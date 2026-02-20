@@ -1,0 +1,40 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcworkspacedata
+xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xccheckout
+*.moved-aside
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+
+# CocoaPods (if used)
+Pods/
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Secrets
+.env
+*.key
+Secrets.swift
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Built app binary (rebuild with build.sh)
+VoxaApp/Voxa.app/Contents/MacOS/Voxa
+VoxaApp/Voxa.app/Contents/_CodeSignature/
+node_modules/
