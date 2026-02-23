@@ -69,7 +69,7 @@ struct VoxaMenuView: View {
         Divider()
 
         // Version
-        Text("Version 0.1.0")
+        Text("Version 0.4")
             .foregroundColor(.secondary)
 
         Divider()

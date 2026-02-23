@@ -26,6 +26,8 @@ final class AppState: ObservableObject {
 
     private var recordingTimer: Timer?
     private var levelTimer: Timer?
+    private var escGlobalMonitor: Any?
+    private var escLocalMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
 
     var menuBarIcon: String {
@@ -121,6 +123,25 @@ final class AppState: ObservableObject {
             // Start recording sound
             NSSound(named: .init("Tink"))?.play()
 
+            // Listen for ESC key to cancel recording (both global and local)
+            let escHandler: (NSEvent) -> Void = { [weak self] event in
+                if event.keyCode == 53 {
+                    Task { @MainActor in
+                        self?.cancelRecording()
+                    }
+                }
+            }
+            escGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: escHandler)
+            escLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                if event.keyCode == 53 {
+                    Task { @MainActor in
+                        self?.cancelRecording()
+                    }
+                    return nil
+                }
+                return event
+            }
+
             recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
                 Task { @MainActor in
                     self?.recordingDuration += 0.1
@@ -133,16 +154,18 @@ final class AppState: ObservableObject {
                 }
             }
         } catch {
-            state = .error("Recording failed: \(error.localizedDescription)")
+            state = .error("录音失败，请检查麦克风权限")
         }
     }
 
     func stopRecording() {
         recordingTimer?.invalidate()
         levelTimer?.invalidate()
+        if let m = escGlobalMonitor { NSEvent.removeMonitor(m); escGlobalMonitor = nil }
+        if let m = escLocalMonitor { NSEvent.removeMonitor(m); escLocalMonitor = nil }
 
         guard let audioURL = audioEngine.stopRecording() else {
-            state = .error("No audio recorded")
+            state = .error("未录到音频，请重试")
             RecordingOverlayController.shared.hide()
             return
         }
@@ -157,6 +180,8 @@ final class AppState: ObservableObject {
     func cancelRecording() {
         recordingTimer?.invalidate()
         levelTimer?.invalidate()
+        if let m = escGlobalMonitor { NSEvent.removeMonitor(m); escGlobalMonitor = nil }
+        if let m = escLocalMonitor { NSEvent.removeMonitor(m); escLocalMonitor = nil }
         _ = audioEngine.stopRecording()
         state = .idle
         RecordingOverlayController.shared.hide()
@@ -168,19 +193,23 @@ final class AppState: ObservableObject {
             do {
                 let apiKey = KeychainHelper.getAPIKey() ?? ""
                 guard !apiKey.isEmpty else {
-                    state = .error("No API key set.")
+                    state = .error("请先在设置中配置 API Key")
                     RecordingOverlayController.shared.hide()
                     return
                 }
 
                 // Step 1: Whisper STT
+                #if DEBUG
                 print("[Voxa] Starting STT transcription...")
+                #endif
                 let rawTranscript = try await whisperService.transcribe(audioURL: url, apiKey: apiKey)
                 lastRawTranscript = rawTranscript
+                #if DEBUG
                 print("[Voxa] STT result: '\(rawTranscript)'")
+                #endif
 
                 guard !rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    state = .error("No speech detected")
+                    state = .error("未检测到语音，请重试")
                     RecordingOverlayController.shared.hide()
                     return
                 }
@@ -188,22 +217,26 @@ final class AppState: ObservableObject {
                 // Step 2: AI Polish (graceful fallback to raw text on failure)
                 var finalText = rawTranscript
                 do {
+                    #if DEBUG
                     print("[Voxa] Starting AI polish...")
+                    #endif
                     let polished = try await aiPolishService.polish(text: rawTranscript, apiKey: apiKey)
                     finalText = polished
+                    #if DEBUG
                     print("[Voxa] Polish result: '\(polished)'")
+                    #endif
                 } catch {
+                    #if DEBUG
                     print("[Voxa] Polish failed (using raw transcript): \(error)")
+                    #endif
                 }
                 lastResult = finalText
 
                 // Step 3: Hide overlay
                 RecordingOverlayController.shared.hide()
 
-                // Step 4: Wait for focus to return to the previous app
-                try await Task.sleep(nanoseconds: 300_000_000) // 300ms
-
-                // Step 5: Activate the previous app and inject text
+                // Step 4: Activate the previous app and inject text
+                // (inject() handles activation polling internally)
                 textInjector.inject(text: finalText)
 
                 // Step 5: Save to history
@@ -225,7 +258,27 @@ final class AppState: ObservableObject {
                 state = .idle
 
             } catch {
-                state = .error(error.localizedDescription)
+                let message: String
+                let desc = error.localizedDescription
+                if desc.contains("insufficient_quota") {
+                    message = "API 额度不足，请充值"
+                } else if desc.contains("invalid_api_key") || desc.contains("Incorrect API key") {
+                    message = "API Key 无效，请在设置中检查"
+                } else if (error as? URLError)?.code == .notConnectedToInternet
+                            || (error as? URLError)?.code == .networkConnectionLost
+                            || (error as? URLError)?.code == .timedOut
+                            || desc.contains("network") || desc.contains("连接") {
+                    message = "网络连接失败，请检查网络"
+                } else if desc.contains("rate_limit") {
+                    message = "请求过于频繁，请稍后重试"
+                } else {
+                    #if DEBUG
+                    message = desc
+                    #else
+                    message = "处理失败，请重试"
+                    #endif
+                }
+                state = .error(message)
                 RecordingOverlayController.shared.hide()
                 NSSound(named: .init("Basso"))?.play()
             }

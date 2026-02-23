@@ -324,7 +324,11 @@ struct HotkeySettingsTab: View {
                         do {
                             if newValue { try SMAppService.mainApp.register() }
                             else { try SMAppService.mainApp.unregister() }
-                        } catch { print("Launch at login error: \(error)") }
+                        } catch {
+                            #if DEBUG
+                            print("Launch at login error: \(error)")
+                            #endif
+                        }
                     }
             }
         }
@@ -439,7 +443,7 @@ struct AboutTab: View {
                 .bold()
             Text("AI Voice Keyboard")
                 .foregroundColor(.secondary)
-            Text("v0.1.0")
+            Text("v0.3")
                 .font(.caption)
                 .foregroundColor(.secondary)
             Text("Speak naturally, get polished text.")

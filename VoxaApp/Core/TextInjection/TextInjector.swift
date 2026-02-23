@@ -1,6 +1,8 @@
 import AppKit
 import Carbon.HIToolbox
 
+/// Text injection using the same proven approach as Maccy (12k+ stars).
+/// Strategy: clipboard + Cmd+V via cgSessionEventTap with combinedSessionState.
 final class TextInjector {
     private var previousApp: NSRunningApplication?
     private var previousBundleID: String?
@@ -8,7 +10,7 @@ final class TextInjector {
     /// Call when recording STARTS to remember where to paste later.
     func saveFrontmostApp() {
         let myBundleID = Bundle.main.bundleIdentifier ?? "com.voxa.app"
-        
+
         if let app = NSWorkspace.shared.frontmostApplication,
            app.bundleIdentifier != myBundleID {
             previousApp = app
@@ -18,23 +20,20 @@ final class TextInjector {
         }
     }
 
-    /// Inject text into the previously active app
+    /// Inject text into the previously active app at the cursor position.
+    /// Called AFTER the overlay has been hidden (so system restores focus automatically).
     func inject(text: String) {
-        NSLog("[TextInjector] Injecting %d chars, target=%@",
-              text.count, previousApp?.localizedName ?? "nil")
+        NSLog("[TextInjector] Injecting %d chars, AXTrusted=%d",
+              text.count, AXIsProcessTrusted() ? 1 : 0)
 
         // Step 1: Activate the previous app
         activatePreviousApp()
 
-        // Step 2: Wait for activation, then type/paste
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            if AXIsProcessTrusted() {
-                NSLog("[TextInjector] Have Accessibility, using clipboard+paste")
-                self.pasteViaClipboard(text: text)
-            } else {
-                NSLog("[TextInjector] No Accessibility, using Unicode typing")
-                self.typeViaUnicode(text: text)
-            }
+        // Step 2: Wait for focus to settle, then paste
+        // The overlay is already hidden at this point, so the system is restoring focus.
+        // We give it a moment then paste via clipboard + Cmd+V (Maccy approach).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.pasteViaClipboard(text: text)
         }
     }
 
@@ -53,53 +52,44 @@ final class TextInjector {
         }
     }
 
-    // MARK: - Method 1: Clipboard + Cmd+V (fast, needs Accessibility)
+    // MARK: - Clipboard + Cmd+V (Maccy-proven approach)
 
     private func pasteViaClipboard(text: String) {
         let pasteboard = NSPasteboard.general
         let previousContents = pasteboard.string(forType: .string)
 
+        // Write text to clipboard
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
 
-        let source = CGEventSource(stateID: .hidSystemState)
-        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true)
-        keyDown?.flags = .maskCommand
-        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false)
-        keyUp?.flags = .maskCommand
-        keyDown?.post(tap: .cghidEventTap)
-        usleep(50_000)
-        keyUp?.post(tap: .cghidEventTap)
-        NSLog("[TextInjector] Cmd+V posted")
+        // Simulate Cmd+V using Maccy's proven parameters:
+        // - CGEventSource: .combinedSessionState (not .hidSystemState)
+        // - Event tap: .cgSessionEventTap (not .cghidEventTap)
+        // - Modifier flags: include 0x000008 left-key marker
+        // - Suppress local keyboard events during paste
+        let source = CGEventSource(stateID: .combinedSessionState)
+        source?.setLocalEventsFilterDuringSuppressionState(
+            [.permitLocalMouseEvents, .permitSystemDefinedEvents],
+            state: .eventSuppressionStateSuppressionInterval
+        )
 
-        // Restore clipboard
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        let cmdFlag = CGEventFlags(rawValue: UInt64(CGEventFlags.maskCommand.rawValue) | 0x000008)
+
+        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true)
+        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false)
+        keyDown?.flags = cmdFlag
+        keyUp?.flags = cmdFlag
+        keyDown?.post(tap: .cgSessionEventTap)
+        keyUp?.post(tap: .cgSessionEventTap)
+
+        NSLog("[TextInjector] Cmd+V posted (combinedSessionState + cgSessionEventTap)")
+
+        // Restore clipboard after paste completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             pasteboard.clearContents()
             if let prev = previousContents {
                 pasteboard.setString(prev, forType: .string)
             }
-        }
-    }
-
-    // MARK: - Method 2: Unicode character typing (no Accessibility needed!)
-    // Uses CGEvent Unicode input which works without special permissions.
-
-    private func typeViaUnicode(text: String) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            for char in text {
-                let str = String(char)
-                let utf16 = Array(str.utf16)
-
-                let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true)
-                keyDown?.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
-                keyDown?.post(tap: .cghidEventTap)
-
-                let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false)
-                keyUp?.post(tap: .cghidEventTap)
-
-                usleep(3_000) // 3ms per char — fast enough for most text
-            }
-            NSLog("[TextInjector] Unicode typing complete (%d chars)", text.count)
         }
     }
 }

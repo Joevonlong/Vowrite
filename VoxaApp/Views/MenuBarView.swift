@@ -165,7 +165,7 @@ struct MenuBarView: View {
                 .background(.orange.opacity(0.2))
                 .cornerRadius(4)
         case .error:
-            Text("Error")
+            Text("出错")
                 .font(.caption)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)

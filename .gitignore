@@ -37,4 +37,3 @@ Secrets.swift
 # Built app binary (rebuild with build.sh)
 VoxaApp/Voxa.app/Contents/MacOS/Voxa
 VoxaApp/Voxa.app/Contents/_CodeSignature/
-node_modules/
