@@ -1,30 +1,39 @@
+<p align="center">
+  <img src="VoxaApp/Resources/AppIcon-source.png" alt="Voxa" width="128">
+</p>
+
 # Voxa 🎙️
 
-**AI Voice Keyboard for macOS** — Speak naturally, get polished text inserted at your cursor.
+> **AI Voice Keyboard for macOS** — Speak naturally, get polished text inserted at your cursor.
 
-Voxa is a lightweight menu bar app that records your voice, transcribes it using OpenAI's Whisper API, polishes the text with GPT, and inserts the result directly into whatever app you're typing in.
+[🇨🇳 中文文档](README_CN.md)
 
-## Features
+Voxa is a lightweight macOS menu bar app that turns your voice into clean, polished text — inserted right where your cursor is. Powered by OpenAI Whisper for transcription and GPT for text polishing.
 
-- 🎤 **Voice-to-text** — Press a hotkey, speak, get text
-- ✨ **AI Polish** — Removes filler words, fixes grammar, adds punctuation
-- 🌍 **Multilingual** — Chinese, English, mixed language support
-- 📋 **Smart paste** — Text appears at your cursor position automatically
-- 🔄 **Graceful fallback** — If AI polish fails, raw transcript is used
-- 🎯 **Unicode typing fallback** — Works even without Accessibility permission
-- 🎨 **Floating overlay** — Minimal recording bar with waveform visualization
-- ⌨️ **Customizable hotkey** — Default: `⌥ Space` (Option + Space)
-- 📊 **History** — Browse past dictations with SwiftData persistence
-- 🔌 **Multi-provider** — OpenAI, OpenRouter, Groq, Together AI, DeepSeek, or custom
+No more typing. Just speak.
 
-## Requirements
+---
 
-- macOS 14.0 (Sonoma) or later
-- An API key from a supported provider (OpenAI recommended)
-- Microphone permission
-- Accessibility permission (recommended, for clipboard paste)
+## ✨ Features
 
-## Build & Run
+- 🎤 **Voice-to-Text** — Press a hotkey, speak, get text
+- ✨ **AI Polish** — Automatically removes filler words, fixes grammar, adds punctuation
+- 🌍 **Multilingual** — Chinese, English, and mixed-language support
+- 📋 **Smart Injection** — Text appears directly at your cursor position
+- 🎯 **Works Everywhere** — Tested in native apps, browsers, Discord, VS Code, and more
+- 🎨 **Floating Overlay** — Compact recording bar with smooth waveform animation
+- ⌨️ **Customizable Hotkey** — Default: `⌥ Space` (Option + Space)
+- ⎋ **ESC to Cancel** — Press Escape to instantly cancel recording
+- 📊 **History** — Browse and search past dictations
+- 🔌 **Multi-Provider** — OpenAI, OpenRouter, Groq, Together AI, DeepSeek, or bring your own
+
+## 🚀 Quick Start
+
+### Download
+
+Download the latest release from [GitHub Releases](https://github.com/Joevonlong/Voxa/releases).
+
+### Build from Source
 
 ```bash
 cd VoxaApp
@@ -35,95 +44,112 @@ Or manually:
 
 ```bash
 cd VoxaApp
-swift build
-cp .build/arm64-apple-macosx/debug/Voxa Voxa.app/Contents/MacOS/Voxa
+swift build -c release
+cp .build/arm64-apple-macosx/release/Voxa Voxa.app/Contents/MacOS/Voxa
 codesign -fs - --deep --entitlements Resources/Voxa.entitlements Voxa.app
 open Voxa.app
 ```
 
-## Setup
+### Setup
 
 1. Launch Voxa — it appears in the menu bar as a 🎤 icon
-2. Go to **Settings** → enter your API key
+2. Open **Settings** → enter your API key ([Get one from OpenAI](https://platform.openai.com/api-keys))
 3. Grant **Microphone** and **Accessibility** permissions when prompted
 4. Press `⌥ Space` to start recording, press again to stop
-5. Text is automatically inserted at your cursor
+5. Text is automatically inserted at your cursor ✨
 
-## How It Works
+## 🔧 How It Works
 
-1. **Record** — Audio captured as AAC (m4a) via AVAudioEngine
-2. **Transcribe** — Sent to OpenAI Whisper API (`whisper-1`)
-3. **Polish** — Raw transcript cleaned up by GPT (`gpt-4o-mini`)
-4. **Inject** — Text pasted into the active app via:
-   - Clipboard + Cmd+V (with Accessibility permission)
-   - Unicode character typing (fallback, no permissions needed)
+```
+🎤 Record → 📝 Transcribe → ✨ Polish → 📋 Insert
+```
 
-## Text Injection
+1. **Record** — Audio captured as AAC via AVAudioEngine
+2. **Transcribe** — Sent to Whisper API for speech-to-text
+3. **Polish** — GPT cleans up filler words, grammar, and punctuation
+4. **Insert** — Text injected at your cursor via clipboard paste or Unicode typing
 
-Voxa uses two methods to insert text:
+### Text Injection Methods
 
-- **Clipboard paste** (preferred): Copies text to clipboard, simulates Cmd+V via CGEvent. Requires Accessibility permission.
-- **Unicode typing** (fallback): Types each character individually via CGEvent Unicode input. No special permissions needed, slightly slower.
+| Method | Speed | Requires |
+|--------|-------|----------|
+| **Clipboard Paste** (default) | ⚡ Instant | Accessibility permission |
+| **Unicode Typing** (fallback) | Fast | Nothing — works everywhere |
 
-If Accessibility permission isn't granted, Voxa automatically falls back to Unicode typing.
+Voxa automatically detects permissions and picks the best method.
 
-## Supported Providers
+## 🔌 Supported Providers
 
 | Provider | STT Model | Polish Model |
 |----------|-----------|-------------|
-| OpenAI | whisper-1 | gpt-4o-mini |
-| OpenRouter | openai/whisper-large-v3 | openai/gpt-4o-mini |
+| **OpenAI** | whisper-1 | gpt-4o-mini |
+| OpenRouter | whisper-large-v3 | gpt-4o-mini |
 | Groq | whisper-large-v3-turbo | llama-3.1-8b-instant |
 | Together AI | whisper-large-v3 | Llama-3.1-8B-Instruct-Turbo |
 | DeepSeek | whisper-1 | deepseek-chat |
 | Custom | configurable | configurable |
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 VoxaApp/
-├── App/
-│   ├── VoxaApp.swift          # App entry point
-│   ├── AppState.swift         # Main state machine
-│   ├── WindowHelper.swift     # Window management
-│   └── PermissionManager.swift # Permission checks
+├── App/                        # App lifecycle & state
 ├── Core/
-│   ├── Audio/AudioEngine.swift        # Mic recording
-│   ├── STT/WhisperService.swift       # Speech-to-text API
-│   ├── AI/AIPolishService.swift       # Text polish API
-│   ├── TextInjection/TextInjector.swift # Cursor injection
-│   ├── Hotkey/HotkeyManager.swift     # Global hotkey
-│   └── Keychain/KeychainHelper.swift  # API key storage
-├── Views/
-│   ├── VoxaMenuView.swift     # Menu bar dropdown
-│   ├── MenuBarView.swift      # Menu bar icon
-│   ├── SettingsView.swift     # Settings + API config
-│   ├── MainWindowView.swift   # Main window
-│   ├── HistoryView.swift      # Dictation history
-│   ├── RecordingOverlay.swift # Floating recording bar
-│   └── HotkeyRecorderView.swift # Hotkey capture
-├── Models/
-│   └── DictationRecord.swift  # SwiftData model
-├── Resources/
-│   ├── Info.plist
-│   └── Voxa.entitlements
-├── Package.swift
-└── build.sh
+│   ├── Audio/                  # Microphone recording
+│   ├── STT/                    # Speech-to-text (Whisper)
+│   ├── AI/                     # Text polishing (GPT)
+│   ├── TextInjection/          # Cursor text injection
+│   ├── Hotkey/                 # Global hotkey management
+│   └── Keychain/               # Secure API key storage
+├── Views/                      # SwiftUI views
+├── Models/                     # SwiftData models
+├── Resources/                  # Info.plist, entitlements
+└── build.sh                    # Build script
 ```
 
-## License
+## 📋 Requirements
 
-Private project.
+- macOS 14.0 (Sonoma) or later
+- API key from a supported provider (OpenAI recommended)
+- Microphone permission
+- Accessibility permission (recommended, not required)
 
-## Version History
+## 🗺️ Roadmap
+
+- [x] **v0.1** — Core voice dictation
+- [x] **v0.2** — Release packaging & error handling
+- [x] **v0.3** — App icon & branding
+- [ ] **v0.4** — Custom prompts, multiple output modes
+- [ ] **v0.4** — Real-time streaming, local Whisper
+- [ ] **v1.0** — Code signing, notarization, auto-update
+
+See [full roadmap](ops/ROADMAP.md) for details.
+
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+## 🤝 Contributing
+
+Contributions welcome! Please open an issue first to discuss what you'd like to change.
+
+## 📝 Changelog
+
+### v0.3 — App Icon
+- Official app icon (waveform ring + text cursor design)
+- Icon generation automation script
+- Build pipeline integration
+
+### v0.2 — Release Ready
+- Release build optimization (debug logs disabled in production)
+- User-friendly error messages
+- Automated DMG packaging
 
 ### v0.1 — Initial Release
-- Core voice dictation with Whisper STT
-- AI text polishing with GPT
+- Voice dictation with Whisper STT + GPT polish
 - Menu bar app with floating recording overlay
 - Customizable hotkey (default ⌥Space)
-- Multi-provider support (OpenAI, OpenRouter, Groq, etc.)
+- Multi-provider support
 - Dual text injection (clipboard paste + Unicode typing fallback)
 - Dictation history with SwiftData
-- Microphone selection
-- Launch at login option
+- Microphone selection & launch at login

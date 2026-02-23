@@ -47,15 +47,20 @@ final class AudioEngine {
     private func updateLevel(buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
         let count = Int(buffer.frameLength)
-        var sum: Float = 0
+
+        var peak: Float = 0
         for i in 0..<count {
-            sum += channelData[i] * channelData[i]
+            let abs = fabsf(channelData[i])
+            if abs > peak { peak = abs }
         }
-        let rms = sqrtf(sum / Float(max(count, 1)))
-        let db = 20 * log10f(max(rms, 1e-6))
-        let normalized = max(0, min(1, (db + 50) / 50))
+
+        // Any sound above noise floor → random high value (0.6-1.0) each frame
+        // Silent → 0. This keeps the waveform constantly jumping while speaking.
+        let db = 20 * log10f(max(peak, 1e-6))
+        let output: Float = db > -45 ? Float.random(in: 0.6...1.0) : 0.0
+
         DispatchQueue.main.async { [weak self] in
-            self?.currentLevel = normalized
+            self?.currentLevel = output
         }
     }
 }
