@@ -1,15 +1,15 @@
 #!/bin/bash
 #
-# Voxa Release Script
+# Vowrite Release Script
 # Usage: ./ops/scripts/release.sh v0.2
 #
 set -e
 
 # --- Config ---
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_DIR="$PROJECT_ROOT/VoxaApp"
-APP_BUNDLE="$APP_DIR/Voxa.app"
-ENTITLEMENTS="$APP_DIR/Resources/Voxa.entitlements"
+APP_DIR="$PROJECT_ROOT/VowriteApp"
+APP_BUNDLE="$APP_DIR/Vowrite.app"
+ENTITLEMENTS="$APP_DIR/Resources/Vowrite.entitlements"
 INFO_PLIST="$APP_DIR/Resources/Info.plist"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
 
@@ -18,7 +18,7 @@ VERSION="${1:?Usage: release.sh <version> (e.g. v0.2)}"
 VERSION_NUM="${VERSION#v}" # Strip 'v' prefix for plist
 
 echo "═══════════════════════════════════════"
-echo "  Voxa Release: $VERSION"
+echo "  Vowrite Release: $VERSION"
 echo "═══════════════════════════════════════"
 
 # --- Pre-checks ---
@@ -55,7 +55,7 @@ echo "  ✓ Release build complete"
 # --- Step 3: Copy binary ---
 echo ""
 echo "▶ Step 3: Copying binary to app bundle..."
-cp .build/arm64-apple-macosx/release/Voxa "$APP_BUNDLE/Contents/MacOS/Voxa"
+cp .build/arm64-apple-macosx/release/Vowrite "$APP_BUNDLE/Contents/MacOS/Vowrite"
 echo "  ✓ Binary copied"
 
 # --- Step 4: Code sign ---
@@ -73,7 +73,7 @@ if [ -n "$IDENTITY" ]; then
     # Notarize
     echo ""
     echo "▶ Step 4b: Notarizing..."
-    DMG_TEMP="/tmp/Voxa-notarize.zip"
+    DMG_TEMP="/tmp/Vowrite-notarize.zip"
     ditto -c -k --keepParent "$APP_BUNDLE" "$DMG_TEMP"
     xcrun notarytool submit "$DMG_TEMP" --keychain-profile "AC_PASSWORD" --wait || echo "  ⚠️  Notarization failed (may need credentials)"
     xcrun stapler staple "$APP_BUNDLE" 2>/dev/null || echo "  ⚠️  Stapling skipped"
@@ -88,7 +88,7 @@ fi
 echo ""
 echo "▶ Step 5: Creating DMG..."
 mkdir -p "$DMG_OUTPUT_DIR"
-DMG_PATH="$DMG_OUTPUT_DIR/Voxa-${VERSION}.dmg"
+DMG_PATH="$DMG_OUTPUT_DIR/Vowrite-${VERSION}.dmg"
 
 # Create a temporary directory for DMG contents
 DMG_STAGING="/tmp/voxa-dmg-$$"
@@ -98,7 +98,7 @@ cp -R "$APP_BUNDLE" "$DMG_STAGING/"
 ln -s /Applications "$DMG_STAGING/Applications"
 
 # Create DMG
-hdiutil create -volname "Voxa $VERSION" -srcfolder "$DMG_STAGING" -ov -format UDZO "$DMG_PATH"
+hdiutil create -volname "Vowrite $VERSION" -srcfolder "$DMG_STAGING" -ov -format UDZO "$DMG_PATH"
 rm -rf "$DMG_STAGING"
 echo "  ✓ DMG created: $DMG_PATH"
 

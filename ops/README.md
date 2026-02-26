@@ -1,27 +1,27 @@
-# Voxa 运维管理中心 (ops/)
+# Vowrite Operations Center (ops/)
 
-本目录是 Voxa 项目的**管理、维护、发布流程专用目录**，不打包进软件。
+This directory is the **management, maintenance, and release process directory** for the Vowrite project. It is not packaged into the software.
 
-## 目录结构
+## Directory Structure
 
 ```
 ops/
-├── README.md              ← 你正在看的文件
-├── PROCESS.md             ← 核心流程总纲（开发→测试→发布→运维）
-├── CHECKLIST_RELEASE.md   ← 发布前检查清单（每次发版必走）
-├── CHECKLIST_SECURITY.md  ← 安全清理检查清单
-├── VERSIONING.md          ← 版本号规范 + Changelog 规范
-├── WEBSITE.md             ← 官网规划与部署方案
-├── ROADMAP.md             ← 产品路线图
+├── README.md              ← You are reading this file
+├── PROCESS.md             ← Core process overview (Develop → Test → Release → Ops)
+├── CHECKLIST_RELEASE.md   ← Pre-release checklist (required before every release)
+├── CHECKLIST_SECURITY.md  ← Security cleanup checklist
+├── VERSIONING.md          ← Version numbering and changelog standards
+├── WEBSITE.md             ← Website planning and deployment
+├── ROADMAP.md             ← Product roadmap
 └── scripts/
-    ├── release.sh         ← 自动化发布脚本
-    ├── test.sh            ← 自动化测试脚本
-    └── clean.sh           ← 构建清理脚本
+    ├── release.sh         ← Automated release script
+    ├── test.sh            ← Automated test script
+    └── clean.sh           ← Build cleanup script
 ```
 
-## 原则
+## Principles
 
-1. **每次发版前**必须过 `CHECKLIST_RELEASE.md`
-2. **每次涉及安全变更**必须过 `CHECKLIST_SECURITY.md`
-3. **版本号和 Changelog** 按 `VERSIONING.md` 规范执行
-4. **所有脚本**在 `ops/scripts/` 下，不放在项目根目录（`build.sh` 除外，那是开发用的）
+1. **Before every release**, complete `CHECKLIST_RELEASE.md`
+2. **Before every security-related change**, complete `CHECKLIST_SECURITY.md`
+3. **Version numbers and changelogs** follow the standards in `VERSIONING.md`
+4. **All scripts** are in `ops/scripts/`, not in the project root (`build.sh` is the exception — it's for development use)

@@ -1,4 +1,4 @@
-# Voxa Development Roadmap
+# Vowrite Development Roadmap
 
 ## v0.1 — macOS MVP (Current Sprint)
 

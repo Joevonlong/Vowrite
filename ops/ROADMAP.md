@@ -1,57 +1,57 @@
-# Voxa 产品路线图
+# Vowrite Product Roadmap
 
 ---
 
-## v0.1 ✅ — 首个可用版本（当前）
-- [x] 语音转文字（Whisper STT）
-- [x] AI 文本润色（GPT）
-- [x] 菜单栏应用 + 浮动录音条
-- [x] 自定义快捷键
-- [x] 多供应商支持
-- [x] 双模式文字注入
-- [x] 听写历史记录
-- [x] 麦克风选择
+## v0.1 ✅ — First Usable Version (Current)
+- [x] Voice-to-text (Whisper STT)
+- [x] AI text polishing (GPT)
+- [x] Menu bar app + floating recording bar
+- [x] Customizable hotkey
+- [x] Multi-provider support
+- [x] Dual-mode text injection
+- [x] Dictation history
+- [x] Microphone selection
 
-## v0.2 — 自动化与打包
-- [ ] Release 构建自动化脚本
-- [ ] DMG 打包
-- [ ] GitHub Release 发布
-- [ ] 官网 MVP（GitHub Pages）
-- [ ] Release 构建关闭调试日志
-- [ ] 错误提示优化（用户友好的中文提示）
+## v0.2 — Automation & Packaging
+- [ ] Release build automation script
+- [ ] DMG packaging
+- [ ] GitHub Release publishing
+- [ ] Website MVP (GitHub Pages)
+- [ ] Disable debug logs in release builds
+- [ ] Improved error messages (user-friendly prompts)
 
-## v0.3 — 体验优化
-- [ ] 自定义润色 Prompt（用户可编辑）
-- [ ] 多种输出模式（纯转录 / 润色 / 翻译）
-- [ ] 录音时长显示
-- [ ] 音频质量自适应
-- [ ] 输入法兼容性优化（搜狗等）
+## v0.3 — Experience Optimization
+- [ ] Custom polish prompts (user-editable)
+- [ ] Multiple output modes (raw transcription / polished / translated)
+- [ ] Recording duration display
+- [ ] Adaptive audio quality
+- [ ] Input method compatibility improvements (Sogou, etc.)
 
-## v0.4 — 高级功能
-- [ ] 实时流式转录（边说边出字）
-- [ ] 本地 Whisper 模型（离线可用）
-- [ ] 快捷短语 / 模板
-- [ ] 多语言 UI
+## v0.4 — Advanced Features
+- [ ] Real-time streaming transcription (text appears as you speak)
+- [ ] Local Whisper model (offline capable)
+- [ ] Quick phrases / templates
+- [ ] Multilingual UI
 
-## v1.0 — 正式发布
-- [ ] Apple Developer ID 签名
-- [ ] 公证（Notarization）
-- [ ] Sparkle 自动更新
-- [ ] 正式官网
-- [ ] 完善文档
-- [ ] Product Hunt / V2EX 发布
+## v1.0 — Official Release
+- [ ] Apple Developer ID signing
+- [ ] Notarization
+- [ ] Sparkle auto-update
+- [ ] Official website
+- [ ] Complete documentation
+- [ ] Product Hunt / V2EX launch
 
-## 未来
-- [ ] iOS 版本
-- [ ] Homebrew Cask 分发
-- [ ] 插件系统（自定义后处理管线）
-- [ ] 团队/企业版（自托管 API）
+## Future
+- [ ] iOS version
+- [ ] Homebrew Cask distribution
+- [ ] Plugin system (custom post-processing pipeline)
+- [ ] Team/Enterprise edition (self-hosted API)
 
 ---
 
-## 优先级原则
+## Priority Principles
 
-1. **用户能用** > 功能多
-2. **稳定可靠** > 速度快
-3. **隐私安全** > 便利性
-4. **低成本验证** > 完美方案
+1. **Usable for users** > Feature-rich
+2. **Stable and reliable** > Fast
+3. **Privacy and security** > Convenience
+4. **Low-cost validation** > Perfect solution

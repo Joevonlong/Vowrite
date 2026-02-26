@@ -1,4 +1,27 @@
-# Voxa v0.4 — Release Notes
+# Vowrite v0.5 — Release Notes
+
+**发布日期:** 2026-02-27
+**标签:** release-v0.5
+
+---
+
+## 🔄 品牌更名 Voxa → Vowrite
+
+v0.5 将项目从 Voxa 正式更名为 Vowrite，同时迁移至新的 GitHub 仓库。
+
+### 变更
+- **项目更名** — Voxa → Vowrite，所有代码、文档、配置全量替换
+- **Bundle Identifier** — `com.voxa.app` → `com.vowrite.app`
+- **GitHub 仓库** — 迁移至 [github.com/Joevonlong/Vowrite](https://github.com/Joevonlong/Vowrite)
+- **官网** — 版本号和下载链接同步更新
+
+### ⚠️ 升级注意
+- 由于 Bundle Identifier 变更，需要重新在 **系统设置 → 辅助功能** 中添加 Vowrite
+- Keychain 中的 API Key 需要重新设置（因为 keychain item name 改变）
+
+---
+
+# Vowrite v0.4 — Release Notes
 
 **发布日期:** 2026-02-27
 **标签:** v0.4
@@ -45,7 +68,7 @@ v0.4 彻底重写了文字注入引擎，修复了语音输入后文字无法插
 
 ---
 
-# Voxa v0.3 — Release Notes
+# Vowrite v0.3 — Release Notes
 
 **发布日期:** 2026-02-27
 **标签:** v0.3
@@ -54,7 +77,7 @@ v0.4 彻底重写了文字注入引擎，修复了语音输入后文字无法插
 
 ## 🎨 App 图标上线
 
-v0.3 为 Voxa 添加了正式的应用图标，提升品牌辨识度。
+v0.3 为 Vowrite 添加了正式的应用图标，提升品牌辨识度。
 
 ### 新增
 - **App 图标** — 声纹圆环 + 文字光标设计，珊瑚粉到琥珀橙渐变，扁平卡通风格
@@ -67,7 +90,7 @@ v0.3 为 Voxa 添加了正式的应用图标，提升品牌辨识度。
 
 ---
 
-# Voxa v0.2 — Release Notes
+# Vowrite v0.2 — Release Notes
 
 **发布日期:** 2026-02-26
 **标签:** v0.2
@@ -76,7 +99,7 @@ v0.3 为 Voxa 添加了正式的应用图标，提升品牌辨识度。
 
 ## 🚀 发布就绪版本
 
-v0.2 聚焦于发布质量优化，让 Voxa 做好面向用户的准备。
+v0.2 聚焦于发布质量优化，让 Vowrite 做好面向用户的准备。
 
 ---
 
@@ -100,7 +123,7 @@ v0.2 聚焦于发布质量优化，让 Voxa 做好面向用户的准备。
 
 ---
 
-# Voxa v0.1 — Release Notes
+# Vowrite v0.1 — Release Notes
 
 **发布日期:** 2026-02-26
 **标签:** v0.1
@@ -110,7 +133,7 @@ v0.2 聚焦于发布质量优化，让 Voxa 做好面向用户的准备。
 
 ## 🎉 首个可用版本
 
-Voxa 是一款 macOS 菜单栏语音输入工具。按下快捷键说话，AI 自动将语音转为文字并插入到光标所在位置。
+Vowrite 是一款 macOS 菜单栏语音输入工具。按下快捷键说话，AI 自动将语音转为文字并插入到光标所在位置。
 
 ---
 
@@ -163,7 +186,7 @@ Voxa 是一款 macOS 菜单栏语音输入工具。按下快捷键说话，AI �
 ## 🔧 构建方式
 
 ```bash
-cd VoxaApp
+cd VowriteApp
 ./build.sh
 ```
 

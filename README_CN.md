@@ -1,14 +1,14 @@
-# Voxa 🎙️
+# Vowrite 🎙️
 
 > **macOS AI 语音键盘** — 自然说话，自动将润色后的文字插入光标位置。
 
 [🇬🇧 English](README.md)
 
 <p align="center">
-  <img src="VoxaApp/Resources/AppIcon-source.png" alt="Voxa" width="128">
+  <img src="VowriteApp/Resources/AppIcon-source.png" alt="Vowrite" width="128">
 </p>
 
-Voxa 是一款轻量级 macOS 菜单栏应用，将你的语音转化为整洁、润色过的文字，直接插入到光标所在位置。基于 OpenAI Whisper 语音识别和 GPT 文本润色。
+Vowrite 是一款轻量级 macOS 菜单栏应用，将你的语音转化为整洁、润色过的文字，直接插入到光标所在位置。基于 OpenAI Whisper 语音识别和 GPT 文本润色。
 
 不用打字，开口就行。
 
@@ -30,28 +30,28 @@ Voxa 是一款轻量级 macOS 菜单栏应用，将你的语音转化为整洁�
 
 ### 下载
 
-从 [GitHub Releases](https://github.com/Joevonlong/Voxa/releases) 下载最新版本。
+从 [GitHub Releases](https://github.com/Joevonlong/Vowrite/releases) 下载最新版本。
 
 ### 从源码构建
 
 ```bash
-cd VoxaApp
+cd VowriteApp
 ./build.sh
 ```
 
 或手动构建：
 
 ```bash
-cd VoxaApp
+cd VowriteApp
 swift build -c release
-cp .build/arm64-apple-macosx/release/Voxa Voxa.app/Contents/MacOS/Voxa
-codesign -fs - --deep --entitlements Resources/Voxa.entitlements Voxa.app
-open Voxa.app
+cp .build/arm64-apple-macosx/release/Vowrite Vowrite.app/Contents/MacOS/Vowrite
+codesign -fs - --deep --entitlements Resources/Vowrite.entitlements Vowrite.app
+open Vowrite.app
 ```
 
 ### 设置
 
-1. 启动 Voxa — 菜单栏出现 🎤 图标
+1. 启动 Vowrite — 菜单栏出现 🎤 图标
 2. 打开 **设置** → 输入 API Key（[从 OpenAI 获取](https://platform.openai.com/api-keys)）
 3. 授权 **麦克风** 和 **辅助功能** 权限
 4. 按 `⌥ 空格` 开始录音，再按一次停止
@@ -75,7 +75,7 @@ open Voxa.app
 | **剪贴板粘贴**（默认） | ⚡ 瞬间 | 辅助功能权限 |
 | **Unicode 逐字输入**（回退） | 快速 | 无需任何权限 |
 
-Voxa 自动检测权限状态，选择最佳方式。
+Vowrite 自动检测权限状态，选择最佳方式。
 
 ## 🔌 支持的供应商
 
@@ -91,7 +91,7 @@ Voxa 自动检测权限状态，选择最佳方式。
 ## 📁 项目结构
 
 ```
-VoxaApp/
+VowriteApp/
 ├── App/                        # 应用生命周期与状态
 ├── Core/
 │   ├── Audio/                  # 麦克风录音
