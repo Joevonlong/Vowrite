@@ -1,73 +1,93 @@
-# 版本号与 Changelog 规范
+# Version Numbering and Changelog Standards
 
 ---
 
-## 版本号格式
+## Version Number Format
 
-采用 **语义化版本** (Semantic Versioning): `vMAJOR.MINOR.PATCH`
+Uses a **four-segment version number**: `vMAJOR.MINOR.PATCH.BUILD`
 
-| 部分 | 何时递增 | 示例 |
-|------|---------|------|
-| MAJOR | 不兼容的大改动、重大架构变更 | v1.0 → v2.0 |
-| MINOR | 新功能、向后兼容的改进 | v0.1 → v0.2 |
-| PATCH | Bug 修复、小调整 | v0.1.0 → v0.1.1 |
+| Segment | Name | When to Increment | Example |
+|---------|------|-------------------|---------|
+| 1st | MAJOR | Incompatible major changes, significant architecture changes | v1.0.0.0 → v2.0.0.0 |
+| 2nd | MINOR | New feature modules, major feature launches | v0.1.0.0 → v0.2.0.0 |
+| 3rd | PATCH | Feature improvements, multiple small updates accumulated for one release | v0.1.1.0 → v0.1.2.0 |
+| 4th | BUILD | Daily small updates: bug fixes, UI tweaks, copy changes, etc. | v0.1.1.1 → v0.1.1.2 |
 
-### 当前版本线
+### Rules
+
+1. **Daily incremental updates** → Only increment BUILD (4th segment), e.g., `v0.1.1.1` → `v0.1.1.2`
+2. **Accumulated small updates** forming meaningful improvements → Increment PATCH (3rd segment), reset BUILD to zero, e.g., `v0.1.1.5` → `v0.1.2.0`
+3. **New feature module launch** → Increment MINOR (2nd segment), reset last two segments to zero
+4. **Major architecture change** → Increment MAJOR (1st segment), reset last three segments to zero
+
+### Current Version Line
 
 ```
-v0.x — 早期开发阶段，功能快速迭代
-v1.0 — 首个正式发布版本（签名 + 公证 + 官网）
+v0.x.x.x — Early development stage, rapid feature iteration
+v1.0.0.0 — First official release (signed + notarized + website)
 ```
 
-### 预发布标签（可选）
+### Pre-release Tags (Optional)
 
 ```
-v0.2-beta    测试版
-v0.2-rc1     发布候选
+v0.2.0.0-beta    Beta version
+v0.2.0.0-rc1     Release candidate
 ```
 
 ---
 
-## Tag 规范
+## RELEASE_NOTES Format
 
-- Git tag 与版本号一致: `v0.1`, `v0.2`, `v1.0`
-- 使用 annotated tag: `git tag -a v0.2 -m "v0.2 — 功能描述"`
-- Tag 打在发布 commit 上，不打在中间 commit
+- **PATCH and above**: Add a full entry in `RELEASE_NOTES.md`
+- **BUILD updates**: No separate entry; merge into the next PATCH release. Daily commit messages should be clear enough
+
+This avoids incremental updates cluttering up the changelog.
 
 ---
 
-## Changelog 规范
+## Tag Standards
 
-每个版本的变更记录在 `RELEASE_NOTES.md` 中，格式：
+- **PATCH and above**: Create a Git tag, e.g., `v0.1.2.0`
+- **BUILD updates**: No tag, just regular commits
+- Use annotated tags: `git tag -a v0.1.2.0 -m "v0.1.2 — Feature description"`
+- Tags go on the release commit, not on intermediate commits
+
+---
+
+## Changelog Standards
+
+Each PATCH+ version's changes are recorded in `RELEASE_NOTES.md` with this format:
 
 ```markdown
-## vX.Y — 标题
+## vX.Y.Z — Title
 
-**发布日期:** YYYY-MM-DD
+**Release Date:** YYYY-MM-DD
 
-### 新功能
-- feat: 描述
+### New Features
+- feat: description
 
-### 修复
-- fix: 描述
+### Fixes
+- fix: description (including fix summaries from BUILD period)
 
-### 改进
-- refactor/chore: 描述
+### Improvements
+- refactor/chore: description
 
-### 已知问题
-- 描述
+### Known Issues
+- description
 ```
 
 ---
 
-## 需要更新版本号的位置
+## Version Number Update Locations
 
-每次发版时，以下位置的版本号必须同步更新：
+For each release (PATCH+), version numbers must be updated in sync at the following locations:
 
-1. `VoxaApp/Resources/Info.plist` → `CFBundleShortVersionString`
-2. `VoxaApp/Views/SettingsView.swift` → `AboutTab` 中的版本显示
-3. `RELEASE_NOTES.md` → 新增版本条目
-4. `README.md` → 版本历史章节
+1. `VowriteApp/Resources/Info.plist` → `CFBundleShortVersionString`
+2. `VowriteApp/Views/SettingsView.swift` → Version display in `AboutTab`
+3. `RELEASE_NOTES.md` → New version entry
+4. `README.md` → Version history section
 5. `Git tag`
 
-`ops/scripts/release.sh` 会自动处理大部分，但请在 checklist 中确认。
+BUILD updates only need a commit; syncing all the above locations is not required.
+
+`ops/scripts/release.sh` handles most of this automatically, but please confirm in the checklist.

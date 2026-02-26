@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# Voxa Automated Test Script
+# Vowrite Automated Test Script
 # Checks build, security, and basic functionality
 #
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_DIR="$PROJECT_ROOT/VoxaApp"
+APP_DIR="$PROJECT_ROOT/VowriteApp"
 PASS=0
 FAIL=0
 WARN=0
@@ -16,7 +16,7 @@ fail() { echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 warn() { echo "  ⚠️  $1"; WARN=$((WARN+1)); }
 
 echo "═══════════════════════════════════════"
-echo "  Voxa Test Suite"
+echo "  Vowrite Test Suite"
 echo "═══════════════════════════════════════"
 
 # --- Build Test ---
@@ -80,7 +80,7 @@ else
 fi
 
 # Check temp files cleanup
-if ls /tmp/voxa_* 2>/dev/null | grep -q .; then
+if ls /tmp/vowrite_* 2>/dev/null | grep -q .; then
     warn "Temp audio files exist in /tmp"
 else
     pass "No leftover temp files"
@@ -90,20 +90,20 @@ fi
 echo ""
 echo "▶ App Bundle"
 
-if [ -f "$APP_DIR/Voxa.app/Contents/Info.plist" ]; then
+if [ -f "$APP_DIR/Vowrite.app/Contents/Info.plist" ]; then
     pass "Info.plist exists"
 else
     fail "Info.plist missing"
 fi
 
-BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_DIR/Voxa.app/Contents/Info.plist" 2>/dev/null)
-if [ "$BUNDLE_ID" = "com.voxa.app" ]; then
+BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_DIR/Vowrite.app/Contents/Info.plist" 2>/dev/null)
+if [ "$BUNDLE_ID" = "com.vowrite.app" ]; then
     pass "Bundle ID: $BUNDLE_ID"
 else
     fail "Unexpected bundle ID: $BUNDLE_ID"
 fi
 
-if [ -f "$APP_DIR/Resources/Voxa.entitlements" ]; then
+if [ -f "$APP_DIR/Resources/Vowrite.entitlements" ]; then
     pass "Entitlements file exists"
 else
     fail "Entitlements file missing"
@@ -114,7 +114,7 @@ echo ""
 echo "▶ File Structure"
 
 REQUIRED_FILES=(
-    "App/VoxaApp.swift"
+    "App/VowriteApp.swift"
     "App/AppState.swift"
     "Core/STT/WhisperService.swift"
     "Core/AI/AIPolishService.swift"

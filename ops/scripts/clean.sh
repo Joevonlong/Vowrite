@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Voxa Build Clean Script
+# Vowrite Build Clean Script
 #
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_DIR="$PROJECT_ROOT/VoxaApp"
+APP_DIR="$PROJECT_ROOT/VowriteApp"
 
-echo "▶ Cleaning Voxa build artifacts..."
+echo "▶ Cleaning Vowrite build artifacts..."
 
 # Swift build cache
 if [ -d "$APP_DIR/.build" ]; then
@@ -16,21 +16,21 @@ if [ -d "$APP_DIR/.build" ]; then
 fi
 
 # Code signature (will be regenerated)
-if [ -d "$APP_DIR/Voxa.app/Contents/_CodeSignature" ]; then
-    rm -rf "$APP_DIR/Voxa.app/Contents/_CodeSignature"
+if [ -d "$APP_DIR/Vowrite.app/Contents/_CodeSignature" ]; then
+    rm -rf "$APP_DIR/Vowrite.app/Contents/_CodeSignature"
     echo "  ✓ Removed _CodeSignature/"
 fi
 
 # Binary (will be rebuilt)
-if [ -f "$APP_DIR/Voxa.app/Contents/MacOS/Voxa" ]; then
-    rm "$APP_DIR/Voxa.app/Contents/MacOS/Voxa"
+if [ -f "$APP_DIR/Vowrite.app/Contents/MacOS/Vowrite" ]; then
+    rm "$APP_DIR/Vowrite.app/Contents/MacOS/Vowrite"
     echo "  ✓ Removed binary"
 fi
 
 # Temp audio files
-TEMP_COUNT=$(ls /tmp/voxa_* 2>/dev/null | wc -l | tr -d ' ')
+TEMP_COUNT=$(ls /tmp/vowrite_* 2>/dev/null | wc -l | tr -d ' ')
 if [ "$TEMP_COUNT" -gt 0 ]; then
-    rm -f /tmp/voxa_*
+    rm -f /tmp/vowrite_*
     echo "  ✓ Removed $TEMP_COUNT temp audio file(s)"
 fi
 

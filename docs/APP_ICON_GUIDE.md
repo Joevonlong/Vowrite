@@ -1,89 +1,89 @@
-# Voxa App 图标指南
+# Vowrite App Icon Guide
 
-## 快速上手
+## Quick Start
 
-### 1. 准备图标
+### 1. Prepare the Icon
 
-用 Gemini (Nano Banana 2) 或任何工具生成一张 **1024×1024 PNG** 图标。
+Use Gemini (Nano Banana 2) or any tool to generate a **1024×1024 PNG** icon.
 
-推荐 prompt 示例：
-> "A modern macOS app icon for a voice dictation app called Voxa. Clean, minimal design with a microphone or sound wave motif. Rounded square shape following macOS icon guidelines. Vibrant gradient."
+Recommended prompt example:
+> "A modern macOS app icon for a voice dictation app called Vowrite. Clean, minimal design with a microphone or sound wave motif. Rounded square shape following macOS icon guidelines. Vibrant gradient."
 
-### 2. 放置图标
+### 2. Place the Icon
 
-将 PNG 文件放到：
+Put the PNG file at:
 
 ```
-VoxaApp/Resources/AppIcon-source.png
+VowriteApp/Resources/AppIcon-source.png
 ```
 
-这是唯一需要你操作的步骤。
+This is the only step you need to do manually.
 
-### 3. 自动转换
+### 3. Automatic Conversion
 
-运行构建脚本，图标会自动转换：
+Run the build script and the icon will be converted automatically:
 
 ```bash
-cd VoxaApp
+cd VowriteApp
 ./build.sh
 ```
 
-或者单独转换图标：
+Or convert the icon separately:
 
 ```bash
 ./scripts/generate-icon.sh
 ```
 
-也可以指定其他路径的图片：
+You can also specify a different image path:
 
 ```bash
 ./scripts/generate-icon.sh ~/Downloads/my-icon.png
 ```
 
-### 4. 完成
+### 4. Done
 
-脚本会自动：
-- 从 1024×1024 源图生成所有 macOS 需要的尺寸（16～512@2x）
-- 打包为 `.icns` 格式
-- 放到 `Voxa.app/Contents/Resources/AppIcon.icns`
-- `Info.plist` 已配置好 `CFBundleIconFile`，无需额外操作
+The script will automatically:
+- Generate all macOS-required sizes (16–512@2x) from the 1024×1024 source image
+- Package into `.icns` format
+- Place at `Vowrite.app/Contents/Resources/AppIcon.icns`
+- `Info.plist` already has `CFBundleIconFile` configured, no additional steps needed
 
-## 文件结构
+## File Structure
 
 ```
-VoxaApp/
+VowriteApp/
 ├── Resources/
-│   ├── AppIcon-source.png    ← 你放图标的地方（1024x1024 PNG）
-│   └── Info.plist            ← 已包含 CFBundleIconFile 配置
+│   ├── AppIcon-source.png    ← Place your icon here (1024x1024 PNG)
+│   └── Info.plist            ← Already includes CFBundleIconFile config
 ├── scripts/
-│   └── generate-icon.sh      ← 自动转换脚本
-├── Voxa.app/
+│   └── generate-icon.sh      ← Automatic conversion script
+├── Vowrite.app/
 │   └── Contents/
 │       └── Resources/
-│           └── AppIcon.icns  ← 生成的图标（自动）
-└── build.sh                  ← 构建时自动检测并转换图标
+│           └── AppIcon.icns  ← Generated icon (automatic)
+└── build.sh                  ← Automatically detects and converts icon during build
 ```
 
-## 更换图标
+## Replacing the Icon
 
-替换 `Resources/AppIcon-source.png`，然后：
+Replace `Resources/AppIcon-source.png`, then:
 
 ```bash
-# 删除旧的 icns 触发重新生成
-rm Voxa.app/Contents/Resources/AppIcon.icns
+# Delete the old icns to trigger regeneration
+rm Vowrite.app/Contents/Resources/AppIcon.icns
 ./build.sh
 ```
 
-或直接强制重新生成：
+Or force regeneration directly:
 
 ```bash
 ./scripts/generate-icon.sh
 ./build.sh
 ```
 
-## 注意事项
+## Notes
 
-- 源图片建议 **1024×1024**，小于此尺寸会有警告但仍可生成
-- 使用 **PNG 格式**，支持透明背景
-- macOS 图标自带圆角遮罩，不需要自己画圆角
-- `.icns` 文件和 `build/` 目录建议加入 `.gitignore`，源 PNG 纳入版本管理
+- Source image should be **1024×1024**; smaller sizes will show a warning but still generate
+- Use **PNG format**, transparent backgrounds are supported
+- macOS icons have automatic rounded corner masks, no need to draw rounded corners yourself
+- `.icns` files and `build/` directory should be added to `.gitignore`; source PNG should be version-controlled

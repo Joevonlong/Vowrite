@@ -1,147 +1,162 @@
-# Voxa 核心流程总纲
+# Vowrite Core Process Overview
 
-所有开发、测试、发布活动遵循以下流程。每个阶段有对应的检查清单和脚本。
-
----
-
-## 流程总览
-
-```
-开发 → 测试 → 清理 → 构建 → 签名 → 打包 → 发布 → 通知
- │      │      │      │      │      │      │      │
- ▼      ▼      ▼      ▼      ▼      ▼      ▼      ▼
-代码   功能   安全   Release  codesign  DMG   GitHub  官网
-变更   验证   审查   编译    +公证    生成  Release 更新
-```
+All development, testing, and release activities follow this process. Each phase has corresponding checklists and scripts.
 
 ---
 
-## 阶段一：开发
+## Process Overview
 
-### 分支策略
-- `main` — 稳定版，只接受经过测试的代码
-- `dev` — 日常开发（可选，小项目直接在 main 上开发）
-- `feature/xxx` — 功能分支（较大功能时使用）
-
-### 提交规范
 ```
-<类型>: <简要说明>
-
-类型:
-- feat: 新功能
-- fix: 修复
-- refactor: 重构
-- docs: 文档
-- chore: 构建/工具/杂项
-- security: 安全相关
+Develop → Test → Cleanup → Build → Sign → Package → Release → Notify
+ │        │       │        │       │       │        │        │
+ ▼        ▼       ▼        ▼       ▼       ▼        ▼        ▼
+Code    Feature  Security  Release  codesign  DMG    GitHub   Website
+Changes  Verify  Review    Build   +Notarize  Gen   Release  Update
 ```
 
-### 开发构建
+---
+
+## Phase 1: Development
+
+### Branch Strategy
+- `main` — Stable branch, only accepts tested code
+- `dev` — Daily development (optional, small projects can develop directly on main)
+- `feature/xxx` — Feature branches (for larger features)
+
+### Language Standards
+
+The project targets the international market. **The official language is English.** The following content must be in English:
+
+| Content | Requirement |
+|---------|-------------|
+| Git Commit Messages | English (type label + English description) |
+| Release Notes / Description | English |
+| Bug Reports (GitHub Issues) | English |
+| GitHub Repo Description, README, Wiki | English |
+| Documentation for final publication | English |
+| Code Comments | English |
+
+> 📝 Daily communication (Discord, chat) can be in Chinese, but all content committed to the repository must be in English.
+
+### Commit Convention
+```
+<type>: <short description in English>
+
+Types:
+- feat: new feature
+- fix: bug fix
+- refactor: refactoring
+- docs: documentation
+- chore: build/tooling/misc
+- security: security-related
+```
+
+### Development Build
 ```bash
-cd VoxaApp && ./build.sh
+cd VowriteApp && ./build.sh
 ```
 
 ---
 
-## 阶段二：测试
+## Phase 2: Testing
 
-### 自动化测试
+### Automated Tests
 ```bash
 ops/scripts/test.sh
 ```
 
-### 手动测试矩阵
+### Manual Test Matrix
 
-| 测试项 | 说明 | 通过 |
-|--------|------|------|
-| OpenAI STT | whisper-1 转录中/英文 | ☐ |
-| AI Polish | gpt-4o-mini 润色 | ☐ |
-| Polish 失败回退 | 断网或无额度时用原文 | ☐ |
-| 剪贴板注入 | 有 Accessibility 权限 | ☐ |
-| Unicode 注入 | 无 Accessibility 权限 | ☐ |
-| 快捷键 | 默认 ⌥Space + 自定义 | ☐ |
-| 菜单栏 | 图标/菜单/状态显示 | ☐ |
-| 录音条 | 显示/波形/不抢焦点 | ☐ |
-| 历史记录 | 保存/查看 | ☐ |
-| 麦克风切换 | 多麦克风选择 | ☐ |
-| 长录音 | >60秒录音 | ☐ |
-| 首次启动 | 无 Key 时的引导 | ☐ |
-| 错误处理 | 无网络/无权限/超时 | ☐ |
-
----
-
-## 阶段三：安全清理
-
-详见 `CHECKLIST_SECURITY.md`。每次发版前必须执行。
-
-核心要求：
-- 代码和 Git 历史中无 API Key 泄露
-- NSLog 调试信息在 Release 构建中关闭
-- Keychain 存储安全
-- 无硬编码凭证
+| Test Item | Description | Pass |
+|-----------|-------------|------|
+| OpenAI STT | whisper-1 transcription for Chinese/English | ☐ |
+| AI Polish | gpt-4o-mini polishing | ☐ |
+| Polish failure fallback | Uses raw text when offline or out of quota | ☐ |
+| Clipboard injection | With Accessibility permission | ☐ |
+| Unicode injection | Without Accessibility permission | ☐ |
+| Hotkey | Default ⌥Space + custom | ☐ |
+| Menu bar | Icon/menu/status display | ☐ |
+| Recording bar | Display/waveform/doesn't steal focus | ☐ |
+| History | Save/view | ☐ |
+| Microphone switching | Multi-microphone selection | ☐ |
+| Long recording | >60 seconds recording | ☐ |
+| First launch | Guidance when no API Key | ☐ |
+| Error handling | No network/no permission/timeout | ☐ |
 
 ---
 
-## 阶段四：构建
+## Phase 3: Security Cleanup
 
-### Release 构建
+See `CHECKLIST_SECURITY.md`. Must be executed before each release.
+
+Core requirements:
+- No API Key leaks in code or Git history
+- NSLog debug messages disabled in release builds
+- Keychain storage is secure
+- No hardcoded credentials
+
+---
+
+## Phase 4: Build
+
+### Release Build
 ```bash
-ops/scripts/release.sh <版本号>
-# 例: ops/scripts/release.sh v0.2
+ops/scripts/release.sh <version>
+# e.g.: ops/scripts/release.sh v0.2
 ```
 
-脚本自动执行：
-1. `swift build -c release` 编译优化版
-2. 拷贝二进制到 Voxa.app
-3. 代码签名（有 Developer ID 时签名+公证，否则 ad-hoc）
-4. 打包 DMG
-5. 生成 Changelog
+The script automatically performs:
+1. `swift build -c release` optimized compilation
+2. Copy binary to Vowrite.app
+3. Code signing (signs + notarizes with Developer ID if available, otherwise ad-hoc)
+4. Package DMG
+5. Generate Changelog
 6. Git commit + tag
 
 ---
 
-## 阶段五：发布
+## Phase 5: Release
 
-### 当前阶段：GitHub Release
-1. `ops/scripts/release.sh` 完成打包
-2. 在 GitHub 创建 Release，附上 DMG
-3. 更新 RELEASE_NOTES.md
+### Current Phase: GitHub Release
+1. `ops/scripts/release.sh` completes packaging
+2. Create Release on GitHub with DMG attached
+3. Update RELEASE_NOTES.md
 
-### 未来阶段：签名 + 公证
-1. 注册 Apple Developer ($99/年)
-2. 用 Developer ID 签名
-3. `xcrun notarytool submit` 提交公证
-4. `xcrun stapler staple` 订书钉公证票据
-5. 打包 DMG 发布
+### Future Phase: Signing + Notarization
+1. Register as Apple Developer ($99/year)
+2. Sign with Developer ID
+3. `xcrun notarytool submit` for notarization
+4. `xcrun stapler staple` to staple the notarization ticket
+5. Package DMG for distribution
 
-### 发布渠道
-- [ ] GitHub Releases（主要）
-- [ ] 官网下载页
-- [ ] Homebrew Cask（未来）
-
----
-
-## 阶段六：发布后
-
-### 通知
-- 更新官网下载链接和版本号
-- 更新 README.md 中的版本信息
-- （未来）通过 Sparkle 推送自动更新
-
-### 监控
-- 检查 GitHub Issues
-- 收集用户反馈
-- 监控崩溃报告（未来接入 Sentry 等）
+### Distribution Channels
+- [ ] GitHub Releases (primary)
+- [ ] Website download page
+- [ ] Homebrew Cask (future)
 
 ---
 
-## 快速参考
+## Phase 6: Post-Release
 
-| 我要做什么 | 执行什么 |
-|-----------|---------|
-| 日常开发构建 | `cd VoxaApp && ./build.sh` |
-| 运行测试 | `ops/scripts/test.sh` |
-| 发布新版本 | `ops/scripts/release.sh v0.x` |
-| 清理构建产物 | `ops/scripts/clean.sh` |
-| 检查安全 | 过一遍 `ops/CHECKLIST_SECURITY.md` |
-| 发版前检查 | 过一遍 `ops/CHECKLIST_RELEASE.md` |
+### Notifications
+- Update website download link and version number
+- Update version information in README.md
+- (Future) Push automatic updates via Sparkle
+
+### Monitoring
+- Check GitHub Issues
+- Collect user feedback
+- Monitor crash reports (integrate Sentry etc. in the future)
+
+---
+
+## Quick Reference
+
+| What I Want To Do | What To Run |
+|-------------------|-------------|
+| Daily development build | `cd VowriteApp && ./build.sh` |
+| Run tests | `ops/scripts/test.sh` |
+| Release a new version | `ops/scripts/release.sh v0.x` |
+| Clean build artifacts | `ops/scripts/clean.sh` |
+| Check security | Review `ops/CHECKLIST_SECURITY.md` |
+| Pre-release check | Review `ops/CHECKLIST_RELEASE.md` |

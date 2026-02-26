@@ -1,65 +1,65 @@
-# 官网规划
+# Website Planning
 
 ---
 
-## 阶段一：MVP（GitHub Pages，零成本）
+## Phase 1: MVP (GitHub Pages, Zero Cost)
 
-### 技术方案
-- 纯静态 HTML + CSS（单页）
-- 托管在 GitHub Pages
-- 自定义域名（可选，~$10/年）
+### Technical Approach
+- Pure static HTML + CSS (single page)
+- Hosted on GitHub Pages
+- Custom domain (optional, ~$10/year)
 
-### 页面结构
+### Page Structure
 ```
 index.html
-├── Hero: 一句话介绍 + 下载按钮 + 演示 GIF
-├── Features: 3-4 个核心卖点（图标 + 文字）
-├── How it works: 3 步流程图
-├── Screenshot: 录音条 + 设置界面截图
-├── Download: 版本号 + DMG 下载链接
-├── FAQ: 常见问题
-└── Footer: GitHub 链接 + 版本信息
+├── Hero: One-liner intro + download button + demo GIF
+├── Features: 3-4 core selling points (icon + text)
+├── How it works: 3-step flow diagram
+├── Screenshot: Recording bar + settings UI screenshots
+├── Download: Version number + DMG download link
+├── FAQ: Frequently asked questions
+└── Footer: GitHub link + version info
 ```
 
-### 部署方式
+### Deployment
 ```bash
-# 在 docs/ 目录放静态文件
+# Place static files in docs/ directory
 # GitHub Settings → Pages → Source: /docs
 ```
 
-### 域名方案
-- 免费: `username.github.io/voxa`
-- 自定义: `voxa.app` 或 `getvoxa.com`（需购买域名）
+### Domain Options
+- Free: `username.github.io/vowrite`
+- Custom: `vowrite.com` (already purchased)
 
 ---
 
-## 阶段二：增强（有用户后）
+## Phase 2: Enhancement (After Gaining Users)
 
-- 接入 Plausible / Umami 轻量分析（隐私友好）
-- 添加 Changelog 页面（自动从 RELEASE_NOTES.md 生成）
-- 添加文档页面（安装指南、Provider 配置）
-- 多语言支持（中/英）
-
----
-
-## 阶段三：正式（v1.0 后）
-
-- 迁移到 Astro / Next.js（如需要更复杂的页面）
-- Sparkle appcast.xml 托管（自动更新）
-- 下载统计
-- 用户反馈表单
+- Integrate Plausible / Umami lightweight analytics (privacy-friendly)
+- Add Changelog page (auto-generated from RELEASE_NOTES.md)
+- Add documentation pages (installation guide, provider configuration)
+- Multi-language support (Chinese/English)
 
 ---
 
-## 设计参考
+## Phase 3: Production (After v1.0)
 
-同类产品官网风格参考：
-- Typeless (typeless.ch) — 简洁、单页、深色
-- Whisper Transcription (goodsnooze.gumroad.com) — 极简
-- Superwhisper (superwhisper.com) — 精致、动画
+- Migrate to Astro / Next.js (if more complex pages are needed)
+- Sparkle appcast.xml hosting (auto-update)
+- Download statistics
+- User feedback form
 
-### 设计原则
-- 深色主题（与 app 风格一致）
-- 移动端友好
-- 加载速度快（纯静态，无 JS 框架依赖）
-- 下载按钮醒目
+---
+
+## Design References
+
+Similar product website style references:
+- Typeless (typeless.ch) — Clean, single-page, dark theme
+- Whisper Transcription (goodsnooze.gumroad.com) — Minimalist
+- Superwhisper (superwhisper.com) — Polished, animated
+
+### Design Principles
+- Dark theme (consistent with app style)
+- Mobile-friendly
+- Fast loading (pure static, no JS framework dependencies)
+- Prominent download button

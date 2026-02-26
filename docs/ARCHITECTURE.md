@@ -1,4 +1,4 @@
-# Voxa Architecture
+# Vowrite Architecture
 
 ## System Flow
 

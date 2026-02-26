@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="VoxaApp/Resources/AppIcon-source.png" alt="Voxa" width="128">
+  <img src="VowriteApp/Resources/AppIcon-source.png" alt="Vowrite" width="128">
 </p>
 
-# Voxa 🎙️
+# Vowrite 🎙️
 
 > **AI Voice Keyboard for macOS** — Speak naturally, get polished text inserted at your cursor.
 
 [🇨🇳 中文文档](README_CN.md)
 
-Voxa is a lightweight macOS menu bar app that turns your voice into clean, polished text — inserted right where your cursor is. Powered by OpenAI Whisper for transcription and GPT for text polishing.
+Vowrite is a lightweight macOS menu bar app that turns your voice into clean, polished text — inserted right where your cursor is. Powered by OpenAI Whisper for transcription and GPT for text polishing.
 
 No more typing. Just speak.
 
@@ -31,28 +31,28 @@ No more typing. Just speak.
 
 ### Download
 
-Download the latest release from [GitHub Releases](https://github.com/Joevonlong/Voxa/releases).
+Download the latest release from [GitHub Releases](https://github.com/Joevonlong/Vowrite/releases).
 
 ### Build from Source
 
 ```bash
-cd VoxaApp
+cd VowriteApp
 ./build.sh
 ```
 
 Or manually:
 
 ```bash
-cd VoxaApp
+cd VowriteApp
 swift build -c release
-cp .build/arm64-apple-macosx/release/Voxa Voxa.app/Contents/MacOS/Voxa
-codesign -fs - --deep --entitlements Resources/Voxa.entitlements Voxa.app
-open Voxa.app
+cp .build/arm64-apple-macosx/release/Vowrite Vowrite.app/Contents/MacOS/Vowrite
+codesign -fs - --deep --entitlements Resources/Vowrite.entitlements Vowrite.app
+open Vowrite.app
 ```
 
 ### Setup
 
-1. Launch Voxa — it appears in the menu bar as a 🎤 icon
+1. Launch Vowrite — it appears in the menu bar as a 🎤 icon
 2. Open **Settings** → enter your API key ([Get one from OpenAI](https://platform.openai.com/api-keys))
 3. Grant **Microphone** and **Accessibility** permissions when prompted
 4. Press `⌥ Space` to start recording, press again to stop
@@ -76,7 +76,7 @@ open Voxa.app
 | **Clipboard Paste** (default) | ⚡ Instant | Accessibility permission |
 | **Unicode Typing** (fallback) | Fast | Nothing — works everywhere |
 
-Voxa automatically detects permissions and picks the best method.
+Vowrite automatically detects permissions and picks the best method.
 
 ## 🔌 Supported Providers
 
@@ -92,7 +92,7 @@ Voxa automatically detects permissions and picks the best method.
 ## 📁 Project Structure
 
 ```
-VoxaApp/
+VowriteApp/
 ├── App/                        # App lifecycle & state
 ├── Core/
 │   ├── Audio/                  # Microphone recording
