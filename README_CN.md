@@ -114,7 +114,7 @@ cd Vowrite/VowriteApp
 
 ## 📄 许可证
 
-[AGPL-3.0](LICENSE)
+[MIT](LICENSE)
 
 ---
 
