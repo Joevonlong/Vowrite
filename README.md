@@ -131,7 +131,7 @@ Contributions welcome! Please [open an issue](https://github.com/Joevonlong/Vowr
 
 ## 📄 License
 
-[AGPL-3.0](LICENSE)
+[MIT](LICENSE)
 
 ---
 

@@ -114,7 +114,7 @@ Beiträge sind willkommen! Bitte [erstelle zuerst ein Issue](https://github.com/
 
 ## 📄 Lizenz
 
-[AGPL-3.0](LICENSE)
+[MIT](LICENSE)
 
 ---
 
