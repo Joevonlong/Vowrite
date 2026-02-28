@@ -7,6 +7,22 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Fixed
+- Text injection engine rewritten using Maccy-proven paste approach (combinedSessionState + cgSessionEventTap)
+- Fixed text insertion in Electron apps (Discord, VS Code, Slack)
+- Fixed version number inconsistency across all UI locations
+
+### Added
+- ESC key to cancel recording instantly
+- History view redesign: single-column scrollable layout with time display and date grouping
+- Waveform animation: 13 bars, bell-curve distribution, 60fps smooth rendering
+- DEV_GUIDE.md with build/deploy/troubleshooting documentation
+- All version displays now read from Bundle.main (single source of truth)
+
+### Changed
+- Recording overlay: more compact design with proportional buttons
+- Audio level detection: binary voice-activity mode for clearer visual feedback
+
 ## [0.1.5.0] — 2026-02-28
 
 ### Added
