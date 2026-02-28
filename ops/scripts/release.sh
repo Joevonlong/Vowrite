@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Vowrite Release Script
-# Usage: ./ops/scripts/release.sh v0.2
+# Usage: ./ops/scripts/release.sh v0.1.5.0
 #
 set -e
 
@@ -14,8 +14,15 @@ INFO_PLIST="$APP_DIR/Resources/Info.plist"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
 
 # --- Args ---
-VERSION="${1:?Usage: release.sh <version> (e.g. v0.2)}"
+VERSION="${1:?Usage: release.sh <version> (e.g. v0.1.5.0)}"
 VERSION_NUM="${VERSION#v}" # Strip 'v' prefix for plist
+
+# Validate 4-segment version format (X.Y.Z.W)
+if ! echo "$VERSION_NUM" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "❌ Invalid version format: $VERSION_NUM"
+    echo "   Expected format: vX.Y.Z.W (e.g. v0.1.5.0)"
+    exit 1
+fi
 
 echo "═══════════════════════════════════════"
 echo "  Vowrite Release: $VERSION"
@@ -91,7 +98,7 @@ mkdir -p "$DMG_OUTPUT_DIR"
 DMG_PATH="$DMG_OUTPUT_DIR/Vowrite-${VERSION}.dmg"
 
 # Create a temporary directory for DMG contents
-DMG_STAGING="/tmp/voxa-dmg-$$"
+DMG_STAGING="/tmp/vowrite-dmg-$$"
 rm -rf "$DMG_STAGING"
 mkdir -p "$DMG_STAGING"
 cp -R "$APP_BUNDLE" "$DMG_STAGING/"

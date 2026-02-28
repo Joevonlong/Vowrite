@@ -2,7 +2,7 @@
 
 ---
 
-## v0.1 ✅ — First Usable Version (Current)
+## v0.1.0.0 ✅ — Initial Release
 - [x] Voice-to-text (Whisper STT)
 - [x] AI text polishing (GPT)
 - [x] Menu bar app + floating recording bar
@@ -12,40 +12,52 @@
 - [x] Dictation history
 - [x] Microphone selection
 
-## v0.2 — Automation & Packaging
-- [ ] Release build automation script
-- [ ] DMG packaging
-- [ ] GitHub Release publishing
-- [ ] Website MVP (GitHub Pages)
-- [ ] Disable debug logs in release builds
-- [ ] Improved error messages (user-friendly prompts)
+## v0.1.1.0 ✅ — Release Ready
+- [x] Release build automation script
+- [x] DMG packaging
+- [x] Disable debug logs in release builds
+- [x] User-friendly error messages
 
-## v0.3 — Experience Optimization
+## v0.1.2.0 ✅ — App Icon
+- [x] Official app icon (waveform ring + text cursor)
+- [x] Icon generation automation script
+- [x] Build pipeline integration
+
+## v0.1.3.0 ✅ — Text Injection Rewrite + Waveform Animation
+- [x] Text injection engine rewrite (Maccy-inspired approach)
+- [x] ESC to cancel recording
+- [x] Waveform animation redesign
+- [x] Developer guide
+
+## v0.1.4.0 ✅ — Rebrand: Voxa → Vowrite
+- [x] Full project rename
+- [x] New Bundle Identifier
+- [x] New GitHub repository
+
+## v0.1.5.0 ✅ — Version Line Restructure (Current)
+- [x] All development consolidated under v0.1.x.x
+- [x] 4-segment versioning adopted
+- [x] All docs translated to English
+- [x] Release script fixed and validated
+
+## v0.2.0.0 — Major Feature (TBD)
+- [ ] Real-time streaming transcription
+- [ ] Local Whisper model (offline capable)
 - [ ] Custom polish prompts (user-editable)
 - [ ] Multiple output modes (raw transcription / polished / translated)
-- [ ] Recording duration display
-- [ ] Adaptive audio quality
-- [ ] Input method compatibility improvements (Sogou, etc.)
 
-## v0.4 — Advanced Features
-- [ ] Real-time streaming transcription (text appears as you speak)
-- [ ] Local Whisper model (offline capable)
-- [ ] Quick phrases / templates
-- [ ] Multilingual UI
-
-## v1.0 — Official Release
+## v1.0.0.0 — Official Release
 - [ ] Apple Developer ID signing
 - [ ] Notarization
 - [ ] Sparkle auto-update
 - [ ] Official website
 - [ ] Complete documentation
-- [ ] Product Hunt / V2EX launch
 
 ## Future
 - [ ] iOS version
 - [ ] Homebrew Cask distribution
-- [ ] Plugin system (custom post-processing pipeline)
-- [ ] Team/Enterprise edition (self-hosted API)
+- [ ] Plugin system
+- [ ] Team/Enterprise edition
 
 ---
 

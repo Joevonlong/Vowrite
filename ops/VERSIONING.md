@@ -23,8 +23,8 @@ Uses a **four-segment version number**: `vMAJOR.MINOR.PATCH.BUILD`
 ### Current Version Line
 
 ```
-v0.x.x.x — Early development stage, rapid feature iteration
-v1.0.0.0 — First official release (signed + notarized + website)
+Current: v0.1.5.0 — Early development stage, rapid feature iteration
+Target:  v1.0.0.0 — First official release (signed + notarized + website)
 ```
 
 ### Pre-release Tags (Optional)

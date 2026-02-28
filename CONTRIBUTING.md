@@ -60,5 +60,5 @@ Then create a GitHub Release with changelog.
 
 - **Never push directly to main** — always go through develop
 - **Squash merge** everything — keep history clean
-- **Tag every release** on main with semver (`v0.5`, `v0.6`, etc.)
+- **Tag every release** on main with 4-segment version (`v0.1.5.0`, `v0.1.6.0`, etc.)
 - **Delete feature branches** after merge
