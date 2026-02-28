@@ -6,7 +6,7 @@ const i18n = {
     // Nav
     'nav.features': '功能',
     'nav.how': '工作原理',
-    'nav.why': '为什么',
+    'nav.why': '为什么选 Vowrite',
     'nav.download': '下载',
 
     // Hero
@@ -129,7 +129,7 @@ const i18n = {
     // Nav
     'nav.features': 'Funktionen',
     'nav.how': 'So funktioniert\'s',
-    'nav.why': 'Warum',
+    'nav.why': 'Warum Vowrite',
     'nav.download': 'Download',
 
     // Hero
