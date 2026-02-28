@@ -31,16 +31,21 @@
       <div class="container nav-inner">
         <a href="/" class="logo"><img src="app-icon-64.png" alt="Vowrite app icon" class="logo-icon"> Vowrite</a>
         <div class="nav-links">
+          <a href="/why" class="active nav-why" data-i18n="nav.why">Why Vowrite</a>
           <a href="/#features" data-i18n="nav.features">Features</a>
           <a href="/#how-it-works" data-i18n="nav.how">How It Works</a>
-          <a href="/why" class="active" data-i18n="nav.why">Why</a>
           <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-small" data-i18n="nav.download">Download</a>
-          <div class="lang-switcher">
-            <button onclick="setLang('en')" class="active" data-lang="en">EN</button>
-            <span class="lang-sep">|</span>
-            <button onclick="setLang('zh')" data-lang="zh">中文</button>
-            <span class="lang-sep">|</span>
-            <button onclick="setLang('de')" data-lang="de">DE</button>
+          <div class="lang-dropdown">
+            <button class="lang-toggle" aria-haspopup="listbox" aria-expanded="false">
+              <span class="lang-icon">🌐</span>
+              <span class="lang-current">EN</span>
+              <span class="lang-arrow">▾</span>
+            </button>
+            <ul class="lang-menu" role="listbox">
+              <li role="option" data-lang="en" class="active">English</li>
+              <li role="option" data-lang="zh">中文</li>
+              <li role="option" data-lang="de">Deutsch</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -128,98 +133,7 @@
     <p>© 2026 Vowrite. Open source under <a href="https://github.com/Joevonlong/Vowrite/blob/main/LICENSE">AGPL-3.0</a>.</p>
   </footer>
 
-  <script>
-    // Scroll fade-in observer
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          observer.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
-    // i18n translations
-    const i18n = {
-      zh: {
-        'nav.features': '功能',
-        'nav.how': '工作原理',
-        'nav.why': '为什么',
-        'nav.download': '下载',
-        'why.hero': '为什么选择 Vowrite',
-        'why.q.h': '你为什么不用最快的方式输入？',
-        'why.q.b': '每天你有无数想法要传达：邮件、消息、笔记、文档。但你选择了最慢的方式——一个字一个字地敲。',
-        'why.t.h': '你真正需要的，只是把想法送出去。',
-        'why.t.b1': '输入方式应该跟得上你的大脑，而不是拖慢它。当你脑子里已经有了完整的一段话，为什么还要花一分钟把它敲出来？',
-        'why.t.b2': '你的嘴比你的手指快得多。一个想法从产生到说出口，几乎没有延迟。说话是人类最自然、最高效的输出方式——但过去的语音输入太粗糙：识别不准、满屏废话、格式混乱。',
-        'why.s.h': '不是语音不好用，是工具不够好。',
-        'why.s.h2': '现在，工具跟上了。',
-        'why.s.demo': '你说「嗯那个就是明天下午三点开个会讨论一下」，屏幕上出现的是：',
-        'why.s.result': '明天下午三点开会。',
-        'why.s.note': '不是记录你说了什么，而是还原你想说什么。干净、准确、一步到位。',
-        'why.v.t': '我们的愿景',
-        'why.v.b': '我们相信输入应该是无感的。你不应该思考"如何"输入——你只需思考、说话，你的想法就会完全按你的意思到达。Vowrite 是你的大脑和屏幕之间的桥梁。',
-        'why.a.t': '我们的野心',
-        'why.a.b': '今天，Vowrite 是一个智能语音键盘。明天，它将成为你的输入层——根据任何语境调整你的文字，连接任何工作流，在各种意义上说你的语言。语音只是开始。',
-        'why.g.t': '我们的目标',
-        'why.g.b': '让每个人的输入都毫不费力。无需学习。无需配置头疼。只需说话，你的想法就会到达——干净、精确、独属于你。',
-        'why.c.h': '最好的输入方式，就是最自然的那种。',
-        'why.c.dl': '下载 Mac 版',
-      },
-      de: {
-        'nav.features': 'Funktionen',
-        'nav.how': 'So funktioniert\'s',
-        'nav.why': 'Warum',
-        'nav.download': 'Download',
-        'why.hero': 'Warum Vowrite',
-        'why.q.h': 'Warum nicht die schnellste Art der Eingabe nutzen?',
-        'why.q.b': 'Jeden Tag hast du unzählige Ideen zu vermitteln: E-Mails, Nachrichten, Notizen, Dokumente. Aber du wählst den langsamsten Weg — Zeichen für Zeichen tippen.',
-        'why.t.h': 'Alles was du wirklich brauchst, ist deine Ideen rauszubekommen.',
-        'why.t.b1': 'Deine Eingabemethode sollte mit deinem Gehirn mithalten, nicht es bremsen. Wenn du bereits einen vollständigen Gedanken hast, warum eine Minute damit verbringen, ihn einzutippen?',
-        'why.t.b2': 'Dein Mund ist viel schneller als deine Finger. Vom Gedanken zum Sprechen gibt es fast keine Verzögerung. Sprechen ist die natürlichste, effizienteste Form menschlicher Ausgabe — aber bisherige Spracheingabe war zu roh: ungenaue Erkennung, überall Füllwörter, chaotische Formatierung.',
-        'why.s.h': 'Nicht die Spracheingabe war schlecht — die Werkzeuge waren nicht gut genug.',
-        'why.s.h2': 'Jetzt haben die Werkzeuge aufgeholt.',
-        'why.s.demo': 'Du sagst \'ähm also lass uns morgen um 15 Uhr ein Meeting machen um zu besprechen\' und auf dem Bildschirm erscheint:',
-        'why.s.result': 'Meeting morgen um 15 Uhr.',
-        'why.s.note': 'Es zeichnet nicht auf, was du gesagt hast — es erfasst, was du gemeint hast. Sauber, präzise, in einem Schritt erledigt.',
-        'why.v.t': 'Unsere Vision',
-        'why.v.b': 'Wir glauben, Eingabe sollte unsichtbar sein. Du solltest nicht darüber nachdenken, wie du eingibst — du solltest einfach denken, sprechen, und deine Ideen kommen genau so an, wie du sie meinst. Vowrite ist die Brücke zwischen deinem Kopf und dem Bildschirm.',
-        'why.a.t': 'Unser Anspruch',
-        'why.a.b': 'Heute ist Vowrite eine intelligente Sprachtastatur. Morgen ist es deine Eingabeschicht — passt deine Worte an jeden Kontext an, verbindet sich mit jedem Workflow, spricht deine Sprache in jeder Hinsicht. Sprache ist nur der Anfang.',
-        'why.g.t': 'Unser Ziel',
-        'why.g.b': 'Eingabe für jeden mühelos machen. Keine Lernkurve. Keine Konfigurationsprobleme. Einfach sprechen, und deine Ideen kommen an — sauber, präzise und unverkennbar deine.',
-        'why.c.h': 'Die beste Eingabe ist die natürlichste.',
-        'why.c.dl': 'Für Mac laden',
-      }
-    };
-
-    // Store default English text
-    const enDefaults = {};
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      enDefaults[el.getAttribute('data-i18n')] = el.textContent;
-    });
-
-    function setLang(lang) {
-      localStorage.setItem('vowrite-lang', lang);
-      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'de' ? 'de' : 'en';
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (lang === 'en') {
-          el.textContent = enDefaults[key] || el.textContent;
-        } else if (i18n[lang] && i18n[lang][key]) {
-          el.textContent = i18n[lang][key];
-        }
-      });
-      document.querySelectorAll('.lang-switcher button').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
-      });
-    }
-
-    // Load saved preference
-    const savedLang = localStorage.getItem('vowrite-lang');
-    if (savedLang && savedLang !== 'en') { setLang(savedLang); }
-  </script>
+  <script src="i18n.js"></script>
 
 </body>
 </html>
