@@ -21,6 +21,7 @@ ENTITLEMENTS="$APP_DIR/Resources/Vowrite.entitlements"
 INFO_PLIST="$APP_DIR/Resources/Info.plist"
 SETTINGS_VIEW="$APP_DIR/Views/SettingsView.swift"
 CHANGELOG="$PROJECT_ROOT/CHANGELOG.md"
+VERSION_SWIFT="$APP_DIR/Core/Version.swift"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
 
 # --- Args ---
@@ -108,15 +109,15 @@ fi
 echo ""
 echo "▶ Step 2: Updating version to $VERSION_NUM..."
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_NUM" "$INFO_PLIST"
-/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString " "$APP_BUNDLE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_NUM" "$APP_BUNDLE/Contents/Info.plist"
 echo "  ✓ App bundle Info.plist updated"
 echo "  ✓ Info.plist updated"
 
 # --- Step 3: Update version in SettingsView.swift ---
 echo ""
-echo "▶ Step 3: Updating SettingsView.swift..."
-sed -i '' "s/Text(\"v[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*\")/Text(\"v$VERSION_NUM\")/" "$SETTINGS_VIEW"
-echo "  ✓ SettingsView updated"
+echo "▶ Step 3: Updating Version.swift..."
+sed -i '' "s/static let current = \"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*\"/static let current = \"$VERSION_NUM\"/" "$VERSION_SWIFT"
+echo "  ✓ Version.swift updated"
 
 # --- Step 4: Build Release ---
 echo ""
