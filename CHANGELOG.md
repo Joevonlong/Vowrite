@@ -7,6 +7,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.6.0] — 2026-02-28
+
 ### Fixed
 - Text injection engine rewritten using Maccy-proven paste approach (combinedSessionState + cgSessionEventTap)
 - Fixed text insertion in Electron apps (Discord, VS Code, Slack)
@@ -101,7 +103,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.5.0...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.6.0...HEAD
+[0.1.6.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.5.0...v0.1.6.0
 [0.1.5.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.4.0...v0.1.5.0
 [0.1.4.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.3.0...v0.1.4.0
 [0.1.3.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.2.0...v0.1.3.0
