@@ -59,12 +59,17 @@
           <a href="#features" data-i18n="nav.features">Features</a>
           <a href="#how-it-works" data-i18n="nav.how">How It Works</a>
           <a href="#download" class="btn btn-small" data-i18n="nav.download">Download</a>
-          <div class="lang-switcher">
-            <button onclick="setLang('en')" class="active" data-lang="en">EN</button>
-            <span class="lang-sep">|</span>
-            <button onclick="setLang('zh')" data-lang="zh">中文</button>
-            <span class="lang-sep">|</span>
-            <button onclick="setLang('de')" data-lang="de">DE</button>
+          <div class="lang-dropdown">
+            <button class="lang-toggle" aria-haspopup="listbox" aria-expanded="false">
+              <span class="lang-icon">🌐</span>
+              <span class="lang-current">EN</span>
+              <span class="lang-arrow">▾</span>
+            </button>
+            <ul class="lang-menu" role="listbox">
+              <li role="option" data-lang="en" class="active">English</li>
+              <li role="option" data-lang="zh">中文</li>
+              <li role="option" data-lang="de">Deutsch</li>
+            </ul>
           </div>
         </div>
       </div>
