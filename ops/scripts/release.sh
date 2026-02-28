@@ -1,7 +1,15 @@
 #!/bin/bash
 #
 # Vowrite Release Script
-# Usage: ./ops/scripts/release.sh v0.1.5.0
+# Usage: ./ops/scripts/release.sh v0.1.6.0 "Short release description"
+#
+# Automates:
+#   1. Version validation (4-segment format)
+#   2. CHANGELOG.md: [Unreleased] → [X.Y.Z.W] — date
+#   3. Info.plist + SettingsView version bump
+#   4. Release build + code signing + DMG packaging
+#   5. Git commit (v0.1.6.0: description) + annotated tag
+#   6. Summary with next steps
 #
 set -e
 
@@ -11,21 +19,25 @@ APP_DIR="$PROJECT_ROOT/VowriteApp"
 APP_BUNDLE="$APP_DIR/Vowrite.app"
 ENTITLEMENTS="$APP_DIR/Resources/Vowrite.entitlements"
 INFO_PLIST="$APP_DIR/Resources/Info.plist"
+SETTINGS_VIEW="$APP_DIR/Views/SettingsView.swift"
+CHANGELOG="$PROJECT_ROOT/CHANGELOG.md"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
 
 # --- Args ---
-VERSION="${1:?Usage: release.sh <version> (e.g. v0.1.5.0)}"
-VERSION_NUM="${VERSION#v}" # Strip 'v' prefix for plist
+VERSION="${1:?Usage: release.sh <version> <description> (e.g. v0.1.6.0 \"Bug fixes and improvements\")}"
+DESCRIPTION="${2:-Release $VERSION}"
+VERSION_NUM="${VERSION#v}" # Strip 'v' prefix
 
-# Validate 4-segment version format (X.Y.Z.W)
+# --- Validate version format (X.Y.Z.W) ---
 if ! echo "$VERSION_NUM" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
-    echo "❌ Invalid version format: $VERSION_NUM"
-    echo "   Expected format: vX.Y.Z.W (e.g. v0.1.5.0)"
+    echo "❌ Invalid version format: $VERSION"
+    echo "   Must be 4-segment: vX.Y.Z.W (e.g. v0.1.6.0)"
     exit 1
 fi
 
 echo "═══════════════════════════════════════"
 echo "  Vowrite Release: $VERSION"
+echo "  $DESCRIPTION"
 echo "═══════════════════════════════════════"
 
 # --- Pre-checks ---
@@ -46,40 +58,83 @@ read -p "   " -n 1 -r
 echo
 [[ $REPLY =~ ^[Yy]$ ]] || { echo "Please complete the checklist first."; exit 1; }
 
-# --- Step 1: Update version in Info.plist ---
+# --- Step 1: Update CHANGELOG.md ---
 echo ""
-echo "▶ Step 1: Updating version to $VERSION_NUM..."
+echo "▶ Step 1: Updating CHANGELOG.md..."
+
+TODAY=$(date +%Y-%m-%d)
+
+if grep -q '## \[Unreleased\]' "$CHANGELOG"; then
+    # Check if [Unreleased] has content
+    UNRELEASED_CONTENT=$(sed -n '/## \[Unreleased\]/,/## \[/p' "$CHANGELOG" | sed '1d;$d' | grep -v '^$' || true)
+    if [ -z "$UNRELEASED_CONTENT" ]; then
+        echo "  ⚠️  [Unreleased] section is empty."
+        read -p "   Continue with empty changelog entry? (y/N) " -n 1 -r
+        echo
+        [[ $REPLY =~ ^[Yy]$ ]] || exit 1
+    fi
+
+    # Replace [Unreleased] with version, add new [Unreleased]
+    sed -i '' "s/## \[Unreleased\]/## [Unreleased]\n\n## [$VERSION_NUM] — $TODAY/" "$CHANGELOG"
+
+    # Update comparison links at bottom
+    # Add new unreleased link and version link
+    PREV_VERSION=$(grep -oE '\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\]' "$CHANGELOG" | head -2 | tail -1 | tr -d '[]')
+    if [ -n "$PREV_VERSION" ]; then
+        # Update [Unreleased] link
+        sed -i '' "s|^\[Unreleased\]:.*|[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/$VERSION...HEAD|" "$CHANGELOG"
+        # Add version comparison link if not exists
+        if ! grep -q "^\[$VERSION_NUM\]:" "$CHANGELOG"; then
+            sed -i '' "/^\[Unreleased\]:/a\\
+[$VERSION_NUM]: https://github.com/Joevonlong/Vowrite/compare/v$PREV_VERSION...$VERSION" "$CHANGELOG"
+        fi
+    fi
+
+    echo "  ✓ CHANGELOG.md updated: [Unreleased] → [$VERSION_NUM] — $TODAY"
+else
+    echo "  ⚠️  No [Unreleased] section found in CHANGELOG.md"
+    echo "  Please add changelog entries manually."
+fi
+
+# --- Step 2: Update version in Info.plist ---
+echo ""
+echo "▶ Step 2: Updating version to $VERSION_NUM..."
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_NUM" "$INFO_PLIST"
 echo "  ✓ Info.plist updated"
 
-# --- Step 2: Build Release ---
+# --- Step 3: Update version in SettingsView.swift ---
 echo ""
-echo "▶ Step 2: Building release..."
+echo "▶ Step 3: Updating SettingsView.swift..."
+sed -i '' "s/Text(\"v[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*\")/Text(\"v$VERSION_NUM\")/" "$SETTINGS_VIEW"
+echo "  ✓ SettingsView updated"
+
+# --- Step 4: Build Release ---
+echo ""
+echo "▶ Step 4: Building release..."
 cd "$APP_DIR"
 swift build -c release 2>&1
 echo "  ✓ Release build complete"
 
-# --- Step 3: Copy binary ---
+# --- Step 5: Copy binary ---
 echo ""
-echo "▶ Step 3: Copying binary to app bundle..."
+echo "▶ Step 5: Copying binary to app bundle..."
 cp .build/arm64-apple-macosx/release/Vowrite "$APP_BUNDLE/Contents/MacOS/Vowrite"
 echo "  ✓ Binary copied"
 
-# --- Step 4: Code sign ---
+# --- Step 6: Code sign ---
 echo ""
-echo "▶ Step 4: Code signing..."
+echo "▶ Step 6: Code signing..."
 
-# Check for Developer ID
 IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID" | head -1 | sed 's/.*"\(.*\)".*/\1/')
 
 if [ -n "$IDENTITY" ]; then
     echo "  Using Developer ID: $IDENTITY"
     codesign -fs "$IDENTITY" --deep --options runtime --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
     echo "  ✓ Signed with Developer ID"
-    
+
     # Notarize
     echo ""
-    echo "▶ Step 4b: Notarizing..."
+    echo "▶ Step 6b: Notarizing..."
     DMG_TEMP="/tmp/Vowrite-notarize.zip"
     ditto -c -k --keepParent "$APP_BUNDLE" "$DMG_TEMP"
     xcrun notarytool submit "$DMG_TEMP" --keychain-profile "AC_PASSWORD" --wait || echo "  ⚠️  Notarization failed (may need credentials)"
@@ -91,50 +146,48 @@ else
     echo "  ✓ Ad-hoc signed"
 fi
 
-# --- Step 5: Create DMG ---
+# --- Step 7: Create DMG ---
 echo ""
-echo "▶ Step 5: Creating DMG..."
+echo "▶ Step 7: Creating DMG..."
 mkdir -p "$DMG_OUTPUT_DIR"
 DMG_PATH="$DMG_OUTPUT_DIR/Vowrite-${VERSION}.dmg"
 
-# Create a temporary directory for DMG contents
 DMG_STAGING="/tmp/vowrite-dmg-$$"
 rm -rf "$DMG_STAGING"
 mkdir -p "$DMG_STAGING"
 cp -R "$APP_BUNDLE" "$DMG_STAGING/"
 ln -s /Applications "$DMG_STAGING/Applications"
 
-# Create DMG
 hdiutil create -volname "Vowrite $VERSION" -srcfolder "$DMG_STAGING" -ov -format UDZO "$DMG_PATH"
 rm -rf "$DMG_STAGING"
 echo "  ✓ DMG created: $DMG_PATH"
 
-# --- Step 6: Git commit + tag ---
+# --- Step 8: Git commit + tag ---
 echo ""
-echo "▶ Step 6: Git commit and tag..."
+echo "▶ Step 8: Git commit and tag..."
 cd "$PROJECT_ROOT"
 git add -A
-git commit -m "release: $VERSION" || echo "  (nothing to commit)"
-git tag -a "$VERSION" -m "$VERSION" 2>/dev/null || {
+git commit -m "$VERSION_NUM: $DESCRIPTION" || echo "  (nothing to commit)"
+git tag -a "$VERSION" -m "$VERSION — $DESCRIPTION" 2>/dev/null || {
     echo "  Tag $VERSION exists. Overwrite? (y/N)"
     read -p "   " -n 1 -r
     echo
-    [[ $REPLY =~ ^[Yy]$ ]] && git tag -fa "$VERSION" -m "$VERSION"
+    [[ $REPLY =~ ^[Yy]$ ]] && git tag -fa "$VERSION" -m "$VERSION — $DESCRIPTION"
 }
 echo "  ✓ Tagged $VERSION"
 
-# --- Step 7: Summary ---
+# --- Step 9: Summary ---
 echo ""
 echo "═══════════════════════════════════════"
 echo "  ✅ Release $VERSION complete!"
 echo "═══════════════════════════════════════"
 echo ""
-echo "  DMG: $DMG_PATH"
+echo "  DMG:  $DMG_PATH"
 echo "  Size: $(du -h "$DMG_PATH" | cut -f1)"
 echo ""
 echo "  Next steps:"
-echo "  1. Test the DMG: open $DMG_PATH"
-echo "  2. Create GitHub Release: gh release create $VERSION $DMG_PATH"
-echo "  3. Update official website download link"
-echo "  4. Push: git push origin main --tags"
+echo "  1. Review:  git log --oneline -3"
+echo "  2. Test:    open $DMG_PATH"
+echo "  3. Push:    git push origin main --tags"
+echo "  4. Release: gh release create $VERSION $DMG_PATH --title \"Vowrite $VERSION — $DESCRIPTION\" --notes-file <(sed -n '/## \\[$VERSION_NUM\\]/,/## \\[/p' CHANGELOG.md | sed '\$d')"
 echo ""

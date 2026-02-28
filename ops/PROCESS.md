@@ -38,10 +38,16 @@ The project targets the international market. **The official language is English
 
 > 📝 Daily communication (Discord, chat) can be in Chinese, but all content committed to the repository must be in English.
 
-### Commit Convention
-```
-<type>: <short description in English>
+### Commit, Versioning & Changelog Standards
 
+All conventions are defined in **[`ops/VERSIONING.md`](VERSIONING.md)**. Key points:
+
+- **Commit format:** `<type>: <short description in English>`
+- **Version releases:** `v0.1.6.0: short summary`
+- **Changelog:** Maintain `[Unreleased]` section in `CHANGELOG.md` during development
+- **Release:** Run `ops/scripts/release.sh` to automate version bump + changelog + tag + build
+
+```
 Types:
 - feat: new feature
 - fix: bug fix

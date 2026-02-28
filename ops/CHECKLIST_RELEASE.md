@@ -23,7 +23,7 @@ Version: __________ Date: __________
 
 - [ ] `CFBundleShortVersionString` updated in `Info.plist`
 - [ ] Version number updated in `AboutTab`
-- [ ] `RELEASE_NOTES.md` updated
+- [ ] `CHANGELOG.md` updated
 - [ ] `README.md` version history updated
 - [ ] Git tag created and matches version number
 

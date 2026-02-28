@@ -1,93 +1,189 @@
-# Version Numbering and Changelog Standards
+# Versioning, Changelog & Commit Standards
+
+This document defines **all** versioning, changelog, and commit conventions for Vowrite.
+All contributors and automation scripts must follow these rules.
 
 ---
 
-## Version Number Format
+## 1. Version Number Format
 
-Uses a **four-segment version number**: `vMAJOR.MINOR.PATCH.BUILD`
+**4-segment:** `MAJOR.MINOR.PATCH.BUILD`
 
-| Segment | Name | When to Increment | Example |
-|---------|------|-------------------|---------|
-| 1st | MAJOR | Incompatible major changes, significant architecture changes | v1.0.0.0 → v2.0.0.0 |
-| 2nd | MINOR | New feature modules, major feature launches | v0.1.0.0 → v0.2.0.0 |
-| 3rd | PATCH | Feature improvements, multiple small updates accumulated for one release | v0.1.1.0 → v0.1.2.0 |
-| 4th | BUILD | Daily small updates: bug fixes, UI tweaks, copy changes, etc. | v0.1.1.1 → v0.1.1.2 |
+| Segment | Name | When to Increment | Git Tag | Changelog Entry |
+|---------|------|-------------------|---------|-----------------|
+| 1st | MAJOR | Incompatible architecture changes | ✅ | ✅ |
+| 2nd | MINOR | New feature module launches | ✅ | ✅ |
+| 3rd | PATCH | Accumulated improvements, meaningful release | ✅ | ✅ |
+| 4th | BUILD | Daily: bug fixes, UI tweaks, copy changes | ❌ | ❌ (add to `[Unreleased]`) |
 
 ### Rules
 
-1. **Daily incremental updates** → Only increment BUILD (4th segment), e.g., `v0.1.1.1` → `v0.1.1.2`
-2. **Accumulated small updates** forming meaningful improvements → Increment PATCH (3rd segment), reset BUILD to zero, e.g., `v0.1.1.5` → `v0.1.2.0`
-3. **New feature module launch** → Increment MINOR (2nd segment), reset last two segments to zero
-4. **Major architecture change** → Increment MAJOR (1st segment), reset last three segments to zero
+1. **BUILD** — Increment only the 4th segment. No tag, no changelog entry. Add notable items to `[Unreleased]` in `CHANGELOG.md`.
+2. **PATCH** — Increment 3rd segment, reset BUILD to 0. Create tag + changelog entry.
+3. **MINOR** — Increment 2nd segment, reset PATCH and BUILD to 0. Create tag + changelog entry.
+4. **MAJOR** — Increment 1st segment, reset all others to 0. Create tag + changelog entry.
 
-### Current Version Line
-
-```
-Current: v0.1.5.0 — Early development stage, rapid feature iteration
-Target:  v1.0.0.0 — First official release (signed + notarized + website)
-```
-
-### Pre-release Tags (Optional)
+### Current Version
 
 ```
-v0.2.0.0-beta    Beta version
-v0.2.0.0-rc1     Release candidate
+v0.1.5.0
+```
+
+### Version Line
+
+```
+v0.x.x.x — Early development, rapid iteration
+v1.0.0.0 — First official public release (signed + notarized + website)
 ```
 
 ---
 
-## RELEASE_NOTES Format
+## 2. Commit Message Convention
 
-- **PATCH and above**: Add a full entry in `RELEASE_NOTES.md`
-- **BUILD updates**: No separate entry; merge into the next PATCH release. Daily commit messages should be clear enough
+All commit messages **must be in English**.
 
-This avoids incremental updates cluttering up the changelog.
+### Format
+
+```
+<type>: <short description>
+```
+
+### Types
+
+| Type | When to Use | Example |
+|------|-------------|---------|
+| `feat` | New feature | `feat: add real-time streaming transcription` |
+| `fix` | Bug fix | `fix: resolve clipboard paste timing on Electron apps` |
+| `docs` | Documentation only | `docs: update README badges` |
+| `refactor` | Code restructure, no behavior change | `refactor: extract audio engine into separate module` |
+| `chore` | Build, tooling, config | `chore: update release script for 4-segment versioning` |
+| `security` | Security fix or improvement | `security: remove hardcoded API key from tests` |
+| `style` | Code style, formatting | `style: fix indentation in SettingsView` |
+| `test` | Tests | `test: add unit tests for WhisperService` |
+
+### Version Release Commits
+
+When releasing a PATCH+ version, the commit message format is:
+
+```
+v0.1.6.0: <short summary of the release>
+```
+
+This makes version releases clearly identifiable in `git log`.
 
 ---
 
-## Tag Standards
+## 3. Changelog Standard
 
-- **PATCH and above**: Create a Git tag, e.g., `v0.1.2.0`
-- **BUILD updates**: No tag, just regular commits
-- Use annotated tags: `git tag -a v0.1.2.0 -m "v0.1.2 — Feature description"`
-- Tags go on the release commit, not on intermediate commits
+### File: `CHANGELOG.md` (repository root)
 
----
+Format follows [Keep a Changelog](https://keepachangelog.com).
 
-## Changelog Standards
+### Categories (use only these 6)
 
-Each PATCH+ version's changes are recorded in `RELEASE_NOTES.md` with this format:
+| Category | When to Use |
+|----------|-------------|
+| `Added` | New features |
+| `Changed` | Changes to existing features |
+| `Fixed` | Bug fixes |
+| `Removed` | Removed features |
+| `Deprecated` | Soon-to-be-removed features |
+| `Security` | Security fixes |
+
+### Workflow
+
+**During development (BUILD level):**
+1. Write clear commit messages following the convention above
+2. For notable changes, add a bullet to the `[Unreleased]` section in `CHANGELOG.md`
+
+**When releasing (PATCH+ level):**
+1. Run `ops/scripts/release.sh v0.1.6.0`
+2. Script automatically:
+   - Renames `[Unreleased]` → `[0.1.6.0] — YYYY-MM-DD`
+   - Creates new empty `[Unreleased]` section
+   - Updates version in `Info.plist` and `SettingsView.swift`
+   - Commits as `v0.1.6.0: <description>`
+   - Creates annotated git tag `v0.1.6.0`
+   - Builds and packages DMG
+3. After script: push with tags, create GitHub Release
+
+### Entry Format
 
 ```markdown
-## vX.Y.Z — Title
+## [0.1.6.0] — 2026-03-15
 
-**Release Date:** YYYY-MM-DD
+### Added
+- Real-time streaming transcription via WebSocket
 
-### New Features
-- feat: description
+### Fixed
+- Clipboard paste failing in Safari 18.2
 
-### Fixes
-- fix: description (including fix summaries from BUILD period)
+### Changed
+- Reduced audio buffer size for lower latency
+```
 
-### Improvements
-- refactor/chore: description
+### Bottom Links
 
-### Known Issues
-- description
+Always maintain comparison links at the bottom of `CHANGELOG.md`:
+
+```markdown
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.6.0...HEAD
+[0.1.6.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.5.0...v0.1.6.0
 ```
 
 ---
 
-## Version Number Update Locations
+## 4. Version Number Update Locations
 
-For each release (PATCH+), version numbers must be updated in sync at the following locations:
+For each PATCH+ release, update version in **all** of these:
 
-1. `VowriteApp/Resources/Info.plist` → `CFBundleShortVersionString`
-2. `VowriteApp/Views/SettingsView.swift` → Version display in `AboutTab`
-3. `RELEASE_NOTES.md` → New version entry
-4. `README.md` → Version history section
-5. `Git tag`
+| Location | Field |
+|----------|-------|
+| `VowriteApp/Resources/Info.plist` | `CFBundleShortVersionString` |
+| `VowriteApp/Views/SettingsView.swift` | Version display in AboutTab |
+| `CHANGELOG.md` | New version entry |
+| Git tag | `v0.1.x.0` |
+| GitHub Release | Created with changelog content |
 
-BUILD updates only need a commit; syncing all the above locations is not required.
+BUILD updates: commit only, no version sync needed.
 
-`ops/scripts/release.sh` handles most of this automatically, but please confirm in the checklist.
+---
+
+## 5. Git Tag Standard
+
+- **PATCH+ releases only** — no tags for BUILD updates
+- **Annotated tags:** `git tag -a v0.1.6.0 -m "v0.1.6.0 — Short description"`
+- **Tag on the release commit** (the `v0.1.6.0:` commit), not on intermediate commits
+- **Push with tags:** `git push origin main --tags`
+
+---
+
+## 6. GitHub Release Standard
+
+- Created for every PATCH+ release
+- **Title:** `Vowrite v0.1.6.0 — Short Description`
+- **Body:** Copy the changelog entry for this version
+- **Assets:** Attach the DMG file
+- Release is created automatically by `release.sh` (or manually via `gh release create`)
+
+---
+
+## 7. Pre-release Tags (Optional)
+
+```
+v0.2.0.0-beta     Beta version
+v0.2.0.0-rc1      Release candidate
+```
+
+---
+
+## Quick Reference
+
+```
+Daily work:     feat: add new feature → commit → push
+                (add notable items to [Unreleased] in CHANGELOG.md)
+
+Release:        ops/scripts/release.sh v0.1.6.0
+                → auto: version bump + changelog + tag + build + DMG
+                → manual: git push --tags + gh release create
+```
