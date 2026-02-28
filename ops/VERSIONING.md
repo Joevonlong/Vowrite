@@ -180,37 +180,35 @@ v0.2.0.0-rc1      Release candidate
 ## 8. Branch Strategy
 
 ```
-main              ← Release-only. Each commit = a squash-merged version release.
-  └─ develop      ← Integration branch. All features merge here first.
-       └─ feature/xxx  ← Individual feature branches.
+main              ← Default branch. Daily development + tagged releases.
+  └─ feature/xxx  ← Feature branches for larger changes.
 ```
 
-| Branch | Purpose | Push directly? | Merges to |
-|--------|---------|---------------|-----------|
-| `main` | Production releases | ❌ Never | — |
-| `develop` | Daily integration | ✅ Small fixes OK | `main` (squash merge via release.sh) |
-| `feature/xxx` | Individual features | ✅ Freely | `develop` (squash merge) |
+| Branch | Purpose | Push directly? |
+|--------|---------|---------------|
+| `main` | Development + releases (tagged) | ✅ Small fixes, docs, chores |
+| `feature/xxx` | Larger features or experiments | ✅ Freely, then squash merge to main |
+
+Releases are identified by **git tags**, not by branches.
 
 ### Feature workflow
 
 ```bash
-git checkout develop && git pull
+git checkout main && git pull
 git checkout -b feature/my-feature
 # ... develop and commit freely ...
-git checkout develop
+git checkout main
 git merge --squash feature/my-feature
 git commit -m "feat: short description"
-git push origin develop
+git push origin main
 git branch -d feature/my-feature
 ```
 
 ### Release workflow
 
 ```bash
-git checkout develop
 ops/scripts/release.sh v0.1.6.0 "Short description"
-# Script auto: commit on develop → squash merge to main → tag → switch back to develop
-git push origin main develop --tags
+git push origin main --tags
 gh release create v0.1.6.0 releases/Vowrite-v0.1.6.0.dmg --title "..."
 ```
 
@@ -219,14 +217,13 @@ gh release create v0.1.6.0 releases/Vowrite-v0.1.6.0.dmg --title "..."
 ## Quick Reference
 
 ```
-Daily work:     git checkout develop
-                feat: add new feature → commit → push to develop
+Daily work:     git checkout main
+                feat: add new feature → commit → push
                 (add notable items to [Unreleased] in CHANGELOG.md)
 
-Big feature:    git checkout -b feature/xxx → develop → squash merge back
+Big feature:    git checkout -b feature/xxx → develop → squash merge to main
 
-Release:        git checkout develop
-                ops/scripts/release.sh v0.1.6.0 "description"
-                → auto: version bump + changelog + build + merge to main + tag
-                → manual: git push origin main develop --tags + gh release create
+Release:        ops/scripts/release.sh v0.1.6.0 "description"
+                → auto: version bump + changelog + build + commit + tag
+                → manual: git push origin main --tags + gh release create
 ```
