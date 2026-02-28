@@ -69,7 +69,7 @@ struct VowriteMenuView: View {
         Divider()
 
         // Version
-        Text("Version 0.5")
+        Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.5")")
             .foregroundColor(.secondary)
 
         Divider()
