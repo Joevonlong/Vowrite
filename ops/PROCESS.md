@@ -19,9 +19,23 @@ Changes  Verify  Review    Build   +Notarize  Gen   Release  Update
 ## Phase 1: Development
 
 ### Branch Strategy
-- `main` — Stable branch, only accepts tested code
-- `dev` — Daily development (optional, small projects can develop directly on main)
-- `feature/xxx` — Feature branches (for larger features)
+
+```
+main              ← Release-only. Each commit = a version release.
+  └─ develop      ← Integration branch. All features merge here first.
+       └─ feature/xxx  ← Individual feature branches.
+```
+
+| Branch | Purpose | Who pushes | Merges to |
+|--------|---------|-----------|-----------|
+| `main` | Release-only, production-ready | Release script only | — |
+| `develop` | Daily integration, latest development | Developers | `main` (squash merge on release) |
+| `feature/xxx` | Individual features or fixes | Developer working on it | `develop` (squash merge) |
+
+**Rules:**
+- **Never push directly to `main`** — always merge from `develop` via `release.sh`
+- **Squash merge** everything — keep history clean
+- **Delete feature branches** after merge to `develop`
 
 ### Language Standards
 

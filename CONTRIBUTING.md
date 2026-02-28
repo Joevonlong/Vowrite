@@ -39,14 +39,13 @@ git branch -d feature/my-feature
 When develop is stable and ready for release:
 
 ```bash
-git checkout main
-git merge --squash develop
-git commit -m "vX.Y: brief release summary"
-git tag vX.Y
-git push origin main --tags
+git checkout develop
+ops/scripts/release.sh v0.1.6.0 "Brief release summary"
+git push origin main develop --tags
+gh release create v0.1.6.0 releases/Vowrite-v0.1.6.0.dmg --title "Vowrite v0.1.6.0 — Summary"
 ```
 
-Then create a GitHub Release with changelog.
+The release script handles: version bump → changelog → build → squash merge to main → tag.
 
 ## Commit Message Format
 

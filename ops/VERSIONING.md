@@ -177,13 +177,56 @@ v0.2.0.0-rc1      Release candidate
 
 ---
 
+## 8. Branch Strategy
+
+```
+main              ← Release-only. Each commit = a squash-merged version release.
+  └─ develop      ← Integration branch. All features merge here first.
+       └─ feature/xxx  ← Individual feature branches.
+```
+
+| Branch | Purpose | Push directly? | Merges to |
+|--------|---------|---------------|-----------|
+| `main` | Production releases | ❌ Never | — |
+| `develop` | Daily integration | ✅ Small fixes OK | `main` (squash merge via release.sh) |
+| `feature/xxx` | Individual features | ✅ Freely | `develop` (squash merge) |
+
+### Feature workflow
+
+```bash
+git checkout develop && git pull
+git checkout -b feature/my-feature
+# ... develop and commit freely ...
+git checkout develop
+git merge --squash feature/my-feature
+git commit -m "feat: short description"
+git push origin develop
+git branch -d feature/my-feature
+```
+
+### Release workflow
+
+```bash
+git checkout develop
+ops/scripts/release.sh v0.1.6.0 "Short description"
+# Script auto: commit on develop → squash merge to main → tag → switch back to develop
+git push origin main develop --tags
+gh release create v0.1.6.0 releases/Vowrite-v0.1.6.0.dmg --title "..."
+```
+
+---
+
 ## Quick Reference
 
 ```
-Daily work:     feat: add new feature → commit → push
+Daily work:     git checkout develop
+                feat: add new feature → commit → push to develop
                 (add notable items to [Unreleased] in CHANGELOG.md)
 
-Release:        ops/scripts/release.sh v0.1.6.0
-                → auto: version bump + changelog + tag + build + DMG
-                → manual: git push --tags + gh release create
+Big feature:    git checkout -b feature/xxx → develop → squash merge back
+
+Release:        git checkout develop
+                ops/scripts/release.sh v0.1.6.0 "description"
+                → auto: version bump + changelog + build + merge to main + tag
+                → manual: git push origin main develop --tags + gh release create
 ```
