@@ -55,12 +55,17 @@
       <div class="container nav-inner">
         <a href="/" class="logo"><img src="app-icon-64.png" alt="Vowrite app icon" class="logo-icon"> Vowrite</a>
         <div class="nav-links">
-          <a href="#features">Features</a>
-          <a href="#how-it-works">How It Works</a>
-          <a href="#compare">Compare</a>
-          <a href="#faq">FAQ</a>
-          <a href="/why">Why</a>
-          <a href="#download" class="btn btn-small">Download</a>
+          <a href="#features" data-i18n="nav.features">Features</a>
+          <a href="#how-it-works" data-i18n="nav.how">How It Works</a>
+          <a href="/why" data-i18n="nav.why">Why</a>
+          <a href="#download" class="btn btn-small" data-i18n="nav.download">Download</a>
+          <div class="lang-switcher">
+            <button onclick="setLang('en')" class="active" data-lang="en">EN</button>
+            <span class="lang-sep">|</span>
+            <button onclick="setLang('zh')" data-lang="zh">中文</button>
+            <span class="lang-sep">|</span>
+            <button onclick="setLang('de')" data-lang="de">DE</button>
+          </div>
         </div>
       </div>
     </nav>
@@ -71,14 +76,14 @@
     <!-- Hero -->
     <section class="hero">
       <div class="container">
-        <div class="badge">Open Source · Free · macOS 14+</div>
-        <h1>Say it once. Mean it perfectly.</h1>
-        <p class="hero-sub">AI-powered voice input for Mac. Speak naturally, get clean text instantly.</p>
+        <div class="badge" data-i18n="hero.badge">Open Source · Free · macOS 14+</div>
+        <h1 data-i18n="hero.title">Say it once. Mean it perfectly.</h1>
+        <p class="hero-sub" data-i18n="hero.sub">AI-powered voice input for Mac. Speak naturally, get clean text instantly.</p>
         <div class="hero-actions">
           <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary">
-            <span class="btn-icon">⬇</span> Download for Mac
+            <span class="btn-icon">⬇</span> <span data-i18n="hero.dl">Download for Mac</span>
           </a>
-          <a href="https://github.com/Joevonlong/Vowrite" class="btn btn-secondary">View on GitHub</a>
+          <a href="https://github.com/Joevonlong/Vowrite" class="btn btn-secondary" data-i18n="hero.github">View on GitHub</a>
         </div>
 
         <!-- Animated flow -->
@@ -89,17 +94,17 @@
           <div class="flow-arrow flow-animate" style="--delay: 0.3s">→</div>
           <div class="flow-step flow-animate" style="--delay: 0.6s">
             <span class="flow-emoji">🎤</span>
-            <span class="flow-label">Speak</span>
+            <span class="flow-label" data-i18n="flow.speak">Speak</span>
           </div>
           <div class="flow-arrow flow-animate" style="--delay: 0.9s">→</div>
           <div class="flow-step flow-animate" style="--delay: 1.2s">
             <span class="flow-emoji">✨</span>
-            <span class="flow-label">Clean</span>
+            <span class="flow-label" data-i18n="flow.clean">Clean</span>
           </div>
           <div class="flow-arrow flow-animate" style="--delay: 1.5s">→</div>
           <div class="flow-step flow-animate" style="--delay: 1.8s">
             <span class="flow-emoji">📋</span>
-            <span class="flow-label">Done</span>
+            <span class="flow-label" data-i18n="flow.done">Done</span>
           </div>
         </div>
       </div>
@@ -108,28 +113,28 @@
     <!-- Features -->
     <section id="features" class="features">
       <div class="container">
-        <h2 class="section-title fade-in">Your input butler</h2>
-        <p class="section-sub fade-in">You speak. Vowrite handles the rest.</p>
+        <h2 class="section-title fade-in" data-i18n="feat.title">Your input butler</h2>
+        <p class="section-sub fade-in" data-i18n="feat.sub">You speak. Vowrite handles the rest.</p>
         <div class="features-grid">
           <div class="feature-card fade-in">
             <div class="feature-icon">✨</div>
-            <h3>Smart cleanup</h3>
-            <p>Filler words gone, grammar fixed, punctuation added. Your ideas, perfectly delivered.</p>
+            <h3 data-i18n="feat.clean.t">Smart cleanup</h3>
+            <p data-i18n="feat.clean.d">Filler words gone, grammar fixed, punctuation added. Your ideas, perfectly delivered.</p>
           </div>
           <div class="feature-card fade-in">
             <div class="feature-icon">📋</div>
-            <h3>Works everywhere</h3>
-            <p>Text lands right at your cursor — any app, any text field. If you can type there, Vowrite works there.</p>
+            <h3 data-i18n="feat.works.t">Works everywhere</h3>
+            <p data-i18n="feat.works.d">Text lands right at your cursor — any app, any text field. If you can type there, Vowrite works there.</p>
           </div>
           <div class="feature-card fade-in">
             <div class="feature-icon">🔑</div>
-            <h3>Your AI, your choice</h3>
-            <p>Bring your own API key. Pick from 6 providers or plug in your own. No subscriptions, no lock-in.</p>
+            <h3 data-i18n="feat.choice.t">Your AI, your choice</h3>
+            <p data-i18n="feat.choice.d">Bring your own API key. Pick from 6 providers or plug in your own. No subscriptions, no lock-in.</p>
           </div>
           <div class="feature-card fade-in">
             <div class="feature-icon">⚡</div>
-            <h3>Blazing fast</h3>
-            <p>Speak, and polished text appears in about 2 seconds. Faster than you can type it.</p>
+            <h3 data-i18n="feat.fast.t">Blazing fast</h3>
+            <p data-i18n="feat.fast.d">Speak, and polished text appears in about 2 seconds. Faster than you can type it.</p>
           </div>
         </div>
       </div>
@@ -138,25 +143,25 @@
     <!-- How it works -->
     <section id="how-it-works" class="how-it-works">
       <div class="container">
-        <h2 class="section-title fade-in">Three steps. Two seconds.</h2>
-        <p class="section-sub fade-in">From thought to polished text, instantly.</p>
+        <h2 class="section-title fade-in" data-i18n="how.title">Three steps. Two seconds.</h2>
+        <p class="section-sub fade-in" data-i18n="how.sub">From thought to polished text, instantly.</p>
         <div class="steps fade-in">
           <div class="step">
             <div class="step-number">1</div>
-            <h3>Speak</h3>
-            <p>Press <kbd>⌥ Space</kbd> and talk. Say as much as you need.</p>
+            <h3 data-i18n="how.s1.t">Speak</h3>
+            <p><span data-i18n="how.s1.d">Press</span> <kbd>⌥ Space</kbd> <span data-i18n="how.s1.d2">and talk. Say as much as you need.</span></p>
           </div>
           <div class="step-arrow">→</div>
           <div class="step">
             <div class="step-number">2</div>
-            <h3>Clean</h3>
-            <p>AI transcribes and polishes. Filler words vanish, punctuation appears.</p>
+            <h3 data-i18n="how.s2.t">Clean</h3>
+            <p data-i18n="how.s2.d">AI transcribes and polishes. Filler words vanish, punctuation appears.</p>
           </div>
           <div class="step-arrow">→</div>
           <div class="step">
             <div class="step-number">3</div>
-            <h3>Done</h3>
-            <p>Clean text inserted at your cursor. No paste, no switching apps. Keep working.</p>
+            <h3 data-i18n="how.s3.t">Done</h3>
+            <p data-i18n="how.s3.d">Clean text inserted at your cursor. No paste, no switching apps. Keep working.</p>
           </div>
         </div>
       </div>
@@ -165,38 +170,38 @@
     <!-- Providers -->
     <section id="providers" class="providers">
       <div class="container">
-        <h2 class="section-title fade-in">Your AI, your rules</h2>
-        <p class="section-sub fade-in">Bring your own API key. Six providers built in, or use your own.</p>
+        <h2 class="section-title fade-in" data-i18n="prov.title">Your AI, your rules</h2>
+        <p class="section-sub fade-in" data-i18n="prov.sub">Bring your own API key. Six providers built in, or use your own.</p>
         <div class="provider-grid fade-in">
           <div class="provider-card">
             <div class="provider-name">OpenAI</div>
             <div class="provider-detail">whisper-1 · gpt-4o-mini</div>
-            <div class="provider-badge recommended">Recommended</div>
+            <div class="provider-badge recommended" data-i18n="prov.rec">Recommended</div>
           </div>
           <div class="provider-card">
             <div class="provider-name">Groq</div>
             <div class="provider-detail">whisper-large-v3-turbo · llama-3.1-8b</div>
-            <div class="provider-badge fast">Ultra Fast</div>
+            <div class="provider-badge fast" data-i18n="prov.fast">Ultra Fast</div>
           </div>
           <div class="provider-card">
             <div class="provider-name">DeepSeek</div>
             <div class="provider-detail">whisper-1 · deepseek-chat</div>
-            <div class="provider-badge budget">Budget Friendly</div>
+            <div class="provider-badge budget" data-i18n="prov.budget">Budget Friendly</div>
           </div>
           <div class="provider-card">
             <div class="provider-name">OpenRouter</div>
             <div class="provider-detail">whisper-large-v3 · gpt-4o-mini</div>
-            <div class="provider-badge">Multi-Model</div>
+            <div class="provider-badge" data-i18n="prov.multi">Multi-Model</div>
           </div>
           <div class="provider-card">
             <div class="provider-name">Together AI</div>
             <div class="provider-detail">whisper-large-v3 · Llama-3.1-8B</div>
-            <div class="provider-badge">Open Source Models</div>
+            <div class="provider-badge" data-i18n="prov.oss">Open Source Models</div>
           </div>
           <div class="provider-card provider-card-custom">
-            <div class="provider-name">Custom</div>
-            <div class="provider-detail">Any OpenAI-compatible endpoint</div>
-            <div class="provider-badge">Your Server</div>
+            <div class="provider-name" data-i18n="prov.custom">Custom</div>
+            <div class="provider-detail" data-i18n="prov.customd">Any OpenAI-compatible endpoint</div>
+            <div class="provider-badge" data-i18n="prov.yours">Your Server</div>
           </div>
         </div>
       </div>
@@ -205,69 +210,69 @@
     <!-- Comparison -->
     <section id="compare" class="compare">
       <div class="container">
-        <h2 class="section-title fade-in">Why Vowrite</h2>
-        <p class="section-sub fade-in">See how it compares.</p>
+        <h2 class="section-title fade-in" data-i18n="cmp.title">Why Vowrite</h2>
+        <p class="section-sub fade-in" data-i18n="cmp.sub">See how it compares.</p>
         <div class="compare-table-wrap fade-in">
           <table class="compare-table">
             <thead>
               <tr>
                 <th></th>
                 <th class="col-vowrite">Vowrite</th>
-                <th class="col-other">macOS Dictation</th>
+                <th class="col-other" data-i18n="cmp.mac">macOS Dictation</th>
                 <th class="col-other">Superwhisper</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="row-label">AI text cleanup</td>
+                <td class="row-label" data-i18n="cmp.r1">AI text cleanup</td>
                 <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-no">✗</td>
                 <td class="col-other cell-yes-dim">✓</td>
               </tr>
               <tr>
-                <td class="row-label">Multiple AI providers</td>
+                <td class="row-label" data-i18n="cmp.r2">Multiple AI providers</td>
                 <td class="col-vowrite cell-yes">✅ 6+</td>
                 <td class="col-other cell-no">✗</td>
                 <td class="col-other cell-no">✗</td>
               </tr>
               <tr>
-                <td class="row-label">Chinese + English mixed</td>
+                <td class="row-label" data-i18n="cmp.r3">Chinese + English mixed</td>
                 <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-warn">Limited</td>
+                <td class="col-other cell-warn" data-i18n="cmp.limited">Limited</td>
                 <td class="col-other cell-yes-dim">✓</td>
               </tr>
               <tr>
-                <td class="row-label">Open source</td>
+                <td class="row-label" data-i18n="cmp.r4">Open source</td>
                 <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-no">✗</td>
                 <td class="col-other cell-no">✗</td>
               </tr>
               <tr>
-                <td class="row-label">Free with your own API key</td>
+                <td class="row-label" data-i18n="cmp.r5">Free with your own API key</td>
                 <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-yes-dim">✓ (Apple only)</td>
+                <td class="col-other cell-yes-dim" data-i18n="cmp.apple">✓ (Apple only)</td>
                 <td class="col-other cell-no">$9.99/mo</td>
               </tr>
               <tr>
-                <td class="row-label">Bring your own API key</td>
+                <td class="row-label" data-i18n="cmp.r6">Bring your own API key</td>
                 <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-no">✗</td>
                 <td class="col-other cell-no">✗</td>
               </tr>
               <tr>
-                <td class="row-label">Dictation history</td>
+                <td class="row-label" data-i18n="cmp.r7">Dictation history</td>
                 <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-no">✗</td>
                 <td class="col-other cell-yes-dim">✓</td>
               </tr>
               <tr>
-                <td class="row-label">Custom hotkey</td>
+                <td class="row-label" data-i18n="cmp.r8">Custom hotkey</td>
                 <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-warn">Fixed</td>
+                <td class="col-other cell-warn" data-i18n="cmp.fixed">Fixed</td>
                 <td class="col-other cell-yes-dim">✓</td>
               </tr>
               <tr>
-                <td class="row-label">Privacy (local storage only)</td>
+                <td class="row-label" data-i18n="cmp.r9">Privacy (local storage only)</td>
                 <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-warn">iCloud</td>
                 <td class="col-other cell-yes-dim">✓</td>
@@ -281,31 +286,31 @@
     <!-- FAQ -->
     <section id="faq" class="faq">
       <div class="container">
-        <h2 class="section-title fade-in">Frequently asked questions</h2>
+        <h2 class="section-title fade-in" data-i18n="faq.title">Frequently asked questions</h2>
         <div class="faq-list fade-in">
           <details class="faq-item">
-            <summary>How does Vowrite turn my voice into clean text?</summary>
-            <p>Vowrite uses AI speech recognition to transcribe your voice, then an AI language model removes filler words, fixes grammar, and adds punctuation. The result is polished text inserted right at your cursor — in about 2 seconds.</p>
+            <summary data-i18n="faq.q1">How does Vowrite turn my voice into clean text?</summary>
+            <p data-i18n="faq.a1">Vowrite uses AI speech recognition to transcribe your voice, then an AI language model removes filler words, fixes grammar, and adds punctuation. The result is polished text inserted right at your cursor — in about 2 seconds.</p>
           </details>
           <details class="faq-item">
-            <summary>Is Vowrite free to use?</summary>
-            <p>Yes. Vowrite is open source and free. You bring your own API key from providers like OpenAI, Groq, or DeepSeek. You only pay for your actual API usage — which typically costs fractions of a cent per dictation.</p>
+            <summary data-i18n="faq.q2">Is Vowrite free to use?</summary>
+            <p data-i18n="faq.a2">Yes. Vowrite is open source and free. You bring your own API key from providers like OpenAI, Groq, or DeepSeek. You only pay for your actual API usage — which typically costs fractions of a cent per dictation.</p>
           </details>
           <details class="faq-item">
-            <summary>Does it work in any app on Mac?</summary>
-            <p>Yes. Vowrite inserts text at your cursor in any app — Safari, VS Code, Discord, Pages, Notion, WeChat, and more. If you can type there, Vowrite works there.</p>
+            <summary data-i18n="faq.q3">Does it work in any app on Mac?</summary>
+            <p data-i18n="faq.a3">Yes. Vowrite inserts text at your cursor in any app — Safari, VS Code, Discord, Pages, Notion, WeChat, and more. If you can type there, Vowrite works there.</p>
           </details>
           <details class="faq-item">
-            <summary>Can I mix Chinese and English in one sentence?</summary>
-            <p>Absolutely. Vowrite handles mixed Chinese and English naturally. No language switching needed — just speak the way you normally do.</p>
+            <summary data-i18n="faq.q4">Can I mix Chinese and English in one sentence?</summary>
+            <p data-i18n="faq.a4">Absolutely. Vowrite handles mixed Chinese and English naturally. No language switching needed — just speak the way you normally do.</p>
           </details>
           <details class="faq-item">
-            <summary>What AI providers are supported?</summary>
-            <p>Vowrite supports OpenAI, Groq, DeepSeek, OpenRouter, Together AI, and any OpenAI-compatible custom endpoint. Bring your own API key — no subscriptions, no lock-in.</p>
+            <summary data-i18n="faq.q5">What AI providers are supported?</summary>
+            <p data-i18n="faq.a5">Vowrite supports OpenAI, Groq, DeepSeek, OpenRouter, Together AI, and any OpenAI-compatible custom endpoint. Bring your own API key — no subscriptions, no lock-in.</p>
           </details>
           <details class="faq-item">
-            <summary>Is my data private?</summary>
-            <p>Your dictation history is stored locally on your Mac. Audio is sent to your chosen AI provider for transcription only — Vowrite itself never stores or transmits your data to any server.</p>
+            <summary data-i18n="faq.q6">Is my data private?</summary>
+            <p data-i18n="faq.a6">Your dictation history is stored locally on your Mac. Audio is sent to your chosen AI provider for transcription only — Vowrite itself never stores or transmits your data to any server.</p>
           </details>
         </div>
       </div>
@@ -315,9 +320,9 @@
     <section class="coming-soon">
       <div class="container">
         <div class="coming-soon-card fade-in">
-          <h3>Coming soon</h3>
-          <p><strong>Style modes</strong> — Switch between casual, formal, and concise output styles.</p>
-          <p><strong>Workflow integration</strong> — Connect Vowrite to your favorite tools and automations.</p>
+          <h3 data-i18n="soon.title">Coming soon</h3>
+          <p><strong data-i18n="soon.s1t">Style modes</strong> — <span data-i18n="soon.s1d">Switch between casual, formal, and concise output styles.</span></p>
+          <p><strong data-i18n="soon.s2t">Workflow integration</strong> — <span data-i18n="soon.s2d">Connect Vowrite to your favorite tools and automations.</span></p>
         </div>
       </div>
     </section>
@@ -325,22 +330,22 @@
     <!-- Download -->
     <section id="download" class="download">
       <div class="container">
-        <h2 class="section-title fade-in">Ready to stop typing?</h2>
-        <p class="version fade-in">v0.5 · macOS 14 Sonoma or later · Apple Silicon & Intel</p>
+        <h2 class="section-title fade-in" data-i18n="dl.title">Ready to stop typing?</h2>
+        <p class="version fade-in">v0.5 · macOS 14 Sonoma · Apple Silicon & Intel</p>
         <div class="download-actions fade-in">
           <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary btn-large">
-            <span class="btn-icon">⬇</span> Download for Mac
+            <span class="btn-icon">⬇</span> <span data-i18n="dl.btn">Download for Mac</span>
           </a>
         </div>
         <div class="download-reqs fade-in">
-          <span class="req">🔑 API Key (OpenAI or other)</span>
-          <span class="req">🎤 Microphone permission</span>
-          <span class="req">♿ Accessibility (optional)</span>
+          <span class="req" data-i18n="dl.r1">🔑 API Key (OpenAI or other)</span>
+          <span class="req" data-i18n="dl.r2">🎤 Microphone permission</span>
+          <span class="req" data-i18n="dl.r3">♿ Accessibility (optional)</span>
         </div>
         <p class="download-note fade-in">
-          Or build from source: <code>cd VowriteApp && ./build.sh</code>
+          <span data-i18n="dl.build">Or build from source:</span> <code>cd VowriteApp && ./build.sh</code>
           <br>
-          <a href="https://github.com/Joevonlong/Vowrite">View source on GitHub</a>
+          <a href="https://github.com/Joevonlong/Vowrite" data-i18n="dl.src">View source on GitHub</a>
         </p>
       </div>
     </section>
@@ -363,10 +368,207 @@
   </footer>
 
   <script>
+    // Scroll fade-in observer
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // i18n translations
+    const i18n = {
+      zh: {
+        'nav.features': '功能',
+        'nav.how': '工作原理',
+        'nav.why': '为什么',
+        'nav.download': '下载',
+        'hero.badge': '开源 · 免费 · macOS 14+',
+        'hero.title': '说一次，完美呈现。',
+        'hero.sub': 'Mac 上的 AI 语音输入。自然说话，即刻获得干净文字。',
+        'hero.dl': '下载 Mac 版',
+        'hero.github': '在 GitHub 查看',
+        'flow.speak': '说话',
+        'flow.clean': '润色',
+        'flow.done': '完成',
+        'feat.title': '你的输入管家',
+        'feat.sub': '你来说，Vowrite 搞定一切。',
+        'feat.clean.t': '智能润色',
+        'feat.clean.d': '去掉口头禅，修正语法，添加标点。你的想法，完美传达。',
+        'feat.works.t': '随处可用',
+        'feat.works.d': '文字直接出现在光标处——任何应用、任何文本框。能打字的地方，就能用 Vowrite。',
+        'feat.choice.t': '自选 AI 服务',
+        'feat.choice.d': '使用你自己的 API 密钥，从 6 家服务商中选择，或接入自定义端点。无订阅，不锁定。',
+        'feat.fast.t': '极速响应',
+        'feat.fast.d': '说完话，约 2 秒内就出现润色好的文字。比打字还快。',
+        'how.title': '三步完成，只需两秒。',
+        'how.sub': '从想法到精致文字，瞬间完成。',
+        'how.s1.t': '说话',
+        'how.s1.d': '按下',
+        'how.s1.d2': '开始说话。说多少都行。',
+        'how.s2.t': '润色',
+        'how.s2.d': 'AI 转录并润色。口头禅消失，标点自动出现。',
+        'how.s3.t': '完成',
+        'how.s3.d': '干净文字插入到光标处。无需粘贴，无需切换应用。继续工作。',
+        'prov.title': '你的 AI，你做主',
+        'prov.sub': '使用你自己的 API 密钥。内置六家服务商，也可自定义。',
+        'prov.rec': '推荐',
+        'prov.fast': '超快',
+        'prov.budget': '经济实惠',
+        'prov.multi': '多模型',
+        'prov.oss': '开源模型',
+        'prov.custom': '自定义',
+        'prov.customd': '任何 OpenAI 兼容端点',
+        'prov.yours': '你的服务器',
+        'cmp.title': '为什么选择 Vowrite',
+        'cmp.sub': '看看对比就知道了。',
+        'cmp.mac': 'macOS 听写',
+        'cmp.r1': 'AI 文本润色',
+        'cmp.r2': '多 AI 服务商',
+        'cmp.r3': '中英混合输入',
+        'cmp.r4': '开源',
+        'cmp.r5': '自带 API 密钥免费用',
+        'cmp.r6': '自带 API 密钥',
+        'cmp.r7': '听写历史',
+        'cmp.r8': '自定义快捷键',
+        'cmp.r9': '隐私（仅本地存储）',
+        'cmp.limited': '有限',
+        'cmp.apple': '✓（仅 Apple）',
+        'cmp.fixed': '固定',
+        'faq.title': '常见问题',
+        'faq.q1': 'Vowrite 如何把语音变成干净文字？',
+        'faq.a1': 'Vowrite 使用 AI 语音识别转录你的声音，然后用 AI 语言模型去掉口头禅、修正语法、添加标点。结果是润色好的文字直接插入到光标处——约 2 秒搞定。',
+        'faq.q2': 'Vowrite 免费吗？',
+        'faq.a2': '是的。Vowrite 是开源免费的。你使用来自 OpenAI、Groq 或 DeepSeek 等服务商的 API 密钥，只需支付实际的 API 用量——通常每次听写只花几分钱。',
+        'faq.q3': '它能在 Mac 上的任何应用中使用吗？',
+        'faq.a3': '能。Vowrite 在任何应用的光标处插入文字——Safari、VS Code、Discord、Pages、Notion、微信等等。能打字的地方，就能用 Vowrite。',
+        'faq.q4': '可以中英文混合说吗？',
+        'faq.a4': '当然可以。Vowrite 自然处理中英混合输入。无需切换语言——像平时一样说话就行。',
+        'faq.q5': '支持哪些 AI 服务商？',
+        'faq.a5': 'Vowrite 支持 OpenAI、Groq、DeepSeek、OpenRouter、Together AI 以及任何 OpenAI 兼容的自定义端点。使用你自己的 API 密钥——无订阅，不锁定。',
+        'faq.q6': '我的数据安全吗？',
+        'faq.a6': '你的听写历史仅存储在本地 Mac 上。音频只发送给你选择的 AI 服务商进行转录——Vowrite 本身不会存储或传输你的数据到任何服务器。',
+        'soon.title': '即将推出',
+        'soon.s1t': '风格模式',
+        'soon.s1d': '在休闲、正式和简洁输出风格间切换。',
+        'soon.s2t': '工作流集成',
+        'soon.s2d': '将 Vowrite 连接到你最爱的工具和自动化流程。',
+        'dl.title': '准备好告别打字了吗？',
+        'dl.btn': '下载 Mac 版',
+        'dl.r1': '🔑 API 密钥（OpenAI 或其他）',
+        'dl.r2': '🎤 麦克风权限',
+        'dl.r3': '♿ 辅助功能（可选）',
+        'dl.build': '或从源码构建：',
+        'dl.src': '在 GitHub 查看源码',
+      },
+      de: {
+        'nav.features': 'Funktionen',
+        'nav.how': 'So funktioniert\'s',
+        'nav.why': 'Warum',
+        'nav.download': 'Download',
+        'hero.badge': 'Open Source · Kostenlos · macOS 14+',
+        'hero.title': 'Einmal sagen. Perfekt gemeint.',
+        'hero.sub': 'KI-gestützte Spracheingabe für Mac. Natürlich sprechen, sofort sauberen Text erhalten.',
+        'hero.dl': 'Für Mac laden',
+        'hero.github': 'Auf GitHub ansehen',
+        'flow.speak': 'Sprechen',
+        'flow.clean': 'Bereinigen',
+        'flow.done': 'Fertig',
+        'feat.title': 'Dein Eingabe-Butler',
+        'feat.sub': 'Du sprichst. Vowrite erledigt den Rest.',
+        'feat.clean.t': 'Intelligente Bereinigung',
+        'feat.clean.d': 'Füllwörter weg, Grammatik korrigiert, Satzzeichen ergänzt. Deine Ideen, perfekt übermittelt.',
+        'feat.works.t': 'Funktioniert überall',
+        'feat.works.d': 'Text erscheint direkt an deinem Cursor — jede App, jedes Textfeld. Wo du tippen kannst, funktioniert Vowrite.',
+        'feat.choice.t': 'Deine KI, deine Wahl',
+        'feat.choice.d': 'Bring deinen eigenen API-Schlüssel. Wähle aus 6 Anbietern oder nutze deinen eigenen. Kein Abo, kein Lock-in.',
+        'feat.fast.t': 'Blitzschnell',
+        'feat.fast.d': 'Sprich, und in ca. 2 Sekunden erscheint polierter Text. Schneller als Tippen.',
+        'how.title': 'Drei Schritte. Zwei Sekunden.',
+        'how.sub': 'Vom Gedanken zum perfekten Text, sofort.',
+        'how.s1.t': 'Sprechen',
+        'how.s1.d': 'Drücke',
+        'how.s1.d2': 'und sprich. Sag so viel du willst.',
+        'how.s2.t': 'Bereinigen',
+        'how.s2.d': 'KI transkribiert und poliert. Füllwörter verschwinden, Satzzeichen erscheinen.',
+        'how.s3.t': 'Fertig',
+        'how.s3.d': 'Sauberer Text am Cursor eingefügt. Kein Einfügen, kein App-Wechsel. Weiterarbeiten.',
+        'prov.title': 'Deine KI, deine Regeln',
+        'prov.sub': 'Bring deinen eigenen API-Schlüssel. Sechs Anbieter integriert, oder nutze deinen eigenen.',
+        'prov.rec': 'Empfohlen',
+        'prov.fast': 'Ultraschnell',
+        'prov.budget': 'Günstig',
+        'prov.multi': 'Multi-Modell',
+        'prov.oss': 'Open-Source-Modelle',
+        'prov.custom': 'Benutzerdefiniert',
+        'prov.customd': 'Jeder OpenAI-kompatible Endpunkt',
+        'prov.yours': 'Dein Server',
+        'cmp.title': 'Warum Vowrite',
+        'cmp.sub': 'Vergleiche selbst.',
+        'cmp.mac': 'macOS Diktat',
+        'cmp.r1': 'KI-Textbereinigung',
+        'cmp.r2': 'Mehrere KI-Anbieter',
+        'cmp.r3': 'Chinesisch + Englisch gemischt',
+        'cmp.r4': 'Open Source',
+        'cmp.r5': 'Kostenlos mit eigenem API-Schlüssel',
+        'cmp.r6': 'Eigener API-Schlüssel',
+        'cmp.r7': 'Diktatverlauf',
+        'cmp.r8': 'Eigene Tastenkombination',
+        'cmp.r9': 'Datenschutz (nur lokale Speicherung)',
+        'cmp.limited': 'Begrenzt',
+        'cmp.apple': '✓ (nur Apple)',
+        'cmp.fixed': 'Fest',
+        'faq.title': 'Häufig gestellte Fragen',
+        'faq.q1': 'Wie verwandelt Vowrite meine Stimme in sauberen Text?',
+        'faq.a1': 'Vowrite nutzt KI-Spracherkennung zum Transkribieren, dann entfernt ein KI-Sprachmodell Füllwörter, korrigiert Grammatik und ergänzt Satzzeichen. Das Ergebnis ist polierter Text direkt am Cursor — in ca. 2 Sekunden.',
+        'faq.q2': 'Ist Vowrite kostenlos?',
+        'faq.a2': 'Ja. Vowrite ist Open Source und kostenlos. Du bringst deinen eigenen API-Schlüssel von Anbietern wie OpenAI, Groq oder DeepSeek. Du zahlst nur für die tatsächliche API-Nutzung — typischerweise Bruchteile eines Cents pro Diktat.',
+        'faq.q3': 'Funktioniert es in jeder App auf dem Mac?',
+        'faq.a3': 'Ja. Vowrite fügt Text am Cursor in jeder App ein — Safari, VS Code, Discord, Pages, Notion, WeChat und mehr. Wo du tippen kannst, funktioniert Vowrite.',
+        'faq.q4': 'Kann ich Chinesisch und Englisch in einem Satz mischen?',
+        'faq.a4': 'Absolut. Vowrite verarbeitet gemischtes Chinesisch und Englisch natürlich. Kein Sprachwechsel nötig — sprich einfach wie gewohnt.',
+        'faq.q5': 'Welche KI-Anbieter werden unterstützt?',
+        'faq.a5': 'Vowrite unterstützt OpenAI, Groq, DeepSeek, OpenRouter, Together AI und jeden OpenAI-kompatiblen benutzerdefinierten Endpunkt. Bring deinen eigenen API-Schlüssel — kein Abo, kein Lock-in.',
+        'faq.q6': 'Sind meine Daten privat?',
+        'faq.a6': 'Dein Diktatverlauf wird lokal auf deinem Mac gespeichert. Audio wird nur zum Transkribieren an deinen gewählten KI-Anbieter gesendet — Vowrite selbst speichert oder überträgt deine Daten niemals an einen Server.',
+        'soon.title': 'Demnächst',
+        'soon.s1t': 'Stilmodi',
+        'soon.s1d': 'Zwischen lässigem, formellem und knappem Ausgabestil wechseln.',
+        'soon.s2t': 'Workflow-Integration',
+        'soon.s2d': 'Vowrite mit deinen Lieblings-Tools und Automatisierungen verbinden.',
+        'dl.title': 'Bereit, das Tippen sein zu lassen?',
+        'dl.btn': 'Für Mac laden',
+        'dl.r1': '🔑 API-Schlüssel (OpenAI oder andere)',
+        'dl.r2': '🎤 Mikrofonberechtigung',
+        'dl.r3': '♿ Bedienungshilfen (optional)',
+        'dl.build': 'Oder aus dem Quellcode bauen:',
+        'dl.src': 'Quellcode auf GitHub ansehen',
+      }
+    };
+
+    // Store default English text
+    const enDefaults = {};
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      enDefaults[el.getAttribute('data-i18n')] = el.textContent;
+    });
+
+    function setLang(lang) {
+      localStorage.setItem('vowrite-lang', lang);
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'de' ? 'de' : 'en';
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (lang === 'en') {
+          el.textContent = enDefaults[key] || el.textContent;
+        } else if (i18n[lang] && i18n[lang][key]) {
+          el.textContent = i18n[lang][key];
+        }
+      });
+      document.querySelectorAll('.lang-switcher button').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+      });
+    }
+
+    // Load saved preference
+    const savedLang = localStorage.getItem('vowrite-lang');
+    if (savedLang && savedLang !== 'en') { setLang(savedLang); }
   </script>
 
 </body>
