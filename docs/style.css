@@ -124,6 +124,12 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 .nav-links a { color: var(--text-muted); font-size: 0.85rem; font-weight: 400; transition: color 0.2s; }
 .nav-links a:hover { color: var(--text); text-decoration: none; }
 .nav-links a.active { color: var(--text); font-weight: 600; }
+.nav-links a.nav-why {
+  color: var(--accent-warm, #c8491c);
+  font-weight: 600;
+  position: relative;
+}
+.nav-links a.nav-why:hover { color: #a33a15; }
 
 /* Language switcher */
 .lang-switcher {
