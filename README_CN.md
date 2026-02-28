@@ -106,7 +106,7 @@ cd Vowrite/VowriteApp
 
 ## 📝 更新日志
 
-详见 [RELEASE_NOTES.md](RELEASE_NOTES.md) 或 [GitHub Releases](https://github.com/Joevonlong/Vowrite/releases)。
+详见 [CHANGELOG.md](CHANGELOG.md) 或 [GitHub Releases](https://github.com/Joevonlong/Vowrite/releases)。
 
 ## 🤝 参与贡献
 

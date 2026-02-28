@@ -123,7 +123,7 @@ See the [full roadmap](ops/ROADMAP.md) for upcoming features.
 
 ## 📝 Changelog
 
-See [RELEASE_NOTES.md](RELEASE_NOTES.md) or [GitHub Releases](https://github.com/Joevonlong/Vowrite/releases).
+See [CHANGELOG.md](CHANGELOG.md) or [GitHub Releases](https://github.com/Joevonlong/Vowrite/releases).
 
 ## 🤝 Contributing
 

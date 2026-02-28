@@ -106,7 +106,7 @@ Siehe die [vollständige Roadmap](ops/ROADMAP.md).
 
 ## 📝 Änderungsprotokoll
 
-Siehe [RELEASE_NOTES.md](RELEASE_NOTES.md) oder [GitHub Releases](https://github.com/Joevonlong/Vowrite/releases).
+Siehe [CHANGELOG.md](CHANGELOG.md) oder [GitHub Releases](https://github.com/Joevonlong/Vowrite/releases).
 
 ## 🤝 Mitwirken
 
