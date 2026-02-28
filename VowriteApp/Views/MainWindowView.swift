@@ -68,7 +68,7 @@ struct MainWindowView: View {
             Spacer()
 
             // Version
-            Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.5")")
+            Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.5.0")")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 16)
@@ -627,7 +627,7 @@ struct AboutPageView: View {
             Text("AI Voice Keyboard")
                 .font(.title3)
                 .foregroundColor(.secondary)
-            Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.5")")
+            Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.5.0")")
                 .font(.caption)
                 .foregroundColor(.secondary)
 
