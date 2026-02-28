@@ -1,6 +1,6 @@
 # Voxa — 新需求 (Feature Backlog)
 
-> 最后更新: 2025-07-13
+> 最后更新: 2026-02-28
 >
 > 本文件追踪所有新提出的 feature 需求，供后续版本开发使用。
 > 由 Aoide 🎵🐉 维护，有新需求请直接在 #voxa-new-requirement 频道提出。

@@ -443,7 +443,7 @@ struct AboutTab: View {
                 .bold()
             Text("AI Voice Keyboard")
                 .foregroundColor(.secondary)
-            Text("v0.1.5.0")
+            Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.5")")
                 .font(.caption)
                 .foregroundColor(.secondary)
             Text("Speak naturally, get polished text.")
