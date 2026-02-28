@@ -44,6 +44,14 @@ echo "════════════════════════�
 echo ""
 echo "▶ Pre-flight checks..."
 
+# Must be on develop branch
+CURRENT_BRANCH=$(git -C "$PROJECT_ROOT" branch --show-current)
+if [ "$CURRENT_BRANCH" != "develop" ]; then
+    echo "❌ Must be on 'develop' branch to release. Currently on: $CURRENT_BRANCH"
+    echo "   Run: git checkout develop"
+    exit 1
+fi
+
 if [ -n "$(git -C "$PROJECT_ROOT" status --porcelain)" ]; then
     echo "⚠️  Working directory has uncommitted changes."
     read -p "   Continue anyway? (y/N) " -n 1 -r
@@ -162,21 +170,33 @@ hdiutil create -volname "Vowrite $VERSION" -srcfolder "$DMG_STAGING" -ov -format
 rm -rf "$DMG_STAGING"
 echo "  ✓ DMG created: $DMG_PATH"
 
-# --- Step 8: Git commit + tag ---
+# --- Step 8: Git commit on develop ---
 echo ""
-echo "▶ Step 8: Git commit and tag..."
+echo "▶ Step 8: Committing on develop..."
 cd "$PROJECT_ROOT"
 git add -A
 git commit -m "$VERSION_NUM: $DESCRIPTION" || echo "  (nothing to commit)"
+echo "  ✓ Committed on develop"
+
+# --- Step 9: Squash merge to main + tag ---
+echo ""
+echo "▶ Step 9: Merging to main..."
+git checkout main
+git pull origin main 2>/dev/null || true
+git merge --squash develop
+git commit -m "$VERSION_NUM: $DESCRIPTION"
 git tag -a "$VERSION" -m "$VERSION — $DESCRIPTION" 2>/dev/null || {
     echo "  Tag $VERSION exists. Overwrite? (y/N)"
     read -p "   " -n 1 -r
     echo
     [[ $REPLY =~ ^[Yy]$ ]] && git tag -fa "$VERSION" -m "$VERSION — $DESCRIPTION"
 }
-echo "  ✓ Tagged $VERSION"
+echo "  ✓ Merged to main and tagged $VERSION"
 
-# --- Step 9: Summary ---
+# Switch back to develop
+git checkout develop
+
+# --- Step 10: Summary ---
 echo ""
 echo "═══════════════════════════════════════"
 echo "  ✅ Release $VERSION complete!"
@@ -186,8 +206,8 @@ echo "  DMG:  $DMG_PATH"
 echo "  Size: $(du -h "$DMG_PATH" | cut -f1)"
 echo ""
 echo "  Next steps:"
-echo "  1. Review:  git log --oneline -3"
+echo "  1. Review:  git log --oneline -3 main"
 echo "  2. Test:    open $DMG_PATH"
-echo "  3. Push:    git push origin main --tags"
+echo "  3. Push:    git push origin main develop --tags"
 echo "  4. Release: gh release create $VERSION $DMG_PATH --title \"Vowrite $VERSION — $DESCRIPTION\" --notes-file <(sed -n '/## \\[$VERSION_NUM\\]/,/## \\[/p' CHANGELOG.md | sed '\$d')"
 echo ""
