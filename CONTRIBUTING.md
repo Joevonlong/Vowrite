@@ -3,49 +3,48 @@
 ## Branch Strategy
 
 ```
-main          ← Release-only. Each commit = a version release.
-  └─ develop  ← Integration branch. All features merge here first.
-       └─ feature/xxx  ← Individual feature branches.
+main              ← Default branch. Development + tagged releases.
+  └─ feature/xxx  ← Feature branches for larger changes.
 ```
 
 ## Workflow
 
-### 1. Start a Feature
+### Small Changes (bug fix, docs, config)
 
 ```bash
-git checkout develop
-git pull origin develop
-git checkout -b feature/my-feature
+git checkout main
+git pull origin main
+# make changes...
+git commit -m "fix: short description"
+git push origin main
 ```
 
-### 2. Develop & Commit
-
-Commit freely on your feature branch — commit messages don't need to be perfect here.
-
-### 3. Merge to develop
+### Larger Features
 
 ```bash
-git checkout develop
+git checkout main && git pull
+git checkout -b feature/my-feature
+# develop and commit freely...
+git checkout main
 git merge --squash feature/my-feature
 git commit -m "feat: short description of what this adds"
-git push origin develop
+git push origin main
 git branch -d feature/my-feature
 ```
 
-**Always squash merge** into develop. One feature = one commit.
+**Always squash merge** feature branches. One feature = one commit on main.
 
-### 4. Release to main
+### Release
 
-When develop is stable and ready for release:
+When main is ready for a versioned release:
 
 ```bash
-git checkout develop
 ops/scripts/release.sh v0.1.6.0 "Brief release summary"
-git push origin main develop --tags
+git push origin main --tags
 gh release create v0.1.6.0 releases/Vowrite-v0.1.6.0.dmg --title "Vowrite v0.1.6.0 — Summary"
 ```
 
-The release script handles: version bump → changelog → build → squash merge to main → tag.
+The release script handles: changelog → version bump → build → commit → tag.
 
 ## Commit Message Format
 
@@ -54,10 +53,13 @@ The release script handles: version bump → changelog → build → squash merg
 - `docs:` — Documentation only
 - `chore:` — Build, config, tooling
 - `refactor:` — Code change that neither fixes a bug nor adds a feature
+- `security:` — Security fix
+
+See [ops/VERSIONING.md](ops/VERSIONING.md) for the full convention.
 
 ## Rules
 
-- **Never push directly to main** — always go through develop
-- **Squash merge** everything — keep history clean
-- **Tag every release** on main with 4-segment version (`v0.1.5.0`, `v0.1.6.0`, etc.)
+- **Squash merge** feature branches — keep history clean
+- **Tag every release** with 4-segment version (`v0.1.6.0`)
 - **Delete feature branches** after merge
+- **All commits in English**

@@ -21,21 +21,20 @@ Changes  Verify  Review    Build   +Notarize  Gen   Release  Update
 ### Branch Strategy
 
 ```
-main              ← Release-only. Each commit = a version release.
-  └─ develop      ← Integration branch. All features merge here first.
-       └─ feature/xxx  ← Individual feature branches.
+main              ← Default branch. Daily development + releases.
+  └─ feature/xxx  ← Feature branches for larger changes.
 ```
 
-| Branch | Purpose | Who pushes | Merges to |
-|--------|---------|-----------|-----------|
-| `main` | Release-only, production-ready | Release script only | — |
-| `develop` | Daily integration, latest development | Developers | `main` (squash merge on release) |
-| `feature/xxx` | Individual features or fixes | Developer working on it | `develop` (squash merge) |
+| Branch | Purpose | Push directly? |
+|--------|---------|---------------|
+| `main` | Development + releases (tagged) | ✅ Small fixes, docs, chores |
+| `feature/xxx` | Larger features or experiments | ✅ Freely, then squash merge to main |
 
 **Rules:**
-- **Never push directly to `main`** — always merge from `develop` via `release.sh`
-- **Squash merge** everything — keep history clean
-- **Delete feature branches** after merge to `develop`
+- Small changes → commit directly to `main`
+- Larger features → open `feature/xxx`, squash merge back to `main`
+- Releases are marked with **git tags** (e.g. `v0.1.6.0`)
+- **Delete feature branches** after merge
 
 ### Language Standards
 
