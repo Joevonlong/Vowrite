@@ -108,6 +108,8 @@ fi
 echo ""
 echo "▶ Step 2: Updating version to $VERSION_NUM..."
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_NUM" "$INFO_PLIST"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString " "$APP_BUNDLE/Contents/Info.plist"
+echo "  ✓ App bundle Info.plist updated"
 echo "  ✓ Info.plist updated"
 
 # --- Step 3: Update version in SettingsView.swift ---
