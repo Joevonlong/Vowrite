@@ -102,7 +102,7 @@ Core requirements:
 ### Release Build
 ```bash
 ops/scripts/release.sh <version>
-# e.g.: ops/scripts/release.sh v0.2
+# e.g.: ops/scripts/release.sh v0.1.5.0
 ```
 
 The script automatically performs:
@@ -156,7 +156,7 @@ The script automatically performs:
 |-------------------|-------------|
 | Daily development build | `cd VowriteApp && ./build.sh` |
 | Run tests | `ops/scripts/test.sh` |
-| Release a new version | `ops/scripts/release.sh v0.x` |
+| Release a new version | `ops/scripts/release.sh v0.x.y.z` |
 | Clean build artifacts | `ops/scripts/clean.sh` |
 | Check security | Review `ops/CHECKLIST_SECURITY.md` |
 | Pre-release check | Review `ops/CHECKLIST_RELEASE.md` |

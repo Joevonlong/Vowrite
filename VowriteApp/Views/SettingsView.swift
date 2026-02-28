@@ -443,7 +443,7 @@ struct AboutTab: View {
                 .bold()
             Text("AI Voice Keyboard")
                 .foregroundColor(.secondary)
-            Text("v0.3")
+            Text("v0.1.5.0")
                 .font(.caption)
                 .foregroundColor(.secondary)
             Text("Speak naturally, get polished text.")
