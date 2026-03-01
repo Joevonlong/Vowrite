@@ -125,7 +125,7 @@ struct SettingsView: View {
             AboutTab()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 520, height: 480)
+        .frame(width: 520, height: 520)
     }
 }
 
@@ -133,6 +133,9 @@ struct SettingsView: View {
 
 struct APISettingsTab: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject private var authManager = AuthManager.shared
+    @ObservedObject private var modelManager = ModelManager.shared
+
     @State private var isEditing = false
     @State private var editProvider: APIProvider = .openai
     @State private var editKey: String = ""
@@ -140,6 +143,7 @@ struct APISettingsTab: View {
     @State private var editSTTModel: String = ""
     @State private var editPolishModel: String = ""
     @State private var savedFeedback = false
+    @State private var editGoogleClientID: String = ""
 
     var body: some View {
         Form {
@@ -158,27 +162,35 @@ struct APISettingsTab: View {
 
     private var displayView: some View {
         Group {
-            Section("Provider") {
-                LabeledContent("Provider", value: APIConfig.provider.rawValue)
-                LabeledContent("Base URL", value: APIConfig.baseURL)
+            Section("Account Mode") {
+                LabeledContent("Mode") {
+                    Text(authManager.authMode == .apiKey ? "API Key" : "Google Account")
+                }
+                if authManager.authMode == .apiKey {
+                    LabeledContent("Provider", value: APIConfig.provider.rawValue)
+                    LabeledContent("Base URL", value: APIConfig.baseURL)
+                    LabeledContent("Key") {
+                        if let key = KeychainHelper.getAPIKey(), !key.isEmpty {
+                            Text(maskKey(key))
+                                .foregroundColor(.secondary)
+                                .font(.system(.body, design: .monospaced))
+                        } else {
+                            Text("Not set")
+                                .foregroundColor(.red)
+                        }
+                    }
+                } else {
+                    if authManager.isLoggedIn, let email = authManager.userEmail {
+                        LabeledContent("Account", value: email)
+                    } else {
+                        LabeledContent("Status", value: "Not signed in")
+                    }
+                }
             }
 
             Section("Models") {
                 LabeledContent("STT Model", value: APIConfig.sttModel)
                 LabeledContent("Polish Model", value: APIConfig.polishModel)
-            }
-
-            Section("API Key") {
-                LabeledContent("Key") {
-                    if let key = KeychainHelper.getAPIKey(), !key.isEmpty {
-                        Text(maskKey(key))
-                            .foregroundColor(.secondary)
-                            .font(.system(.body, design: .monospaced))
-                    } else {
-                        Text("Not set")
-                            .foregroundColor(.red)
-                    }
-                }
             }
 
             Section {
@@ -199,61 +211,213 @@ struct APISettingsTab: View {
 
     private var editingView: some View {
         Group {
-            Section("Provider") {
-                Picker("Provider", selection: $editProvider) {
-                    ForEach(APIProvider.allCases) { provider in
-                        Text(provider.rawValue).tag(provider)
+            accountModeSection
+            modelsSection
+            actionSection
+        }
+    }
+
+    // MARK: Account Mode Section
+
+    private var accountModeSection: some View {
+        Section("Account Mode") {
+            Picker("Mode", selection: Binding(
+                get: { authManager.authMode },
+                set: { authManager.setAuthMode($0) }
+            )) {
+                Text("Use API Key").tag(AuthMode.apiKey)
+                Text("Google Account").tag(AuthMode.googleAccount)
+            }
+            .pickerStyle(.segmented)
+
+            if authManager.authMode == .apiKey {
+                apiKeyEditView
+            } else {
+                googleAccountEditView
+            }
+        }
+    }
+
+    private var apiKeyEditView: some View {
+        Group {
+            Picker("Provider", selection: $editProvider) {
+                ForEach(APIProvider.allCases) { provider in
+                    Text(provider.rawValue).tag(provider)
+                }
+            }
+            .onChange(of: editProvider) { _, newValue in
+                editBaseURL = newValue.defaultBaseURL
+                editSTTModel = newValue.defaultSTTModel
+                editPolishModel = newValue.defaultPolishModel
+            }
+
+            if editProvider == .custom {
+                TextField("Base URL", text: $editBaseURL)
+                    .textFieldStyle(.roundedBorder)
+            } else {
+                LabeledContent("Base URL", value: editBaseURL)
+            }
+
+            SecureField(editProvider.keyPlaceholder, text: $editKey)
+                .textFieldStyle(.roundedBorder)
+
+            if !editProvider.keyURL.isEmpty {
+                Link("Get API Key \u{2192}", destination: URL(string: editProvider.keyURL)!)
+                    .font(.caption)
+            }
+        }
+    }
+
+    private var googleAccountEditView: some View {
+        Group {
+            TextField("Google OAuth Client ID", text: $editGoogleClientID)
+                .textFieldStyle(.roundedBorder)
+                .onChange(of: editGoogleClientID) { _, newValue in
+                    GoogleAuthService.clientID = newValue
+                }
+
+            LabeledContent("Redirect URI") {
+                Text(GoogleAuthService.redirectURI)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundColor(.secondary)
+                    .textSelection(.enabled)
+            }
+
+            if authManager.isLoggedIn {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(authManager.userName ?? "User")
+                            .fontWeight(.medium)
+                        Text(authManager.userEmail ?? "")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Button("Sign Out") {
+                        authManager.signOut()
                     }
                 }
-                .onChange(of: editProvider) { _, newValue in
-                    editBaseURL = newValue.defaultBaseURL
-                    editSTTModel = newValue.defaultSTTModel
-                    editPolishModel = newValue.defaultPolishModel
-                }
-
-                if editProvider == .custom {
-                    TextField("Base URL", text: $editBaseURL)
-                        .textFieldStyle(.roundedBorder)
+            } else {
+                if authManager.isAuthenticating {
+                    HStack {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Signing in...")
+                            .foregroundColor(.secondary)
+                    }
                 } else {
-                    LabeledContent("Base URL", value: editBaseURL)
-                }
-
-                if !editProvider.keyURL.isEmpty {
-                    Link("Get API Key →", destination: URL(string: editProvider.keyURL)!)
-                        .font(.caption)
+                    Button {
+                        authManager.signInWithGoogle()
+                    } label: {
+                        HStack {
+                            Image(systemName: "person.crop.circle.badge.checkmark")
+                            Text("Sign in with Google")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(editGoogleClientID.isEmpty)
                 }
             }
 
-            Section("API Key") {
-                SecureField(editProvider.keyPlaceholder, text: $editKey)
-                    .textFieldStyle(.roundedBorder)
+            if let error = authManager.authError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
             }
+        }
+    }
 
-            Section("Models") {
+    // MARK: Models Section
+
+    private var modelsSection: some View {
+        Section("Models") {
+            if editProvider == .openrouter && !editKey.isEmpty {
+                openRouterModelsView
+            } else {
                 TextField("STT Model", text: $editSTTModel)
                     .textFieldStyle(.roundedBorder)
                 TextField("Polish Model", text: $editPolishModel)
                     .textFieldStyle(.roundedBorder)
             }
+        }
+    }
 
-            Section {
-                HStack {
-                    Button("Cancel") {
-                        isEditing = false
+    private var openRouterModelsView: some View {
+        Group {
+            HStack {
+                Button {
+                    Task { await modelManager.refreshModels() }
+                } label: {
+                    HStack(spacing: 4) {
+                        if modelManager.isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                        Text(modelManager.isLoading ? "Loading..." : "Refresh Models")
                     }
-                    Spacer()
-                    if savedFeedback {
-                        Label("Saved!", systemImage: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                    }
-                    Button("Save") {
-                        save()
-                    }
-                    .buttonStyle(.borderedProminent)
                 }
+                .disabled(modelManager.isLoading)
+
+                Spacer()
+
+                if let error = modelManager.error {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .lineLimit(1)
+                }
+            }
+
+            if !modelManager.sttModels.isEmpty {
+                Picker("STT Model", selection: $editSTTModel) {
+                    ForEach(modelManager.sttModels) { model in
+                        Text(modelManager.isRecommendedSTTModel(model)
+                             ? "\u{2B50} \(model.name)" : model.name)
+                            .tag(model.id)
+                    }
+                }
+            } else {
+                TextField("STT Model", text: $editSTTModel)
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            if !modelManager.polishModels.isEmpty {
+                Picker("Polish Model", selection: $editPolishModel) {
+                    ForEach(modelManager.polishModels) { model in
+                        Text(modelManager.isRecommendedPolishModel(model)
+                             ? "\u{2B50} \(model.name)" : model.name)
+                            .tag(model.id)
+                    }
+                }
+            } else {
+                TextField("Polish Model", text: $editPolishModel)
+                    .textFieldStyle(.roundedBorder)
             }
         }
     }
+
+    // MARK: Action Section
+
+    private var actionSection: some View {
+        Section {
+            HStack {
+                Button("Cancel") {
+                    isEditing = false
+                }
+                Spacer()
+                if savedFeedback {
+                    Label("Saved!", systemImage: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                }
+                Button("Save") {
+                    save()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+
+    // MARK: Helpers
 
     private func loadCurrent() {
         editProvider = APIConfig.provider
@@ -261,6 +425,7 @@ struct APISettingsTab: View {
         editBaseURL = APIConfig.baseURL
         editSTTModel = APIConfig.sttModel
         editPolishModel = APIConfig.polishModel
+        editGoogleClientID = GoogleAuthService.clientID ?? ""
     }
 
     private func save() {
@@ -271,6 +436,7 @@ struct APISettingsTab: View {
         if !editKey.isEmpty {
             _ = KeychainHelper.saveAPIKey(editKey)
         }
+        GoogleAuthService.clientID = editGoogleClientID
         appState.objectWillChange.send()
         savedFeedback = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -280,10 +446,10 @@ struct APISettingsTab: View {
     }
 
     private func maskKey(_ key: String) -> String {
-        guard key.count > 8 else { return "••••••••" }
+        guard key.count > 8 else { return "\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}" }
         let prefix = String(key.prefix(4))
         let suffix = String(key.suffix(4))
-        return "\(prefix)••••\(suffix)"
+        return "\(prefix)\u{2022}\u{2022}\u{2022}\u{2022}\(suffix)"
     }
 }
 
