@@ -7,7 +7,9 @@ import ServiceManagement
 enum SidebarItem: String, CaseIterable, Identifiable {
     case home = "Home"
     case history = "History"
+    case account = "Account"
     case settings = "Settings"
+    case personalization = "Personalization"
     case about = "About"
 
     var id: String { rawValue }
@@ -16,7 +18,9 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         switch self {
         case .home: return "house"
         case .history: return "clock.arrow.circlepath"
+        case .account: return "person.circle"
         case .settings: return "gearshape"
+        case .personalization: return "paintbrush"
         case .about: return "info.circle"
         }
     }
@@ -88,9 +92,13 @@ struct MainWindowView: View {
         case .history:
             HistoryPageView()
                 .environmentObject(appState)
+        case .account:
+            AccountPageView()
         case .settings:
             SettingsPageView()
                 .environmentObject(appState)
+        case .personalization:
+            PersonalizationPageView()
         case .about:
             AboutPageView()
         }
@@ -134,7 +142,6 @@ struct HomePageView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // Hero
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Speak naturally, write perfectly")
                         .font(.system(size: 24, weight: .bold))
@@ -154,18 +161,12 @@ struct HomePageView: View {
                     .foregroundColor(.secondary)
                 }
 
-                // Stats grid
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: 16) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     StatCard(icon: "clock", value: formatMinutes(appState.totalDictationTime), label: "Total dictation time")
                     StatCard(icon: "mic", value: "\(appState.totalWords)", label: "Words dictated")
                     StatCard(icon: "text.badge.checkmark", value: "\(appState.totalDictations)", label: "Dictations")
                 }
 
-                // Quick actions
                 HStack(spacing: 16) {
                     QuickActionCard(
                         title: "API Status",
@@ -176,8 +177,7 @@ struct HomePageView: View {
                     QuickActionCard(
                         title: "Permissions",
                         description: PermissionManager.hasMicrophoneAccess() && PermissionManager.hasAccessibilityAccess()
-                            ? "All permissions granted"
-                            : "Some permissions needed",
+                            ? "All permissions granted" : "Some permissions needed",
                         icon: PermissionManager.hasMicrophoneAccess() && PermissionManager.hasAccessibilityAccess()
                             ? "lock.open.fill" : "lock.fill",
                         iconColor: PermissionManager.hasMicrophoneAccess() && PermissionManager.hasAccessibilityAccess()
@@ -185,19 +185,16 @@ struct HomePageView: View {
                     )
                 }
 
-                // Last result
                 if let result = appState.lastResult {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Last dictation")
-                                .font(.headline)
+                            Text("Last dictation").font(.headline)
                             Spacer()
                             Button("Copy") {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(result, forType: .string)
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
+                            .buttonStyle(.bordered).controlSize(.small)
                         }
                         Text(result)
                             .padding(12)
@@ -229,15 +226,10 @@ struct StatCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .foregroundColor(.secondary)
-                    .font(.caption)
-                Text(value)
-                    .font(.system(size: 20, weight: .bold))
+                Image(systemName: icon).foregroundColor(.secondary).font(.caption)
+                Text(value).font(.system(size: 20, weight: .bold))
             }
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
+            Text(label).font(.caption).foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -256,23 +248,15 @@ struct QuickActionCard: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(iconColor)
-                .frame(width: 36)
+            Image(systemName: icon).font(.title2).foregroundColor(iconColor).frame(width: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.headline)
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text(title).font(.headline)
+                Text(description).font(.caption).foregroundColor(.secondary)
             }
             Spacer()
         }
-        .padding(16)
-        .frame(maxWidth: .infinity)
-        .background(Color.secondary.opacity(0.06))
-        .cornerRadius(12)
+        .padding(16).frame(maxWidth: .infinity)
+        .background(Color.secondary.opacity(0.06)).cornerRadius(12)
     }
 }
 
@@ -288,6 +272,134 @@ struct HistoryPageView: View {
     }
 }
 
+// MARK: - Account Page
+
+struct AccountPageView: View {
+    @ObservedObject private var authManager = AuthManager.shared
+    @State private var googleClientID: String = GoogleAuthService.clientID ?? ""
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Text("Account")
+                    .font(.system(size: 24, weight: .bold))
+
+                if authManager.authMode == .googleAccount && authManager.isLoggedIn {
+                    // Logged in
+                    HStack(spacing: 16) {
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 48))
+                            .foregroundColor(.accentColor)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(authManager.userName ?? "Vowrite User")
+                                .font(.title2).fontWeight(.semibold)
+                            Text(authManager.userEmail ?? "")
+                                .font(.body).foregroundColor(.secondary)
+                        }
+                    }
+
+                    Divider()
+
+                    SettingsRow(title: "Subscription", description: "Current plan") {
+                        HStack(spacing: 8) {
+                            Text("Free").foregroundColor(.secondary)
+                            Button("Upgrade") {}.buttonStyle(.borderedProminent).controlSize(.small).disabled(true)
+                        }
+                    }
+
+                    HStack { Spacer(); Button("Sign Out") { authManager.signOut() }.buttonStyle(.bordered) }
+
+                } else if authManager.authMode == .googleAccount {
+                    // Google mode, not signed in
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Sign in to Vowrite")
+                            .font(.title3).fontWeight(.semibold)
+
+                        SettingsRow(title: "Google OAuth Client ID", description: "Required for Google Sign-In") {
+                            TextField("Client ID", text: $googleClientID)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 300)
+                                .onChange(of: googleClientID) { _, v in GoogleAuthService.clientID = v }
+                        }
+
+                        Text("Redirect URI: \(GoogleAuthService.redirectURI)")
+                            .font(.caption2).foregroundColor(.secondary).textSelection(.enabled)
+
+                        Button {
+                            authManager.signInWithGoogle()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "person.crop.circle.badge.checkmark")
+                                Text("Sign in with Google").fontWeight(.medium)
+                            }
+                            .frame(width: 240, height: 36)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(googleClientID.isEmpty || authManager.isAuthenticating)
+
+                        if authManager.isAuthenticating {
+                            HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Signing in...").foregroundColor(.secondary) }
+                        }
+                        if let error = authManager.authError {
+                            Text(error).font(.caption).foregroundColor(.red)
+                        }
+                    }
+
+                } else {
+                    // API Key mode
+                    HStack(spacing: 16) {
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 36)).foregroundColor(.orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("API Key Mode").font(.title2).fontWeight(.semibold)
+                            Text("Using your own API key. Configure in Settings.")
+                                .font(.body).foregroundColor(.secondary)
+                        }
+                    }
+
+                    if let key = KeychainHelper.getAPIKey(), !key.isEmpty {
+                        SettingsRow(title: "Current Key", description: "Your API key") {
+                            Text(maskKey(key)).font(.system(.body, design: .monospaced)).foregroundColor(.secondary)
+                        }
+                        SettingsRow(title: "Provider", description: "AI service") {
+                            Text(APIConfig.provider.rawValue).foregroundColor(.secondary)
+                        }
+                    } else {
+                        Text("No API key configured. Go to Settings to set one up.")
+                            .foregroundColor(.orange)
+                    }
+                }
+
+                Divider()
+
+                // Account mode toggle
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Account Mode").font(.headline)
+                    Picker("", selection: Binding(
+                        get: { authManager.authMode },
+                        set: { authManager.setAuthMode($0) }
+                    )) {
+                        Text("API Key").tag(AuthMode.apiKey)
+                        Text("Google Account").tag(AuthMode.googleAccount)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 300)
+                    Text(authManager.authMode == .apiKey
+                         ? "Use your own API key to access AI models directly."
+                         : "Sign in with Google for a managed experience.")
+                        .font(.caption).foregroundColor(.secondary)
+                }
+            }
+            .padding(32)
+        }
+    }
+
+    private func maskKey(_ key: String) -> String {
+        guard key.count > 8 else { return "••••••••" }
+        return "\(key.prefix(4))••••\(key.suffix(4))"
+    }
+}
+
 // MARK: - Settings Page
 
 struct SettingsPageView: View {
@@ -299,12 +411,8 @@ struct SettingsPageView: View {
                 Text("Settings")
                     .font(.system(size: 24, weight: .bold))
 
-                // Keyboard shortcuts section
                 SettingsSection(icon: "keyboard", title: "Keyboard shortcuts") {
-                    SettingsRow(
-                        title: "Dictate",
-                        description: "Press to start and stop dictation."
-                    ) {
+                    SettingsRow(title: "Dictate", description: "Press to start and stop dictation.") {
                         HotkeyRecorderButton(
                             currentKeyCode: appState.hotkeyManager.keyCode,
                             currentModifiers: appState.hotkeyManager.modifiers
@@ -314,29 +422,187 @@ struct SettingsPageView: View {
                     }
                 }
 
-                // API Configuration
                 SettingsSection(icon: "key", title: "API Configuration") {
-                    APISettingsContent()
-                        .environmentObject(appState)
+                    APISettingsContent().environmentObject(appState)
                 }
 
-                // Permissions
+                SettingsSection(icon: "cpu", title: "Models") {
+                    ModelsContent()
+                }
+
                 SettingsSection(icon: "lock.shield", title: "Permissions") {
                     PermissionsContent()
                 }
 
-                // Appearance
-                SettingsSection(icon: "paintbrush", title: "Appearance") {
-                    AppearanceContent()
-                }
-
-                // Startup
                 SettingsSection(icon: "power", title: "General") {
                     GeneralContent()
                 }
             }
             .padding(32)
         }
+    }
+}
+
+// MARK: - Models Content (OpenRouter + manual)
+
+struct ModelsContent: View {
+    @ObservedObject private var modelManager = ModelManager.shared
+    @State private var editSTT: String = APIConfig.sttModel
+    @State private var editPolish: String = APIConfig.polishModel
+    @State private var saved = false
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if APIConfig.provider == .openrouter {
+                HStack {
+                    Button {
+                        Task { await modelManager.refreshModels() }
+                    } label: {
+                        HStack(spacing: 4) {
+                            if modelManager.isLoading { ProgressView().controlSize(.small) }
+                            Text(modelManager.isLoading ? "Loading..." : "Refresh Models from OpenRouter")
+                        }
+                    }
+                    .disabled(modelManager.isLoading)
+                    Spacer()
+                    if let e = modelManager.error { Text(e).font(.caption).foregroundColor(.red) }
+                }
+            }
+
+            if !modelManager.sttModels.isEmpty {
+                SettingsRow(title: "STT Model", description: "Speech-to-text") {
+                    Picker("", selection: $editSTT) {
+                        ForEach(modelManager.sttModels) { m in
+                            Text(modelManager.isRecommendedSTTModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
+                        }
+                    }.frame(width: 280)
+                }
+            } else {
+                SettingsRow(title: "STT Model", description: "Speech-to-text") {
+                    TextField("", text: $editSTT).textFieldStyle(.roundedBorder).frame(width: 240)
+                }
+            }
+
+            if !modelManager.polishModels.isEmpty {
+                SettingsRow(title: "Polish Model", description: "Text cleanup") {
+                    Picker("", selection: $editPolish) {
+                        ForEach(modelManager.polishModels) { m in
+                            Text(modelManager.isRecommendedPolishModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
+                        }
+                    }.frame(width: 280)
+                }
+            } else {
+                SettingsRow(title: "Polish Model", description: "Text cleanup") {
+                    TextField("", text: $editPolish).textFieldStyle(.roundedBorder).frame(width: 240)
+                }
+            }
+
+            HStack {
+                Spacer()
+                if saved { Label("Saved", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption) }
+                Button("Save Models") {
+                    APIConfig.sttModel = editSTT
+                    APIConfig.polishModel = editPolish
+                    saved = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { saved = false }
+                }.buttonStyle(.borderedProminent)
+            }
+        }
+    }
+}
+
+// MARK: - Personalization Page
+
+struct PersonalizationPageView: View {
+    @State private var systemPrompt = PromptConfig.systemPrompt
+    @State private var userPrompt = PromptConfig.userPrompt
+    @ObservedObject private var sceneManager = SceneManager.shared
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Text("Personalization")
+                    .font(.system(size: 24, weight: .bold))
+
+                // System Prompt
+                SettingsSection(icon: "cpu", title: "System Prompt") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("⚠️ Modifying the system prompt may affect core behavior.")
+                                .font(.caption).foregroundColor(.orange)
+                            Spacer()
+                            Button("Reset to Default") {
+                                PromptConfig.resetSystemPrompt()
+                                systemPrompt = PromptConfig.systemPrompt
+                            }.font(.caption).buttonStyle(.bordered).controlSize(.small)
+                        }
+                        TextEditor(text: $systemPrompt)
+                            .font(.system(.body, design: .monospaced))
+                            .frame(height: 200)
+                            .border(Color.secondary.opacity(0.3))
+                            .onChange(of: systemPrompt) { _, v in PromptConfig.systemPrompt = v }
+                    }
+                }
+
+                // User Prompt
+                SettingsSection(icon: "person.text.rectangle", title: "User Prompt") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Add personal preferences: \"Technical terms keep English\", \"Formal business tone\"")
+                                .font(.caption).foregroundColor(.secondary)
+                            Spacer()
+                            Button("Clear") { userPrompt = ""; PromptConfig.userPrompt = "" }
+                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                        }
+                        TextEditor(text: $userPrompt)
+                            .font(.system(.body, design: .monospaced))
+                            .frame(height: 150)
+                            .border(Color.secondary.opacity(0.3))
+                            .onChange(of: userPrompt) { _, v in PromptConfig.userPrompt = v }
+                    }
+                }
+
+                // Output Scene
+                SettingsSection(icon: "theatermasks", title: "Output Scene") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Choose a scene to automatically adjust output formatting.")
+                            .font(.caption).foregroundColor(.secondary)
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            ForEach(sceneManager.allScenes) { scene in
+                                SceneCardView(scene: scene, isSelected: sceneManager.currentSceneId == scene.id) {
+                                    sceneManager.select(scene)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(32)
+        }
+    }
+}
+
+// MARK: - Scene Card
+
+struct SceneCardView: View {
+    let scene: SceneProfile
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: scene.icon).font(.title2)
+                    .foregroundColor(isSelected ? .white : .accentColor)
+                Text(scene.name).font(.caption)
+                    .fontWeight(isSelected ? .semibold : .regular)
+                    .foregroundColor(isSelected ? .white : .primary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 70)
+            .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.1))
+            .cornerRadius(10)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -350,10 +616,8 @@ struct SettingsSection<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .foregroundColor(.secondary)
-                Text(title)
-                    .font(.headline)
+                Image(systemName: icon).foregroundColor(.secondary)
+                Text(title).font(.headline)
             }
             Divider()
             content
@@ -371,12 +635,8 @@ struct SettingsRow<Trailing: View>: View {
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body)
-                    .fontWeight(.medium)
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text(title).font(.body).fontWeight(.medium)
+                Text(description).font(.caption).foregroundColor(.secondary)
             }
             Spacer()
             trailing
@@ -393,52 +653,25 @@ struct APISettingsContent: View {
     @State private var editProvider: APIProvider = .openai
     @State private var editKey: String = ""
     @State private var editBaseURL: String = ""
-    @State private var editSTTModel: String = ""
-    @State private var editPolishModel: String = ""
     @State private var saved = false
 
     var body: some View {
-        if isEditing {
-            editView
-        } else {
-            displayView
-        }
+        if isEditing { editView } else { displayView }
     }
 
     private var displayView: some View {
         VStack(spacing: 12) {
             SettingsRow(title: "Provider", description: "AI service provider") {
-                Text(APIConfig.provider.rawValue)
-                    .foregroundColor(.secondary)
+                Text(APIConfig.provider.rawValue).foregroundColor(.secondary)
             }
             SettingsRow(title: "API Key", description: "Authentication key") {
                 if let key = KeychainHelper.getAPIKey(), !key.isEmpty {
-                    Text(maskKey(key))
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.secondary)
+                    Text(maskKey(key)).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
                 } else {
-                    Text("Not configured")
-                        .foregroundColor(.orange)
+                    Text("Not configured").foregroundColor(.orange)
                 }
             }
-            SettingsRow(title: "STT Model", description: "Speech-to-text model") {
-                Text(APIConfig.sttModel)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            SettingsRow(title: "Polish Model", description: "Text cleanup model") {
-                Text(APIConfig.polishModel)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            HStack {
-                Spacer()
-                Button("Edit Configuration") {
-                    loadCurrent()
-                    isEditing = true
-                }
-                .buttonStyle(.bordered)
-            }
+            HStack { Spacer(); Button("Edit Configuration") { loadCurrent(); isEditing = true }.buttonStyle(.bordered) }
         }
     }
 
@@ -446,90 +679,39 @@ struct APISettingsContent: View {
         VStack(spacing: 12) {
             SettingsRow(title: "Provider", description: "Choose your AI provider") {
                 Picker("", selection: $editProvider) {
-                    ForEach(APIProvider.allCases) { p in
-                        Text(p.rawValue).tag(p)
-                    }
-                }
-                .frame(width: 160)
-                .onChange(of: editProvider) { _, v in
-                    editBaseURL = v.defaultBaseURL
-                    editSTTModel = v.defaultSTTModel
-                    editPolishModel = v.defaultPolishModel
-                }
+                    ForEach(APIProvider.allCases) { p in Text(p.rawValue).tag(p) }
+                }.frame(width: 160)
+                .onChange(of: editProvider) { _, v in editBaseURL = v.defaultBaseURL }
             }
-
             SettingsRow(title: "API Key", description: editProvider.keyPlaceholder) {
-                SecureField("", text: $editKey)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 240)
+                SecureField("", text: $editKey).textFieldStyle(.roundedBorder).frame(width: 240)
             }
-
             if !editProvider.keyURL.isEmpty {
-                HStack {
-                    Spacer()
-                    Link("Get API Key →", destination: URL(string: editProvider.keyURL)!)
-                        .font(.caption)
-                }
+                HStack { Spacer(); Link("Get API Key →", destination: URL(string: editProvider.keyURL)!).font(.caption) }
             }
-
-            SettingsRow(title: "STT Model", description: "Speech recognition") {
-                TextField("", text: $editSTTModel)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 240)
-            }
-
-            SettingsRow(title: "Polish Model", description: "Text cleanup") {
-                TextField("", text: $editPolishModel)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 240)
-            }
-
             if editProvider == .custom {
                 SettingsRow(title: "Base URL", description: "API endpoint") {
-                    TextField("", text: $editBaseURL)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 240)
+                    TextField("", text: $editBaseURL).textFieldStyle(.roundedBorder).frame(width: 240)
                 }
             }
-
             HStack {
-                Button("Cancel") { isEditing = false }
-                    .buttonStyle(.bordered)
+                Button("Cancel") { isEditing = false }.buttonStyle(.bordered)
                 Spacer()
-                if saved {
-                    Label("Saved", systemImage: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .font(.caption)
-                }
-                Button("Save") { save() }
-                    .buttonStyle(.borderedProminent)
-            }
-            .padding(.top, 8)
+                if saved { Label("Saved", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption) }
+                Button("Save") { save() }.buttonStyle(.borderedProminent)
+            }.padding(.top, 8)
         }
     }
 
     private func loadCurrent() {
-        editProvider = APIConfig.provider
-        editKey = KeychainHelper.getAPIKey() ?? ""
-        editBaseURL = APIConfig.baseURL
-        editSTTModel = APIConfig.sttModel
-        editPolishModel = APIConfig.polishModel
+        editProvider = APIConfig.provider; editKey = KeychainHelper.getAPIKey() ?? ""; editBaseURL = APIConfig.baseURL
     }
-
     private func save() {
-        APIConfig.provider = editProvider
-        APIConfig.baseURL = editBaseURL
-        APIConfig.sttModel = editSTTModel
-        APIConfig.polishModel = editPolishModel
+        APIConfig.provider = editProvider; APIConfig.baseURL = editBaseURL
         if !editKey.isEmpty { _ = KeychainHelper.saveAPIKey(editKey) }
-        appState.objectWillChange.send()
-        saved = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            saved = false
-            isEditing = false
-        }
+        appState.objectWillChange.send(); saved = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { saved = false; isEditing = false }
     }
-
     private func maskKey(_ key: String) -> String {
         guard key.count > 8 else { return "••••••••" }
         return "\(key.prefix(4))••••\(key.suffix(4))"
@@ -566,31 +748,10 @@ struct PermissionsContent: View {
         }
         .onAppear {
             timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { _ in
-                Task { @MainActor in
-                    hasMic = PermissionManager.hasMicrophoneAccess()
-                    hasAcc = PermissionManager.hasAccessibilityAccess()
-                }
+                Task { @MainActor in hasMic = PermissionManager.hasMicrophoneAccess(); hasAcc = PermissionManager.hasAccessibilityAccess() }
             }
         }
         .onDisappear { timer?.invalidate() }
-    }
-}
-
-// MARK: - Appearance Content
-
-struct AppearanceContent: View {
-    @AppStorage("appColorScheme") private var colorScheme: String = "system"
-
-    var body: some View {
-        SettingsRow(title: "Theme", description: "Choose light, dark, or follow system") {
-            Picker("", selection: $colorScheme) {
-                Text("System").tag("system")
-                Text("Light").tag("light")
-                Text("Dark").tag("dark")
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 200)
-        }
     }
 }
 
@@ -604,10 +765,7 @@ struct GeneralContent: View {
             Toggle("", isOn: $launchAtLogin)
                 .toggleStyle(.switch)
                 .onChange(of: launchAtLogin) { _, v in
-                    do {
-                        if v { try SMAppService.mainApp.register() }
-                        else { try SMAppService.mainApp.unregister() }
-                    } catch {}
+                    do { if v { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } } catch {}
                 }
         }
     }
@@ -619,24 +777,17 @@ struct AboutPageView: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-            Image(systemName: "mic.circle.fill")
-                .font(.system(size: 64))
-                .foregroundColor(.accentColor)
-            Text("Vowrite")
-                .font(.system(size: 32, weight: .bold))
-            Text("AI Voice Keyboard")
-                .font(.title3)
-                .foregroundColor(.secondary)
-            Text("v\(AppVersion.current)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
+            Image(systemName: "mic.circle.fill").font(.system(size: 64)).foregroundColor(.accentColor)
+            Text("Vowrite").font(.system(size: 32, weight: .bold))
+            Text("AI Voice Keyboard").font(.title3).foregroundColor(.secondary)
+            Text("v\(AppVersion.current)").font(.caption).foregroundColor(.secondary)
+            Text("Say it once. Mean it perfectly.").font(.body).italic().foregroundColor(.secondary)
             Divider().frame(width: 200)
-
-            Text("Speak naturally, get polished text.\nPowered by Whisper + GPT.")
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-
+            HStack(spacing: 24) {
+                Link("Website", destination: URL(string: "https://vowrite.com")!)
+                Link("GitHub", destination: URL(string: "https://github.com/Joevonlong/Vowrite")!)
+                Link("License (MIT)", destination: URL(string: "https://github.com/Joevonlong/Vowrite/blob/main/LICENSE")!)
+            }.font(.caption)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
