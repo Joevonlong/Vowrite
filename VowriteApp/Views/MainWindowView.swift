@@ -277,130 +277,235 @@ struct HistoryPageView: View {
 struct AccountPageView: View {
     @ObservedObject private var authManager = AuthManager.shared
     @State private var googleClientID: String = GoogleAuthService.clientID ?? ""
+    @State private var showAdvanced = false
+    @State private var showNoClientIDAlert = false
+    @State private var showAPIKeySetup = false
+    @State private var editProvider: APIProvider = APIConfig.provider
+    @State private var editKey: String = ""
+    @State private var editBaseURL: String = ""
+    @State private var editSTTModel: String = ""
+    @State private var editPolishModel: String = ""
+    @State private var apiSaved = false
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 28) {
                 Text("Account")
                     .font(.system(size: 24, weight: .bold))
 
-                if authManager.authMode == .googleAccount && authManager.isLoggedIn {
-                    // Logged in
-                    HStack(spacing: 16) {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 48))
-                            .foregroundColor(.accentColor)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(authManager.userName ?? "Vowrite User")
-                                .font(.title2).fontWeight(.semibold)
-                            Text(authManager.userEmail ?? "")
-                                .font(.body).foregroundColor(.secondary)
-                        }
-                    }
-
-                    Divider()
-
-                    SettingsRow(title: "Subscription", description: "Current plan") {
-                        HStack(spacing: 8) {
-                            Text("Free").foregroundColor(.secondary)
-                            Button("Upgrade") {}.buttonStyle(.borderedProminent).controlSize(.small).disabled(true)
-                        }
-                    }
-
-                    HStack { Spacer(); Button("Sign Out") { authManager.signOut() }.buttonStyle(.bordered) }
-
-                } else if authManager.authMode == .googleAccount {
-                    // Google mode, not signed in
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Sign in to Vowrite")
-                            .font(.title3).fontWeight(.semibold)
-
-                        SettingsRow(title: "Google OAuth Client ID", description: "Required for Google Sign-In") {
-                            TextField("Client ID", text: $googleClientID)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 300)
-                                .onChange(of: googleClientID) { _, v in GoogleAuthService.clientID = v }
-                        }
-
-                        Text("Redirect URI: \(GoogleAuthService.redirectURI)")
-                            .font(.caption2).foregroundColor(.secondary).textSelection(.enabled)
-
-                        Button {
-                            authManager.signInWithGoogle()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "person.crop.circle.badge.checkmark")
-                                Text("Sign in with Google").fontWeight(.medium)
-                            }
-                            .frame(width: 240, height: 36)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(googleClientID.isEmpty || authManager.isAuthenticating)
-
-                        if authManager.isAuthenticating {
-                            HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Signing in...").foregroundColor(.secondary) }
-                        }
-                        if let error = authManager.authError {
-                            Text(error).font(.caption).foregroundColor(.red)
-                        }
-                    }
-
+                if authManager.isLoggedIn {
+                    profileCard
+                } else if authManager.authMode == .apiKey, let key = KeychainHelper.getAPIKey(), !key.isEmpty {
+                    apiKeySummaryCard(key: key)
                 } else {
-                    // API Key mode
-                    HStack(spacing: 16) {
-                        Image(systemName: "key.fill")
-                            .font(.system(size: 36)).foregroundColor(.orange)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("API Key Mode").font(.title2).fontWeight(.semibold)
-                            Text("Using your own API key. Configure in Settings.")
-                                .font(.body).foregroundColor(.secondary)
-                        }
-                    }
-
-                    if let key = KeychainHelper.getAPIKey(), !key.isEmpty {
-                        SettingsRow(title: "Current Key", description: "Your API key") {
-                            Text(maskKey(key)).font(.system(.body, design: .monospaced)).foregroundColor(.secondary)
-                        }
-                        SettingsRow(title: "Provider", description: "AI service") {
-                            Text(APIConfig.provider.rawValue).foregroundColor(.secondary)
-                        }
-                    } else {
-                        Text("No API key configured. Go to Settings to set one up.")
-                            .foregroundColor(.orange)
-                    }
+                    Text("Choose how to connect Vowrite to AI models")
+                        .foregroundColor(.secondary)
                 }
 
-                Divider()
-
-                // Account mode toggle
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Account Mode").font(.headline)
-                    Picker("", selection: Binding(
-                        get: { authManager.authMode },
-                        set: { authManager.setAuthMode($0) }
-                    )) {
-                        Text("API Key").tag(AuthMode.apiKey)
-                        Text("Google Account").tag(AuthMode.googleAccount)
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 300)
-                    Text(authManager.authMode == .apiKey
-                         ? "Use your own API key to access AI models directly."
-                         : "Sign in with Google for a managed experience.")
-                        .font(.caption).foregroundColor(.secondary)
+                if !authManager.isLoggedIn {
+                    googleSignInCard
+                    apiKeyCard
                 }
+
+                advancedSection
             }
             .padding(32)
+        }
+        .alert("Google Sign-In Setup Required", isPresented: $showNoClientIDAlert) {
+            Button("OK") { showAdvanced = true }
+        } message: {
+            Text("To use Google Sign-In, configure a Google Cloud OAuth Client ID in the Advanced section below.")
+        }
+    }
+
+    private var profileCard: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                Image(systemName: "person.circle.fill")
+                    .font(.system(size: 56)).foregroundColor(.accentColor)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(authManager.userName ?? "Vowrite User")
+                        .font(.title2).fontWeight(.semibold)
+                    Text(authManager.userEmail ?? "")
+                        .font(.body).foregroundColor(.secondary)
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.seal.fill").foregroundColor(.green).font(.caption)
+                        Text("Connected via Google").font(.caption).foregroundColor(.secondary)
+                    }
+                }
+                Spacer()
+            }
+            Divider()
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Plan").font(.caption).foregroundColor(.secondary)
+                    Text("Free").fontWeight(.medium)
+                }
+                Spacer()
+                Button("Sign Out") { authManager.signOut() }.buttonStyle(.bordered)
+            }
+        }
+        .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
+    }
+
+    private func apiKeySummaryCard(key: String) -> some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                Image(systemName: "key.fill").font(.system(size: 36)).foregroundColor(.orange)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Connected via API Key").font(.title3).fontWeight(.semibold)
+                    Text("\(APIConfig.provider.rawValue) \u{00B7} \(maskKey(key))")
+                        .font(.body).foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("STT").font(.caption).foregroundColor(.secondary)
+                    Text(APIConfig.sttModel).font(.caption2).lineLimit(1)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Polish").font(.caption).foregroundColor(.secondary)
+                    Text(APIConfig.polishModel).font(.caption2).lineLimit(1)
+                }
+                Spacer()
+                Button("Edit") { loadAPIDefaults(); showAPIKeySetup = true }
+                    .buttonStyle(.bordered).controlSize(.small)
+            }
+        }
+        .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
+    }
+
+    private var googleSignInCard: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: "globe").font(.title2).foregroundColor(.blue)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Sign in with Google").font(.title3).fontWeight(.semibold)
+                    Text("Get started instantly with your Google account")
+                        .font(.caption).foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            Button {
+                if GoogleAuthService.clientID == nil || GoogleAuthService.clientID!.isEmpty {
+                    showNoClientIDAlert = true
+                } else {
+                    authManager.signInWithGoogle()
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "person.crop.circle.badge.checkmark")
+                    Text("Continue with Google").fontWeight(.medium)
+                }.frame(maxWidth: .infinity, minHeight: 40)
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(authManager.isAuthenticating)
+
+            if authManager.isAuthenticating {
+                HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Signing in...").foregroundColor(.secondary) }
+            }
+            if let error = authManager.authError {
+                Text(error).font(.caption).foregroundColor(.red)
+            }
+        }
+        .padding(20).background(Color.blue.opacity(0.08)).cornerRadius(12)
+    }
+
+    private var apiKeyCard: some View {
+        VStack(spacing: 12) {
+            Button { if !showAPIKeySetup { loadAPIDefaults() }; showAPIKeySetup.toggle() } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "key.fill").font(.title2).foregroundColor(.orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Use your own API Key").font(.body).fontWeight(.medium)
+                        Text("Connect to OpenAI, OpenRouter, or other providers")
+                            .font(.caption).foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: showAPIKeySetup ? "chevron.up" : "chevron.down").foregroundColor(.secondary)
+                }.contentShape(Rectangle())
+            }.buttonStyle(.plain)
+
+            if showAPIKeySetup {
+                VStack(spacing: 12) {
+                    Divider()
+                    HStack { Text("Provider").frame(width: 80, alignment: .leading)
+                        Picker("", selection: $editProvider) {
+                            ForEach(APIProvider.allCases) { p in Text(p.rawValue).tag(p) }
+                        }.onChange(of: editProvider) { _, v in
+                            editBaseURL = v.defaultBaseURL; editSTTModel = v.defaultSTTModel; editPolishModel = v.defaultPolishModel
+                        }
+                    }
+                    HStack { Text("API Key").frame(width: 80, alignment: .leading)
+                        SecureField(editProvider.keyPlaceholder, text: $editKey).textFieldStyle(.roundedBorder)
+                    }
+                    if editProvider == .custom {
+                        HStack { Text("Base URL").frame(width: 80, alignment: .leading)
+                            TextField("https://...", text: $editBaseURL).textFieldStyle(.roundedBorder)
+                        }
+                    }
+                    HStack { Text("STT Model").frame(width: 80, alignment: .leading)
+                        TextField("", text: $editSTTModel).textFieldStyle(.roundedBorder)
+                    }
+                    HStack { Text("Polish").frame(width: 80, alignment: .leading)
+                        TextField("", text: $editPolishModel).textFieldStyle(.roundedBorder)
+                    }
+                    if !editProvider.keyURL.isEmpty {
+                        Link("Get API Key \u{2192}", destination: URL(string: editProvider.keyURL)!).font(.caption)
+                    }
+                    HStack {
+                        Spacer()
+                        if apiSaved { Label("Saved!", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption) }
+                        Button("Save & Connect") { saveAPIKey() }.buttonStyle(.borderedProminent).disabled(editKey.isEmpty)
+                    }
+                }
+            }
+        }
+        .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
+    }
+
+    private var advancedSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { showAdvanced.toggle() } label: {
+                HStack {
+                    Text("Advanced").font(.caption).foregroundColor(.secondary)
+                    Image(systemName: showAdvanced ? "chevron.up" : "chevron.down").font(.caption2).foregroundColor(.secondary)
+                }
+            }.buttonStyle(.plain)
+            if showAdvanced {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Google OAuth Client ID").font(.caption).foregroundColor(.secondary)
+                    TextField("Enter your Google Cloud OAuth Client ID", text: $googleClientID)
+                        .textFieldStyle(.roundedBorder)
+                        .onChange(of: googleClientID) { _, v in GoogleAuthService.clientID = v }
+                    Text("Redirect URI: \(GoogleAuthService.redirectURI)")
+                        .font(.caption2).foregroundColor(.secondary).textSelection(.enabled)
+                    Text("Create at console.cloud.google.com \u{2192} APIs & Services \u{2192} Credentials")
+                        .font(.caption2).foregroundColor(.secondary)
+                }.padding(12).background(Color.secondary.opacity(0.04)).cornerRadius(8)
+            }
         }
     }
 
     private func maskKey(_ key: String) -> String {
-        guard key.count > 8 else { return "••••••••" }
-        return "\(key.prefix(4))••••\(key.suffix(4))"
+        guard key.count > 8 else { return "\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}" }
+        return "\(key.prefix(4))\u{2022}\u{2022}\u{2022}\u{2022}\(key.suffix(4))"
+    }
+    private func loadAPIDefaults() {
+        editProvider = APIConfig.provider; editKey = ""
+        editBaseURL = APIConfig.baseURL; editSTTModel = APIConfig.sttModel; editPolishModel = APIConfig.polishModel
+    }
+    private func saveAPIKey() {
+        APIConfig.provider = editProvider; APIConfig.baseURL = editBaseURL
+        APIConfig.sttModel = editSTTModel; APIConfig.polishModel = editPolishModel
+        if !editKey.isEmpty { _ = KeychainHelper.saveAPIKey(editKey) }
+        authManager.setAuthMode(.apiKey); apiSaved = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { apiSaved = false; showAPIKeySetup = false }
     }
 }
 
-// MARK: - Settings Page
+// MARK: - Settings Page (Models + Hotkey + Permissions + General)
 
 struct SettingsPageView: View {
     @EnvironmentObject var appState: AppState
@@ -411,6 +516,10 @@ struct SettingsPageView: View {
                 Text("Settings")
                     .font(.system(size: 24, weight: .bold))
 
+                SettingsSection(icon: "cpu", title: "Models") {
+                    ModelsContent()
+                }
+
                 SettingsSection(icon: "keyboard", title: "Keyboard shortcuts") {
                     SettingsRow(title: "Dictate", description: "Press to start and stop dictation.") {
                         HotkeyRecorderButton(
@@ -420,14 +529,6 @@ struct SettingsPageView: View {
                             appState.hotkeyManager.update(keyCode: code, modifiers: mods)
                         }
                     }
-                }
-
-                SettingsSection(icon: "key", title: "API Configuration") {
-                    APISettingsContent().environmentObject(appState)
-                }
-
-                SettingsSection(icon: "cpu", title: "Models") {
-                    ModelsContent()
                 }
 
                 SettingsSection(icon: "lock.shield", title: "Permissions") {
@@ -642,79 +743,6 @@ struct SettingsRow<Trailing: View>: View {
             trailing
         }
         .padding(.vertical, 4)
-    }
-}
-
-// MARK: - API Settings Content
-
-struct APISettingsContent: View {
-    @EnvironmentObject var appState: AppState
-    @State private var isEditing = false
-    @State private var editProvider: APIProvider = .openai
-    @State private var editKey: String = ""
-    @State private var editBaseURL: String = ""
-    @State private var saved = false
-
-    var body: some View {
-        if isEditing { editView } else { displayView }
-    }
-
-    private var displayView: some View {
-        VStack(spacing: 12) {
-            SettingsRow(title: "Provider", description: "AI service provider") {
-                Text(APIConfig.provider.rawValue).foregroundColor(.secondary)
-            }
-            SettingsRow(title: "API Key", description: "Authentication key") {
-                if let key = KeychainHelper.getAPIKey(), !key.isEmpty {
-                    Text(maskKey(key)).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
-                } else {
-                    Text("Not configured").foregroundColor(.orange)
-                }
-            }
-            HStack { Spacer(); Button("Edit Configuration") { loadCurrent(); isEditing = true }.buttonStyle(.bordered) }
-        }
-    }
-
-    private var editView: some View {
-        VStack(spacing: 12) {
-            SettingsRow(title: "Provider", description: "Choose your AI provider") {
-                Picker("", selection: $editProvider) {
-                    ForEach(APIProvider.allCases) { p in Text(p.rawValue).tag(p) }
-                }.frame(width: 160)
-                .onChange(of: editProvider) { _, v in editBaseURL = v.defaultBaseURL }
-            }
-            SettingsRow(title: "API Key", description: editProvider.keyPlaceholder) {
-                SecureField("", text: $editKey).textFieldStyle(.roundedBorder).frame(width: 240)
-            }
-            if !editProvider.keyURL.isEmpty {
-                HStack { Spacer(); Link("Get API Key →", destination: URL(string: editProvider.keyURL)!).font(.caption) }
-            }
-            if editProvider == .custom {
-                SettingsRow(title: "Base URL", description: "API endpoint") {
-                    TextField("", text: $editBaseURL).textFieldStyle(.roundedBorder).frame(width: 240)
-                }
-            }
-            HStack {
-                Button("Cancel") { isEditing = false }.buttonStyle(.bordered)
-                Spacer()
-                if saved { Label("Saved", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption) }
-                Button("Save") { save() }.buttonStyle(.borderedProminent)
-            }.padding(.top, 8)
-        }
-    }
-
-    private func loadCurrent() {
-        editProvider = APIConfig.provider; editKey = KeychainHelper.getAPIKey() ?? ""; editBaseURL = APIConfig.baseURL
-    }
-    private func save() {
-        APIConfig.provider = editProvider; APIConfig.baseURL = editBaseURL
-        if !editKey.isEmpty { _ = KeychainHelper.saveAPIKey(editKey) }
-        appState.objectWillChange.send(); saved = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { saved = false; isEditing = false }
-    }
-    private func maskKey(_ key: String) -> String {
-        guard key.count > 8 else { return "••••••••" }
-        return "\(key.prefix(4))••••\(key.suffix(4))"
     }
 }
 
