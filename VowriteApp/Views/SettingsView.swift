@@ -113,6 +113,8 @@ struct SettingsView: View {
             APISettingsTab()
                 .environmentObject(appState)
                 .tabItem { Label("API", systemImage: "key") }
+            PromptsSettingsTab()
+                .tabItem { Label("Prompts", systemImage: "text.bubble") }
             HotkeySettingsTab()
                 .environmentObject(appState)
                 .tabItem { Label("Hotkey", systemImage: "keyboard") }
@@ -121,7 +123,7 @@ struct SettingsView: View {
             AboutTab()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 520, height: 380)
+        .frame(width: 520, height: 480)
     }
 }
 
@@ -280,6 +282,63 @@ struct APISettingsTab: View {
         let prefix = String(key.prefix(4))
         let suffix = String(key.suffix(4))
         return "\(prefix)••••\(suffix)"
+    }
+}
+
+// MARK: - Prompts Settings Tab
+
+struct PromptsSettingsTab: View {
+    @State private var systemPrompt = PromptConfig.systemPrompt
+    @State private var userPrompt = PromptConfig.userPrompt
+
+    var body: some View {
+        Form {
+            Section("System Prompt") {
+                Text("Modifying the system prompt may affect core behavior. Reset to default if issues occur.")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+
+                TextEditor(text: $systemPrompt)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(height: 160)
+                    .onChange(of: systemPrompt) { _, newValue in
+                        PromptConfig.systemPrompt = newValue
+                    }
+
+                HStack {
+                    Spacer()
+                    Button("Reset to Default") {
+                        PromptConfig.resetSystemPrompt()
+                        systemPrompt = PromptConfig.systemPrompt
+                    }
+                    .font(.caption)
+                }
+            }
+
+            Section("User Prompt") {
+                Text("Add your personal preferences. Examples: \"Technical terms keep English\" \"Use Arabic numerals\" \"Formal business tone\"")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                TextEditor(text: $userPrompt)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(height: 120)
+                    .onChange(of: userPrompt) { _, newValue in
+                        PromptConfig.userPrompt = newValue
+                    }
+
+                HStack {
+                    Spacer()
+                    Button("Clear") {
+                        userPrompt = ""
+                        PromptConfig.userPrompt = ""
+                    }
+                    .font(.caption)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
     }
 }
 
