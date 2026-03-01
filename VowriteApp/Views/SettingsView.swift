@@ -115,6 +115,8 @@ struct SettingsView: View {
                 .tabItem { Label("API", systemImage: "key") }
             PromptsSettingsTab()
                 .tabItem { Label("Prompts", systemImage: "text.bubble") }
+            ScenesSettingsTab()
+                .tabItem { Label("Scenes", systemImage: "theatermasks") }
             HotkeySettingsTab()
                 .environmentObject(appState)
                 .tabItem { Label("Hotkey", systemImage: "keyboard") }
@@ -334,6 +336,53 @@ struct PromptsSettingsTab: View {
                         PromptConfig.userPrompt = ""
                     }
                     .font(.caption)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+    }
+}
+
+// MARK: - Scenes Settings Tab
+
+struct ScenesSettingsTab: View {
+    @ObservedObject private var sceneManager = SceneManager.shared
+
+    var body: some View {
+        Form {
+            Section("Scene Formatting") {
+                Text("Choose a scene to automatically adjust the AI output style. The scene prompt is appended to your system and user prompts.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                ForEach(sceneManager.allScenes) { scene in
+                    Button {
+                        sceneManager.select(scene)
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: scene.icon)
+                                .foregroundColor(.accentColor)
+                                .frame(width: 24)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(scene.name)
+                                    .fontWeight(sceneManager.currentSceneId == scene.id ? .semibold : .regular)
+                                if !scene.promptTemplate.isEmpty {
+                                    Text(scene.promptTemplate.prefix(80) + (scene.promptTemplate.count > 80 ? "..." : ""))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                            Spacer()
+                            if sceneManager.currentSceneId == scene.id {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }

@@ -18,10 +18,16 @@ final class AIPolishService {
             request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
         }
 
+        var systemPrompt = PromptConfig.effectiveSystemPrompt
+        let scenePrompt = SceneManager.currentScenePrompt
+        if !scenePrompt.isEmpty {
+            systemPrompt += "\n\n---\nOutput formatting for current scene:\n\(scenePrompt)"
+        }
+
         let payload: [String: Any] = [
             "model": model,
             "messages": [
-                ["role": "system", "content": PromptConfig.effectiveSystemPrompt],
+                ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": text]
             ],
             "temperature": 0.3,
