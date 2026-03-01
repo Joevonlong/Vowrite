@@ -22,6 +22,7 @@ final class AuthManager: NSObject, ObservableObject {
     @Published var isAuthenticating: Bool = false
 
     private var codeVerifier: String?
+    private var authSession: ASWebAuthenticationSession?
 
     private static let authModeKey = "authMode"
     private static let googleEmailKey = "googleUserEmail"
@@ -74,6 +75,8 @@ final class AuthManager: NSObject, ObservableObject {
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
 
+                self.authSession = nil
+
                 if let error = error {
                     let nsError = error as NSError
                     // User cancelled — not an error to display
@@ -100,6 +103,7 @@ final class AuthManager: NSObject, ObservableObject {
 
         session.presentationContextProvider = self
         session.prefersEphemeralWebBrowserSession = false
+        self.authSession = session
         session.start()
     }
 
