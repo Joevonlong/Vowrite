@@ -276,9 +276,6 @@ struct HistoryPageView: View {
 
 struct AccountPageView: View {
     @ObservedObject private var authManager = AuthManager.shared
-    @State private var googleClientID: String = GoogleAuthService.clientID ?? ""
-    @State private var showAdvanced = false
-    @State private var showNoClientIDAlert = false
     @State private var showAPIKeySetup = false
     @State private var editProvider: APIProvider = APIConfig.provider
     @State private var editKey: String = ""
@@ -307,15 +304,10 @@ struct AccountPageView: View {
                     apiKeyCard
                 }
 
-                advancedSection
             }
             .padding(32)
         }
-        .alert("Google Sign-In Setup Required", isPresented: $showNoClientIDAlert) {
-            Button("OK") { showAdvanced = true }
-        } message: {
-            Text("To use Google Sign-In, configure a Google Cloud OAuth Client ID in the Advanced section below.")
-        }
+
     }
 
     private var profileCard: some View {
@@ -388,11 +380,7 @@ struct AccountPageView: View {
                 Spacer()
             }
             Button {
-                if GoogleAuthService.clientID == nil || GoogleAuthService.clientID!.isEmpty {
-                    showNoClientIDAlert = true
-                } else {
-                    authManager.signInWithGoogle()
-                }
+                authManager.signInWithGoogle()
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "person.crop.circle.badge.checkmark")
@@ -463,29 +451,6 @@ struct AccountPageView: View {
             }
         }
         .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
-    }
-
-    private var advancedSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Button { showAdvanced.toggle() } label: {
-                HStack {
-                    Text("Advanced").font(.caption).foregroundColor(.secondary)
-                    Image(systemName: showAdvanced ? "chevron.up" : "chevron.down").font(.caption2).foregroundColor(.secondary)
-                }
-            }.buttonStyle(.plain)
-            if showAdvanced {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Google OAuth Client ID").font(.caption).foregroundColor(.secondary)
-                    TextField("Enter your Google Cloud OAuth Client ID", text: $googleClientID)
-                        .textFieldStyle(.roundedBorder)
-                        .onChange(of: googleClientID) { _, v in GoogleAuthService.clientID = v }
-                    Text("Redirect URI: \(GoogleAuthService.redirectURI)")
-                        .font(.caption2).foregroundColor(.secondary).textSelection(.enabled)
-                    Text("Create at console.cloud.google.com \u{2192} APIs & Services \u{2192} Credentials")
-                        .font(.caption2).foregroundColor(.secondary)
-                }.padding(12).background(Color.secondary.opacity(0.04)).cornerRadius(8)
-            }
-        }
     }
 
     private func maskKey(_ key: String) -> String {

@@ -64,12 +64,20 @@ enum GoogleAuthService {
     private static let authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth"
     private static let tokenEndpoint = "https://oauth2.googleapis.com/token"
 
-    // MARK: - Client ID (stored in UserDefaults)
+    // MARK: - Client ID
+    // TODO: Replace with your Google Cloud OAuth Client ID for com.vowrite.app
+    // Create at: console.cloud.google.com → APIs & Services → Credentials → OAuth 2.0 (macOS)
+    private static let bundledClientID = ""  // FILL IN AFTER CREATING GOOGLE CLOUD PROJECT
 
     private static let clientIDKey = "googleOAuthClientID"
 
     static var clientID: String? {
-        get { UserDefaults.standard.string(forKey: clientIDKey) }
+        get {
+            // Allow override via UserDefaults (for development), fallback to bundled
+            let override = UserDefaults.standard.string(forKey: clientIDKey) ?? ""
+            if !override.isEmpty { return override }
+            return bundledClientID.isEmpty ? nil : bundledClientID
+        }
         set { UserDefaults.standard.set(newValue, forKey: clientIDKey) }
     }
 
