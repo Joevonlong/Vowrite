@@ -20,6 +20,17 @@
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Google OAuth Callback</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.vowrite.app</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Vowrite needs microphone access to record your voice for dictation.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

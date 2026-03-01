@@ -18,7 +18,8 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("Carbon"),
                 .linkedFramework("AVFoundation"),
-                .linkedFramework("Security")
+                .linkedFramework("Security"),
+                .linkedFramework("AuthenticationServices")
             ]
         )
     ]
