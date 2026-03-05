@@ -41,8 +41,9 @@ struct DualAPIConfigView: View {
                                 }
                             }
                         } else {
-                            TextField("STT Model", text: $sttModel)
-                                .textFieldStyle(.roundedBorder)
+                            LabeledContent("Model") {
+                                Text(sttModel).foregroundColor(.secondary)
+                            }
                         }
                     }
                     .padding(8)
@@ -68,8 +69,9 @@ struct DualAPIConfigView: View {
                                 }
                             }
                         } else {
-                            TextField("Polish Model", text: $polishModel)
-                                .textFieldStyle(.roundedBorder)
+                            LabeledContent("Model") {
+                                Text(polishModel).foregroundColor(.secondary)
+                            }
                         }
                     }
                     .padding(8)

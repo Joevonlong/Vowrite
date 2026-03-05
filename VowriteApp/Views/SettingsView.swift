@@ -322,6 +322,7 @@ struct SettingsContentPage: View {
     @State private var testingAPI = false
     @State private var apiTestResult: (success: Bool, message: String)?
     @State private var editLanguage: SupportedLanguage = LanguageConfig.globalLanguage
+    @State private var advancedModelMode = false
     @State private var hotkeyCode: UInt32 = UInt32(kVK_Space)
     @State private var hotkeyMods: UInt32 = UInt32(optionKey)
     @State private var launchAtLogin = false
@@ -362,8 +363,16 @@ struct SettingsContentPage: View {
                 // Models
                 GroupBox("Models") {
                     VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Spacer()
+                            Toggle("Advanced", isOn: $advancedModelMode)
+                                .toggleStyle(.switch)
+                                .controlSize(.small)
+                                .font(.caption)
+                        }
+
                         if editProvider == .openrouter && !editKey.isEmpty {
-                            // OpenRouter: dynamic fetch + manual input
+                            // OpenRouter: dynamic fetch
                             HStack {
                                 Button {
                                     Task { await modelManager.refreshModels() }
@@ -380,18 +389,20 @@ struct SettingsContentPage: View {
                                     ForEach(modelManager.sttModels) { m in
                                         Text(modelManager.isRecommendedSTTModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
                                     }
-                                    Divider()
-                                    Text("Custom...").tag("__custom_stt__")
+                                    if advancedModelMode {
+                                        Divider()
+                                        Text("Custom...").tag("__custom_stt__")
+                                    }
                                 }
                                 .onChange(of: editSTTModel) { _, v in
                                     if v == "__custom_stt__" { editSTTModel = customSTTModel }
                                 }
-                                if editSTTModel == customSTTModel && !customSTTModel.isEmpty || !modelManager.sttModels.contains(where: { $0.id == editSTTModel }) {
+                                if advancedModelMode && (editSTTModel == customSTTModel && !customSTTModel.isEmpty || !modelManager.sttModels.contains(where: { $0.id == editSTTModel })) {
                                     TextField("Custom STT Model ID", text: $customSTTModel)
                                         .textFieldStyle(.roundedBorder)
                                         .onChange(of: customSTTModel) { _, v in editSTTModel = v }
                                 }
-                            } else {
+                            } else if advancedModelMode {
                                 TextField("STT Model", text: $editSTTModel).textFieldStyle(.roundedBorder)
                             }
                             if !modelManager.polishModels.isEmpty {
@@ -399,46 +410,70 @@ struct SettingsContentPage: View {
                                     ForEach(modelManager.polishModels) { m in
                                         Text(modelManager.isRecommendedPolishModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
                                     }
-                                    Divider()
-                                    Text("Custom...").tag("__custom_polish__")
+                                    if advancedModelMode {
+                                        Divider()
+                                        Text("Custom...").tag("__custom_polish__")
+                                    }
                                 }
                                 .onChange(of: editPolishModel) { _, v in
                                     if v == "__custom_polish__" { editPolishModel = customPolishModel }
                                 }
-                                if editPolishModel == customPolishModel && !customPolishModel.isEmpty || !modelManager.polishModels.contains(where: { $0.id == editPolishModel }) {
+                                if advancedModelMode && (editPolishModel == customPolishModel && !customPolishModel.isEmpty || !modelManager.polishModels.contains(where: { $0.id == editPolishModel })) {
                                     TextField("Custom Polish Model ID", text: $customPolishModel)
                                         .textFieldStyle(.roundedBorder)
                                         .onChange(of: customPolishModel) { _, v in editPolishModel = v }
                                 }
-                            } else {
+                            } else if advancedModelMode {
                                 TextField("Polish Model", text: $editPolishModel).textFieldStyle(.roundedBorder)
                             }
                         } else if !editProvider.presetSTTModels.isEmpty || !editProvider.presetPolishModels.isEmpty {
-                            // Providers with preset models: Picker + Custom option
+                            // Providers with preset models: Picker only (Advanced enables custom input)
                             if editProvider.hasSTTSupport {
                                 presetModelPicker(
                                     label: "STT Model",
                                     selection: $editSTTModel,
                                     presets: editProvider.presetSTTModels,
-                                    customText: $customSTTModel
+                                    customText: $customSTTModel,
+                                    allowCustom: advancedModelMode
                                 )
                             }
                             presetModelPicker(
                                 label: "Polish Model",
                                 selection: $editPolishModel,
                                 presets: editProvider.presetPolishModels,
-                                customText: $customPolishModel
+                                customText: $customPolishModel,
+                                allowCustom: advancedModelMode
                             )
                         } else {
-                            // Custom provider or DeepSeek (no presets): manual text fields
+                            // Custom provider or DeepSeek (no presets): manual text fields only in Advanced mode
                             if editProvider.hasSTTSupport {
-                                TextField("STT Model", text: $editSTTModel).textFieldStyle(.roundedBorder)
+                                if advancedModelMode {
+                                    TextField("STT Model", text: $editSTTModel).textFieldStyle(.roundedBorder)
+                                } else {
+                                    LabeledContent("STT Model") {
+                                        Text(editSTTModel).foregroundColor(.secondary)
+                                    }
+                                    Text("Enable Advanced mode to change model manually.")
+                                        .font(.caption).foregroundColor(.secondary)
+                                }
                             } else {
                                 LabeledContent("STT Model") {
                                     Text("Not supported by this provider").font(.caption).foregroundColor(.secondary)
                                 }
                             }
-                            TextField("Polish Model", text: $editPolishModel).textFieldStyle(.roundedBorder)
+                            if advancedModelMode {
+                                TextField("Polish Model", text: $editPolishModel).textFieldStyle(.roundedBorder)
+                            } else {
+                                LabeledContent("Polish Model") {
+                                    Text(editPolishModel).foregroundColor(.secondary)
+                                }
+                                if editProvider.hasSTTSupport {
+                                    // hint already shown above
+                                } else {
+                                    Text("Enable Advanced mode to change model manually.")
+                                        .font(.caption).foregroundColor(.secondary)
+                                }
+                            }
                         }
                     }.padding(8)
                 }
@@ -540,21 +575,27 @@ struct SettingsContentPage: View {
     }
 
     @ViewBuilder
-    private func presetModelPicker(label: String, selection: Binding<String>, presets: [String], customText: Binding<String>) -> some View {
-        let isCustom = !presets.contains(selection.wrappedValue)
+    private func presetModelPicker(label: String, selection: Binding<String>, presets: [String], customText: Binding<String>, allowCustom: Bool = false) -> some View {
+        let isCustom = !presets.contains(selection.wrappedValue) && !selection.wrappedValue.isEmpty
         Picker(label, selection: selection) {
             ForEach(presets, id: \.self) { model in
                 Text(model).tag(model)
             }
-            Divider()
-            Text("Custom...").tag("__custom__")
+            if allowCustom {
+                Divider()
+                Text("Custom...").tag("__custom__")
+            }
         }
         .onChange(of: selection.wrappedValue) { _, v in
             if v == "__custom__" {
                 selection.wrappedValue = customText.wrappedValue.isEmpty ? "" : customText.wrappedValue
             }
+            // If not in advanced mode and value is not in presets, snap to first preset
+            if !allowCustom && !presets.contains(v) && v != "__custom__" && !presets.isEmpty {
+                selection.wrappedValue = presets[0]
+            }
         }
-        if isCustom {
+        if allowCustom && isCustom {
             TextField("Custom Model ID", text: customText)
                 .textFieldStyle(.roundedBorder)
                 .onChange(of: customText.wrappedValue) { _, v in selection.wrappedValue = v }
@@ -628,7 +669,6 @@ struct SettingsContentPage: View {
 // MARK: - Personalization Page
 
 struct PersonalizationPage: View {
-    @State private var systemPrompt = PromptConfig.systemPrompt
     @State private var userPrompt = PromptConfig.userPrompt
     @ObservedObject private var modeManager = ModeManager.shared
     @ObservedObject private var vocabManager = VocabularyManager.shared
@@ -697,25 +737,6 @@ struct PersonalizationPage: View {
                             editingMode = nil
                         }
                     }
-                }
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Label("System Prompt", systemImage: "cpu").font(.headline)
-                            Spacer()
-                            Button("Reset to Default") {
-                                PromptConfig.resetSystemPrompt(); systemPrompt = PromptConfig.systemPrompt
-                            }.font(.caption).buttonStyle(.bordered).controlSize(.small)
-                        }
-                        Text("Modifying the system prompt may affect core behavior.")
-                            .font(.caption).foregroundColor(.orange)
-                        TextEditor(text: $systemPrompt)
-                            .font(.system(.body, design: .monospaced))
-                            .frame(height: 200)
-                            .border(Color.secondary.opacity(0.3))
-                            .onChange(of: systemPrompt) { _, v in PromptConfig.systemPrompt = v }
-                    }.padding(8)
                 }
 
                 GroupBox {
