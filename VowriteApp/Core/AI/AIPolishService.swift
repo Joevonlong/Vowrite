@@ -1,9 +1,12 @@
 import Foundation
 
 final class AIPolishService {
-    func polish(text: String, apiKey: String) async throws -> String {
+    func polish(text: String, apiKey: String, modeConfig: ModeConfig? = nil) async throws -> String {
         let baseURL = APIConfig.baseURL
-        let model = APIConfig.polishModel
+        let config = modeConfig ?? ModeManager.currentModeConfig
+
+        // Use mode-specific polish model or fall back to global
+        let model = config.polishModel ?? APIConfig.polishModel
         let endpoint = "\(baseURL)/chat/completions"
 
         var request = URLRequest(url: URL(string: endpoint)!)
@@ -18,11 +21,26 @@ final class AIPolishService {
             request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
         }
 
+        // Build system prompt: base + mode-specific override or scene fallback
         var systemPrompt = PromptConfig.effectiveSystemPrompt
-        let scenePrompt = SceneManager.currentScenePrompt
-        if !scenePrompt.isEmpty {
-            systemPrompt += "\n\n---\nOutput formatting for current scene:\n\(scenePrompt)"
+
+        if !config.systemPrompt.isEmpty {
+            systemPrompt += "\n\n---\nOutput formatting for current mode (\(config.modeName)):\n\(config.systemPrompt)"
+        } else {
+            // Backward compat: check SceneManager if mode has no custom prompt
+            let scenePrompt = SceneManager.currentScenePrompt
+            if !scenePrompt.isEmpty {
+                systemPrompt += "\n\n---\nOutput formatting for current scene:\n\(scenePrompt)"
+            }
         }
+
+        // Mode-specific user prompt
+        if !config.userPrompt.isEmpty {
+            systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(config.userPrompt)"
+        }
+
+        // Language: keep output in the same language as the user's input
+        systemPrompt += "\n\n---\nLanguage rule: Respond in the same language as the user's input unless explicitly asked to translate."
 
         let payload: [String: Any] = [
             "model": model,
@@ -30,7 +48,7 @@ final class AIPolishService {
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": text]
             ],
-            "temperature": 0.3,
+            "temperature": config.temperature,
             "max_tokens": 4096
         ]
 
