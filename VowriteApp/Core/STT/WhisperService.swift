@@ -2,19 +2,22 @@ import Foundation
 
 final class WhisperService {
     func transcribe(audioURL: URL, apiKey: String, language: String? = nil, prompt: String? = nil) async throws -> String {
-        let baseURL = APIConfig.baseURL
-        let model = APIConfig.sttModel
+        // F-019: Use dual API config for STT pipeline
+        let effectiveKey = DualAPIConfig.effectiveSTTAPIKey ?? apiKey
+        let baseURL = DualAPIConfig.effectiveSTTBaseURL
+        let model = DualAPIConfig.effectiveSTTModel
+        let provider = DualAPIConfig.effectiveSTTProvider
         let endpoint = "\(baseURL)/audio/transcriptions"
 
         let boundary = UUID().uuidString
         var request = URLRequest(url: URL(string: endpoint)!)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(effectiveKey)", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 60
 
         // OpenRouter requires HTTP-Referer
-        if APIConfig.provider == .openrouter {
+        if provider == .openrouter {
             request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
             request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
         }

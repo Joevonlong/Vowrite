@@ -103,4 +103,21 @@ enum KeychainHelper {
         delete(service: googleService, account: "refresh_token")
         delete(service: googleService, account: "id_token")
     }
+
+    // MARK: - Generic Value (for DualAPIConfig)
+
+    @discardableResult
+    static func saveValue(_ value: String, forAccount acct: String) -> Bool {
+        save(service: service, account: acct, value: value)
+    }
+
+    static func getValue(forAccount acct: String) -> String? {
+        load(service: service, account: acct)
+    }
+
+    @discardableResult
+    static func deleteValue(forAccount acct: String) -> Bool {
+        delete(service: service, account: acct)
+        return true
+    }
 }

@@ -5,11 +5,25 @@ import AppKit
 
 final class NonActivatingPanel: NSPanel {
     override var canBecomeMain: Bool { false }
-    // canBecomeKey is true so buttons work, but nonactivatingPanel style
-    // prevents the owning app from becoming frontmost
 }
 
-// MARK: - Floating Recording Bar (like Typeless)
+// MARK: - Overlay Style
+
+enum OverlayStyle: String, CaseIterable {
+    case compact = "Compact"
+    case normal = "Normal"
+
+    static var current: OverlayStyle {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: "overlayStyle"),
+                  let style = OverlayStyle(rawValue: raw) else { return .compact }
+            return style
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: "overlayStyle") }
+    }
+}
+
+// MARK: - Floating Recording Bar
 
 final class RecordingOverlayController {
     static let shared = RecordingOverlayController()
@@ -29,10 +43,11 @@ final class RecordingOverlayController {
 
         let barView = RecordingBarView(appState: appState)
         let hosting = NSHostingView(rootView: barView)
-        hosting.frame = NSRect(x: 0, y: 0, width: 158, height: 42)
+        let size = overlaySize
+        hosting.frame = NSRect(origin: .zero, size: size)
 
         let win = NonActivatingPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 158, height: 42),
+            contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -50,9 +65,8 @@ final class RecordingOverlayController {
         if let screen = NSScreen.main {
             let screenFrame = screen.frame
             let visibleFrame = screen.visibleFrame
-            // Dock height = difference between screen bottom and visible frame bottom
             let dockHeight = visibleFrame.minY - screenFrame.minY
-            let x = screenFrame.midX - 79
+            let x = screenFrame.midX - size.width / 2
             let y = screenFrame.minY + dockHeight + 12
             win.setFrameOrigin(NSPoint(x: x, y: y))
         }
@@ -73,6 +87,13 @@ final class RecordingOverlayController {
         window = nil
         hostingView = nil
         appState = nil
+    }
+
+    private var overlaySize: NSSize {
+        switch OverlayStyle.current {
+        case .compact: return NSSize(width: 200, height: 42)
+        case .normal: return NSSize(width: 260, height: 52)
+        }
     }
 }
 
@@ -95,49 +116,67 @@ struct RecordingBarView: View {
         .animation(.easeInOut(duration: 0.2), value: appState.state)
     }
 
-    // MARK: Recording state — X [waveform] ✓
+    private var durationText: String {
+        let total = Int(appState.recordingDuration)
+        let mins = total / 60
+        let secs = total % 60
+        return String(format: "%d:%02d", mins, secs)
+    }
+
+    // MARK: Recording state
 
     private var recordingBar: some View {
-        HStack(spacing: 0) {
-            // Cancel button — large, prominent
-            Button {
-                appState.cancelRecording()
-            } label: {
+        let isCompact = OverlayStyle.current == .compact
+        return HStack(spacing: 0) {
+            // Cancel button
+            Button { appState.cancelRecording() } label: {
                 ZStack {
                     Circle()
                         .fill(Color.white.opacity(0.12))
-                        .frame(width: 32, height: 32)
+                        .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
                     Image(systemName: "xmark")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: isCompact ? 13 : 15, weight: .bold))
                         .foregroundColor(.white)
                 }
             }
             .buttonStyle(.plain)
             .padding(.leading, 5)
 
-            // Waveform — compact center
-            WaveformView(level: appState.audioLevel)
-                .frame(width: 70)
-                .frame(height: 22)
-                .padding(.horizontal, 4)
+            // Duration
+            Text(durationText)
+                .font(.system(size: isCompact ? 11 : 13, weight: .medium, design: .monospaced))
+                .foregroundColor(.white.opacity(0.7))
+                .frame(width: isCompact ? 32 : 40)
 
-            // Confirm button — large, prominent
-            Button {
-                appState.stopRecording()
-            } label: {
+            // Waveform
+            WaveformView(level: appState.audioLevel)
+                .frame(width: isCompact ? 56 : 80, height: isCompact ? 22 : 28)
+
+            // Recording dot
+            Circle()
+                .fill(Color.red)
+                .frame(width: 6, height: 6)
+                .opacity(appState.audioLevel > 0.1 ? 1 : 0.5)
+                .padding(.trailing, 4)
+
+            // Confirm button
+            Button { appState.stopRecording() } label: {
                 ZStack {
                     Circle()
                         .fill(Color.white.opacity(0.12))
-                        .frame(width: 32, height: 32)
+                        .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
                     Image(systemName: "checkmark")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: isCompact ? 13 : 15, weight: .bold))
                         .foregroundColor(.white)
                 }
             }
             .buttonStyle(.plain)
             .padding(.trailing, 5)
         }
-        .frame(width: 158, height: 42)
+        .frame(
+            width: isCompact ? 200 : 260,
+            height: isCompact ? 42 : 52
+        )
         .background(
             Capsule()
                 .fill(Color.black.opacity(0.85))
@@ -148,7 +187,7 @@ struct RecordingBarView: View {
         )
     }
 
-    // MARK: Processing state — "Thinking"
+    // MARK: Processing state
 
     private var processingBar: some View {
         HStack(spacing: 8) {
@@ -179,6 +218,8 @@ struct WaveformView: View {
 
     @State private var animatedLevels: [Float] = Array(repeating: 0, count: 13)
     @State private var timer: Timer?
+    @State private var targetLevels: [Float] = Array(repeating: 0, count: 13)
+    @State private var targetTimer: Timer?
 
     var body: some View {
         HStack(spacing: 2.5) {
@@ -201,41 +242,26 @@ struct WaveformView: View {
     }
 
     private func barOpacity(for index: Int) -> Double {
-        // Outer bars slightly more transparent for fade effect
         let center = Double(barCount) / 2.0
         let dist = abs(Double(index) - center) / center
         return 1.0 - dist * 0.3
     }
 
-    // Slow-moving targets that each bar drifts toward
-    @State private var targetLevels: [Float] = Array(repeating: 0, count: 13)
-    @State private var targetTimer: Timer?
-
     private func startAnimation() {
-        // Render at 60fps for silky smooth interpolation
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { _ in
-            Task { @MainActor in
-                interpolateLevels()
-            }
+            Task { @MainActor in interpolateLevels() }
         }
-        // Update targets at ~4Hz for slow, organic movement
         targetTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { _ in
-            Task { @MainActor in
-                updateTargets()
-            }
+            Task { @MainActor in updateTargets() }
         }
     }
 
-    /// Pick new random target heights (called ~4x per second)
     private func updateTargets() {
         let speaking = level > 0.5
-
         for i in 0..<barCount {
             let center = Float(barCount) / 2.0
             let centerDistance = abs(Float(i) - center) / center
-
             if speaking {
-                // Bell curve: center bars reach full height, edges ~40%
                 let bellCurve: Float = 1.0 - centerDistance * 0.6
                 targetLevels[i] = bellCurve * Float.random(in: 0.6...1.0)
             } else {
@@ -244,11 +270,9 @@ struct WaveformView: View {
         }
     }
 
-    /// Smoothly drift toward targets (called 60fps)
     private func interpolateLevels() {
         withAnimation(.easeInOut(duration: 0.016)) {
             for i in 0..<barCount {
-                // Smooth lerp: ~15% per frame → takes ~15 frames (~250ms) to reach target
                 animatedLevels[i] += (targetLevels[i] - animatedLevels[i]) * 0.15
             }
         }
