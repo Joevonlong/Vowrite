@@ -47,6 +47,34 @@ enum APIProvider: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Preset STT models for this provider. Empty means no STT support.
+    var presetSTTModels: [String] {
+        switch self {
+        case .openai: return ["whisper-1"]
+        case .openrouter: return [] // uses dynamic fetch
+        case .groq: return ["whisper-large-v3-turbo", "whisper-large-v3"]
+        case .together: return ["whisper-large-v3"]
+        case .deepseek: return [] // no STT support
+        case .custom: return [] // manual input only
+        }
+    }
+
+    /// Preset Polish models for this provider. Empty means manual input only.
+    var presetPolishModels: [String] {
+        switch self {
+        case .openai: return ["gpt-4o-mini", "gpt-4o"]
+        case .openrouter: return [] // uses dynamic fetch
+        case .groq: return ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
+        case .together: return ["meta-llama/Llama-3.1-8B-Instruct-Turbo"]
+        case .deepseek: return ["deepseek-chat", "deepseek-reasoner"]
+        case .custom: return [] // manual input only
+        }
+    }
+
+    var hasSTTSupport: Bool {
+        self != .deepseek
+    }
+
     var keyPlaceholder: String {
         switch self {
         case .openai: return "sk-..."
@@ -288,7 +316,11 @@ struct SettingsContentPage: View {
     @State private var editBaseURL: String = APIConfig.baseURL
     @State private var editSTTModel: String = APIConfig.sttModel
     @State private var editPolishModel: String = APIConfig.polishModel
+    @State private var customSTTModel: String = ""
+    @State private var customPolishModel: String = ""
     @State private var savedFeedback = false
+    @State private var testingAPI = false
+    @State private var apiTestResult: (success: Bool, message: String)?
     @State private var hotkeyCode: UInt32 = UInt32(kVK_Space)
     @State private var hotkeyMods: UInt32 = UInt32(optionKey)
     @State private var launchAtLogin = false
@@ -330,6 +362,7 @@ struct SettingsContentPage: View {
                 GroupBox("Models") {
                     VStack(alignment: .leading, spacing: 12) {
                         if editProvider == .openrouter && !editKey.isEmpty {
+                            // OpenRouter: dynamic fetch + manual input
                             HStack {
                                 Button {
                                     Task { await modelManager.refreshModels() }
@@ -346,6 +379,16 @@ struct SettingsContentPage: View {
                                     ForEach(modelManager.sttModels) { m in
                                         Text(modelManager.isRecommendedSTTModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
                                     }
+                                    Divider()
+                                    Text("Custom...").tag("__custom_stt__")
+                                }
+                                .onChange(of: editSTTModel) { _, v in
+                                    if v == "__custom_stt__" { editSTTModel = customSTTModel }
+                                }
+                                if editSTTModel == customSTTModel && !customSTTModel.isEmpty || !modelManager.sttModels.contains(where: { $0.id == editSTTModel }) {
+                                    TextField("Custom STT Model ID", text: $customSTTModel)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onChange(of: customSTTModel) { _, v in editSTTModel = v }
                                 }
                             } else {
                                 TextField("STT Model", text: $editSTTModel).textFieldStyle(.roundedBorder)
@@ -355,19 +398,67 @@ struct SettingsContentPage: View {
                                     ForEach(modelManager.polishModels) { m in
                                         Text(modelManager.isRecommendedPolishModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
                                     }
+                                    Divider()
+                                    Text("Custom...").tag("__custom_polish__")
+                                }
+                                .onChange(of: editPolishModel) { _, v in
+                                    if v == "__custom_polish__" { editPolishModel = customPolishModel }
+                                }
+                                if editPolishModel == customPolishModel && !customPolishModel.isEmpty || !modelManager.polishModels.contains(where: { $0.id == editPolishModel }) {
+                                    TextField("Custom Polish Model ID", text: $customPolishModel)
+                                        .textFieldStyle(.roundedBorder)
+                                        .onChange(of: customPolishModel) { _, v in editPolishModel = v }
                                 }
                             } else {
                                 TextField("Polish Model", text: $editPolishModel).textFieldStyle(.roundedBorder)
                             }
+                        } else if !editProvider.presetSTTModels.isEmpty || !editProvider.presetPolishModels.isEmpty {
+                            // Providers with preset models: Picker + Custom option
+                            if editProvider.hasSTTSupport {
+                                presetModelPicker(
+                                    label: "STT Model",
+                                    selection: $editSTTModel,
+                                    presets: editProvider.presetSTTModels,
+                                    customText: $customSTTModel
+                                )
+                            }
+                            presetModelPicker(
+                                label: "Polish Model",
+                                selection: $editPolishModel,
+                                presets: editProvider.presetPolishModels,
+                                customText: $customPolishModel
+                            )
                         } else {
-                            TextField("STT Model", text: $editSTTModel).textFieldStyle(.roundedBorder)
+                            // Custom provider or DeepSeek (no presets): manual text fields
+                            if editProvider.hasSTTSupport {
+                                TextField("STT Model", text: $editSTTModel).textFieldStyle(.roundedBorder)
+                            } else {
+                                LabeledContent("STT Model") {
+                                    Text("Not supported by this provider").font(.caption).foregroundColor(.secondary)
+                                }
+                            }
                             TextField("Polish Model", text: $editPolishModel).textFieldStyle(.roundedBorder)
                         }
                     }.padding(8)
                 }
 
                 HStack {
+                    if let result = apiTestResult {
+                        Label(result.message, systemImage: result.success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundColor(result.success ? .green : .red)
+                            .font(.caption)
+                    }
                     Spacer()
+                    Button {
+                        Task { await testAPIConnection() }
+                    } label: {
+                        HStack(spacing: 4) {
+                            if testingAPI { ProgressView().controlSize(.small) }
+                            Text("Test Connection")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(editKey.isEmpty || testingAPI)
                     if savedFeedback {
                         Label("Saved!", systemImage: "checkmark.circle.fill").foregroundColor(.green)
                     }
@@ -431,6 +522,83 @@ struct SettingsContentPage: View {
             }
         }
         .onDisappear { permTimer?.invalidate() }
+    }
+
+    @ViewBuilder
+    private func presetModelPicker(label: String, selection: Binding<String>, presets: [String], customText: Binding<String>) -> some View {
+        let isCustom = !presets.contains(selection.wrappedValue)
+        Picker(label, selection: selection) {
+            ForEach(presets, id: \.self) { model in
+                Text(model).tag(model)
+            }
+            Divider()
+            Text("Custom...").tag("__custom__")
+        }
+        .onChange(of: selection.wrappedValue) { _, v in
+            if v == "__custom__" {
+                selection.wrappedValue = customText.wrappedValue.isEmpty ? "" : customText.wrappedValue
+            }
+        }
+        if isCustom {
+            TextField("Custom Model ID", text: customText)
+                .textFieldStyle(.roundedBorder)
+                .onChange(of: customText.wrappedValue) { _, v in selection.wrappedValue = v }
+        }
+    }
+
+    private func testAPIConnection() async {
+        testingAPI = true
+        apiTestResult = nil
+        defer { testingAPI = false }
+
+        let key = editKey
+        guard !key.isEmpty else {
+            apiTestResult = (false, "No API key provided")
+            return
+        }
+
+        let baseURL = editBaseURL
+        let model = editPolishModel
+        let endpoint = "\(baseURL)/chat/completions"
+
+        guard let url = URL(string: endpoint) else {
+            apiTestResult = (false, "Invalid base URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 15
+
+        if editProvider == .openrouter {
+            request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
+            request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
+        }
+
+        let payload: [String: Any] = [
+            "model": model,
+            "messages": [["role": "user", "content": "Say hi"]],
+            "max_tokens": 5
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                apiTestResult = (false, "Invalid response")
+                return
+            }
+            if httpResponse.statusCode == 200 {
+                apiTestResult = (true, "Connection successful!")
+            } else {
+                let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+                apiTestResult = (false, "Error \(httpResponse.statusCode): \(body.prefix(100))")
+            }
+        } catch {
+            apiTestResult = (false, error.localizedDescription)
+        }
     }
 
     private func saveAPI() {
