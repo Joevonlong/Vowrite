@@ -7,7 +7,6 @@ import ServiceManagement
 enum SidebarItem: String, CaseIterable, Identifiable {
     case home = "Home"
     case history = "History"
-    case transcribe = "Transcribe"
     case account = "Account"
     case settings = "Settings"
     case personalization = "Personalization"
@@ -19,7 +18,6 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         switch self {
         case .home: return "house"
         case .history: return "clock.arrow.circlepath"
-        case .transcribe: return "doc.text.magnifyingglass"
         case .account: return "person.circle"
         case .settings: return "gearshape"
         case .personalization: return "paintbrush"
@@ -94,8 +92,6 @@ struct MainWindowView: View {
         case .history:
             HistoryPageView()
                 .environmentObject(appState)
-        case .transcribe:
-            FileTranscriptionView()
         case .account:
             AccountPageView()
         case .settings:
