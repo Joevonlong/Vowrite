@@ -182,34 +182,13 @@ struct AccountPage: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
 
-                if authManager.authMode == .googleAccount && authManager.isLoggedIn {
-                    loggedInView
-                } else if authManager.authMode == .googleAccount {
-                    googleSignInView
-                } else {
-                    apiKeyModeView
-                }
+                // TODO: Re-enable Google sign-in when backend OAuth service is ready
+                // Currently only API Key mode is available
+                apiKeyModeView
 
-                Divider()
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Account Mode")
-                        .font(.headline)
-                    Picker("", selection: Binding(
-                        get: { authManager.authMode },
-                        set: { authManager.setAuthMode($0) }
-                    )) {
-                        Text("API Key").tag(AuthMode.apiKey)
-                        Text("Google Account").tag(AuthMode.googleAccount)
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 300)
-                    Text(authManager.authMode == .apiKey
-                         ? "Use your own API key to access AI models directly."
-                         : "Sign in with Google for a managed experience.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                // Divider()
+                // Account Mode picker hidden until Google OAuth backend is ready
+                // VStack(alignment: .leading, spacing: 8) { ... }
             }
             .padding(30)
         }
