@@ -4,7 +4,7 @@ import Foundation
 final class VocabularyManager: ObservableObject {
     static let shared = VocabularyManager()
 
-    nonisolated(unsafe) private static let storageKey = "personalVocabulary"
+    nonisolated private static let storageKey = "personalVocabulary"
 
     @Published var words: [String] {
         didSet { save() }

@@ -630,15 +630,74 @@ struct SettingsContentPage: View {
 struct PersonalizationPage: View {
     @State private var systemPrompt = PromptConfig.systemPrompt
     @State private var userPrompt = PromptConfig.userPrompt
-    @ObservedObject private var sceneManager = SceneManager.shared
+    @ObservedObject private var modeManager = ModeManager.shared
     @ObservedObject private var vocabManager = VocabularyManager.shared
     @State private var newWord = ""
     @State private var bulkInput = ""
+    @State private var editingMode: Mode?
+    @State private var showModeEditor = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Text("Personalization").font(.largeTitle).fontWeight(.bold)
+
+                // Modes
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("Modes", systemImage: "square.stack.3d.up").font(.headline)
+                            Spacer()
+                            Button {
+                                let newMode = Mode(
+                                    id: UUID(), name: "New Mode", icon: "star",
+                                    isBuiltin: false, sttModel: nil, language: nil,
+                                    polishEnabled: true, polishModel: nil,
+                                    systemPrompt: "", userPrompt: "",
+                                    temperature: 0.3, autoPaste: true, shortcutIndex: nil
+                                )
+                                editingMode = newMode
+                                showModeEditor = true
+                            } label: {
+                                Label("New Mode", systemImage: "plus")
+                            }
+                            .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                        }
+                        Text("Select a mode to change how your voice input is processed. Cmd+1-6 shortcuts available.")
+                            .font(.caption).foregroundColor(.secondary)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            ForEach(modeManager.modes) { mode in
+                                ModeCard(mode: mode, isSelected: modeManager.currentModeId == mode.id) {
+                                    modeManager.select(mode)
+                                }
+                                .contextMenu {
+                                    Button("Edit") {
+                                        editingMode = mode
+                                        showModeEditor = true
+                                    }
+                                    if mode.isBuiltin {
+                                        Button("Reset to Default") {
+                                            modeManager.resetBuiltinMode(mode)
+                                        }
+                                    } else {
+                                        Button("Delete", role: .destructive) {
+                                            modeManager.deleteMode(mode)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }.padding(8)
+                }
+                .sheet(isPresented: $showModeEditor) {
+                    if let mode = editingMode {
+                        ModeEditorView(mode: mode, modeManager: modeManager) {
+                            showModeEditor = false
+                            editingMode = nil
+                        }
+                    }
+                }
 
                 GroupBox {
                     VStack(alignment: .leading, spacing: 8) {
@@ -674,21 +733,6 @@ struct PersonalizationPage: View {
                             .frame(height: 150)
                             .border(Color.secondary.opacity(0.3))
                             .onChange(of: userPrompt) { _, v in PromptConfig.userPrompt = v }
-                    }.padding(8)
-                }
-
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("Output Scene", systemImage: "theatermasks").font(.headline)
-                        Text("Choose a scene to automatically adjust output formatting.")
-                            .font(.caption).foregroundColor(.secondary)
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            ForEach(sceneManager.allScenes) { scene in
-                                SceneCard(scene: scene, isSelected: sceneManager.currentSceneId == scene.id) {
-                                    sceneManager.select(scene)
-                                }
-                            }
-                        }
                     }.padding(8)
                 }
 
@@ -766,21 +810,29 @@ struct PersonalizationPage: View {
     }
 }
 
-// MARK: - Scene Card
+// MARK: - Mode Card
 
-struct SceneCard: View {
-    let scene: SceneProfile
+struct ModeCard: View {
+    let mode: Mode
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: scene.icon).font(.title2)
+            VStack(spacing: 6) {
+                Image(systemName: mode.icon).font(.title2)
                     .foregroundColor(isSelected ? .white : .accentColor)
-                Text(scene.name).font(.caption)
+                Text(mode.name).font(.caption)
                     .fontWeight(isSelected ? .semibold : .regular)
                     .foregroundColor(isSelected ? .white : .primary)
+                if let idx = mode.shortcutIndex {
+                    Text("Cmd+\(idx)").font(.system(size: 9))
+                        .foregroundColor(isSelected ? .white.opacity(0.7) : .secondary)
+                }
+                if !mode.polishEnabled {
+                    Text("No AI").font(.system(size: 9))
+                        .foregroundColor(isSelected ? .white.opacity(0.7) : .orange)
+                }
             }
             .frame(maxWidth: .infinity, minHeight: 70)
             .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.1))
@@ -788,6 +840,166 @@ struct SceneCard: View {
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2))
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Mode Editor
+
+struct ModeEditorView: View {
+    @State var mode: Mode
+    let modeManager: ModeManager
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            modeEditorHeader
+            Divider()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    modeEditorContent
+                }
+                .padding()
+            }
+        }
+        .frame(width: 500, height: 600)
+    }
+
+    @ViewBuilder
+    private var modeEditorContent: some View {
+        modeGeneralSection
+        modePolishSection
+        modeLanguageSection
+        if mode.polishEnabled { modePromptSection }
+        modeBehaviorSection
+    }
+
+    private var modeEditorHeader: some View {
+        HStack {
+            Text(modeManager.modes.contains(where: { $0.id == mode.id }) ? "Edit Mode" : "New Mode")
+                .font(.headline)
+            Spacer()
+            Button("Cancel") { onDismiss() }.keyboardShortcut(.cancelAction)
+            Button("Save") { saveMode() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
+        }
+        .padding()
+    }
+
+    private var modeGeneralSection: some View {
+        let icons = [
+            "mic.fill", "sparkles", "envelope", "bubble.left", "note.text",
+            "chevron.left.forwardslash.chevron.right", "star", "doc.text",
+            "person.fill", "briefcase", "book", "pencil", "megaphone",
+            "graduationcap", "heart", "lightbulb", "hammer", "globe"
+        ]
+        return GroupBox("General") {
+            VStack(alignment: .leading, spacing: 8) {
+                TextField("Mode Name", text: $mode.name)
+                    .textFieldStyle(.roundedBorder)
+                HStack {
+                    Text("Icon").foregroundColor(.secondary)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(icons, id: \.self) { icon in
+                                Button { mode.icon = icon } label: {
+                                    Image(systemName: icon)
+                                        .frame(width: 28, height: 28)
+                                        .background(mode.icon == icon ? Color.accentColor : Color.secondary.opacity(0.1))
+                                        .foregroundColor(mode.icon == icon ? .white : .primary)
+                                        .cornerRadius(6)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+            }.padding(8)
+        }
+    }
+
+    private var modePolishSection: some View {
+        GroupBox("AI Polish") {
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("Enable AI Polish", isOn: $mode.polishEnabled)
+                if mode.polishEnabled {
+                    TextField("Polish Model (empty = global default)", text: Binding(
+                        get: { mode.polishModel ?? "" },
+                        set: { mode.polishModel = $0.isEmpty ? nil : $0 }
+                    ))
+                    .textFieldStyle(.roundedBorder)
+                    HStack {
+                        Text("Temperature")
+                        Slider(value: $mode.temperature, in: 0...1, step: 0.1)
+                        Text(String(format: "%.1f", mode.temperature))
+                            .font(.caption).foregroundColor(.secondary).frame(width: 30)
+                    }
+                }
+            }.padding(8)
+        }
+    }
+
+    private var modeLanguageSection: some View {
+        GroupBox("Language") {
+            VStack(alignment: .leading, spacing: 8) {
+                Picker("Language Override", selection: modeLanguageSelection) {
+                    ForEach(SupportedLanguage.allCases) { lang in
+                        Text(lang == .auto ? "Use Global Default" : lang.displayName).tag(lang)
+                    }
+                }
+                TextField("STT Model (empty = global default)", text: Binding(
+                    get: { mode.sttModel ?? "" },
+                    set: { mode.sttModel = $0.isEmpty ? nil : $0 }
+                ))
+                .textFieldStyle(.roundedBorder)
+            }
+            .padding(8)
+        }
+    }
+
+    private var modeLanguageSelection: Binding<SupportedLanguage> {
+        Binding(
+            get: {
+                if let raw = mode.language, let lang = SupportedLanguage(rawValue: raw) { return lang }
+                return .auto
+            },
+            set: { newValue in
+                mode.language = (newValue == .auto) ? nil : newValue.rawValue
+            }
+        )
+    }
+
+    private var modePromptSection: some View {
+        GroupBox("Mode Prompt") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("System prompt appended when this mode is active:")
+                    .font(.caption).foregroundColor(.secondary)
+                TextEditor(text: $mode.systemPrompt)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(height: 100)
+                    .border(Color.secondary.opacity(0.3))
+                Text("User prompt for this mode:")
+                    .font(.caption).foregroundColor(.secondary)
+                TextEditor(text: $mode.userPrompt)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(height: 80)
+                    .border(Color.secondary.opacity(0.3))
+            }.padding(8)
+        }
+    }
+
+    private var modeBehaviorSection: some View {
+        GroupBox("Behavior") {
+            Toggle("Auto-paste result", isOn: $mode.autoPaste)
+                .padding(8)
+        }
+    }
+
+    private func saveMode() {
+        if modeManager.modes.contains(where: { $0.id == mode.id }) {
+            modeManager.updateMode(mode)
+        } else {
+            modeManager.addMode(mode)
+        }
+        onDismiss()
     }
 }
 
