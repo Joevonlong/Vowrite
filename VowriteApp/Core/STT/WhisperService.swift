@@ -1,7 +1,7 @@
 import Foundation
 
 final class WhisperService {
-    func transcribe(audioURL: URL, apiKey: String) async throws -> String {
+    func transcribe(audioURL: URL, apiKey: String, language: String? = nil, prompt: String? = nil) async throws -> String {
         let baseURL = APIConfig.baseURL
         let model = APIConfig.sttModel
         let endpoint = "\(baseURL)/audio/transcriptions"
@@ -27,6 +27,16 @@ final class WhisperService {
 
         // response_format
         body.appendMultipart(boundary: boundary, name: "response_format", value: "text")
+
+        // language (if specified, not auto-detect)
+        if let language = language, !language.isEmpty {
+            body.appendMultipart(boundary: boundary, name: "language", value: language)
+        }
+
+        // prompt (for vocabulary guidance)
+        if let prompt = prompt, !prompt.isEmpty {
+            body.appendMultipart(boundary: boundary, name: "prompt", value: prompt)
+        }
 
         // audio file
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
