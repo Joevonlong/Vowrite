@@ -2,21 +2,24 @@ import Foundation
 
 final class AIPolishService {
     func polish(text: String, apiKey: String, modeConfig: ModeConfig? = nil) async throws -> String {
-        let baseURL = APIConfig.baseURL
+        // F-019: Use dual API config for Polish pipeline
+        let effectiveKey = DualAPIConfig.effectivePolishAPIKey ?? apiKey
+        let baseURL = DualAPIConfig.effectivePolishBaseURL
+        let provider = DualAPIConfig.effectivePolishProvider
         let config = modeConfig ?? ModeManager.currentModeConfig
 
-        // Use mode-specific polish model or fall back to global
-        let model = config.polishModel ?? APIConfig.polishModel
+        // Use mode-specific polish model or fall back to effective config
+        let model = config.polishModel ?? DualAPIConfig.effectivePolishModel
         let endpoint = "\(baseURL)/chat/completions"
 
         var request = URLRequest(url: URL(string: endpoint)!)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(effectiveKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 30
 
         // OpenRouter requires these headers
-        if APIConfig.provider == .openrouter {
+        if provider == .openrouter {
             request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
             request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
         }

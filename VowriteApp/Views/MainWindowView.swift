@@ -7,6 +7,7 @@ import ServiceManagement
 enum SidebarItem: String, CaseIterable, Identifiable {
     case home = "Home"
     case history = "History"
+    case transcribe = "Transcribe"
     case account = "Account"
     case settings = "Settings"
     case personalization = "Personalization"
@@ -18,6 +19,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         switch self {
         case .home: return "house"
         case .history: return "clock.arrow.circlepath"
+        case .transcribe: return "doc.text.magnifyingglass"
         case .account: return "person.circle"
         case .settings: return "gearshape"
         case .personalization: return "paintbrush"
@@ -92,6 +94,8 @@ struct MainWindowView: View {
         case .history:
             HistoryPageView()
                 .environmentObject(appState)
+        case .transcribe:
+            FileTranscriptionView()
         case .account:
             AccountPageView()
         case .settings:
@@ -486,13 +490,34 @@ struct SettingsPageView: View {
                     ModelsContent()
                 }
 
+                // F-019: Dual API Provider Configuration
+                SettingsSection(icon: "arrow.triangle.branch", title: "Advanced: Dual Provider") {
+                    DualAPIConfigView()
+                }
+
                 SettingsSection(icon: "keyboard", title: "Keyboard shortcuts") {
-                    SettingsRow(title: "Dictate", description: "Press to start and stop dictation.") {
-                        HotkeyRecorderButton(
-                            currentKeyCode: appState.hotkeyManager.keyCode,
-                            currentModifiers: appState.hotkeyManager.modifiers
-                        ) { code, mods in
-                            appState.hotkeyManager.update(keyCode: code, modifiers: mods)
+                    VStack(spacing: 12) {
+                        SettingsRow(title: "Dictate", description: "Press to start and stop dictation.") {
+                            HotkeyRecorderButton(
+                                currentKeyCode: appState.hotkeyManager.keyCode,
+                                currentModifiers: appState.hotkeyManager.modifiers
+                            ) { code, mods in
+                                appState.hotkeyManager.update(keyCode: code, modifiers: mods)
+                            }
+                        }
+                        // F-018: Push to Talk toggle
+                        SettingsRow(title: "Push to Talk", description: "Hold hotkey to record, release to stop.") {
+                            Toggle("", isOn: Binding(
+                                get: { appState.hotkeyManager.pushToTalkEnabled },
+                                set: { appState.hotkeyManager.pushToTalkEnabled = $0 }
+                            ))
+                            .toggleStyle(.switch)
+                        }
+                        // F-018: Mode shortcuts info
+                        SettingsRow(title: "Mode Shortcuts", description: "⌃1 through ⌃9 to switch modes.") {
+                            Text("Built-in")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
@@ -753,14 +778,29 @@ struct PermissionsContent: View {
 
 struct GeneralContent: View {
     @State private var launchAtLogin = false
+    @State private var overlayStyle = OverlayStyle.current
 
     var body: some View {
-        SettingsRow(title: "Launch at login", description: "Start Vowrite when you log in") {
-            Toggle("", isOn: $launchAtLogin)
-                .toggleStyle(.switch)
-                .onChange(of: launchAtLogin) { _, v in
-                    do { if v { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } } catch {}
+        VStack(spacing: 12) {
+            SettingsRow(title: "Launch at login", description: "Start Vowrite when you log in") {
+                Toggle("", isOn: $launchAtLogin)
+                    .toggleStyle(.switch)
+                    .onChange(of: launchAtLogin) { _, v in
+                        do { if v { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } } catch {}
+                    }
+            }
+            // F-022: Overlay style
+            SettingsRow(title: "Recording overlay", description: "Size of the floating recording bar") {
+                Picker("", selection: $overlayStyle) {
+                    ForEach(OverlayStyle.allCases, id: \.rawValue) { style in
+                        Text(style.rawValue).tag(style)
+                    }
                 }
+                .frame(width: 120)
+                .onChange(of: overlayStyle) { _, v in
+                    OverlayStyle.current = v
+                }
+            }
         }
     }
 }

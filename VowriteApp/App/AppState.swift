@@ -84,7 +84,28 @@ final class AppState: ObservableObject {
                 self?.toggleRecording()
             }
         }
+        // F-018: Push to Talk — release stops recording
+        hotkeyManager.onPushToTalkRelease = { [weak self] in
+            Task { @MainActor in
+                if self?.state == .recording {
+                    self?.stopRecording()
+                }
+            }
+        }
+        // F-018: Mode switching via ⌃1-⌃9
+        hotkeyManager.onModeSwitch = { [weak self] index in
+            Task { @MainActor in
+                self?.switchToMode(at: index)
+            }
+        }
         hotkeyManager.register()
+    }
+
+    /// F-018: Switch to mode by index (0-based)
+    func switchToMode(at index: Int) {
+        let modes = ModeManager.shared.modes
+        guard index >= 0, index < modes.count else { return }
+        ModeManager.shared.select(modes[index])
     }
 
     func toggleRecording() {
