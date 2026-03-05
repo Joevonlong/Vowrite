@@ -321,6 +321,7 @@ struct SettingsContentPage: View {
     @State private var savedFeedback = false
     @State private var testingAPI = false
     @State private var apiTestResult: (success: Bool, message: String)?
+    @State private var editLanguage: SupportedLanguage = LanguageConfig.globalLanguage
     @State private var hotkeyCode: UInt32 = UInt32(kVK_Space)
     @State private var hotkeyMods: UInt32 = UInt32(optionKey)
     @State private var launchAtLogin = false
@@ -463,6 +464,20 @@ struct SettingsContentPage: View {
                         Label("Saved!", systemImage: "checkmark.circle.fill").foregroundColor(.green)
                     }
                     Button("Save Configuration") { saveAPI() }.buttonStyle(.borderedProminent)
+                }
+
+                // Language
+                GroupBox("Language") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Picker("Default Language", selection: $editLanguage) {
+                            ForEach(SupportedLanguage.allCases) { lang in
+                                Text(lang.displayName).tag(lang)
+                            }
+                        }
+                        .onChange(of: editLanguage) { _, v in LanguageConfig.globalLanguage = v }
+                        Text("Language hint for speech recognition. Auto-detect works well for most cases.")
+                            .font(.caption).foregroundColor(.secondary)
+                    }.padding(8)
                 }
 
                 Divider()

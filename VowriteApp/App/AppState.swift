@@ -202,7 +202,8 @@ final class AppState: ObservableObject {
                 #if DEBUG
                 print("[Vowrite] Starting STT transcription...")
                 #endif
-                let rawTranscript = try await whisperService.transcribe(audioURL: url, apiKey: apiKey)
+                let whisperLanguage = LanguageConfig.globalLanguage.whisperCode
+                let rawTranscript = try await whisperService.transcribe(audioURL: url, apiKey: apiKey, language: whisperLanguage)
                 lastRawTranscript = rawTranscript
                 #if DEBUG
                 print("[Vowrite] STT result: '\(rawTranscript)'")
