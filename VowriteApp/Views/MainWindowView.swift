@@ -300,7 +300,8 @@ struct AccountPageView: View {
                 }
 
                 if !authManager.isLoggedIn {
-                    googleSignInCard
+                    // TODO: Re-enable Google sign-in when backend OAuth service is ready
+                    // googleSignInCard
                     apiKeyCard
                 }
 
