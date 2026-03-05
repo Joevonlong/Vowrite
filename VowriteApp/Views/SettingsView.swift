@@ -631,6 +631,9 @@ struct PersonalizationPage: View {
     @State private var systemPrompt = PromptConfig.systemPrompt
     @State private var userPrompt = PromptConfig.userPrompt
     @ObservedObject private var sceneManager = SceneManager.shared
+    @ObservedObject private var vocabManager = VocabularyManager.shared
+    @State private var newWord = ""
+    @State private var bulkInput = ""
 
     var body: some View {
         ScrollView {
@@ -646,7 +649,7 @@ struct PersonalizationPage: View {
                                 PromptConfig.resetSystemPrompt(); systemPrompt = PromptConfig.systemPrompt
                             }.font(.caption).buttonStyle(.bordered).controlSize(.small)
                         }
-                        Text("⚠️ Modifying the system prompt may affect core behavior.")
+                        Text("Modifying the system prompt may affect core behavior.")
                             .font(.caption).foregroundColor(.orange)
                         TextEditor(text: $systemPrompt)
                             .font(.system(.body, design: .monospaced))
@@ -684,6 +687,76 @@ struct PersonalizationPage: View {
                                 SceneCard(scene: scene, isSelected: sceneManager.currentSceneId == scene.id) {
                                     sceneManager.select(scene)
                                 }
+                            }
+                        }
+                    }.padding(8)
+                }
+
+                // Personal Dictionary
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Personal Dictionary", systemImage: "character.book.closed").font(.headline)
+                        Text("Add custom words, names, or technical terms to improve speech recognition accuracy.")
+                            .font(.caption).foregroundColor(.secondary)
+
+                        HStack {
+                            TextField("Add a word or phrase", text: $newWord)
+                                .textFieldStyle(.roundedBorder)
+                                .onSubmit {
+                                    vocabManager.add(newWord)
+                                    newWord = ""
+                                }
+                            Button("Add") {
+                                vocabManager.add(newWord)
+                                newWord = ""
+                            }
+                            .disabled(newWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+
+                        HStack {
+                            TextField("Bulk add (comma-separated)", text: $bulkInput)
+                                .textFieldStyle(.roundedBorder)
+                            Button("Add All") {
+                                vocabManager.addBulk(bulkInput)
+                                bulkInput = ""
+                            }
+                            .disabled(bulkInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+
+                        if !vocabManager.words.isEmpty {
+                            ScrollView {
+                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))], spacing: 6) {
+                                    ForEach(vocabManager.words, id: \.self) { word in
+                                        HStack(spacing: 4) {
+                                            Text(word).font(.caption).lineLimit(1)
+                                            Spacer(minLength: 2)
+                                            Button {
+                                                vocabManager.remove(word)
+                                            } label: {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.secondary.opacity(0.1))
+                                        .cornerRadius(6)
+                                    }
+                                }
+                            }
+                            .frame(maxHeight: 120)
+
+                            HStack {
+                                Text("\(vocabManager.words.count) word(s)")
+                                    .font(.caption).foregroundColor(.secondary)
+                                Spacer()
+                                Button("Clear All") {
+                                    vocabManager.words.removeAll()
+                                }
+                                .font(.caption)
+                                .foregroundColor(.red)
                             }
                         }
                     }.padding(8)
