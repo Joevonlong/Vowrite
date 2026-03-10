@@ -486,6 +486,10 @@ struct SettingsPageView: View {
                     ModelsContent()
                 }
 
+                SettingsSection(icon: "globe", title: "Language") {
+                    LanguageContent()
+                }
+
                 // F-019: Dual API Provider Configuration
                 SettingsSection(icon: "arrow.triangle.branch", title: "Advanced: Dual Provider") {
                     DualAPIConfigView()
@@ -594,6 +598,40 @@ struct ModelsContent: View {
                     saved = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { saved = false }
                 }.buttonStyle(.borderedProminent)
+            }
+        }
+    }
+}
+
+// MARK: - Language Content
+
+struct LanguageContent: View {
+    @State private var selectedLanguage: SupportedLanguage = LanguageConfig.globalLanguage
+
+    var body: some View {
+        VStack(spacing: 12) {
+            SettingsRow(title: "Default Language", description: "Language hint for speech recognition. \"Auto-detect\" works best for most users.") {
+                Picker("", selection: $selectedLanguage) {
+                    ForEach(SupportedLanguage.allCases) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+                .frame(width: 180)
+                .onChange(of: selectedLanguage) { _, v in
+                    LanguageConfig.globalLanguage = v
+                }
+            }
+
+            if selectedLanguage != .auto {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                        .font(.caption)
+                    Text("Setting a specific language forces the speech engine to that language. If you speak multiple languages or mix languages, use \"Auto-detect\".")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                    Spacer()
+                }
             }
         }
     }
