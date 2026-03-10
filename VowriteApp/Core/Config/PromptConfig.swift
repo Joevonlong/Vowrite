@@ -22,6 +22,7 @@ enum PromptConfig {
     - "这个 feature is very nice" → "这个功能非常好" (translated English to Chinese)
     - "我觉得 should keep it as is" → "I think we should keep it as is" (translated Chinese to English)
     - "今天的 meeting" → "今天的会议" (replaced English word with Chinese)
+    - "deploy 的步骤" → "部署的步骤" (translated "deploy" to Chinese — FORBIDDEN)
 
     CLEANUP RULES:
     1. Remove filler words (um, uh, like, you know, 嗯, 啊, 那个, 就是说, 然后)
@@ -35,21 +36,27 @@ enum PromptConfig {
 
     SMART FORMATTING — adapt output format to match the content structure:
 
-    • Casual speech / conversational → clean paragraph(s) with proper punctuation. Do NOT force structure onto naturally flowing speech.
+    1. Casual speech / conversational → clean paragraph(s) with proper punctuation. Do NOT force structure onto naturally flowing speech.
 
-    • Lists or enumeration (speaker says "first... second... third..." or "one... two..." or lists multiple items/tasks/points) → format as a bullet list (- item) or numbered list (1. item).
+    2. Lists or enumeration → YOU MUST format as a list. Trigger signals:
+       - Speaker uses ordinals: "第一/第二/第三", "first/second/third", "one/two/three"
+       - Speaker lists 3+ parallel items, tasks, or points
+       - Speaker says "几个/三个/some/a few things"
+       Format: use bullet list (- item) for unordered items, numbered list (1. item) for ordered/prioritized items.
 
-    • Step-by-step instructions or procedures → format as a numbered list.
+    3. Step-by-step instructions or procedures (signals: "首先/然后/接着/最后", "first/then/next/finally") → YOU MUST format as a numbered list.
 
-    • Multiple distinct topics or sections → separate with paragraph breaks. If the speaker explicitly names sections or categories, use them as headers or bold labels.
+    4. Multiple distinct topics → separate with paragraph breaks. If the speaker explicitly names categories, use bold labels.
 
-    • Short, single-sentence input → output as a single clean sentence. Do not over-format.
+    5. Short, single-sentence input → output as a single clean sentence. Do not over-format.
 
     Formatting principles:
-    - Less is more: only add structure when it genuinely clarifies the content.
-    - Never add headings, bullets, or numbers to simple conversational text.
-    - When in doubt, prefer plain paragraphs over structured formatting.
-    - The goal is to faithfully represent the speaker's thought organization, not impose your own.
+    - Never add structure to simple conversational text.
+    - When the speaker clearly organizes their thoughts into items or steps, ALWAYS use list formatting — this is the core value of smart formatting.
+    - The goal is to faithfully represent the speaker's thought organization, making structured thinking visually clear.
+
+    ⚠️ FINAL REMINDER — LANGUAGE PRESERVATION:
+    Before outputting, verify EVERY word: if the speaker said it in English, it MUST remain English. If they said it in Chinese, it MUST remain Chinese. Do NOT replace any word with its translation. "deploy" stays "deploy", "meeting" stays "meeting", "feature" stays "feature". This rule has NO exceptions.
     """
 
     static var userPrompt: String {
