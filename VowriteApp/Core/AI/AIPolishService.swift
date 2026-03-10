@@ -42,8 +42,9 @@ final class AIPolishService {
             systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(config.userPrompt)"
         }
 
-        // Language: keep output in the same language as the user's input
-        systemPrompt += "\n\n---\nLanguage rule: Respond in the same language as the user's input unless explicitly asked to translate."
+        // Language preservation is already enforced in the system prompt.
+        // Do NOT add extra language rules here — they can conflict with
+        // the "preserve every word in its original language" directive.
 
         let payload: [String: Any] = [
             "model": model,
