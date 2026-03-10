@@ -11,14 +11,15 @@ let package = Package(
         .executableTarget(
             name: "Vowrite",
             path: ".",
-            exclude: ["Package.swift", "Resources/Info.plist", "Resources/Vowrite.entitlements", "Vowrite.app"],
+            exclude: ["Package.swift", "Resources/Info.plist", "Resources/Vowrite.entitlements", "Resources/AppIcon-source.png", "Vowrite.app", "build.sh", "scripts"],
             swiftSettings: [
                 .unsafeFlags(["-parse-as-library"])
             ],
             linkerSettings: [
                 .linkedFramework("Carbon"),
                 .linkedFramework("AVFoundation"),
-                .linkedFramework("Security")
+                .linkedFramework("Security"),
+                .linkedFramework("AuthenticationServices")
             ]
         )
     ]

@@ -1,38 +1,49 @@
 import Foundation
 
 final class AIPolishService {
-    private let systemPrompt = """
-    You are a voice dictation assistant. Your job is to clean up raw speech transcripts into polished, well-written text.
+    func polish(text: String, apiKey: String, modeConfig: ModeConfig? = nil) async throws -> String {
+        // F-019: Use dual API config for Polish pipeline
+        let effectiveKey = DualAPIConfig.effectivePolishAPIKey ?? apiKey
+        let baseURL = DualAPIConfig.effectivePolishBaseURL
+        let provider = DualAPIConfig.effectivePolishProvider
+        let config = modeConfig ?? ModeManager.currentModeConfig
 
-    Rules:
-    1. Remove filler words (um, uh, like, you know, 嗯, 啊, 那个, 就是说, 然后)
-    2. When the speaker corrects themselves ("no wait, I mean..." or "不对，应该是..."), keep ONLY the final corrected version
-    3. Remove unnecessary repetitions
-    4. Add proper punctuation and paragraph breaks
-    5. Fix obvious grammar issues
-    6. Preserve the speaker's original meaning and intent exactly
-    7. Do NOT add information that wasn't spoken
-    8. Do NOT change the language — if they spoke Chinese, output Chinese; if mixed, keep mixed
-    9. Keep the tone natural, not overly formal
-    10. Output ONLY the cleaned text, no explanations or commentary
-    """
-
-    func polish(text: String, apiKey: String) async throws -> String {
-        let baseURL = APIConfig.baseURL
-        let model = APIConfig.polishModel
+        // Use mode-specific polish model or fall back to effective config
+        let model = config.polishModel ?? DualAPIConfig.effectivePolishModel
         let endpoint = "\(baseURL)/chat/completions"
 
         var request = URLRequest(url: URL(string: endpoint)!)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(effectiveKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 30
 
         // OpenRouter requires these headers
-        if APIConfig.provider == .openrouter {
+        if provider == .openrouter {
             request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
             request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
         }
+
+        // Build system prompt: base + mode-specific override or scene fallback
+        var systemPrompt = PromptConfig.effectiveSystemPrompt
+
+        if !config.systemPrompt.isEmpty {
+            systemPrompt += "\n\n---\nOutput formatting for current mode (\(config.modeName)):\n\(config.systemPrompt)"
+        } else {
+            // Backward compat: check SceneManager if mode has no custom prompt
+            let scenePrompt = SceneManager.currentScenePrompt
+            if !scenePrompt.isEmpty {
+                systemPrompt += "\n\n---\nOutput formatting for current scene:\n\(scenePrompt)"
+            }
+        }
+
+        // Mode-specific user prompt
+        if !config.userPrompt.isEmpty {
+            systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(config.userPrompt)"
+        }
+
+        // Language: keep output in the same language as the user's input
+        systemPrompt += "\n\n---\nLanguage rule: Respond in the same language as the user's input unless explicitly asked to translate."
 
         let payload: [String: Any] = [
             "model": model,
@@ -40,7 +51,7 @@ final class AIPolishService {
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": text]
             ],
-            "temperature": 0.3,
+            "temperature": config.temperature,
             "max_tokens": 4096
         ]
 
