@@ -7,6 +7,37 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.7.0] — 2026-03-11
+
+### Added
+- **F-001**: Stronger multilingual preservation in AI polish prompt (Chinese + English mixed text)
+- **F-005**: Scene-aware smart formatting with 6 presets (email, code, chat, etc.)
+- **F-010**: System prompt & user prompt configuration in Settings UI
+- **F-011**: Multi-provider API configuration enhancement (easier setup for 6+ providers)
+- **F-013**: Language settings with global default and Whisper API integration
+- **F-014**: Personal dictionary for improved speech recognition (custom vocabulary)
+- **F-016**: Input modes (Dictation / AI Polish / Translation)
+- **F-017**: First-launch onboarding flow
+- **F-018**: Redesigned recording overlay with mode indicator
+- **F-019**: Quick settings panel accessible from menu bar
+- **F-022**: About page with version info and links
+- Sidebar navigation for Settings: Account / Settings / Personalization / About
+- Account page redesign: card-based login UX, API key inline setup
+
+### Changed
+- Settings UI completely redesigned with sidebar navigation
+- System prompt hidden from user settings (enforced internally)
+- Model selection enforced via dropdown (no free-text input)
+
+### Fixed
+- Version display now uses compiled `AppVersion.current` (fixes SwiftPM builds)
+- Google Sign-In session retention fix
+- JSON-LD version corrected, Twitter Card upgraded to `summary_large_image`
+
+### Removed
+- F-020 file transcription (reverted — not ready for release)
+- Google Sign-In UI temporarily hidden (pending backend OAuth)
+
 ## [0.1.6.0] — 2026-02-28
 
 ### Fixed
@@ -103,7 +134,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.6.0...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.0...HEAD
+[0.1.7.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.6.0...v0.1.7.0
 [0.1.6.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.5.0...v0.1.6.0
 [0.1.5.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.4.0...v0.1.5.0
 [0.1.4.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.3.0...v0.1.4.0
