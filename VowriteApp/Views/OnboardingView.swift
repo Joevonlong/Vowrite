@@ -15,7 +15,7 @@ struct OnboardingView: View {
 
     let onComplete: () -> Void
 
-    private let steps = ["Welcome", "Language", "Permissions", "API Setup", "Test", "Done"]
+    private let totalSteps = 6 // 0..5
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,46 +23,42 @@ struct OnboardingView: View {
             progressBar
                 .padding(.horizontal, 40)
                 .padding(.top, 24)
+                .padding(.bottom, 8)
 
-            // Content
-            Group {
-                switch currentStep {
-                case 0: welcomeStep
-                case 1: languageStep
-                case 2: permissionsStep
-                case 3: apiSetupStep
-                case 4: testStep
-                case 5: doneStep
-                default: EmptyView()
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(40)
-
-            // Navigation buttons
-            HStack {
-                if currentStep > 0 && currentStep < 5 {
-                    Button("Back") { withAnimation { currentStep -= 1 } }
-                        .buttonStyle(.bordered)
-                }
-                Spacer()
-                if currentStep < 5 {
-                    Button(currentStep == 4 ? "Finish" : "Next") {
-                        withAnimation { currentStep += 1 }
+            // Scrollable content area
+            ScrollView {
+                Group {
+                    switch currentStep {
+                    case 0: welcomeStep
+                    case 1: languageStep
+                    case 2: permissionsStep
+                    case 3: apiSetupStep
+                    case 4: testStep
+                    case 5: doneStep
+                    default: EmptyView()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!canProceed)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 40)
+                .padding(.vertical, 24)
             }
-            .padding(.horizontal, 40)
-            .padding(.bottom, 24)
+
+            Divider()
+
+            // Navigation buttons — always visible at bottom
+            navigationBar
+                .padding(.horizontal, 40)
+                .padding(.vertical, 16)
         }
-        .frame(width: 600, height: 500)
+        .frame(width: 600, height: 520)
         .onAppear {
+            selectedLanguage = LanguageConfig.globalLanguage
             hasMicrophone = PermissionManager.hasMicrophoneAccess()
             hasAccessibility = PermissionManager.hasAccessibilityAccess()
         }
     }
+
+    // MARK: - Can Proceed
 
     private var canProceed: Bool {
         switch currentStep {
@@ -71,11 +67,59 @@ struct OnboardingView: View {
         }
     }
 
+    // MARK: - Navigation Bar
+
+    private var navigationBar: some View {
+        HStack {
+            if currentStep > 0 && currentStep < 5 {
+                Button("Back") { withAnimation(.easeInOut(duration: 0.25)) { currentStep -= 1 } }
+                    .buttonStyle(.bordered)
+            }
+            Spacer()
+            if currentStep == 3 {
+                // Allow skipping API setup
+                Button("Skip for now") {
+                    withAnimation(.easeInOut(duration: 0.25)) { currentStep += 1 }
+                }
+                .buttonStyle(.bordered)
+                .foregroundColor(.secondary)
+            }
+            if currentStep < 5 {
+                Button(nextButtonLabel) {
+                    advanceStep()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!canProceed)
+            }
+        }
+    }
+
+    private var nextButtonLabel: String {
+        switch currentStep {
+        case 0: return "Get Started"
+        case 4: return "Finish"
+        default: return "Next"
+        }
+    }
+
+    private func advanceStep() {
+        // Save settings on step transitions
+        switch currentStep {
+        case 1:
+            LanguageConfig.globalLanguage = selectedLanguage
+        case 3:
+            saveAPIConfig()
+        default:
+            break
+        }
+        withAnimation(.easeInOut(duration: 0.25)) { currentStep += 1 }
+    }
+
     // MARK: - Progress Bar
 
     private var progressBar: some View {
         HStack(spacing: 4) {
-            ForEach(0..<steps.count, id: \.self) { i in
+            ForEach(0..<totalSteps, id: \.self) { i in
                 RoundedRectangle(cornerRadius: 2)
                     .fill(i <= currentStep ? Color.accentColor : Color.secondary.opacity(0.2))
                     .frame(height: 4)
@@ -87,6 +131,7 @@ struct OnboardingView: View {
 
     private var welcomeStep: some View {
         VStack(spacing: 20) {
+            Spacer().frame(height: 40)
             Image(systemName: "mic.circle.fill")
                 .font(.system(size: 64))
                 .foregroundColor(.accentColor)
@@ -97,6 +142,7 @@ struct OnboardingView: View {
                 .foregroundColor(.secondary)
             Text("Let's get you set up in just a few steps.")
                 .foregroundColor(.secondary)
+            Spacer().frame(height: 40)
         }
     }
 
@@ -106,22 +152,51 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Choose your language")
                 .font(.title2.bold())
-            Text("This helps Vowrite recognize your speech more accurately.")
+            Text("This sets the default language for speech recognition. You can always change it later.")
                 .foregroundColor(.secondary)
 
-            Picker("Default Language", selection: $selectedLanguage) {
-                ForEach(SupportedLanguage.allCases) { lang in
-                    Text(lang.displayName).tag(lang)
+            // Grouped popular + all languages for compact display
+            VStack(alignment: .leading, spacing: 12) {
+                // Quick pick: popular languages
+                let popular: [SupportedLanguage] = [.auto, .en, .zhHans, .de, .ja, .fr, .es]
+                ForEach(popular) { lang in
+                    languageRow(lang)
                 }
-            }
-            .pickerStyle(.radioGroup)
-            .onChange(of: selectedLanguage) { _, v in
-                LanguageConfig.globalLanguage = v
-            }
 
-            Text("You can always change this later in Settings.")
-                .font(.caption)
+                Divider()
+                    .padding(.vertical, 4)
+
+                DisclosureGroup("More languages") {
+                    let others = SupportedLanguage.allCases.filter { !popular.contains($0) }
+                    ForEach(others) { lang in
+                        languageRow(lang)
+                    }
+                }
                 .foregroundColor(.secondary)
+            }
+        }
+    }
+
+    private func languageRow(_ lang: SupportedLanguage) -> some View {
+        HStack {
+            Text(lang.displayName)
+                .foregroundColor(.primary)
+            Spacer()
+            if selectedLanguage == lang {
+                Image(systemName: "checkmark")
+                    .foregroundColor(.accentColor)
+                    .fontWeight(.semibold)
+            }
+        }
+        .contentShape(Rectangle())
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(selectedLanguage == lang ? Color.accentColor.opacity(0.1) : Color.clear)
+        )
+        .onTapGesture {
+            selectedLanguage = lang
         }
     }
 
@@ -131,14 +206,14 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Grant permissions")
                 .font(.title2.bold())
-            Text("Vowrite needs these to work properly.")
+            Text("Vowrite needs these to work properly. You can grant them now or later in System Settings.")
                 .foregroundColor(.secondary)
 
             VStack(spacing: 16) {
                 permissionRow(
                     icon: "mic.fill",
                     title: "Microphone",
-                    description: "To record your voice",
+                    description: "Required — to record your voice",
                     granted: hasMicrophone
                 ) {
                     PermissionManager.requestMicrophoneAccess { g in
@@ -149,7 +224,7 @@ struct OnboardingView: View {
                 permissionRow(
                     icon: "hand.raised.fill",
                     title: "Accessibility",
-                    description: "To paste text into other apps",
+                    description: "Recommended — to paste text into other apps",
                     granted: hasAccessibility
                 ) {
                     DispatchQueue.global().async { PermissionManager.requestAccessibilityAccess() }
@@ -163,6 +238,12 @@ struct OnboardingView: View {
                         }
                     }
                 }
+            }
+
+            if !hasMicrophone {
+                Text("⚠️ Microphone access is required for voice input to work.")
+                    .font(.caption)
+                    .foregroundColor(.orange)
             }
         }
     }
@@ -198,7 +279,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Connect to AI")
                 .font(.title2.bold())
-            Text("Choose your AI provider and enter your API key.")
+            Text("Vowrite uses your own API key (BYOK). Choose a provider and enter your key.")
                 .foregroundColor(.secondary)
 
             Picker("Provider", selection: $editProvider) {
@@ -208,13 +289,14 @@ struct OnboardingView: View {
             }
             .onChange(of: editProvider) { _, v in
                 editBaseURL = v.defaultBaseURL
+                testResult = nil
             }
 
             SecureField(editProvider.keyPlaceholder, text: $editKey)
                 .textFieldStyle(.roundedBorder)
 
             if !editProvider.keyURL.isEmpty {
-                Link("Get your API key →", destination: URL(string: editProvider.keyURL)!)
+                Link("Get your \(editProvider.rawValue) API key →", destination: URL(string: editProvider.keyURL)!)
                     .font(.caption)
             }
 
@@ -231,22 +313,29 @@ struct OnboardingView: View {
                 } label: {
                     HStack(spacing: 4) {
                         if testing { ProgressView().controlSize(.small) }
-                        Text("Save & Test")
+                        Text("Test Connection")
                     }
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(editKey.isEmpty || testing)
             }
+
+            Text("Your API key is stored securely in macOS Keychain.")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
 
-    private func saveAndTest() {
-        // Save config
+    private func saveAPIConfig() {
         APIConfig.provider = editProvider
         APIConfig.baseURL = editBaseURL
         APIConfig.sttModel = editProvider.defaultSTTModel
         APIConfig.polishModel = editProvider.defaultPolishModel
         if !editKey.isEmpty { _ = KeychainHelper.saveAPIKey(editKey) }
+    }
+
+    private func saveAndTest() {
+        saveAPIConfig()
 
         // Test connection
         testing = true
@@ -256,8 +345,10 @@ struct OnboardingView: View {
                 let model = editProvider.defaultPolishModel
                 let endpoint = "\(editBaseURL)/chat/completions"
                 guard let url = URL(string: endpoint) else {
-                    testResult = (false, "Invalid URL")
-                    testing = false
+                    await MainActor.run {
+                        testResult = (false, "Invalid URL")
+                        testing = false
+                    }
                     return
                 }
                 var request = URLRequest(url: url)
@@ -272,15 +363,20 @@ struct OnboardingView: View {
                 ]
                 request.httpBody = try JSONSerialization.data(withJSONObject: payload)
                 let (_, response) = try await URLSession.shared.data(for: request)
-                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
-                    testResult = (true, "Connected!")
-                } else {
-                    testResult = (false, "Connection failed")
+                await MainActor.run {
+                    if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                        testResult = (true, "Connected to \(editProvider.rawValue)!")
+                    } else {
+                        testResult = (false, "Connection failed — check your API key")
+                    }
+                    testing = false
                 }
             } catch {
-                testResult = (false, error.localizedDescription)
+                await MainActor.run {
+                    testResult = (false, error.localizedDescription)
+                    testing = false
+                }
             }
-            testing = false
         }
     }
 
@@ -292,54 +388,53 @@ struct OnboardingView: View {
 
     private var testStep: some View {
         VStack(spacing: 20) {
+            Spacer().frame(height: 20)
             Text("Try it out!")
                 .font(.title2.bold())
-            Text("Say something to test your setup.")
+            Text("Test your setup by recording a short phrase.")
                 .foregroundColor(.secondary)
 
-            switch testRecordingState {
-            case .idle:
-                Button {
-                    // Just show a prompt — actual recording happens via the global hotkey
-                } label: {
+            VStack(spacing: 12) {
+                Image(systemName: "mic.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(.accentColor)
+
+                switch testRecordingState {
+                case .idle:
+                    Text("Press ⌥ Space (Option + Space) to record")
+                        .foregroundColor(.secondary)
+
+                case .recording:
                     VStack(spacing: 8) {
-                        Image(systemName: "mic.circle.fill")
-                            .font(.system(size: 48))
-                            .foregroundColor(.accentColor)
-                        Text("Press your hotkey (⌥ Space) to record")
-                            .foregroundColor(.secondary)
+                        ProgressView()
+                        Text("Recording…")
+                    }
+
+                case .processing:
+                    VStack(spacing: 8) {
+                        ProgressView()
+                        Text("Processing…")
+                    }
+
+                case .done(let text):
+                    VStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(.green)
+                        Text(text)
+                            .padding(12)
+                            .background(Color.secondary.opacity(0.06))
+                            .cornerRadius(8)
+                            .textSelection(.enabled)
                     }
                 }
-                .buttonStyle(.plain)
-
-            case .recording:
-                VStack(spacing: 8) {
-                    ProgressView()
-                    Text("Recording...")
-                }
-
-            case .processing:
-                VStack(spacing: 8) {
-                    ProgressView()
-                    Text("Processing...")
-                }
-
-            case .done(let text):
-                VStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 36))
-                        .foregroundColor(.green)
-                    Text(text)
-                        .padding(12)
-                        .background(Color.secondary.opacity(0.06))
-                        .cornerRadius(8)
-                        .textSelection(.enabled)
-                }
             }
+            .padding(.vertical, 16)
 
-            Text("You can skip this step if you prefer to test later.")
+            Text("This step is optional — you can always test later.")
                 .font(.caption)
                 .foregroundColor(.secondary)
+            Spacer().frame(height: 20)
         }
     }
 
@@ -347,12 +442,13 @@ struct OnboardingView: View {
 
     private var doneStep: some View {
         VStack(spacing: 20) {
+            Spacer().frame(height: 40)
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 64))
                 .foregroundColor(.green)
             Text("You're all set!")
                 .font(.system(size: 28, weight: .bold))
-            Text("Vowrite is ready to use. Press ⌥ Space anywhere to start dictating.")
+            Text("Press ⌥ Space anywhere to start dictating.")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
 
@@ -362,6 +458,7 @@ struct OnboardingView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            Spacer().frame(height: 40)
         }
     }
 }
