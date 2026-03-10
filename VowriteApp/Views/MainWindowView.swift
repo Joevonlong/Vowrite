@@ -602,7 +602,6 @@ struct ModelsContent: View {
 // MARK: - Personalization Page
 
 struct PersonalizationPageView: View {
-    @State private var systemPrompt = PromptConfig.systemPrompt
     @State private var userPrompt = PromptConfig.userPrompt
     @ObservedObject private var sceneManager = SceneManager.shared
 
@@ -612,31 +611,11 @@ struct PersonalizationPageView: View {
                 Text("Personalization")
                     .font(.system(size: 24, weight: .bold))
 
-                // System Prompt
-                SettingsSection(icon: "cpu", title: "System Prompt") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("⚠️ Modifying the system prompt may affect core behavior.")
-                                .font(.caption).foregroundColor(.orange)
-                            Spacer()
-                            Button("Reset to Default") {
-                                PromptConfig.resetSystemPrompt()
-                                systemPrompt = PromptConfig.systemPrompt
-                            }.font(.caption).buttonStyle(.bordered).controlSize(.small)
-                        }
-                        TextEditor(text: $systemPrompt)
-                            .font(.system(.body, design: .monospaced))
-                            .frame(height: 200)
-                            .border(Color.secondary.opacity(0.3))
-                            .onChange(of: systemPrompt) { _, v in PromptConfig.systemPrompt = v }
-                    }
-                }
-
                 // User Prompt
-                SettingsSection(icon: "person.text.rectangle", title: "User Prompt") {
+                SettingsSection(icon: "person.text.rectangle", title: "Your Preferences") {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Add personal preferences: \"Technical terms keep English\", \"Formal business tone\"")
+                            Text("Customize how your voice input is polished. Examples: \"Technical terms keep English\", \"Use Arabic numerals\", \"Formal business tone\"")
                                 .font(.caption).foregroundColor(.secondary)
                             Spacer()
                             Button("Clear") { userPrompt = ""; PromptConfig.userPrompt = "" }
