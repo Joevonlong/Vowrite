@@ -1,10 +1,12 @@
 import Foundation
 
 enum PromptConfig {
-    private static let systemPromptKey = "promptSystemPrompt"
+    private static let legacySystemPromptKey = "promptSystemPrompt"
     private static let userPromptKey = "promptUserPrompt"
 
-    static let defaultSystemPrompt = """
+    /// The system prompt is read-only and cannot be modified by the user.
+    /// This ensures core behavior (language preservation, dictation rules) stays intact.
+    static let systemPrompt = """
     You are a voice dictation assistant. Clean up raw speech transcripts into polished text.
 
     ⚠️ ABSOLUTE RULE — LANGUAGE PRESERVATION (overrides everything else):
@@ -33,21 +35,15 @@ enum PromptConfig {
     9. Output ONLY the cleaned text, no explanations or commentary
     """
 
-    static var systemPrompt: String {
-        get {
-            let stored = UserDefaults.standard.string(forKey: systemPromptKey) ?? ""
-            return stored.isEmpty ? defaultSystemPrompt : stored
-        }
-        set { UserDefaults.standard.set(newValue, forKey: systemPromptKey) }
-    }
-
     static var userPrompt: String {
         get { UserDefaults.standard.string(forKey: userPromptKey) ?? "" }
         set { UserDefaults.standard.set(newValue, forKey: userPromptKey) }
     }
 
-    static func resetSystemPrompt() {
-        UserDefaults.standard.removeObject(forKey: systemPromptKey)
+    /// Remove any legacy user-modified system prompt from UserDefaults.
+    /// Call once at app launch to clean up.
+    static func migrateLegacySystemPrompt() {
+        UserDefaults.standard.removeObject(forKey: legacySystemPromptKey)
     }
 
     static var effectiveSystemPrompt: String {

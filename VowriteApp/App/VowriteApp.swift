@@ -45,5 +45,7 @@ struct VowriteApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        // Clean up any legacy user-modified system prompt from UserDefaults
+        PromptConfig.migrateLegacySystemPrompt()
     }
 }
