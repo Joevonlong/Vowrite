@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject private var modeManager = ModeManager.shared
 
     var body: some View {
         VStack(spacing: 12) {
@@ -10,6 +11,17 @@ struct MenuBarView: View {
                 Text("Vowrite")
                     .font(.headline)
                 Spacer()
+                // Current mode indicator
+                HStack(spacing: 4) {
+                    Image(systemName: modeManager.currentMode.icon)
+                        .font(.caption)
+                    Text(modeManager.currentMode.name)
+                        .font(.caption)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color.accentColor.opacity(0.15))
+                .cornerRadius(4)
                 statusBadge
             }
 
@@ -18,7 +30,7 @@ struct MenuBarView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "key.fill")
                         .foregroundColor(.orange)
-                    Text("Set your OpenAI API Key in Settings to get started.")
+                    Text("Set your API Key in Settings to get started.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

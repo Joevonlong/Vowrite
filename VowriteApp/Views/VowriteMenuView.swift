@@ -57,6 +57,11 @@ struct VowriteMenuView: View {
         }
         .keyboardShortcut(",", modifiers: .command)
 
+        // Scene submenu
+        Menu("Scene") {
+            SceneMenuList()
+        }
+
         // Select microphone submenu
         Menu("Select Microphone") {
             MicrophoneListView()
@@ -78,6 +83,26 @@ struct VowriteMenuView: View {
             NSApplication.shared.terminate(nil)
         }
         .keyboardShortcut("q", modifiers: .command)
+    }
+}
+
+struct SceneMenuList: View {
+    @ObservedObject private var sceneManager = SceneManager.shared
+
+    var body: some View {
+        ForEach(sceneManager.allScenes) { scene in
+            Button {
+                sceneManager.select(scene)
+            } label: {
+                HStack {
+                    Text("\(Image(systemName: scene.icon)) \(scene.name)")
+                    if sceneManager.currentSceneId == scene.id {
+                        Spacer()
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+        }
     }
 }
 

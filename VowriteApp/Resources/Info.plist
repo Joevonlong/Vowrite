@@ -13,13 +13,24 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.6.0</string>
+	<string>0.1.7.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Google OAuth Callback</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.vowrite.app</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Vowrite needs microphone access to record your voice for dictation.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

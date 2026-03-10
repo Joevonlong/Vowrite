@@ -84,7 +84,28 @@ final class AppState: ObservableObject {
                 self?.toggleRecording()
             }
         }
+        // F-018: Push to Talk — release stops recording
+        hotkeyManager.onPushToTalkRelease = { [weak self] in
+            Task { @MainActor in
+                if self?.state == .recording {
+                    self?.stopRecording()
+                }
+            }
+        }
+        // F-018: Mode switching via ⌃1-⌃9
+        hotkeyManager.onModeSwitch = { [weak self] index in
+            Task { @MainActor in
+                self?.switchToMode(at: index)
+            }
+        }
         hotkeyManager.register()
+    }
+
+    /// F-018: Switch to mode by index (0-based)
+    func switchToMode(at index: Int) {
+        let modes = ModeManager.shared.modes
+        guard index >= 0, index < modes.count else { return }
+        ModeManager.shared.select(modes[index])
     }
 
     func toggleRecording() {
@@ -198,11 +219,23 @@ final class AppState: ObservableObject {
                     return
                 }
 
+                // Load current mode config
+                let modeConfig = ModeManager.currentModeConfig
+
                 // Step 1: Whisper STT
                 #if DEBUG
-                print("[Vowrite] Starting STT transcription...")
+                print("[Vowrite] Starting STT transcription (mode: \(modeConfig.modeName))...")
                 #endif
-                let rawTranscript = try await whisperService.transcribe(audioURL: url, apiKey: apiKey)
+                // Mode language override > global language setting
+                let whisperLanguage: String?
+                if let modeLang = modeConfig.language,
+                   let lang = SupportedLanguage(rawValue: modeLang) {
+                    whisperLanguage = lang.whisperCode
+                } else {
+                    whisperLanguage = LanguageConfig.globalLanguage.whisperCode
+                }
+                let vocabPrompt = VocabularyManager.whisperPrompt
+                let rawTranscript = try await whisperService.transcribe(audioURL: url, apiKey: apiKey, language: whisperLanguage, prompt: vocabPrompt)
                 lastRawTranscript = rawTranscript
                 #if DEBUG
                 print("[Vowrite] STT result: '\(rawTranscript)'")
@@ -214,20 +247,26 @@ final class AppState: ObservableObject {
                     return
                 }
 
-                // Step 2: AI Polish (graceful fallback to raw text on failure)
+                // Step 2: AI Polish (skip if mode has polishEnabled=false)
                 var finalText = rawTranscript
-                do {
+                if modeConfig.polishEnabled {
+                    do {
+                        #if DEBUG
+                        print("[Vowrite] Starting AI polish...")
+                        #endif
+                        let polished = try await aiPolishService.polish(text: rawTranscript, apiKey: apiKey, modeConfig: modeConfig)
+                        finalText = polished
+                        #if DEBUG
+                        print("[Vowrite] Polish result: '\(polished)'")
+                        #endif
+                    } catch {
+                        #if DEBUG
+                        print("[Vowrite] Polish failed (using raw transcript): \(error)")
+                        #endif
+                    }
+                } else {
                     #if DEBUG
-                    print("[Vowrite] Starting AI polish...")
-                    #endif
-                    let polished = try await aiPolishService.polish(text: rawTranscript, apiKey: apiKey)
-                    finalText = polished
-                    #if DEBUG
-                    print("[Vowrite] Polish result: '\(polished)'")
-                    #endif
-                } catch {
-                    #if DEBUG
-                    print("[Vowrite] Polish failed (using raw transcript): \(error)")
+                    print("[Vowrite] Polish skipped (Dictation mode)")
                     #endif
                 }
                 lastResult = finalText
@@ -236,8 +275,9 @@ final class AppState: ObservableObject {
                 RecordingOverlayController.shared.hide()
 
                 // Step 4: Activate the previous app and inject text
-                // (inject() handles activation polling internally)
-                textInjector.inject(text: finalText)
+                if modeConfig.autoPaste {
+                    textInjector.inject(text: finalText)
+                }
 
                 // Step 5: Save to history
                 let record = DictationRecord(
