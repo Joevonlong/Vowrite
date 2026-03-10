@@ -7,6 +7,24 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.7.1] — 2026-03-11
+
+### Added
+- **Smart formatting**: AI automatically adapts output format based on content structure — lists become bullet points, steps become numbered lists, casual speech stays as paragraphs
+- **Language picker in Settings**: Language selection now accessible in the main Settings page (was previously missing from new UI)
+- Warning displayed when a specific language is selected, recommending Auto-detect for multilingual users
+
+### Fixed
+- **System prompt protection**: System prompt is now read-only and hidden from user UI — prevents accidental deletion of core rules (language preservation, dictation behavior)
+- **Chinese→English translation bug**: Fixed issue where speaking Chinese would output English text, caused by:
+  - Language setting missing from new Settings UI (couldn't change back after onboarding)
+  - Conflicting language rule in AI polish pipeline removed
+- Legacy user-modified system prompts cleaned from UserDefaults on app launch
+
+### Changed
+- System prompt enhanced with smart formatting rules and stronger language preservation (final reminder pattern)
+- AI polish language handling now solely controlled by system prompt (removed redundant inline rule from AIPolishService)
+
 ## [0.1.7.0] — 2026-03-11
 
 ### Added
@@ -134,7 +152,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.0...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.1...HEAD
+[0.1.7.1]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.0...v0.1.7.1
 [0.1.7.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.6.0...v0.1.7.0
 [0.1.6.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.5.0...v0.1.6.0
 [0.1.5.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.4.0...v0.1.5.0
