@@ -38,3 +38,4 @@ Secrets.swift
 VoxaApp/Voxa.app/Contents/MacOS/Voxa
 VoxaApp/Voxa.app/Contents/_CodeSignature/
 tracking/
+releases/*.dmg
