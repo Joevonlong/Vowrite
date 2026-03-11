@@ -440,6 +440,12 @@ struct AccountPageView: View {
                     HStack { Text("Polish").frame(width: 80, alignment: .leading)
                         TextField("", text: $editPolishModel).textFieldStyle(.roundedBorder)
                     }
+                    if let note = editProvider.sttSupportNote {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange).font(.caption)
+                            Text(note).font(.caption).foregroundColor(.orange)
+                        }
+                    }
                     if !editProvider.keyURL.isEmpty {
                         Link("Get API Key \u{2192}", destination: URL(string: editProvider.keyURL)!).font(.caption)
                     }

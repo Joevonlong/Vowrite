@@ -72,7 +72,19 @@ enum APIProvider: String, CaseIterable, Identifiable {
     }
 
     var hasSTTSupport: Bool {
-        self != .deepseek
+        switch self {
+        case .openai, .groq, .together: return true
+        case .openrouter, .deepseek, .custom: return false
+        }
+    }
+
+    var sttSupportNote: String? {
+        switch self {
+        case .openrouter: return "OpenRouter does not proxy the Whisper API. Enable Dual Provider and use OpenAI/Groq for STT."
+        case .deepseek: return "DeepSeek does not offer speech-to-text. Enable Dual Provider and use OpenAI/Groq for STT."
+        case .custom: return "Ensure your custom endpoint supports /audio/transcriptions (OpenAI Whisper API compatible)."
+        default: return nil
+        }
     }
 
     var keyPlaceholder: String {

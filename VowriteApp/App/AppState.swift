@@ -222,6 +222,14 @@ final class AppState: ObservableObject {
                 // Load current mode config
                 let modeConfig = ModeManager.currentModeConfig
 
+                // Check STT provider compatibility
+                let sttProvider = DualAPIConfig.effectiveSTTProvider
+                if !sttProvider.hasSTTSupport {
+                    state = .error("\(sttProvider.rawValue) 不支持语音识别，请切换 Provider 或启用 Dual Provider 模式")
+                    RecordingOverlayController.shared.hide()
+                    return
+                }
+
                 // Step 1: Whisper STT
                 #if DEBUG
                 print("[Vowrite] Starting STT transcription (mode: \(modeConfig.modeName))...")
@@ -300,23 +308,27 @@ final class AppState: ObservableObject {
             } catch {
                 let message: String
                 let desc = error.localizedDescription
+                #if DEBUG
+                print("[Vowrite] Error: \(desc)")
+                #endif
                 if desc.contains("insufficient_quota") {
                     message = "API 额度不足，请充值"
-                } else if desc.contains("invalid_api_key") || desc.contains("Incorrect API key") {
+                } else if desc.contains("invalid_api_key") || desc.contains("Incorrect API key") || desc.contains("401") {
                     message = "API Key 无效，请在设置中检查"
-                } else if (error as? URLError)?.code == .notConnectedToInternet
-                            || (error as? URLError)?.code == .networkConnectionLost
-                            || (error as? URLError)?.code == .timedOut
-                            || desc.contains("network") || desc.contains("连接") {
-                    message = "网络连接失败，请检查网络"
-                } else if desc.contains("rate_limit") {
+                } else if desc.contains("rate_limit") || desc.contains("429") {
                     message = "请求过于频繁，请稍后重试"
+                } else if desc.contains("404") || desc.contains("not found") || desc.contains("Not Found") {
+                    message = "API 端点不支持，请检查 Provider 设置"
+                } else if (error as? URLError)?.code == .notConnectedToInternet {
+                    message = "无网络连接"
+                } else if (error as? URLError)?.code == .timedOut {
+                    message = "请求超时，请检查 API 设置或网络"
+                } else if (error as? URLError)?.code == .networkConnectionLost {
+                    message = "网络连接中断"
                 } else {
-                    #if DEBUG
-                    message = desc
-                    #else
-                    message = "处理失败，请重试"
-                    #endif
+                    // Show actual error for debugging — truncate if too long
+                    let truncated = desc.count > 80 ? String(desc.prefix(80)) + "..." : desc
+                    message = truncated
                 }
                 state = .error(message)
                 RecordingOverlayController.shared.hide()
