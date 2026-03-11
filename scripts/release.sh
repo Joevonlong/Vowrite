@@ -113,9 +113,14 @@ cd ..
 cp "${APP_PACKAGE}/.build/arm64-apple-macosx/release/${APP_NAME}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 cp "$PLIST_FILE" "${APP_BUNDLE}/Contents/Info.plist"
 
-# ── Step 3: Code sign ─────────────────────────────────────
-echo "🔏 Step 3: Code signing (ad-hoc)..."
-codesign --force --deep --sign - "${APP_BUNDLE}"
+# ── Step 3: Code sign (with entitlements) ─────────────────
+echo "🔏 Step 3: Code signing (ad-hoc + entitlements)..."
+ENTITLEMENTS="${APP_PACKAGE}/Resources/Vowrite.entitlements"
+if [ ! -f "$ENTITLEMENTS" ]; then
+    echo "❌ Entitlements file not found: $ENTITLEMENTS"
+    exit 1
+fi
+codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "${APP_BUNDLE}"
 codesign --verify "${APP_BUNDLE}"
 
 # ── Step 4: Create DMG ────────────────────────────────────
@@ -123,6 +128,8 @@ echo "💿 Step 4: Creating DMG..."
 STAGING=$(mktemp -d)/${APP_NAME}
 mkdir -p "$STAGING"
 cp -R "${APP_BUNDLE}" "${STAGING}/${APP_NAME}.app"
+# Re-sign the copy with entitlements (ensures DMG copy is properly signed)
+codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "${STAGING}/${APP_NAME}.app"
 ln -s /Applications "${STAGING}/Applications"
 
 mkdir -p "$DMG_DIR"
