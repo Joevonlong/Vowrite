@@ -114,13 +114,24 @@ cp "${APP_PACKAGE}/.build/arm64-apple-macosx/release/${APP_NAME}" "${APP_BUNDLE}
 cp "$PLIST_FILE" "${APP_BUNDLE}/Contents/Info.plist"
 
 # ── Step 3: Code sign (with entitlements) ─────────────────
-echo "🔏 Step 3: Code signing (ad-hoc + entitlements)..."
 ENTITLEMENTS="${APP_PACKAGE}/Resources/Vowrite.entitlements"
 if [ ! -f "$ENTITLEMENTS" ]; then
     echo "❌ Entitlements file not found: $ENTITLEMENTS"
     exit 1
 fi
-codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "${APP_BUNDLE}"
+
+# Prefer "Vowrite Developer" self-signed cert (stable identity → permissions persist)
+# Fall back to ad-hoc if not available
+if security find-identity -v -p codesigning 2>/dev/null | grep -q "Vowrite Developer"; then
+    SIGN_IDENTITY="Vowrite Developer"
+    echo "🔏 Step 3: Code signing (self-signed certificate)..."
+else
+    SIGN_IDENTITY="-"
+    echo "🔏 Step 3: Code signing (ad-hoc — permissions may reset on update)..."
+    echo "   💡 Tip: Set up self-signed cert to keep permissions across updates."
+    echo "   See ops/SIGNING.md for instructions."
+fi
+codesign --force --deep --sign "${SIGN_IDENTITY}" --entitlements "$ENTITLEMENTS" "${APP_BUNDLE}"
 codesign --verify "${APP_BUNDLE}"
 
 # ── Step 4: Create DMG ────────────────────────────────────
@@ -129,8 +140,11 @@ STAGING=$(mktemp -d)/${APP_NAME}
 mkdir -p "$STAGING"
 cp -R "${APP_BUNDLE}" "${STAGING}/${APP_NAME}.app"
 # Re-sign the copy with entitlements (ensures DMG copy is properly signed)
-codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "${STAGING}/${APP_NAME}.app"
+codesign --force --deep --sign "${SIGN_IDENTITY}" --entitlements "$ENTITLEMENTS" "${STAGING}/${APP_NAME}.app"
 ln -s /Applications "${STAGING}/Applications"
+# Include install script for easy updates (quit → replace → relaunch)
+cp scripts/install.sh "${STAGING}/Install ${APP_NAME}.command"
+chmod +x "${STAGING}/Install ${APP_NAME}.command"
 
 mkdir -p "$DMG_DIR"
 rm -f "$DMG_PATH"
