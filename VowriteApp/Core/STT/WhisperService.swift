@@ -14,7 +14,8 @@ final class WhisperService {
         request.httpMethod = "POST"
         request.setValue("Bearer \(effectiveKey)", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 60
+        // Longer timeout for large audio files (upload + server processing)
+        request.timeoutInterval = 180
 
         // OpenRouter requires HTTP-Referer
         if provider == .openrouter {
@@ -23,6 +24,12 @@ final class WhisperService {
         }
 
         let audioData = try Data(contentsOf: audioURL)
+
+        // Whisper API file size limit: 25MB
+        let fileSizeMB = Double(audioData.count) / (1024 * 1024)
+        if fileSizeMB > 25 {
+            throw VowriteError.apiError("录音文件过大（\(String(format: "%.1f", fileSizeMB))MB），Whisper 限制 25MB。请缩短录音时间。")
+        }
         var body = Data()
 
         // model field

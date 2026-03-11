@@ -16,7 +16,8 @@ final class AIPolishService {
         request.httpMethod = "POST"
         request.setValue("Bearer \(effectiveKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 30
+        // Longer timeout for large text (more tokens = longer generation)
+        request.timeoutInterval = 120
 
         // OpenRouter requires these headers
         if provider == .openrouter {
