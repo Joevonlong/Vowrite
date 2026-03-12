@@ -7,6 +7,25 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.7.2] — 2026-03-12
+
+### Fixed
+- **App launch failure**: Code signing now includes entitlements (microphone, network access) — fixes "network error" on all API calls
+- **Long recordings timeout**: STT timeout 60s→180s, AI polish timeout 30s→120s — long dictations no longer fail
+- **Misleading error messages**: Show actual error instead of generic "network error" for all failure types
+- **STT provider check**: Warn before recording if provider doesn't support Whisper API (e.g. OpenRouter, DeepSeek)
+
+### Added
+- **Install script in DMG**: Double-click `Install Vowrite.command` to auto-quit → replace → relaunch (no need to manually quit first)
+- **Applications symlink in DMG**: Standard macOS drag-to-install experience
+- **25MB file size check**: Clear error message when recording exceeds Whisper API limit
+- **Self-signed certificate support**: `release.sh` auto-detects "Vowrite Developer" cert for consistent signing identity
+- **Standardized release pipeline**: `scripts/release.sh` — one-command build, sign, package, tag, push, GitHub Release
+
+### Changed
+- Release DMG now contains: `Vowrite.app` + `Applications` shortcut + `Install Vowrite.command`
+- Error messages show specific failure reason (404, timeout, quota, invalid key, etc.)
+
 ## [0.1.7.1] — 2026-03-11
 
 ### Added
@@ -152,7 +171,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.1...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.2...HEAD
+[0.1.7.2]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.1...v0.1.7.2
 [0.1.7.1]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.0...v0.1.7.1
 [0.1.7.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.6.0...v0.1.7.0
 [0.1.6.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.5.0...v0.1.6.0
