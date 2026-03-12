@@ -18,6 +18,9 @@ struct Mode: Identifiable, Codable, Equatable {
     var temperature: Double
     var autoPaste: Bool
 
+    // Output style template (nil = no style / "None")
+    var outputStyleId: UUID?
+
     // Keyboard shortcut index (Cmd+1, Cmd+2, etc.)
     var shortcutIndex: Int?
 
@@ -35,6 +38,7 @@ struct Mode: Identifiable, Codable, Equatable {
             userPrompt: "",
             temperature: 0.3,
             autoPaste: true,
+            outputStyleId: nil,
             shortcutIndex: 1
         ),
         Mode(
@@ -50,6 +54,7 @@ struct Mode: Identifiable, Codable, Equatable {
             userPrompt: "",
             temperature: 0.3,
             autoPaste: true,
+            outputStyleId: nil,
             shortcutIndex: 2
         ),
         Mode(
@@ -65,6 +70,7 @@ struct Mode: Identifiable, Codable, Equatable {
             userPrompt: "",
             temperature: 0.3,
             autoPaste: true,
+            outputStyleId: UUID(uuidString: "00000000-0000-0000-0001-000000000004")!,
             shortcutIndex: 3
         ),
         Mode(
@@ -80,6 +86,7 @@ struct Mode: Identifiable, Codable, Equatable {
             userPrompt: "",
             temperature: 0.4,
             autoPaste: true,
+            outputStyleId: nil,
             shortcutIndex: 4
         ),
         Mode(
@@ -95,6 +102,7 @@ struct Mode: Identifiable, Codable, Equatable {
             userPrompt: "",
             temperature: 0.3,
             autoPaste: true,
+            outputStyleId: UUID(uuidString: "00000000-0000-0000-0001-000000000002")!,
             shortcutIndex: 5
         ),
         Mode(
@@ -110,6 +118,7 @@ struct Mode: Identifiable, Codable, Equatable {
             userPrompt: "",
             temperature: 0.2,
             autoPaste: true,
+            outputStyleId: nil,
             shortcutIndex: 6
         ),
     ]

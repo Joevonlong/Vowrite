@@ -125,6 +125,7 @@ struct ModeConfig {
     let temperature: Double
     let autoPaste: Bool
     let modeName: String
+    let outputStyleId: UUID?
 
     init(from mode: Mode) {
         self.polishEnabled = mode.polishEnabled
@@ -136,5 +137,6 @@ struct ModeConfig {
         self.temperature = mode.temperature
         self.autoPaste = mode.autoPaste
         self.modeName = mode.name
+        self.outputStyleId = mode.outputStyleId
     }
 }
