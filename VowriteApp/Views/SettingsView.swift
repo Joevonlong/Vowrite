@@ -683,11 +683,14 @@ struct SettingsContentPage: View {
 struct PersonalizationPage: View {
     @State private var userPrompt = PromptConfig.userPrompt
     @ObservedObject private var modeManager = ModeManager.shared
+    @ObservedObject private var styleManager = OutputStyleManager.shared
     @ObservedObject private var vocabManager = VocabularyManager.shared
     @State private var newWord = ""
     @State private var bulkInput = ""
     @State private var editingMode: Mode?
     @State private var showModeEditor = false
+    @State private var editingStyle: OutputStyle?
+    @State private var showStyleEditor = false
 
     var body: some View {
         ScrollView {
@@ -706,7 +709,8 @@ struct PersonalizationPage: View {
                                     isBuiltin: false, sttModel: nil, language: nil,
                                     polishEnabled: true, polishModel: nil,
                                     systemPrompt: "", userPrompt: "",
-                                    temperature: 0.3, autoPaste: true, shortcutIndex: nil
+                                    temperature: 0.3, autoPaste: true,
+                                    outputStyleId: nil, shortcutIndex: nil
                                 )
                                 editingMode = newMode
                                 showModeEditor = true
@@ -744,9 +748,65 @@ struct PersonalizationPage: View {
                 }
                 .sheet(isPresented: $showModeEditor) {
                     if let mode = editingMode {
-                        ModeEditorView(mode: mode, modeManager: modeManager) {
+                        ModeEditorView(mode: mode, modeManager: modeManager, styleManager: styleManager) {
                             showModeEditor = false
                             editingMode = nil
+                        }
+                    }
+                }
+
+                // Output Styles
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("Output Styles", systemImage: "textformat.alt").font(.headline)
+                            Spacer()
+                            Button {
+                                let newStyle = OutputStyle(
+                                    id: UUID(), name: "New Style", icon: "star",
+                                    description: "", templatePrompt: "",
+                                    isBuiltin: false
+                                )
+                                editingStyle = newStyle
+                                showStyleEditor = true
+                            } label: {
+                                Label("New Style", systemImage: "plus")
+                            }
+                            .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                        }
+                        Text("Reusable formatting templates that Modes can reference for output styling.")
+                            .font(.caption).foregroundColor(.secondary)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            ForEach(styleManager.styles) { style in
+                                OutputStyleCard(style: style) {
+                                    editingStyle = style
+                                    showStyleEditor = true
+                                }
+                                .contextMenu {
+                                    Button("Edit") {
+                                        editingStyle = style
+                                        showStyleEditor = true
+                                    }
+                                    if style.isBuiltin {
+                                        Button("Reset to Default") {
+                                            styleManager.resetBuiltinStyle(style)
+                                        }
+                                    } else {
+                                        Button("Delete", role: .destructive) {
+                                            styleManager.deleteStyle(style)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }.padding(8)
+                }
+                .sheet(isPresented: $showStyleEditor) {
+                    if let style = editingStyle {
+                        OutputStyleEditorView(style: style, styleManager: styleManager) {
+                            showStyleEditor = false
+                            editingStyle = nil
                         }
                     }
                 }
@@ -881,6 +941,7 @@ struct ModeCard: View {
 struct ModeEditorView: View {
     @State var mode: Mode
     let modeManager: ModeManager
+    @ObservedObject var styleManager: OutputStyleManager
     let onDismiss: () -> Void
 
     var body: some View {
@@ -965,9 +1026,28 @@ struct ModeEditorView: View {
                         Text(String(format: "%.1f", mode.temperature))
                             .font(.caption).foregroundColor(.secondary).frame(width: 30)
                     }
+                    Picker("Output Style", selection: modeOutputStyleSelection) {
+                        Text("None").tag(nil as UUID?)
+                        ForEach(styleManager.styles.filter { $0.id != OutputStyle.noneId }) { style in
+                            Label(style.name, systemImage: style.icon).tag(style.id as UUID?)
+                        }
+                    }
+                    if let styleId = mode.outputStyleId,
+                       let style = styleManager.styles.first(where: { $0.id == styleId }),
+                       !style.description.isEmpty {
+                        Text(style.description)
+                            .font(.caption).foregroundColor(.secondary)
+                    }
                 }
             }.padding(8)
         }
+    }
+
+    private var modeOutputStyleSelection: Binding<UUID?> {
+        Binding(
+            get: { mode.outputStyleId },
+            set: { mode.outputStyleId = $0 }
+        )
     }
 
     private var modeLanguageSection: some View {
@@ -1031,6 +1111,119 @@ struct ModeEditorView: View {
             modeManager.updateMode(mode)
         } else {
             modeManager.addMode(mode)
+        }
+        onDismiss()
+    }
+}
+
+// MARK: - Output Style Card
+
+struct OutputStyleCard: View {
+    let style: OutputStyle
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: style.icon).font(.title2)
+                    .foregroundColor(.accentColor)
+                Text(style.name).font(.caption)
+                    .foregroundColor(.primary)
+                if !style.isBuiltin {
+                    Text("Custom").font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 70)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(10)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Output Style Editor
+
+struct OutputStyleEditorView: View {
+    @State var style: OutputStyle
+    let styleManager: OutputStyleManager
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(styleManager.styles.contains(where: { $0.id == style.id }) ? "Edit Output Style" : "New Output Style")
+                    .font(.headline)
+                Spacer()
+                Button("Cancel") { onDismiss() }.keyboardShortcut(.cancelAction)
+                Button("Save") { saveStyle() }.keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
+            }
+            .padding()
+            Divider()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    styleGeneralSection
+                    stylePromptSection
+                }
+                .padding()
+            }
+        }
+        .frame(width: 500, height: 450)
+    }
+
+    private var styleGeneralSection: some View {
+        let icons = [
+            "minus.circle", "list.bullet", "list.number", "envelope.open",
+            "person.3", "bubble.left.and.bubble.right", "doc.text.magnifyingglass",
+            "star", "doc.text", "pencil", "megaphone", "lightbulb",
+            "text.alignleft", "text.justify", "rectangle.and.pencil.and.ellipsis",
+            "checklist", "quote.opening", "terminal"
+        ]
+        return GroupBox("General") {
+            VStack(alignment: .leading, spacing: 8) {
+                TextField("Style Name", text: $style.name)
+                    .textFieldStyle(.roundedBorder)
+                TextField("Description", text: $style.description)
+                    .textFieldStyle(.roundedBorder)
+                HStack {
+                    Text("Icon").foregroundColor(.secondary)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(icons, id: \.self) { icon in
+                                Button { style.icon = icon } label: {
+                                    Image(systemName: icon)
+                                        .frame(width: 28, height: 28)
+                                        .background(style.icon == icon ? Color.accentColor : Color.secondary.opacity(0.1))
+                                        .foregroundColor(style.icon == icon ? .white : .primary)
+                                        .cornerRadius(6)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+            }.padding(8)
+        }
+    }
+
+    private var stylePromptSection: some View {
+        GroupBox("Template Prompt") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("This prompt is appended to the system prompt when a Mode uses this style:")
+                    .font(.caption).foregroundColor(.secondary)
+                TextEditor(text: $style.templatePrompt)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(height: 150)
+                    .border(Color.secondary.opacity(0.3))
+            }.padding(8)
+        }
+    }
+
+    private func saveStyle() {
+        if styleManager.styles.contains(where: { $0.id == style.id }) {
+            styleManager.updateStyle(style)
+        } else {
+            styleManager.addStyle(style)
         }
         onDismiss()
     }

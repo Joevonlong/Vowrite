@@ -25,8 +25,13 @@ final class AIPolishService {
             request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
         }
 
-        // Build system prompt: base + mode-specific override or scene fallback
+        // Build system prompt: base + output style + mode-specific override or scene fallback
         var systemPrompt = PromptConfig.effectiveSystemPrompt
+
+        // Output style template (applied before mode prompt so mode can override/supplement)
+        if let stylePrompt = OutputStyleManager.templatePrompt(for: config.outputStyleId) {
+            systemPrompt += "\n\n---\nOutput style:\n\(stylePrompt)"
+        }
 
         if !config.systemPrompt.isEmpty {
             systemPrompt += "\n\n---\nOutput formatting for current mode (\(config.modeName)):\n\(config.systemPrompt)"
