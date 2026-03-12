@@ -47,11 +47,20 @@ final class AIPolishService {
         // Do NOT add extra language rules here — they can conflict with
         // the "preserve every word in its original language" directive.
 
+        // Wrap transcript in delimiters so the model treats it as data, not conversation
+        let wrappedText = """
+        Clean up the following speech transcript. Output ONLY the cleaned text, nothing else.
+
+        --- TRANSCRIPT START ---
+        \(text)
+        --- TRANSCRIPT END ---
+        """
+
         let payload: [String: Any] = [
             "model": model,
             "messages": [
                 ["role": "system", "content": systemPrompt],
-                ["role": "user", "content": text]
+                ["role": "user", "content": wrappedText]
             ],
             "temperature": config.temperature,
             "max_tokens": 4096
