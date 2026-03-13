@@ -8,32 +8,9 @@ enum WindowHelper {
     static func openHistory() { openMainWindow() }
 
     static func openMainWindow() {
+        // F-025: Open the SwiftUI Settings scene window
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         NSApp.activate(ignoringOtherApps: true)
-
-        // If window already exists, just bring it forward
-        if let win = mainWindow, win.isVisible {
-            win.makeKeyAndOrderFront(nil)
-            return
-        }
-
-        // Get appState from the running app
-        guard let appState = AppStateHolder.shared else { return }
-
-        let view = MainWindowView()
-            .environmentObject(appState)
-            .modelContainer(appState.modelContainer)
-
-        let hosting = NSHostingController(rootView: view)
-
-        let window = NSWindow(contentViewController: hosting)
-        window.title = "Vowrite"
-        window.setContentSize(NSSize(width: 820, height: 560))
-        window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
-        window.minSize = NSSize(width: 700, height: 450)
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-
-        mainWindow = window
     }
 }
 

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Sparkle
 
 @main
 struct VowriteApp: App {
@@ -22,6 +23,28 @@ struct VowriteApp: App {
                 .symbolRenderingMode(.hierarchical)
         }
         .menuBarExtraStyle(.menu)
+
+        // F-025: Settings scene — shows the main window when opened via ⌘, or menu
+        Settings {
+            MainWindowView()
+                .environmentObject(appState)
+                .modelContainer(appState.modelContainer)
+        }
+        .commands {
+            // Vowrite menu: About
+            CommandGroup(replacing: .appInfo) {
+                Button("About Vowrite") {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+            }
+            // Vowrite menu: Check for Updates
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates...") {
+                    appDelegate.checkForUpdates()
+                }
+            }
+        }
     }
 
     private func showOnboarding() {
@@ -43,9 +66,64 @@ struct VowriteApp: App {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    // F-026: Sparkle updater controller (not started — will be enabled after appcast setup)
+    let updaterController: SPUStandardUpdaterController
+
+    override init() {
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: false,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+        super.init()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         // Clean up any legacy user-modified system prompt from UserDefaults
         PromptConfig.migrateLegacySystemPrompt()
+
+        // F-025: Monitor window lifecycle for activation policy switching
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeMainNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateActivationPolicy()
+        }
+
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // Delay so the window has finished closing before we re-check
+            DispatchQueue.main.async {
+                self?.updateActivationPolicy()
+            }
+        }
+    }
+
+    // F-026: Public method to trigger update check
+    func checkForUpdates() {
+        updaterController.checkForUpdates(nil)
+    }
+
+    // F-025: Switch activation policy based on visible windows
+    private func updateActivationPolicy() {
+        let hasVisibleWindows = NSApp.windows.contains {
+            $0.isVisible && $0.styleMask.contains(.titled)
+        }
+
+        if hasVisibleWindows {
+            if NSApp.activationPolicy() != .regular {
+                NSApp.setActivationPolicy(.regular)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        } else {
+            if NSApp.activationPolicy() != .accessory {
+                NSApp.setActivationPolicy(.accessory)
+            }
+        }
     }
 }

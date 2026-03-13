@@ -7,9 +7,13 @@ let package = Package(
     products: [
         .executable(name: "Vowrite", targets: ["Vowrite"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0")
+    ],
     targets: [
         .executableTarget(
             name: "Vowrite",
+            dependencies: [.product(name: "Sparkle", package: "Sparkle")],
             path: ".",
             exclude: ["Package.swift", "Resources/Info.plist", "Resources/Vowrite.entitlements", "Resources/AppIcon-source.png", "Vowrite.app", "build.sh", "scripts"],
             swiftSettings: [
