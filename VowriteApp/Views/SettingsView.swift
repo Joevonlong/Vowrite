@@ -1241,6 +1241,23 @@ struct AboutPage: View {
             Text("v\(AppVersion.current)").font(.body).foregroundColor(.secondary)
             Text("Say it once. Mean it perfectly.").font(.body).italic().foregroundColor(.secondary)
             Divider().frame(width: 200)
+            // F-026: Update controls
+            VStack(spacing: 8) {
+                Button("Check for Updates...") {
+                    (NSApp.delegate as? AppDelegate)?.checkForUpdates()
+                }
+                Toggle("Automatically check for updates", isOn: Binding(
+                    get: {
+                        (NSApp.delegate as? AppDelegate)?.updaterController.updater.automaticallyChecksForUpdates ?? false
+                    },
+                    set: { newValue in
+                        (NSApp.delegate as? AppDelegate)?.updaterController.updater.automaticallyChecksForUpdates = newValue
+                    }
+                ))
+                .toggleStyle(.checkbox)
+                .fixedSize()
+            }
+            Divider().frame(width: 200)
             HStack(spacing: 24) {
                 Link("Website", destination: URL(string: "https://vowrite.com")!)
                 Link("GitHub", destination: URL(string: "https://github.com/Joevonlong/Vowrite")!)

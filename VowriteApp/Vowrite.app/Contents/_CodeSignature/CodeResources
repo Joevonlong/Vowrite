@@ -15,10 +15,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			q7j0wmBFJxN26DJWaU+6CZgUtP4=
+			8Fg1udX7MoAZZtY67N4R3ABxXKg=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"abb8f4c26045271376e83256694fba099814b4fe"</string>
+			<string>identifier Vowrite and certificate leaf = H"9a7a6f73f13f17d55c1035997a286ab38cfb3e13"</string>
 		</dict>
 		<key>Resources/AppIcon.icns</key>
 		<dict>

@@ -35,5 +35,9 @@
 	<string>Vowrite needs microphone access to record your voice for dictation.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Vowrite uses speech recognition to convert your voice to text.</string>
+	<key>SUFeedURL</key>
+	<string>https://vowrite.com/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string></string>
 </dict>
 </plist>

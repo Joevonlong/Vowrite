@@ -19,7 +19,21 @@ mkdir -p Vowrite.app/Contents/MacOS
 cp .build/arm64-apple-macosx/debug/Vowrite Vowrite.app/Contents/MacOS/Vowrite
 
 echo "Re-signing app bundle..."
-codesign -fs - --deep --entitlements Resources/Vowrite.entitlements Vowrite.app
+# F-024: Use stable self-signed cert for persistent permissions across updates
+SIGN_ID="Vowrite Developer"
+SIGN_KEYCHAIN="$HOME/Library/Keychains/vowrite-signing.keychain-db"
+
+if [ -f "$SIGN_KEYCHAIN" ]; then
+    security unlock-keychain -p "vowrite" "$SIGN_KEYCHAIN" 2>/dev/null
+    codesign --force --deep --sign "$SIGN_ID" \
+        --keychain "$SIGN_KEYCHAIN" \
+        --entitlements Resources/Vowrite.entitlements Vowrite.app
+    echo "   ✅ Signed with self-signed certificate: $SIGN_ID"
+else
+    echo "   ⚠️  Signing keychain not found. Using adhoc signing."
+    echo "   Permissions may reset on update. See ops/SIGNING.md"
+    codesign --force --deep --sign "-" --entitlements Resources/Vowrite.entitlements Vowrite.app
+fi
 
 echo "Restarting Vowrite..."
 pkill -x Vowrite 2>/dev/null || true

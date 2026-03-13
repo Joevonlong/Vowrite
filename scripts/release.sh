@@ -120,18 +120,21 @@ if [ ! -f "$ENTITLEMENTS" ]; then
     exit 1
 fi
 
-# Prefer "Vowrite Developer" self-signed cert (stable identity → permissions persist)
-# Fall back to ad-hoc if not available
-if security find-identity -v -p codesigning 2>/dev/null | grep -q "Vowrite Developer"; then
+# F-024: Use stable self-signed cert for persistent permissions
+SIGN_KEYCHAIN="$HOME/Library/Keychains/vowrite-signing.keychain-db"
+if [ -f "$SIGN_KEYCHAIN" ]; then
+    security unlock-keychain -p "vowrite" "$SIGN_KEYCHAIN" 2>/dev/null
     SIGN_IDENTITY="Vowrite Developer"
+    KEYCHAIN_FLAG="--keychain ${SIGN_KEYCHAIN}"
     echo "🔏 Step 3: Code signing (self-signed certificate)..."
 else
     SIGN_IDENTITY="-"
+    KEYCHAIN_FLAG=""
     echo "🔏 Step 3: Code signing (ad-hoc — permissions may reset on update)..."
     echo "   💡 Tip: Set up self-signed cert to keep permissions across updates."
     echo "   See ops/SIGNING.md for instructions."
 fi
-codesign --force --deep --sign "${SIGN_IDENTITY}" --entitlements "$ENTITLEMENTS" "${APP_BUNDLE}"
+codesign --force --deep --sign "${SIGN_IDENTITY}" ${KEYCHAIN_FLAG} --entitlements "$ENTITLEMENTS" "${APP_BUNDLE}"
 codesign --verify "${APP_BUNDLE}"
 
 # ── Step 4: Create DMG ────────────────────────────────────
@@ -140,7 +143,7 @@ STAGING=$(mktemp -d)/${APP_NAME}
 mkdir -p "$STAGING"
 cp -R "${APP_BUNDLE}" "${STAGING}/${APP_NAME}.app"
 # Re-sign the copy with entitlements (ensures DMG copy is properly signed)
-codesign --force --deep --sign "${SIGN_IDENTITY}" --entitlements "$ENTITLEMENTS" "${STAGING}/${APP_NAME}.app"
+codesign --force --deep --sign "${SIGN_IDENTITY}" ${KEYCHAIN_FLAG} --entitlements "$ENTITLEMENTS" "${STAGING}/${APP_NAME}.app"
 ln -s /Applications "${STAGING}/Applications"
 # Include install script for easy updates (quit → replace → relaunch)
 cp scripts/install.sh "${STAGING}/Install ${APP_NAME}.command"
