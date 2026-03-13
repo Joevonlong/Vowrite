@@ -7,6 +7,14 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.8.0] — 2026-03-13
+
+### Added
+- **F-002**: Output Style templates system — customizable text formatting presets (formal, casual, bullet points, etc.)
+
+### Fixed
+- Prevent AI polish from responding conversationally to transcripts (treats all input as text to polish, not questions to answer)
+
 ## [0.1.7.2] — 2026-03-12
 
 ### Fixed
@@ -171,7 +179,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.2...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.8.0...HEAD
+[0.1.8.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.2...v0.1.8.0
 [0.1.7.2]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.1...v0.1.7.2
 [0.1.7.1]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.0...v0.1.7.1
 [0.1.7.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.6.0...v0.1.7.0
