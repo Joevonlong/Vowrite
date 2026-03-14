@@ -292,6 +292,14 @@ struct OnboardingView: View {
                 testResult = nil
             }
 
+            if editProvider == .openai {
+                Text("✨ Recommended — one key for both transcription and polish")
+                    .font(.caption).foregroundColor(.green)
+            } else if editProvider == .groq {
+                Text("💰 Cheapest STT — pair with OpenAI polish via Dual Provider in Settings")
+                    .font(.caption).foregroundColor(.orange)
+            }
+
             SecureField(editProvider.keyPlaceholder, text: $editKey)
                 .textFieldStyle(.roundedBorder)
 

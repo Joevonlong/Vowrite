@@ -17,7 +17,7 @@ struct DualAPIConfigView: View {
                 .onChange(of: enabled) { _, v in DualAPIConfig.isDualModeEnabled = v }
 
             if enabled {
-                Text("Example: Groq Whisper (fast, free STT) + OpenAI GPT (quality polish)")
+                Text("Example: Groq Whisper (fastest & cheapest STT) + OpenAI GPT-4o-mini (best polish quality)")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
@@ -37,7 +37,11 @@ struct DualAPIConfigView: View {
                         if !sttProvider.presetSTTModels.isEmpty {
                             Picker("Model", selection: $sttModel) {
                                 ForEach(sttProvider.presetSTTModels, id: \.self) { m in
-                                    Text(m).tag(m)
+                                    if let desc = APIProvider.sttModelDescription(m) {
+                                        Text("\(m)  ·  \(desc)").tag(m)
+                                    } else {
+                                        Text(m).tag(m)
+                                    }
                                 }
                             }
                         } else {
@@ -65,7 +69,11 @@ struct DualAPIConfigView: View {
                         if !polishProvider.presetPolishModels.isEmpty {
                             Picker("Model", selection: $polishModel) {
                                 ForEach(polishProvider.presetPolishModels, id: \.self) { m in
-                                    Text(m).tag(m)
+                                    if let desc = APIProvider.polishModelDescription(m) {
+                                        Text("\(m)  ·  \(desc)").tag(m)
+                                    } else {
+                                        Text(m).tag(m)
+                                    }
                                 }
                             }
                         } else {
