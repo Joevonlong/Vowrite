@@ -27,7 +27,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
 
     var defaultSTTModel: String {
         switch self {
-        case .openai: return "whisper-1"
+        case .openai: return "gpt-4o-mini-transcribe"
         case .openrouter: return "openai/whisper-large-v3"
         case .groq: return "whisper-large-v3-turbo"
         case .together: return "whisper-large-v3"
@@ -40,7 +40,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
         switch self {
         case .openai: return "gpt-4o-mini"
         case .openrouter: return "openai/gpt-4o-mini"
-        case .groq: return "llama-3.1-8b-instant"
+        case .groq: return "llama-3.3-70b-versatile"
         case .together: return "meta-llama/Llama-3.1-8B-Instruct-Turbo"
         case .deepseek: return "deepseek-chat"
         case .custom: return "gpt-4o-mini"
@@ -50,7 +50,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
     /// Preset STT models for this provider. Empty means no STT support.
     var presetSTTModels: [String] {
         switch self {
-        case .openai: return ["whisper-1"]
+        case .openai: return ["gpt-4o-mini-transcribe", "gpt-4o-transcribe", "whisper-1"]
         case .openrouter: return [] // uses dynamic fetch
         case .groq: return ["whisper-large-v3-turbo", "whisper-large-v3"]
         case .together: return ["whisper-large-v3"]
@@ -64,10 +64,34 @@ enum APIProvider: String, CaseIterable, Identifiable {
         switch self {
         case .openai: return ["gpt-4o-mini", "gpt-4o"]
         case .openrouter: return [] // uses dynamic fetch
-        case .groq: return ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
+        case .groq: return ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-qwq-32b"]
         case .together: return ["meta-llama/Llama-3.1-8B-Instruct-Turbo"]
         case .deepseek: return ["deepseek-chat", "deepseek-reasoner"]
         case .custom: return [] // manual input only
+        }
+    }
+
+    /// Brief description for known STT models
+    static func sttModelDescription(_ modelId: String) -> String? {
+        switch modelId {
+        case "gpt-4o-mini-transcribe": return "Fast & cheap — $0.003/min"
+        case "gpt-4o-transcribe": return "Best quality — $0.006/min"
+        case "whisper-1": return "Classic — $0.006/min"
+        case "whisper-large-v3-turbo": return "Fastest & cheapest — $0.0007/min"
+        case "whisper-large-v3": return "High accuracy — $0.002/min"
+        default: return nil
+        }
+    }
+
+    /// Brief description for known Polish models
+    static func polishModelDescription(_ modelId: String) -> String? {
+        switch modelId {
+        case "gpt-4o-mini": return "Best balance — fast & accurate"
+        case "gpt-4o": return "Highest quality — slower"
+        case "llama-3.3-70b-versatile": return "Fast & free-tier friendly"
+        case "llama-3.1-8b-instant": return "Ultra fast — basic quality"
+        case "qwen-qwq-32b": return "Strong reasoning — multilingual"
+        default: return nil
         }
     }
 
@@ -591,7 +615,14 @@ struct SettingsContentPage: View {
         let isCustom = !presets.contains(selection.wrappedValue) && !selection.wrappedValue.isEmpty
         Picker(label, selection: selection) {
             ForEach(presets, id: \.self) { model in
-                Text(model).tag(model)
+                let desc = label.contains("STT")
+                    ? APIProvider.sttModelDescription(model)
+                    : APIProvider.polishModelDescription(model)
+                if let desc = desc {
+                    Text("\(model)  ·  \(desc)").tag(model)
+                } else {
+                    Text(model).tag(model)
+                }
             }
             if allowCustom {
                 Divider()
