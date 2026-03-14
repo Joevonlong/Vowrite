@@ -10,6 +10,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
     case groq = "Groq"
     case together = "Together AI"
     case deepseek = "DeepSeek"
+    case ollama = "Ollama (Local)"
     case custom = "Custom"
 
     var id: String { rawValue }
@@ -21,6 +22,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case .groq: return "https://api.groq.com/openai/v1"
         case .together: return "https://api.together.xyz/v1"
         case .deepseek: return "https://api.deepseek.com/v1"
+        case .ollama: return "http://localhost:11434/v1"
         case .custom: return ""
         }
     }
@@ -32,6 +34,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case .groq: return "whisper-large-v3-turbo"
         case .together: return "whisper-large-v3"
         case .deepseek: return "whisper-1"
+        case .ollama: return "whisper-large-v3-turbo"
         case .custom: return "whisper-1"
         }
     }
@@ -43,6 +46,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case .groq: return "llama-3.3-70b-versatile"
         case .together: return "meta-llama/Llama-3.1-8B-Instruct-Turbo"
         case .deepseek: return "deepseek-chat"
+        case .ollama: return "qwen3:8b"
         case .custom: return "gpt-4o-mini"
         }
     }
@@ -55,6 +59,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case .groq: return ["whisper-large-v3-turbo", "whisper-large-v3"]
         case .together: return ["whisper-large-v3"]
         case .deepseek: return [] // no STT support
+        case .ollama: return [] // user pulls models manually, use custom input
         case .custom: return [] // manual input only
         }
     }
@@ -67,6 +72,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case .groq: return ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-qwq-32b"]
         case .together: return ["meta-llama/Llama-3.1-8B-Instruct-Turbo"]
         case .deepseek: return ["deepseek-chat", "deepseek-reasoner"]
+        case .ollama: return ["qwen3:8b", "llama3.1:8b", "gemma3:4b", "mistral:7b"]
         case .custom: return [] // manual input only
         }
     }
@@ -93,6 +99,10 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case "qwen-qwq-32b": return "Strong reasoning — multilingual"
         case "deepseek-chat": return "Best value — $0.28/M input, excellent Chinese"
         case "deepseek-reasoner": return "Deep thinking — complex rewrites"
+        case "qwen3:8b": return "Local — fast, good multilingual"
+        case "llama3.1:8b": return "Local — solid general purpose"
+        case "gemma3:4b": return "Local — lightweight & quick"
+        case "mistral:7b": return "Local — good European languages"
         default: return nil
         }
     }
@@ -100,6 +110,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
     var hasSTTSupport: Bool {
         switch self {
         case .openai, .groq, .together: return true
+        case .ollama: return true // supports Whisper via OpenAI-compatible API if model is pulled
         case .openrouter, .deepseek, .custom: return false
         }
     }
@@ -108,6 +119,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
         switch self {
         case .openrouter: return "OpenRouter does not proxy the Whisper API. Enable Dual Provider and use OpenAI/Groq for STT."
         case .deepseek: return "DeepSeek does not offer speech-to-text. Enable Dual Provider and use OpenAI/Groq for STT."
+        case .ollama: return "Requires a Whisper model pulled locally (e.g. `ollama pull whisper-large-v3-turbo`). Or use Dual Provider with Groq for STT."
         case .custom: return "Ensure your custom endpoint supports /audio/transcriptions (OpenAI Whisper API compatible)."
         default: return nil
         }
@@ -120,7 +132,16 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case .groq: return "gsk_..."
         case .together: return "..."
         case .deepseek: return "sk-..."
+        case .ollama: return "ollama (no key needed)"
         case .custom: return "API Key"
+        }
+    }
+
+    /// Whether this provider requires an API key
+    var requiresAPIKey: Bool {
+        switch self {
+        case .ollama: return false
+        default: return true
         }
     }
 
@@ -131,6 +152,7 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case .groq: return "https://console.groq.com/keys"
         case .together: return "https://api.together.xyz/settings/api-keys"
         case .deepseek: return "https://platform.deepseek.com/api_keys"
+        case .ollama: return "https://ollama.com/download"
         case .custom: return ""
         }
     }
@@ -384,16 +406,22 @@ struct SettingsContentPage: View {
                             editSTTModel = v.defaultSTTModel
                             editPolishModel = v.defaultPolishModel
                         }
-                        if editProvider == .custom {
+                        if editProvider == .custom || editProvider == .ollama {
                             TextField("Base URL", text: $editBaseURL).textFieldStyle(.roundedBorder)
                         } else {
                             LabeledContent("Base URL") {
                                 Text(editBaseURL).font(.caption).foregroundColor(.secondary).lineLimit(1)
                             }
                         }
-                        SecureField(editProvider.keyPlaceholder, text: $editKey).textFieldStyle(.roundedBorder)
+                        if editProvider.requiresAPIKey {
+                            SecureField(editProvider.keyPlaceholder, text: $editKey).textFieldStyle(.roundedBorder)
+                        } else {
+                            Text("No API key required — \(editProvider.rawValue) runs locally on your machine.")
+                                .font(.caption).foregroundColor(.secondary)
+                        }
                         if !editProvider.keyURL.isEmpty {
-                            Link("Get API Key →", destination: URL(string: editProvider.keyURL)!).font(.caption)
+                            Link(editProvider.requiresAPIKey ? "Get API Key →" : "Download \(editProvider.rawValue) →",
+                                 destination: URL(string: editProvider.keyURL)!).font(.caption)
                         }
                     }.padding(8)
                 }
@@ -532,7 +560,7 @@ struct SettingsContentPage: View {
                         }
                     }
                     .buttonStyle(.bordered)
-                    .disabled(editKey.isEmpty || testingAPI)
+                    .disabled((editProvider.requiresAPIKey && editKey.isEmpty) || testingAPI)
                     if savedFeedback {
                         Label("Saved!", systemImage: "checkmark.circle.fill").foregroundColor(.green)
                     }

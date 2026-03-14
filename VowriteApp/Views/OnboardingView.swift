@@ -62,7 +62,7 @@ struct OnboardingView: View {
 
     private var canProceed: Bool {
         switch currentStep {
-        case 3: return !editKey.isEmpty
+        case 3: return !editProvider.requiresAPIKey || !editKey.isEmpty
         default: return true
         }
     }
@@ -301,13 +301,31 @@ struct OnboardingView: View {
             } else if editProvider == .deepseek {
                 Text("💎 Best value polish — pair with Groq STT via Dual Provider in Settings")
                     .font(.caption).foregroundColor(.green)
+            } else if editProvider == .ollama {
+                Text("🏠 100% local & free — requires Ollama running on your Mac. No API key needed.")
+                    .font(.caption).foregroundColor(.purple)
             }
 
-            SecureField(editProvider.keyPlaceholder, text: $editKey)
-                .textFieldStyle(.roundedBorder)
+            if editProvider.requiresAPIKey {
+                SecureField(editProvider.keyPlaceholder, text: $editKey)
+                    .textFieldStyle(.roundedBorder)
 
-            if !editProvider.keyURL.isEmpty {
-                Link("Get your \(editProvider.rawValue) API key →", destination: URL(string: editProvider.keyURL)!)
+                if !editProvider.keyURL.isEmpty {
+                    Link("Get your \(editProvider.rawValue) API key →", destination: URL(string: editProvider.keyURL)!)
+                        .font(.caption)
+                }
+
+                Text("Your API key is stored securely in macOS Keychain.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                if !editProvider.keyURL.isEmpty {
+                    Link("Download \(editProvider.rawValue) →", destination: URL(string: editProvider.keyURL)!)
+                        .font(.caption)
+                }
+
+                TextField("Base URL", text: $editBaseURL)
+                    .textFieldStyle(.roundedBorder)
                     .font(.caption)
             }
 
@@ -328,12 +346,8 @@ struct OnboardingView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(editKey.isEmpty || testing)
+                .disabled((editProvider.requiresAPIKey && editKey.isEmpty) || testing)
             }
-
-            Text("Your API key is stored securely in macOS Keychain.")
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
     }
 
