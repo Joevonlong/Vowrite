@@ -91,6 +91,8 @@ enum APIProvider: String, CaseIterable, Identifiable {
         case "llama-3.3-70b-versatile": return "Fast & free-tier friendly"
         case "llama-3.1-8b-instant": return "Ultra fast — basic quality"
         case "qwen-qwq-32b": return "Strong reasoning — multilingual"
+        case "deepseek-chat": return "Best value — $0.28/M input, excellent Chinese"
+        case "deepseek-reasoner": return "Deep thinking — complex rewrites"
         default: return nil
         }
     }
@@ -145,24 +147,24 @@ enum APIConfig {
     static var provider: APIProvider {
         get {
             guard let raw = UserDefaults.standard.string(forKey: providerKey),
-                  let p = APIProvider(rawValue: raw) else { return .openai }
+                  let p = APIProvider(rawValue: raw) else { return .groq }
             return p
         }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: providerKey) }
     }
 
     static var baseURL: String {
-        get { UserDefaults.standard.string(forKey: baseURLKey) ?? APIProvider.openai.defaultBaseURL }
+        get { UserDefaults.standard.string(forKey: baseURLKey) ?? APIProvider.groq.defaultBaseURL }
         set { UserDefaults.standard.set(newValue, forKey: baseURLKey) }
     }
 
     static var sttModel: String {
-        get { UserDefaults.standard.string(forKey: sttModelKey) ?? "whisper-1" }
+        get { UserDefaults.standard.string(forKey: sttModelKey) ?? "whisper-large-v3-turbo" }
         set { UserDefaults.standard.set(newValue, forKey: sttModelKey) }
     }
 
     static var polishModel: String {
-        get { UserDefaults.standard.string(forKey: polishModelKey) ?? "gpt-4o-mini" }
+        get { UserDefaults.standard.string(forKey: polishModelKey) ?? "llama-3.3-70b-versatile" }
         set { UserDefaults.standard.set(newValue, forKey: polishModelKey) }
     }
 }

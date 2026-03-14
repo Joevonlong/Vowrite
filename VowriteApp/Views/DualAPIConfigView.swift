@@ -17,7 +17,7 @@ struct DualAPIConfigView: View {
                 .onChange(of: enabled) { _, v in DualAPIConfig.isDualModeEnabled = v }
 
             if enabled {
-                Text("Example: Groq Whisper (fastest & cheapest STT) + OpenAI GPT-4o-mini (best polish quality)")
+                Text("Recommended: Groq Whisper (fastest & cheapest STT) + DeepSeek V3 (best value polish)")
                     .font(.caption)
                     .foregroundColor(.secondary)
 

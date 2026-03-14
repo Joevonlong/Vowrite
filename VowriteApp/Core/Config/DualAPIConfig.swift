@@ -60,7 +60,7 @@ enum DualAPIConfig {
     static var polishProvider: APIProvider {
         get {
             guard let raw = UserDefaults.standard.string(forKey: polishProviderKey),
-                  let p = APIProvider(rawValue: raw) else { return .openai }
+                  let p = APIProvider(rawValue: raw) else { return .deepseek }
             return p
         }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: polishProviderKey) }
