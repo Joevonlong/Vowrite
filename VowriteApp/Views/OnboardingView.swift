@@ -4,9 +4,9 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var currentStep = 0
     @State private var selectedLanguage: SupportedLanguage = .auto
-    @State private var editProvider: APIProvider = .openai
+    @State private var editProvider: APIProvider = .groq
     @State private var editKey = ""
-    @State private var editBaseURL = APIProvider.openai.defaultBaseURL
+    @State private var editBaseURL = APIProvider.groq.defaultBaseURL
     @State private var testResult: (success: Bool, message: String)?
     @State private var testing = false
     @State private var hasMicrophone = false
@@ -292,12 +292,15 @@ struct OnboardingView: View {
                 testResult = nil
             }
 
-            if editProvider == .openai {
-                Text("✨ Recommended — one key for both transcription and polish")
+            if editProvider == .groq {
+                Text("✨ Recommended — fastest & cheapest transcription. Pair with DeepSeek polish via Dual Provider in Settings for best results.")
                     .font(.caption).foregroundColor(.green)
-            } else if editProvider == .groq {
-                Text("💰 Cheapest STT — pair with OpenAI polish via Dual Provider in Settings")
-                    .font(.caption).foregroundColor(.orange)
+            } else if editProvider == .openai {
+                Text("🎯 One key for both transcription and polish — simplest setup")
+                    .font(.caption).foregroundColor(.blue)
+            } else if editProvider == .deepseek {
+                Text("💎 Best value polish — pair with Groq STT via Dual Provider in Settings")
+                    .font(.caption).foregroundColor(.green)
             }
 
             SecureField(editProvider.keyPlaceholder, text: $editKey)
