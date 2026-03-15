@@ -37,5 +37,9 @@ Secrets.swift
 # Built app binary (rebuild with build.sh)
 VoxaApp/Voxa.app/Contents/MacOS/Voxa
 VoxaApp/Voxa.app/Contents/_CodeSignature/
+VowriteApp/Vowrite.app/Contents/MacOS/Vowrite
+VowriteApp/Vowrite.app/Contents/MacOS/Vowrite.bak
+VowriteApp/Vowrite.app/Contents/Frameworks/
+VowriteApp/Vowrite.app/Contents/_CodeSignature/
 tracking/
 releases/*.dmg

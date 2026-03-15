@@ -114,6 +114,21 @@ cd ..
 cp "${APP_PACKAGE}/.build/arm64-apple-macosx/release/${APP_NAME}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 cp "$PLIST_FILE" "${APP_BUNDLE}/Contents/Info.plist"
 
+# Embed Sparkle.framework into app bundle
+SPARKLE_FW="${APP_PACKAGE}/.build/arm64-apple-macosx/release/Sparkle.framework"
+if [ -d "$SPARKLE_FW" ]; then
+    echo "   Embedding Sparkle.framework..."
+    mkdir -p "${APP_BUNDLE}/Contents/Frameworks"
+    rm -rf "${APP_BUNDLE}/Contents/Frameworks/Sparkle.framework"
+    cp -a "$SPARKLE_FW" "${APP_BUNDLE}/Contents/Frameworks/"
+    # Ensure @rpath resolves to Frameworks dir
+    install_name_tool -add_rpath @executable_path/../Frameworks \
+        "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}" 2>/dev/null || true
+    echo "   ✅ Sparkle.framework embedded"
+else
+    echo "   ⚠️  Sparkle.framework not found — release may crash on launch!"
+fi
+
 # ── Step 3: Code sign (with entitlements) ─────────────────
 ENTITLEMENTS="${APP_PACKAGE}/Resources/Vowrite.entitlements"
 if [ ! -f "$ENTITLEMENTS" ]; then
