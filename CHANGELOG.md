@@ -7,6 +7,22 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.8.1] — 2026-03-15
+
+### Added
+- **F-024**: Stable code signing with self-signed certificate + dedicated keychain (permissions persist across updates)
+- **F-025**: macOS standard menu bar when Settings window is open + sidebar navigation redesign
+- **F-027**: STT model expansion — gpt-4o-transcribe support, Groq as default STT, DeepSeek as default polish
+- **Ollama**: Local LLM provider support for AI polish (on-device processing)
+
+### Changed
+- Default STT provider changed to Groq (faster, free tier)
+- Default AI polish provider changed to DeepSeek (cost-effective)
+- Model config UX improvements for STT provider selection
+
+### Partial
+- **F-026**: Sparkle auto-update framework integrated (code + UI ready, EdDSA key + appcast.xml pending)
+
 ## [0.1.8.0] — 2026-03-13
 
 ### Added

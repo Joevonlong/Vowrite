@@ -13,7 +13,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.8.0</string>
+	<string>0.1.8.1</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -38,6 +38,6 @@
 	<key>SUFeedURL</key>
 	<string>https://vowrite.com/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string></string>
+	<string>h8JDEdirc9vxaQ0hSm7tccjI2EzSWgpJXdbQg6hZYM8=</string>
 </dict>
 </plist>

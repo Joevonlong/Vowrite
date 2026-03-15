@@ -11,22 +11,30 @@ All contributors and automation scripts must follow these rules.
 
 | Segment | Name | When to Increment | Git Tag | Changelog Entry |
 |---------|------|-------------------|---------|-----------------|
-| 1st | MAJOR | Incompatible architecture changes | ✅ | ✅ |
-| 2nd | MINOR | New feature module launches | ✅ | ✅ |
-| 3rd | PATCH | Accumulated improvements, meaningful release | ✅ | ✅ |
-| 4th | BUILD | Daily: bug fixes, UI tweaks, copy changes | ❌ | ❌ (add to `[Unreleased]`) |
+| 1st | MAJOR | Product era change, fundamental redesign, 1.0 launch | ✅ | ✅ |
+| 2nd | MINOR | Product stage milestone (MVP→Beta→RC) | ✅ | ✅ |
+| 3rd | PATCH | Accumulated batch of user-facing features | ✅ | ✅ |
+| 4th | BUILD | Bugfixes, infra improvements, provider additions, polish | ✅ | ✅ |
+
+> **Global standard:** See `~/Dev_Workspace/VERSIONING.md` for cross-project rules.
 
 ### Rules
 
-1. **BUILD** — Increment only the 4th segment. No tag, no changelog entry. Add notable items to `[Unreleased]` in `CHANGELOG.md`.
-2. **PATCH** — Increment 3rd segment, reset BUILD to 0. Create tag + changelog entry.
-3. **MINOR** — Increment 2nd segment, reset PATCH and BUILD to 0. Create tag + changelog entry.
-4. **MAJOR** — Increment 1st segment, reset all others to 0. Create tag + changelog entry.
+1. **BUILD** — Bugfixes, infrastructure, provider additions, polish. Create tag + changelog entry.
+2. **PATCH** — Bump when shipping a meaningful batch of user-facing features. A PATCH bump should feel like "this is a noticeable update worth announcing". Don't bump for every single feature. Reset BUILD to 0.
+3. **MINOR** — Only when reaching a defined product milestone (0.1=MVP, 0.2=Beta, etc.). Reset PATCH and BUILD to 0.
+4. **MAJOR** — Extremely rare. 0.x = pre-release, 1.0 = first stable public release. Reset all others to 0.
+
+### Anti-patterns
+
+- ❌ Bumping PATCH for a single feature addition (use BUILD)
+- ❌ Bumping MINOR just because PATCH reached .9
+- ❌ Skipping BUILD for small changes and going straight to next PATCH
 
 ### Current Version
 
 ```
-v0.1.5.0
+v0.1.8.1
 ```
 
 ### Version Line

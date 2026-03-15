@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Vowrite Updates</title>
+    <link>https://vowrite.com/appcast.xml</link>
+    <description>Vowrite release feed</description>
+    <language>en</language>
+    <!--
+      To add a new release:
+      1. Build the DMG with release.sh
+      2. Sign it: generate_appcast /path/to/releases/
+         OR manually: sign_update Vowrite-vX.Y.Z.W.dmg
+      3. Add a new <item> block below with the edSignature and length
+      4. Push to GitHub Pages (docs/)
+    -->
+  </channel>
+</rss>

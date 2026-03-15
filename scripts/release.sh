@@ -10,7 +10,8 @@ set -euo pipefail
 #   ./scripts/release.sh <version> [--dry-run]
 #
 # Examples:
-#   ./scripts/release.sh 0.1.8.0
+#   ./scripts/release.sh 0.1.8.1        # BUILD bump (bugfix/infra/polish)
+#   ./scripts/release.sh 0.1.9.0        # PATCH bump (feature batch)
 #   ./scripts/release.sh 0.2.0.0 --dry-run
 #
 # Prerequisites:
