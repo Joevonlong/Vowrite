@@ -642,8 +642,25 @@ struct SettingsContentPage: View {
 
     @ViewBuilder
     private func presetModelPicker(label: String, selection: Binding<String>, presets: [String], customText: Binding<String>, allowCustom: Bool = false) -> some View {
-        let isCustom = !presets.contains(selection.wrappedValue) && !selection.wrappedValue.isEmpty
-        Picker(label, selection: selection) {
+        let isCustom = !presets.contains(selection.wrappedValue)
+        // Use a local binding that maps custom values to/from the "__custom__" tag
+        let pickerSelection = Binding<String>(
+            get: {
+                if presets.contains(selection.wrappedValue) {
+                    return selection.wrappedValue
+                }
+                return allowCustom ? "__custom__" : (presets.first ?? selection.wrappedValue)
+            },
+            set: { newValue in
+                if newValue == "__custom__" {
+                    // Switching to custom: use existing custom text or clear
+                    selection.wrappedValue = customText.wrappedValue
+                } else {
+                    selection.wrappedValue = newValue
+                }
+            }
+        )
+        Picker(label, selection: pickerSelection) {
             ForEach(presets, id: \.self) { model in
                 let desc = label.contains("STT")
                     ? APIProvider.sttModelDescription(model)
@@ -657,15 +674,6 @@ struct SettingsContentPage: View {
             if allowCustom {
                 Divider()
                 Text("Custom...").tag("__custom__")
-            }
-        }
-        .onChange(of: selection.wrappedValue) { _, v in
-            if v == "__custom__" {
-                selection.wrappedValue = customText.wrappedValue.isEmpty ? "" : customText.wrappedValue
-            }
-            // If not in advanced mode and value is not in presets, snap to first preset
-            if !allowCustom && !presets.contains(v) && v != "__custom__" && !presets.isEmpty {
-                selection.wrappedValue = presets[0]
             }
         }
         if allowCustom && isCustom {
