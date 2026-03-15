@@ -7,6 +7,11 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.8.3] — 2026-03-15
+
+### Fixed
+- **Custom model picker**: Selecting "Custom..." in model pickers now correctly shows a text input field. Previously the picker would revert selection due to a missing tag binding.
+
 ## [0.1.8.2] — 2026-03-15
 
 ### Fixed
