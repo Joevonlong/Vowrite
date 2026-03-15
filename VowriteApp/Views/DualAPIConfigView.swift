@@ -6,9 +6,11 @@ struct DualAPIConfigView: View {
     @State private var sttProvider = DualAPIConfig.sttProvider
     @State private var sttKey = ""
     @State private var sttModel = DualAPIConfig.sttModel
+    @State private var customSTTModel = ""
     @State private var polishProvider = DualAPIConfig.polishProvider
     @State private var polishKey = ""
     @State private var polishModel = DualAPIConfig.polishModel
+    @State private var customPolishModel = ""
     @State private var saved = false
 
     var body: some View {
@@ -31,24 +33,22 @@ struct DualAPIConfigView: View {
                         }
                         .onChange(of: sttProvider) { _, v in
                             sttModel = v.defaultSTTModel
+                            customSTTModel = ""
                         }
-                        SecureField(sttProvider.keyPlaceholder, text: $sttKey)
-                            .textFieldStyle(.roundedBorder)
-                        if !sttProvider.presetSTTModels.isEmpty {
-                            Picker("Model", selection: $sttModel) {
-                                ForEach(sttProvider.presetSTTModels, id: \.self) { m in
-                                    if let desc = APIProvider.sttModelDescription(m) {
-                                        Text("\(m)  ·  \(desc)").tag(m)
-                                    } else {
-                                        Text(m).tag(m)
-                                    }
-                                }
-                            }
+                        if sttProvider.requiresAPIKey {
+                            SecureField(sttProvider.keyPlaceholder, text: $sttKey)
+                                .textFieldStyle(.roundedBorder)
                         } else {
-                            LabeledContent("Model") {
-                                Text(sttModel).foregroundColor(.secondary)
-                            }
+                            Text("No API key required — \(sttProvider.rawValue) runs locally.")
+                                .font(.caption).foregroundColor(.secondary)
                         }
+                        dualModelPicker(
+                            label: "Model",
+                            selection: $sttModel,
+                            customText: $customSTTModel,
+                            presets: sttProvider.presetSTTModels,
+                            descriptionFn: APIProvider.sttModelDescription
+                        )
                     }
                     .padding(8)
                 }
@@ -63,24 +63,22 @@ struct DualAPIConfigView: View {
                         }
                         .onChange(of: polishProvider) { _, v in
                             polishModel = v.defaultPolishModel
+                            customPolishModel = ""
                         }
-                        SecureField(polishProvider.keyPlaceholder, text: $polishKey)
-                            .textFieldStyle(.roundedBorder)
-                        if !polishProvider.presetPolishModels.isEmpty {
-                            Picker("Model", selection: $polishModel) {
-                                ForEach(polishProvider.presetPolishModels, id: \.self) { m in
-                                    if let desc = APIProvider.polishModelDescription(m) {
-                                        Text("\(m)  ·  \(desc)").tag(m)
-                                    } else {
-                                        Text(m).tag(m)
-                                    }
-                                }
-                            }
+                        if polishProvider.requiresAPIKey {
+                            SecureField(polishProvider.keyPlaceholder, text: $polishKey)
+                                .textFieldStyle(.roundedBorder)
                         } else {
-                            LabeledContent("Model") {
-                                Text(polishModel).foregroundColor(.secondary)
-                            }
+                            Text("No API key required — \(polishProvider.rawValue) runs locally.")
+                                .font(.caption).foregroundColor(.secondary)
                         }
+                        dualModelPicker(
+                            label: "Model",
+                            selection: $polishModel,
+                            customText: $customPolishModel,
+                            presets: polishProvider.presetPolishModels,
+                            descriptionFn: APIProvider.polishModelDescription
+                        )
                     }
                     .padding(8)
                 }
@@ -101,6 +99,59 @@ struct DualAPIConfigView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+        }
+    }
+
+    /// A model picker that shows presets (if any) plus a "Custom..." option for manual input.
+    /// If no presets exist, shows a text field directly.
+    @ViewBuilder
+    private func dualModelPicker(
+        label: String,
+        selection: Binding<String>,
+        customText: Binding<String>,
+        presets: [String],
+        descriptionFn: @escaping (String) -> String?
+    ) -> some View {
+        let isCustomValue = !presets.contains(selection.wrappedValue) && selection.wrappedValue != "__custom__"
+
+        if !presets.isEmpty {
+            Picker(label, selection: selection) {
+                ForEach(presets, id: \.self) { model in
+                    if let desc = descriptionFn(model) {
+                        Text("\(model)  ·  \(desc)").tag(model)
+                    } else {
+                        Text(model).tag(model)
+                    }
+                }
+                Divider()
+                Text("Custom...").tag("__custom__")
+            }
+            .onChange(of: selection.wrappedValue) { _, v in
+                if v == "__custom__" {
+                    // Switch to custom mode: use customText or empty
+                    selection.wrappedValue = customText.wrappedValue.isEmpty
+                        ? "" : customText.wrappedValue
+                }
+            }
+
+            // Show text field when custom value is active
+            if isCustomValue || selection.wrappedValue.isEmpty {
+                TextField("Enter model name (e.g. gpt-4o-mini-transcribe)", text: customText)
+                    .textFieldStyle(.roundedBorder)
+                    .onChange(of: customText.wrappedValue) { _, v in
+                        selection.wrappedValue = v
+                    }
+                    .onAppear {
+                        // Sync initial custom value
+                        if isCustomValue && customText.wrappedValue.isEmpty {
+                            customText.wrappedValue = selection.wrappedValue
+                        }
+                    }
+            }
+        } else {
+            // No presets — always show text field
+            TextField("\(label) (e.g. whisper-large-v3-turbo)", text: selection)
+                .textFieldStyle(.roundedBorder)
         }
     }
 
