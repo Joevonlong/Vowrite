@@ -78,8 +78,21 @@ mkdir -p "$DMG_OUTPUT_DIR"
 DMG_STAGING="/tmp/vowrite-beta-dmg-$$"
 rm -rf "$DMG_STAGING"
 mkdir -p "$DMG_STAGING"
-cp -R "$APP_BUNDLE" "$DMG_STAGING/"
+cp -R "$APP_BUNDLE" "$DMG_STAGING/Vowrite.app"
+# Re-sign the copy
+if [ -f "$SIGN_KEYCHAIN" ]; then
+    codesign --force --deep --sign "$SIGN_ID" \
+        --keychain "$SIGN_KEYCHAIN" \
+        --entitlements "$ENTITLEMENTS" "$DMG_STAGING/Vowrite.app"
+else
+    codesign --force --deep --sign "-" --entitlements "$ENTITLEMENTS" "$DMG_STAGING/Vowrite.app"
+fi
 ln -s /Applications "$DMG_STAGING/Applications"
+# Include install script if available
+if [ -f "$PROJECT_ROOT/scripts/install.sh" ]; then
+    cp "$PROJECT_ROOT/scripts/install.sh" "$DMG_STAGING/Install Vowrite.command"
+    chmod +x "$DMG_STAGING/Install Vowrite.command"
+fi
 
 hdiutil create -volname "Vowrite Dev" -srcfolder "$DMG_STAGING" -ov -format UDZO "$DMG_PATH"
 rm -rf "$DMG_STAGING"

@@ -169,36 +169,47 @@ cd "$APP_DIR"
 swift build -c release 2>&1
 echo "  ✓ Release build complete"
 
-# --- Step 5: Copy binary ---
+# --- Step 5: Copy binary + embed Sparkle ---
 echo ""
 echo "▶ Step 5: Copying binary to app bundle..."
 cp .build/arm64-apple-macosx/release/Vowrite "$APP_BUNDLE/Contents/MacOS/Vowrite"
-echo "  ✓ Binary copied"
+cp "$INFO_PLIST" "$APP_BUNDLE/Contents/Info.plist"
+echo "  ✓ Binary and Info.plist copied"
 
-# --- Step 6: Code sign ---
-echo ""
-echo "▶ Step 6: Code signing..."
-
-IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID" | head -1 | sed 's/.*"\(.*\)".*/\1/')
-
-if [ -n "$IDENTITY" ]; then
-    echo "  Using Developer ID: $IDENTITY"
-    codesign -fs "$IDENTITY" --deep --options runtime --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
-    echo "  ✓ Signed with Developer ID"
-
-    # Notarize
-    echo ""
-    echo "▶ Step 6b: Notarizing..."
-    DMG_TEMP="/tmp/Vowrite-notarize.zip"
-    ditto -c -k --keepParent "$APP_BUNDLE" "$DMG_TEMP"
-    xcrun notarytool submit "$DMG_TEMP" --keychain-profile "AC_PASSWORD" --wait || echo "  ⚠️  Notarization failed (may need credentials)"
-    xcrun stapler staple "$APP_BUNDLE" 2>/dev/null || echo "  ⚠️  Stapling skipped"
-    rm -f "$DMG_TEMP"
+# Embed Sparkle.framework into app bundle
+SPARKLE_FW=".build/arm64-apple-macosx/release/Sparkle.framework"
+if [ -d "$SPARKLE_FW" ]; then
+    echo "  Embedding Sparkle.framework..."
+    mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+    rm -rf "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    cp -a "$SPARKLE_FW" "$APP_BUNDLE/Contents/Frameworks/"
+    install_name_tool -add_rpath @executable_path/../Frameworks \
+        "$APP_BUNDLE/Contents/MacOS/Vowrite" 2>/dev/null || true
+    echo "  ✓ Sparkle.framework embedded"
 else
-    echo "  No Developer ID found, using ad-hoc signing"
-    codesign -fs - --deep --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
-    echo "  ✓ Ad-hoc signed"
+    echo "  ⚠️  Sparkle.framework not found — release may crash on launch!"
 fi
+
+# --- Step 6: Code sign (with entitlements) ---
+echo ""
+
+# F-024: Use stable self-signed cert for persistent permissions
+SIGN_KEYCHAIN="$HOME/Library/Keychains/vowrite-signing.keychain-db"
+if [ -f "$SIGN_KEYCHAIN" ]; then
+    security unlock-keychain -p "vowrite" "$SIGN_KEYCHAIN" 2>/dev/null
+    SIGN_IDENTITY="Vowrite Developer"
+    KEYCHAIN_FLAG="--keychain ${SIGN_KEYCHAIN}"
+    echo "🔏 Step 6: Code signing (self-signed certificate)..."
+else
+    SIGN_IDENTITY="-"
+    KEYCHAIN_FLAG=""
+    echo "🔏 Step 6: Code signing (ad-hoc — permissions may reset on update)..."
+    echo "   💡 Tip: Set up self-signed cert to keep permissions across updates."
+    echo "   See ops/SIGNING.md for instructions."
+fi
+codesign --force --deep --sign "${SIGN_IDENTITY}" ${KEYCHAIN_FLAG} --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
+codesign --verify "$APP_BUNDLE"
+echo "  ✓ Code signed and verified"
 
 # --- Step 7: Create DMG ---
 echo ""
@@ -209,8 +220,15 @@ DMG_PATH="$DMG_OUTPUT_DIR/Vowrite-${VERSION}.dmg"
 DMG_STAGING="/tmp/vowrite-dmg-$$"
 rm -rf "$DMG_STAGING"
 mkdir -p "$DMG_STAGING"
-cp -R "$APP_BUNDLE" "$DMG_STAGING/"
+cp -R "$APP_BUNDLE" "$DMG_STAGING/Vowrite.app"
+# Re-sign the copy with entitlements (ensures DMG copy is properly signed)
+codesign --force --deep --sign "${SIGN_IDENTITY}" ${KEYCHAIN_FLAG} --entitlements "$ENTITLEMENTS" "$DMG_STAGING/Vowrite.app"
 ln -s /Applications "$DMG_STAGING/Applications"
+# Include install script for easy updates (quit → replace → relaunch)
+if [ -f "$PROJECT_ROOT/scripts/install.sh" ]; then
+    cp "$PROJECT_ROOT/scripts/install.sh" "$DMG_STAGING/Install Vowrite.command"
+    chmod +x "$DMG_STAGING/Install Vowrite.command"
+fi
 
 hdiutil create -volname "Vowrite $VERSION" -srcfolder "$DMG_STAGING" -ov -format UDZO "$DMG_PATH"
 rm -rf "$DMG_STAGING"
