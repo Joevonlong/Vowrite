@@ -176,10 +176,50 @@ BUILD updates: commit only, no version sync needed.
 
 ---
 
-## 7. Pre-release Tags (Optional)
+## 7. Beta Versions
+
+### Format
 
 ```
-v0.2.0.0-beta     Beta version
+X.Y.Z.W-beta.N
+```
+
+Where `N` is the beta iteration number (1, 2, 3...).
+
+### Examples
+
+```
+v0.1.9.0-beta.1   First beta of 0.1.9.0
+v0.1.9.0-beta.2   Second beta (bugfixes from beta.1 feedback)
+v0.1.9.0           Stable release (same content as final beta, minus -beta suffix)
+```
+
+### Beta vs Stable
+
+| | Beta | Stable |
+|---|---|---|
+| **Purpose** | Early testing, gathering feedback | Production-ready release |
+| **Audience** | Testers, power users | All users |
+| **Appcast** | `docs/appcast-beta.xml` | `docs/appcast.xml` |
+| **GitHub Release** | `--prerelease` flag | Normal release |
+| **CHANGELOG** | Optional (entries kept in [Unreleased]) | Required |
+| **Git tag** | `v0.1.9.0-beta.1` | `v0.1.9.0` |
+
+### Beta → Stable Promotion
+
+To promote a beta to stable, simply release the same version without the `-beta.N` suffix:
+
+```bash
+# Beta
+ops/scripts/release.sh v0.1.9.0-beta.1 "Beta: new feature X"
+
+# Promote to stable (after beta testing is done)
+ops/scripts/release.sh v0.1.9.0 "New feature X"
+```
+
+### Pre-release Tags (Other)
+
+```
 v0.2.0.0-rc1      Release candidate
 ```
 
