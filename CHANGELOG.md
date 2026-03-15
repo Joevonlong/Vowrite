@@ -7,6 +7,11 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.8.2] — 2026-03-15
+
+### Fixed
+- **Settings window not opening**: Clicking "Settings..." in the menu bar now reliably opens the settings window. Replaced unreliable `showSettingsWindow:` selector with direct `NSWindow` creation, fixing a race condition where the activation policy check would hide the window before it appeared.
+
 ## [0.1.8.1] — 2026-03-15
 
 ### Added

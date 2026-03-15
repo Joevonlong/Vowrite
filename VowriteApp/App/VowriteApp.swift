@@ -24,18 +24,12 @@ struct VowriteApp: App {
         }
         .menuBarExtraStyle(.menu)
 
-        // F-025: Settings scene — shows the main window when opened via ⌘, or menu
-        Settings {
-            MainWindowView()
-                .environmentObject(appState)
-                .modelContainer(appState.modelContainer)
-        }
+        // F-025: Commands for the menu bar when the window is active
         .commands {
             // Vowrite menu: About
             CommandGroup(replacing: .appInfo) {
                 Button("About Vowrite") {
-                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                    NSApp.activate(ignoringOtherApps: true)
+                    WindowHelper.openMainWindow()
                 }
             }
             // Vowrite menu: Check for Updates
@@ -43,6 +37,13 @@ struct VowriteApp: App {
                 Button("Check for Updates...") {
                     appDelegate.checkForUpdates()
                 }
+            }
+            // ⌘, opens our custom settings window
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings...") {
+                    WindowHelper.openSettings()
+                }
+                .keyboardShortcut(",", modifiers: .command)
             }
         }
     }
@@ -111,6 +112,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // F-025: Switch activation policy based on visible windows
     private func updateActivationPolicy() {
+        // Don't switch back to .accessory while WindowHelper is in the middle
+        // of opening a window — the Settings window may not be visible yet.
+        if WindowHelper.isOpeningWindow { return }
+
         let hasVisibleWindows = NSApp.windows.contains {
             $0.isVisible && $0.styleMask.contains(.titled)
         }
