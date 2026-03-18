@@ -7,6 +7,25 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.1.9.0] — 2026-03-18
+
+### Added
+- **Key Vault** (F-028): API keys are now stored per-provider in macOS Keychain. Enter once, reuse everywhere — no more duplicate key entries for STT and Polish.
+- **Unified Split Config** (F-028): STT and Polish always have independent provider/model selection. Removed the confusing "single provider" vs "dual provider" toggle.
+- **API Presets** (F-028): 3 built-in presets (⭐ Recommended: Groq STT + DeepSeek Polish, OpenAI All-in-One, Local Ollama) for one-click API setup.
+- **Personalization Quick Presets** (F-029): 5 preference presets (Business, Casual, Academic, Creative, Technical) that fill your custom prompt with one click.
+- **Save/Edit/Lock for Preferences** (F-029): Your custom preferences now have clear save/edit/lock states — no more wondering if changes took effect.
+- **"How it works" guide** (F-029): Inline explanation of how preferences and modes work together.
+
+### Changed
+- **Settings UI redesign** (F-029): Card-based sections, adaptive layout, improved dark/light mode support.
+- **Onboarding updated** for new API config flow.
+
+### Removed
+- **Scene system removed** (F-029): Output Scene was redundant with the Mode system. Replaced by Quick Presets for preferences + Mode for output formatting.
+- **DualAPIConfig removed** (F-028): Superseded by the cleaner Unified Split Config.
+- **Old SettingsView removed**: Replaced by integrated MainWindowView settings pages.
+
 ## [0.1.8.3] — 2026-03-15
 
 ### Fixed
