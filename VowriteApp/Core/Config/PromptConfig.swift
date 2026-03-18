@@ -75,6 +75,11 @@ enum PromptConfig {
         set { UserDefaults.standard.set(newValue, forKey: userPromptKey) }
     }
 
+    static var isUserPromptLocked: Bool {
+        get { UserDefaults.standard.bool(forKey: "promptUserPromptLocked") }
+        set { UserDefaults.standard.set(newValue, forKey: "promptUserPromptLocked") }
+    }
+
     /// Remove any legacy user-modified system prompt from UserDefaults.
     /// Call once at app launch to clean up.
     static func migrateLegacySystemPrompt() {

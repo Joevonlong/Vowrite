@@ -61,11 +61,12 @@ final class AppState: ObservableObject {
     }
 
     var hasAPIKey: Bool {
-        guard let key = KeychainHelper.getAPIKey() else { return false }
-        return !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        isReadyForCurrentMode
     }
 
     init() {
+        APIConfigMigration.runIfNeeded()
+
         do {
             let schema = Schema([DictationRecord.self])
             let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
@@ -212,20 +213,11 @@ final class AppState: ObservableObject {
     private func processAudio(url: URL) {
         Task {
             do {
-                let apiKey = KeychainHelper.getAPIKey() ?? ""
-                guard !apiKey.isEmpty else {
-                    state = .error("请先在设置中配置 API Key")
-                    RecordingOverlayController.shared.hide()
-                    return
-                }
-
                 // Load current mode config
                 let modeConfig = ModeManager.currentModeConfig
 
-                // Check STT provider compatibility
-                let sttProvider = DualAPIConfig.effectiveSTTProvider
-                if !sttProvider.hasSTTSupport {
-                    state = .error("\(sttProvider.rawValue) 不支持语音识别，请切换 Provider 或启用 Dual Provider 模式")
+                if let setupError = setupErrorMessage(for: modeConfig) {
+                    state = .error(setupError)
                     RecordingOverlayController.shared.hide()
                     return
                 }
@@ -243,7 +235,7 @@ final class AppState: ObservableObject {
                     whisperLanguage = LanguageConfig.globalLanguage.whisperCode
                 }
                 let vocabPrompt = VocabularyManager.whisperPrompt
-                let rawTranscript = try await whisperService.transcribe(audioURL: url, apiKey: apiKey, language: whisperLanguage, prompt: vocabPrompt)
+                let rawTranscript = try await whisperService.transcribe(audioURL: url, language: whisperLanguage, prompt: vocabPrompt)
                 lastRawTranscript = rawTranscript
                 #if DEBUG
                 print("[Vowrite] STT result: '\(rawTranscript)'")
@@ -262,7 +254,7 @@ final class AppState: ObservableObject {
                         #if DEBUG
                         print("[Vowrite] Starting AI polish...")
                         #endif
-                        let polished = try await aiPolishService.polish(text: rawTranscript, apiKey: apiKey, modeConfig: modeConfig)
+                        let polished = try await aiPolishService.polish(text: rawTranscript, modeConfig: modeConfig)
                         finalText = polished
                         #if DEBUG
                         print("[Vowrite] Polish result: '\(polished)'")
@@ -335,5 +327,28 @@ final class AppState: ObservableObject {
                 NSSound(named: .init("Basso"))?.play()
             }
         }
+    }
+
+    private var isReadyForCurrentMode: Bool {
+        setupErrorMessage(for: ModeManager.currentModeConfig) == nil
+    }
+
+    private func setupErrorMessage(for modeConfig: ModeConfig) -> String? {
+        let sttConfiguration = APIConfig.stt
+        if !sttConfiguration.provider.hasSTTSupport {
+            return "\(sttConfiguration.provider.rawValue) 不支持语音识别，请在设置中修改 STT Provider"
+        }
+        if sttConfiguration.requiresAPIKey && sttConfiguration.key == nil {
+            return "请先在设置中配置 \(sttConfiguration.provider.rawValue) API Key"
+        }
+
+        if modeConfig.polishEnabled {
+            let polishConfiguration = APIConfig.polish
+            if polishConfiguration.requiresAPIKey && polishConfiguration.key == nil {
+                return "请先在设置中配置 \(polishConfiguration.provider.rawValue) API Key"
+            }
+        }
+
+        return nil
     }
 }

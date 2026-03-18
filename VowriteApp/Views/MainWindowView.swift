@@ -2,6 +2,30 @@ import SwiftUI
 import Carbon.HIToolbox
 import ServiceManagement
 
+// MARK: - Appearance Mode
+
+enum AppearanceMode: String, CaseIterable {
+    case system = "System"
+    case light = "Light"
+    case dark = "Dark"
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .system: return "laptopcomputer"
+        case .light: return "sun.max.fill"
+        case .dark: return "moon.fill"
+        }
+    }
+}
+
 // MARK: - Sidebar Navigation
 
 enum SidebarItem: String, CaseIterable, Identifiable {
@@ -31,6 +55,11 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 struct MainWindowView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedItem: SidebarItem = .home
+    @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
+
+    private var currentAppearance: AppearanceMode {
+        AppearanceMode(rawValue: appearanceMode) ?? .system
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -39,6 +68,7 @@ struct MainWindowView: View {
             detailView
         }
         .frame(minWidth: 780, minHeight: 520)
+        .preferredColorScheme(currentAppearance.colorScheme)
     }
 
     // MARK: Sidebar
@@ -170,7 +200,7 @@ struct HomePageView: View {
                 HStack(spacing: 16) {
                     QuickActionCard(
                         title: "API Status",
-                        description: appState.hasAPIKey ? "Connected and ready" : "Set up your API key to get started",
+                        description: appState.hasAPIKey ? "Connected and ready" : "Set up your provider keys to get started",
                         icon: appState.hasAPIKey ? "checkmark.circle.fill" : "key.fill",
                         iconColor: appState.hasAPIKey ? .green : .orange
                     )
@@ -276,13 +306,6 @@ struct HistoryPageView: View {
 
 struct AccountPageView: View {
     @ObservedObject private var authManager = AuthManager.shared
-    @State private var showAPIKeySetup = false
-    @State private var editProvider: APIProvider = APIConfig.provider
-    @State private var editKey: String = ""
-    @State private var editBaseURL: String = ""
-    @State private var editSTTModel: String = ""
-    @State private var editPolishModel: String = ""
-    @State private var apiSaved = false
 
     var body: some View {
         ScrollView {
@@ -292,23 +315,12 @@ struct AccountPageView: View {
 
                 if authManager.isLoggedIn {
                     profileCard
-                } else if authManager.authMode == .apiKey, let key = KeychainHelper.getAPIKey(), !key.isEmpty {
-                    apiKeySummaryCard(key: key)
                 } else {
-                    Text("Choose how to connect Vowrite to AI models")
-                        .foregroundColor(.secondary)
+                    configurationCard
                 }
-
-                if !authManager.isLoggedIn {
-                    // TODO: Re-enable Google sign-in when backend OAuth service is ready
-                    // googleSignInCard
-                    apiKeyCard
-                }
-
             }
             .padding(32)
         }
-
     }
 
     private var profileCard: some View {
@@ -341,13 +353,17 @@ struct AccountPageView: View {
         .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
     }
 
-    private func apiKeySummaryCard(key: String) -> some View {
-        VStack(spacing: 12) {
+    private var configurationCard: some View {
+        let configuration = APIConfig.current
+        let presetName = APIConfig.activePreset?.name ?? "Custom"
+        let missingProviders = KeyVault.missingProviders(for: configuration)
+
+        return VStack(spacing: 12) {
             HStack(spacing: 16) {
-                Image(systemName: "key.fill").font(.system(size: 36)).foregroundColor(.orange)
+                Image(systemName: "slider.horizontal.3").font(.system(size: 36)).foregroundColor(.accentColor)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Connected via API Key").font(.title3).fontWeight(.semibold)
-                    Text("\(APIConfig.provider.rawValue) \u{00B7} \(maskKey(key))")
+                    Text("Unified Split Configuration").font(.title3).fontWeight(.semibold)
+                    Text("Preset: \(presetName)")
                         .font(.body).foregroundColor(.secondary)
                 }
                 Spacer()
@@ -355,125 +371,36 @@ struct AccountPageView: View {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("STT").font(.caption).foregroundColor(.secondary)
-                    Text(APIConfig.sttModel).font(.caption2).lineLimit(1)
+                    Text("\(configuration.stt.provider.rawValue) · \(configuration.stt.model)")
+                        .font(.caption2)
+                        .lineLimit(1)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Polish").font(.caption).foregroundColor(.secondary)
-                    Text(APIConfig.polishModel).font(.caption2).lineLimit(1)
-                }
-                Spacer()
-                Button("Edit") { loadAPIDefaults(); showAPIKeySetup = true }
-                    .buttonStyle(.bordered).controlSize(.small)
-            }
-        }
-        .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
-    }
-
-    private var googleSignInCard: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
-                Image(systemName: "globe").font(.title2).foregroundColor(.blue)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Sign in with Google").font(.title3).fontWeight(.semibold)
-                    Text("Get started instantly with your Google account")
-                        .font(.caption).foregroundColor(.secondary)
+                    Text("\(configuration.polish.provider.rawValue) · \(configuration.polish.model)")
+                        .font(.caption2)
+                        .lineLimit(1)
                 }
                 Spacer()
             }
-            Button {
-                authManager.signInWithGoogle()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "person.crop.circle.badge.checkmark")
-                    Text("Continue with Google").fontWeight(.medium)
-                }.frame(maxWidth: .infinity, minHeight: 40)
+            Divider()
+            if missingProviders.isEmpty {
+                Label("Required provider keys are ready in Keychain.", systemImage: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.caption)
+            } else {
+                Label(
+                    "Missing keys: \(missingProviders.map(\.rawValue).joined(separator: ", "))",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .foregroundColor(.orange)
+                .font(.caption)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(authManager.isAuthenticating)
-
-            if authManager.isAuthenticating {
-                HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Signing in...").foregroundColor(.secondary) }
-            }
-            if let error = authManager.authError {
-                Text(error).font(.caption).foregroundColor(.red)
-            }
-        }
-        .padding(20).background(Color.blue.opacity(0.08)).cornerRadius(12)
-    }
-
-    private var apiKeyCard: some View {
-        VStack(spacing: 12) {
-            Button { if !showAPIKeySetup { loadAPIDefaults() }; showAPIKeySetup.toggle() } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "key.fill").font(.title2).foregroundColor(.orange)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Use your own API Key").font(.body).fontWeight(.medium)
-                        Text("Connect to OpenAI, OpenRouter, or other providers")
-                            .font(.caption).foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: showAPIKeySetup ? "chevron.up" : "chevron.down").foregroundColor(.secondary)
-                }.contentShape(Rectangle())
-            }.buttonStyle(.plain)
-
-            if showAPIKeySetup {
-                VStack(spacing: 12) {
-                    Divider()
-                    HStack { Text("Provider").frame(width: 80, alignment: .leading)
-                        Picker("", selection: $editProvider) {
-                            ForEach(APIProvider.allCases) { p in Text(p.rawValue).tag(p) }
-                        }.onChange(of: editProvider) { _, v in
-                            editBaseURL = v.defaultBaseURL; editSTTModel = v.defaultSTTModel; editPolishModel = v.defaultPolishModel
-                        }
-                    }
-                    HStack { Text("API Key").frame(width: 80, alignment: .leading)
-                        SecureField(editProvider.keyPlaceholder, text: $editKey).textFieldStyle(.roundedBorder)
-                    }
-                    if editProvider == .custom {
-                        HStack { Text("Base URL").frame(width: 80, alignment: .leading)
-                            TextField("https://...", text: $editBaseURL).textFieldStyle(.roundedBorder)
-                        }
-                    }
-                    HStack { Text("STT Model").frame(width: 80, alignment: .leading)
-                        TextField("", text: $editSTTModel).textFieldStyle(.roundedBorder)
-                    }
-                    HStack { Text("Polish").frame(width: 80, alignment: .leading)
-                        TextField("", text: $editPolishModel).textFieldStyle(.roundedBorder)
-                    }
-                    if let note = editProvider.sttSupportNote {
-                        HStack(spacing: 6) {
-                            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange).font(.caption)
-                            Text(note).font(.caption).foregroundColor(.orange)
-                        }
-                    }
-                    if !editProvider.keyURL.isEmpty {
-                        Link("Get API Key \u{2192}", destination: URL(string: editProvider.keyURL)!).font(.caption)
-                    }
-                    HStack {
-                        Spacer()
-                        if apiSaved { Label("Saved!", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption) }
-                        Button("Save & Connect") { saveAPIKey() }.buttonStyle(.borderedProminent).disabled(editKey.isEmpty)
-                    }
-                }
-            }
+            Text("Manage providers, presets, and API keys from the Settings sidebar.")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
-    }
-
-    private func maskKey(_ key: String) -> String {
-        guard key.count > 8 else { return "\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}" }
-        return "\(key.prefix(4))\u{2022}\u{2022}\u{2022}\u{2022}\(key.suffix(4))"
-    }
-    private func loadAPIDefaults() {
-        editProvider = APIConfig.provider; editKey = ""
-        editBaseURL = APIConfig.baseURL; editSTTModel = APIConfig.sttModel; editPolishModel = APIConfig.polishModel
-    }
-    private func saveAPIKey() {
-        APIConfig.provider = editProvider; APIConfig.baseURL = editBaseURL
-        APIConfig.sttModel = editSTTModel; APIConfig.polishModel = editPolishModel
-        if !editKey.isEmpty { _ = KeychainHelper.saveAPIKey(editKey) }
-        authManager.setAuthMode(.apiKey); apiSaved = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { apiSaved = false; showAPIKeySetup = false }
     }
 }
 
@@ -481,24 +408,63 @@ struct AccountPageView: View {
 
 struct SettingsPageView: View {
     @EnvironmentObject var appState: AppState
+    @State private var workingConfig = APIConfig.current
+    @State private var selectedPresetID = customPresetID
+    @State private var newPresetName = ""
+    @State private var keyInputs: [APIProvider: String] = [:]
+    @State private var keyEditorExpanded: [APIProvider: Bool] = [:]
+    @State private var configSaved = false
+    @State private var keysSaved = false
+    @State private var sttTestState: EndpointTestState = .idle
+    @State private var polishTestState: EndpointTestState = .idle
+    @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
+
+    private static let customPresetID = "__custom_preset__"
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 32) {
-                Text("Settings")
-                    .font(.system(size: 24, weight: .bold))
+            VStack(alignment: .leading, spacing: 28) {
+                // Header with appearance toggle
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Settings")
+                            .font(.system(size: 24, weight: .bold))
+                        Text(configurationSummaryLine)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    AppearancePicker(selection: $appearanceMode)
+                }
 
-                SettingsSection(icon: "cpu", title: "Models") {
-                    ModelsContent()
+                SettingsSection(icon: "square.stack.3d.up", title: "Presets") {
+                    presetsContent
+                }
+
+                SettingsSection(icon: "waveform", title: "STT") {
+                    PipelineConfigurationEditor(
+                        title: "Speech-to-text",
+                        description: "Choose the provider and model used for transcription.",
+                        isSpeechToText: true,
+                        configuration: $workingConfig.stt
+                    )
+                }
+
+                SettingsSection(icon: "sparkles", title: "Polish") {
+                    PipelineConfigurationEditor(
+                        title: "Cleanup and rewrite",
+                        description: "Choose the provider and model used for text polish.",
+                        isSpeechToText: false,
+                        configuration: $workingConfig.polish
+                    )
+                }
+
+                SettingsSection(icon: "key", title: "API Keys") {
+                    apiKeysContent
                 }
 
                 SettingsSection(icon: "globe", title: "Language") {
                     LanguageContent()
-                }
-
-                // F-019: Dual API Provider Configuration
-                SettingsSection(icon: "arrow.triangle.branch", title: "Advanced: Dual Provider") {
-                    DualAPIConfigView()
                 }
 
                 SettingsSection(icon: "keyboard", title: "Keyboard shortcuts") {
@@ -538,73 +504,598 @@ struct SettingsPageView: View {
             }
             .padding(32)
         }
+        .onAppear(perform: loadState)
+        .onChange(of: workingConfig) { _, newValue in
+            // Keep the chosen preset selected while the user edits away from it,
+            // but snap back if the working config exactly matches a known preset.
+            if let matchingPreset = APIPresetStore.matchingPreset(for: newValue) {
+                selectedPresetID = matchingPreset.id
+            }
+            configSaved = false
+            sttTestState = .idle
+            polishTestState = .idle
+        }
     }
-}
 
-// MARK: - Models Content (OpenRouter + manual)
-
-struct ModelsContent: View {
-    @ObservedObject private var modelManager = ModelManager.shared
-    @State private var editSTT: String = APIConfig.sttModel
-    @State private var editPolish: String = APIConfig.polishModel
-    @State private var saved = false
-
-    var body: some View {
-        VStack(spacing: 12) {
-            if APIConfig.provider == .openrouter {
-                HStack {
-                    Button {
-                        Task { await modelManager.refreshModels() }
-                    } label: {
-                        HStack(spacing: 4) {
-                            if modelManager.isLoading { ProgressView().controlSize(.small) }
-                            Text(modelManager.isLoading ? "Loading..." : "Refresh Models from OpenRouter")
+    private var presetsContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SettingsRow(
+                title: "Active Preset",
+                description: currentPresetDescription,
+                layout: .vertical
+            ) {
+                HStack(spacing: 10) {
+                    Picker("Preset", selection: $selectedPresetID) {
+                        Text("Custom").tag(Self.customPresetID)
+                        ForEach(APIPresetStore.allPresets) { preset in
+                            Text(presetPickerLabel(for: preset)).tag(preset.id)
                         }
                     }
-                    .disabled(modelManager.isLoading)
-                    Spacer()
-                    if let e = modelManager.error { Text(e).font(.caption).foregroundColor(.red) }
+                    .labelsHidden()
+                    .onChange(of: selectedPresetID) { _, newValue in
+                        guard newValue != Self.customPresetID,
+                              let preset = APIPresetStore.preset(for: newValue) else {
+                            return
+                        }
+                        workingConfig = preset.configuration
+                    }
+
+                    Button("Reset to Recommended") {
+                        applyRecommendedPreset()
+                    }
+                    .buttonStyle(.link)
+                    .font(.caption)
+                    .disabled(
+                        selectedPresetID == BuiltInAPIPreset.recommended.id &&
+                        !isSelectedPresetModified
+                    )
                 }
             }
 
-            if !modelManager.sttModels.isEmpty {
-                SettingsRow(title: "STT Model", description: "Speech-to-text") {
-                    Picker("", selection: $editSTT) {
-                        ForEach(modelManager.sttModels) { m in
-                            Text(modelManager.isRecommendedSTTModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
+            Divider()
+
+            SettingsRow(
+                title: "Save & Test",
+                description: "",
+                layout: .vertical
+            ) {
+                VStack(alignment: .leading, spacing: 10) {
+                    // Save as preset row
+                    HStack(spacing: 8) {
+                        TextField("Preset name", text: $newPresetName)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 240)
+
+                        Button("Save as Preset") {
+                            let preset = APIPresetStore.saveUserPreset(name: newPresetName, configuration: workingConfig)
+                            selectedPresetID = APIPresetStore.userPresetID(for: preset.id)
+                            newPresetName = ""
                         }
-                    }.frame(width: 280)
+                        .buttonStyle(.bordered)
+
+                        Button("Delete Selected") {
+                            deleteSelectedPreset()
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(selectedUserPresetID == nil)
+                    }
+
+                    // Test & apply row
+                    HStack(spacing: 8) {
+                        Button {
+                            testEndpoint(.stt)
+                        } label: {
+                            HStack(spacing: 4) {
+                                if sttTestState.isTesting {
+                                    ProgressView().controlSize(.small)
+                                }
+                                Text("Test STT")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!canTest(.stt) || sttTestState.isTesting)
+
+                        EndpointTestBadge(state: sttTestState)
+
+                        Button {
+                            testEndpoint(.polish)
+                        } label: {
+                            HStack(spacing: 4) {
+                                if polishTestState.isTesting {
+                                    ProgressView().controlSize(.small)
+                                }
+                                Text("Test Polish")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!canTest(.polish) || polishTestState.isTesting)
+
+                        EndpointTestBadge(state: polishTestState)
+
+                        Spacer()
+
+                        if configSaved {
+                            Label("Saved", systemImage: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                        }
+
+                        Button("Save Configuration") {
+                            saveConfiguration()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
                 }
-            } else {
-                SettingsRow(title: "STT Model", description: "Speech-to-text") {
-                    TextField("", text: $editSTT).textFieldStyle(.roundedBorder).frame(width: 240)
+            }
+        }
+    }
+
+    private var apiKeysContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Storage").font(.body).fontWeight(.semibold)
+                    Text("Keys are stored in macOS Keychain once per provider.")
+                        .font(.caption).foregroundColor(.secondary)
+                }
+                Spacer()
+                if keysSaved {
+                    Label("Keys saved", systemImage: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
                 }
             }
 
-            if !modelManager.polishModels.isEmpty {
-                SettingsRow(title: "Polish Model", description: "Text cleanup") {
-                    Picker("", selection: $editPolish) {
-                        ForEach(modelManager.polishModels) { m in
-                            Text(modelManager.isRecommendedPolishModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
-                        }
-                    }.frame(width: 280)
-                }
-            } else {
-                SettingsRow(title: "Polish Model", description: "Text cleanup") {
-                    TextField("", text: $editPolish).textFieldStyle(.roundedBorder).frame(width: 240)
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(KeyVault.managedProviders.enumerated()), id: \.element.id) { index, provider in
+                    providerKeyRow(for: provider)
+                        .padding(.vertical, 8)
+
+                    if index < KeyVault.managedProviders.count - 1 {
+                        Divider()
+                    }
                 }
             }
 
             HStack {
                 Spacer()
-                if saved { Label("Saved", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption) }
-                Button("Save Models") {
-                    APIConfig.sttModel = editSTT
-                    APIConfig.polishModel = editPolish
-                    saved = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { saved = false }
-                }.buttonStyle(.borderedProminent)
+                Button("Save Keys") {
+                    saveKeys()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!hasPendingKeyChanges)
             }
+        }
+    }
+
+    private var selectedUserPresetID: UUID? {
+        APIPresetStore.preset(for: selectedPresetID)?.userPresetID
+    }
+
+    private func keyBinding(for provider: APIProvider) -> Binding<String> {
+        Binding(
+            get: { keyInputs[provider] ?? "" },
+            set: { keyInputs[provider] = $0 }
+        )
+    }
+
+    private func loadState() {
+        workingConfig = APIConfig.current
+        selectedPresetID = APIConfig.activePreset?.id ?? APIPresetStore.matchingPreset(for: workingConfig)?.id ?? Self.customPresetID
+        keyInputs = Dictionary(uniqueKeysWithValues: KeyVault.managedProviders.map { ($0, "") })
+        keyEditorExpanded = Dictionary(uniqueKeysWithValues: KeyVault.managedProviders.map { ($0, false) })
+        sttTestState = .idle
+        polishTestState = .idle
+    }
+
+    private func saveConfiguration() {
+        let presetID = APIPresetStore.matchingPreset(for: workingConfig)?.id
+        APIConfig.apply(workingConfig, presetID: presetID)
+        AuthManager.shared.setAuthMode(.apiKey)
+        configSaved = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { configSaved = false }
+    }
+
+    private func saveKeys() {
+        for provider in KeyVault.managedProviders {
+            let value = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !value.isEmpty {
+                _ = KeyVault.saveKey(value, for: provider)
+                keyInputs[provider] = ""
+                keyEditorExpanded[provider] = false
+            }
+        }
+        AuthManager.shared.setAuthMode(.apiKey)
+        keysSaved = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { keysSaved = false }
+    }
+
+    private func deleteSelectedPreset() {
+        guard let userPresetID = selectedUserPresetID else { return }
+        APIPresetStore.deleteUserPreset(id: userPresetID)
+        selectedPresetID = APIPresetStore.matchingPreset(for: workingConfig)?.id ?? Self.customPresetID
+    }
+
+    private var configurationSummaryLine: String {
+        "\(workingConfig.stt.provider.rawValue) STT · \(workingConfig.polish.provider.rawValue) Polish · \(summaryKeyStatus)"
+    }
+
+    private var summaryKeyStatus: String {
+        let requiredProviders = KeyVault.requiredProviders(for: workingConfig)
+        guard !requiredProviders.isEmpty else { return "No keys needed" }
+
+        let readyCount = requiredProviders.filter(providerHasReadyKey).count
+        return readyCount == requiredProviders.count
+            ? "\(readyCount) keys ready"
+            : "\(readyCount)/\(requiredProviders.count) keys ready"
+    }
+
+    private var hasPendingKeyChanges: Bool {
+        KeyVault.managedProviders.contains { provider in
+            !(keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    private var isSelectedPresetModified: Bool {
+        guard let preset = APIPresetStore.preset(for: selectedPresetID) else { return false }
+        return preset.configuration != workingConfig
+    }
+
+    private func presetPickerLabel(for preset: APIPresetOption) -> String {
+        let baseName = presetDisplayName(for: preset)
+        return "\(baseName) · \(preset.summary)"
+    }
+
+    private func presetDisplayName(for preset: APIPresetOption) -> String {
+        let isRecommendedPreset = preset.id == BuiltInAPIPreset.recommended.id
+        let prefix = isRecommendedPreset ? "⭐ " : ""
+        let suffix = selectedPresetID == preset.id && preset.configuration != workingConfig ? " (modified)" : ""
+        return "\(prefix)\(preset.name)\(suffix)"
+    }
+
+    private func presetSummaryText(for preset: APIPresetOption) -> String {
+        if preset.configuration != workingConfig {
+            return "\(preset.summary) · Current settings are modified from this preset."
+        }
+        return preset.summary
+    }
+
+    private func applyRecommendedPreset() {
+        selectedPresetID = BuiltInAPIPreset.recommended.id
+        workingConfig = BuiltInAPIPreset.recommended.configuration
+    }
+
+    private var currentPresetDescription: String {
+        if let preset = APIPresetStore.preset(for: selectedPresetID) {
+            return presetSummaryText(for: preset)
+        }
+        return "Manual configuration. Save it as a preset if you want to reuse it."
+    }
+
+    private func providerKeyRow(for provider: APIProvider) -> some View {
+        let isConfigured = KeyVault.hasKey(for: provider)
+        let isExpanded = isKeyEditorExpanded(for: provider)
+
+        return HStack(alignment: .top, spacing: 12) {
+            // Left: provider name + status
+            HStack(spacing: 8) {
+                Text(provider.rawValue)
+                    .font(.body).fontWeight(.medium)
+
+                ProviderKeyStatusBadge(
+                    provider: provider,
+                    isRequired: providerIsInUse(provider)
+                )
+            }
+            .frame(minWidth: 140, alignment: .leading)
+
+            // Middle: masked key or input
+            VStack(alignment: .leading, spacing: 6) {
+                if isConfigured, let maskedKey = KeyVault.maskedKey(for: provider), !isExpanded {
+                    Text(maskedKey)
+                        .font(.caption.monospaced())
+                        .foregroundColor(.secondary)
+                }
+
+                if isExpanded {
+                    SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 320)
+                }
+
+                if !provider.keyURL.isEmpty && !isConfigured {
+                    Link("Get \(provider.rawValue) key →", destination: URL(string: provider.keyURL)!)
+                        .font(.caption)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Right: actions
+            HStack(spacing: 6) {
+                if isConfigured {
+                    Button("Edit") {
+                        keyEditorExpanded[provider] = true
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+
+                    Button("Clear") {
+                        _ = KeyVault.deleteKey(for: provider)
+                        keyInputs[provider] = ""
+                        keyEditorExpanded[provider] = false
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+                    .foregroundColor(.red.opacity(0.8))
+                } else if !isExpanded {
+                    Button("Add") {
+                        keyEditorExpanded[provider] = true
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+                }
+            }
+        }
+    }
+
+    private func providerIsInUse(_ provider: APIProvider) -> Bool {
+        workingConfig.stt.provider == provider || workingConfig.polish.provider == provider
+    }
+
+    private func providerUsageText(for provider: APIProvider) -> String {
+        switch (workingConfig.stt.provider == provider, workingConfig.polish.provider == provider) {
+        case (true, true):
+            return "Used for STT and Polish"
+        case (true, false):
+            return "Used for STT"
+        case (false, true):
+            return "Used for Polish"
+        case (false, false):
+            return ""
+        }
+    }
+
+    private func providerKeyDescription(for provider: APIProvider) -> String {
+        let usage = providerUsageText(for: provider)
+        if usage.isEmpty {
+            return "Stored once in Keychain for this provider."
+        }
+        return "\(usage). Stored once in Keychain for this provider."
+    }
+
+    private func isKeyEditorExpanded(for provider: APIProvider) -> Bool {
+        let hasSavedKey = KeyVault.hasKey(for: provider)
+        if !hasSavedKey && providerIsInUse(provider) {
+            return true
+        }
+        return keyEditorExpanded[provider] ?? false
+    }
+
+    private func providerHasReadyKey(_ provider: APIProvider) -> Bool {
+        if KeyVault.hasKey(for: provider) {
+            return true
+        }
+        return !(keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func canTest(_ endpoint: SettingsEndpoint) -> Bool {
+        switch endpoint {
+        case .stt:
+            return workingConfig.stt.provider.hasSTTSupport && endpointHasRequiredKey(workingConfig.stt)
+        case .polish:
+            return endpointHasRequiredKey(workingConfig.polish)
+        }
+    }
+
+    private func endpointHasRequiredKey(_ configuration: APIEndpointConfiguration) -> Bool {
+        !configuration.provider.requiresAPIKey || providerHasReadyKey(configuration.provider)
+    }
+
+    private func testEndpoint(_ endpoint: SettingsEndpoint) {
+        switch endpoint {
+        case .stt:
+            sttTestState = .testing
+        case .polish:
+            polishTestState = .testing
+        }
+
+        let configuration = endpoint.configuration(from: workingConfig)
+        let apiKeyOverride = keyInputOverride(for: configuration.provider)
+
+        Task {
+            do {
+                switch endpoint {
+                case .stt:
+                    try await SettingsConnectionTester.testSpeechToText(
+                        configuration: configuration,
+                        apiKeyOverride: apiKeyOverride
+                    )
+                case .polish:
+                    try await SettingsConnectionTester.testChatCompletion(
+                        configuration: configuration,
+                        apiKeyOverride: apiKeyOverride
+                    )
+                }
+
+                await MainActor.run {
+                    switch endpoint {
+                    case .stt:
+                        sttTestState = .result(success: true, message: "✅ Ready")
+                    case .polish:
+                        polishTestState = .result(success: true, message: "✅ Ready")
+                    }
+                }
+            } catch {
+                let message = error.localizedDescription
+                await MainActor.run {
+                    switch endpoint {
+                    case .stt:
+                        sttTestState = .result(success: false, message: "❌ \(message)")
+                    case .polish:
+                        polishTestState = .result(success: false, message: "❌ \(message)")
+                    }
+                }
+            }
+        }
+    }
+
+    private func keyInputOverride(for provider: APIProvider) -> String? {
+        let trimmed = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+enum SettingsEndpoint {
+    case stt
+    case polish
+
+    func configuration(from splitConfiguration: SplitAPIConfiguration) -> APIEndpointConfiguration {
+        switch self {
+        case .stt:
+            return splitConfiguration.stt
+        case .polish:
+            return splitConfiguration.polish
+        }
+    }
+}
+
+enum EndpointTestState: Equatable {
+    case idle
+    case testing
+    case result(success: Bool, message: String)
+
+    var isTesting: Bool {
+        if case .testing = self {
+            return true
+        }
+        return false
+    }
+}
+
+struct EndpointTestBadge: View {
+    let state: EndpointTestState
+
+    var body: some View {
+        switch state {
+        case .idle, .testing:
+            EmptyView()
+        case .result(let success, let message):
+            Text(message)
+                .font(.caption)
+                .foregroundColor(success ? .green : .red)
+        }
+    }
+}
+
+enum SettingsConnectionTester {
+    static func testChatCompletion(
+        configuration: APIEndpointConfiguration,
+        apiKeyOverride: String? = nil
+    ) async throws {
+        try await APIConnectionTester.testChatCompletion(
+            configuration: configuration,
+            apiKeyOverride: apiKeyOverride
+        )
+    }
+
+    static func testSpeechToText(
+        configuration: APIEndpointConfiguration,
+        apiKeyOverride: String? = nil
+    ) async throws {
+        let endpoint = "\(configuration.resolvedBaseURL)/audio/transcriptions"
+        guard let url = URL(string: endpoint) else {
+            throw VowriteError.apiError("Invalid base URL")
+        }
+
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        if let apiKey = resolvedAPIKey(for: configuration, override: apiKeyOverride) {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        if configuration.provider == .openrouter {
+            request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
+            request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
+        }
+
+        request.httpBody = transcriptionProbeBody(boundary: boundary, model: configuration.model)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VowriteError.networkError("Invalid response")
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw VowriteError.apiError("Error \(httpResponse.statusCode): \(body)")
+        }
+    }
+
+    private static func resolvedAPIKey(
+        for configuration: APIEndpointConfiguration,
+        override: String?
+    ) -> String? {
+        let trimmedOverride = override?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let trimmedOverride, !trimmedOverride.isEmpty {
+            return trimmedOverride
+        }
+        return configuration.key
+    }
+
+    private static func transcriptionProbeBody(boundary: String, model: String) -> Data {
+        var body = Data()
+        body.appendMultipart(boundary: boundary, name: "model", value: model)
+        body.appendMultipart(boundary: boundary, name: "response_format", value: "text")
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"probe.wav\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: audio/wav\r\n\r\n".data(using: .utf8)!)
+        body.append(silentWAVData())
+        body.append("\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        return body
+    }
+
+    // A tiny valid WAV keeps the STT probe cheap while still exercising the real endpoint.
+    private static func silentWAVData(
+        sampleRate: UInt32 = 16_000,
+        durationSeconds: Double = 0.1
+    ) -> Data {
+        let samples = max(1, Int(Double(sampleRate) * durationSeconds))
+        let bitsPerSample: UInt16 = 16
+        let channels: UInt16 = 1
+        let byteRate = sampleRate * UInt32(channels) * UInt32(bitsPerSample / 8)
+        let blockAlign = channels * (bitsPerSample / 8)
+        let dataSize = UInt32(samples) * UInt32(blockAlign)
+
+        var data = Data()
+        data.append("RIFF".data(using: .ascii)!)
+        data.appendLE(UInt32(36) + dataSize)
+        data.append("WAVE".data(using: .ascii)!)
+        data.append("fmt ".data(using: .ascii)!)
+        data.appendLE(UInt32(16))
+        data.appendLE(UInt16(1))
+        data.appendLE(channels)
+        data.appendLE(sampleRate)
+        data.appendLE(byteRate)
+        data.appendLE(blockAlign)
+        data.appendLE(bitsPerSample)
+        data.append("data".data(using: .ascii)!)
+        data.appendLE(dataSize)
+        data.append(Data(count: Int(dataSize)))
+        return data
+    }
+}
+
+private extension Data {
+    mutating func appendLE<T: FixedWidthInteger>(_ value: T) {
+        var littleEndianValue = value.littleEndian
+        Swift.withUnsafeBytes(of: &littleEndianValue) { buffer in
+            append(contentsOf: buffer)
         }
     }
 }
@@ -643,11 +1134,300 @@ struct LanguageContent: View {
     }
 }
 
+struct PipelineConfigurationEditor: View {
+    let title: String
+    let description: String
+    let isSpeechToText: Bool
+    @Binding var configuration: APIEndpointConfiguration
+
+    /// Controls whether the custom model text field is in editing mode
+    @State private var isEditingCustomModel = false
+    /// Draft text while editing custom model
+    @State private var customModelDraft = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SettingsRow(
+                title: "Provider",
+                description: providerRowDescription
+            ) {
+                HStack(spacing: 8) {
+                    PipelineKeyStatusBadge(configuration: configuration, isSpeechToText: isSpeechToText)
+
+                    Picker("Provider", selection: providerBinding) {
+                        ForEach(APIProvider.allCases) { provider in
+                            Text(provider.rawValue).tag(provider)
+                        }
+                    }
+                    .frame(width: 220)
+                    .labelsHidden()
+                }
+            }
+
+            Divider()
+
+            if !modelSuggestions.isEmpty {
+                SettingsRow(
+                    title: "Model",
+                    description: modelRowDescription,
+                    layout: .vertical
+                ) {
+                    Picker("Model", selection: quickModelBinding) {
+                        ForEach(modelSuggestions, id: \.self) { model in
+                            if let desc = modelDescription(for: model) {
+                                Text("\(model) · \(desc)").tag(model)
+                            } else {
+                                Text(model).tag(model)
+                            }
+                        }
+                        Divider()
+                        Text("Custom…").tag(customModelTag)
+                    }
+                    .labelsHidden()
+                }
+
+                if isCustomModel {
+                    SettingsRow(
+                        title: "Custom Model",
+                        description: "Use any provider-specific model identifier when the preset list is not enough.",
+                        layout: .vertical
+                    ) {
+                        customModelEditor(width: .infinity)
+                    }
+                }
+            } else {
+                SettingsRow(
+                    title: "Custom Model",
+                    description: "This provider uses a free-form model identifier.",
+                    layout: .vertical
+                ) {
+                    customModelEditor(width: .infinity)
+                }
+            }
+
+            Divider()
+
+            SettingsRow(
+                title: "Base URL",
+                description: baseURLDescription,
+                layout: .vertical
+            ) {
+                if configuration.provider == .custom || configuration.provider == .ollama {
+                    TextField("Base URL", text: baseURLBinding)
+                        .textFieldStyle(.roundedBorder)
+                } else {
+                    Text(configuration.resolvedBaseURL)
+                        .font(.caption.monospaced())
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .textSelection(.enabled)
+                }
+            }
+        }
+    }
+
+    // MARK: - Private
+
+    private let customModelTag = "__custom_model__"
+
+    private var modelSuggestions: [String] {
+        isSpeechToText ? configuration.provider.presetSTTModels : configuration.provider.presetPolishModels
+    }
+
+    /// True when the current model is not in the preset list
+    private var isCustomModel: Bool {
+        !modelSuggestions.isEmpty && !modelSuggestions.contains(configuration.model)
+    }
+
+    /// Confirm the custom model draft and lock the field
+    private func confirmCustomModel() {
+        let trimmed = customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        configuration.model = trimmed
+        isEditingCustomModel = false
+    }
+
+    private var providerBinding: Binding<APIProvider> {
+        Binding(
+            get: { configuration.provider },
+            set: { newProvider in
+                configuration.provider = newProvider
+                configuration.baseURL = newProvider.defaultBaseURL
+                configuration.model = isSpeechToText ? newProvider.defaultSTTModel : newProvider.defaultPolishModel
+                // Reset custom editing state when provider changes
+                isEditingCustomModel = false
+                customModelDraft = ""
+            }
+        )
+    }
+
+    private var baseURLBinding: Binding<String> {
+        Binding(
+            get: { configuration.baseURL },
+            set: { configuration.baseURL = $0 }
+        )
+    }
+
+    private var quickModelBinding: Binding<String> {
+        Binding(
+            get: {
+                modelSuggestions.contains(configuration.model) ? configuration.model : customModelTag
+            },
+            set: { selection in
+                if selection == customModelTag {
+                    // Enter custom editing mode
+                    customModelDraft = ""
+                    isEditingCustomModel = true
+                    configuration.model = ""
+                } else {
+                    configuration.model = selection
+                    isEditingCustomModel = false
+                }
+            }
+        )
+    }
+
+    private func modelDescription(for model: String) -> String? {
+        isSpeechToText ? APIProvider.sttModelDescription(model) : APIProvider.polishModelDescription(model)
+    }
+
+    private var providerRowDescription: String {
+        var parts = [description]
+
+        if isSpeechToText, let note = configuration.provider.sttSupportNote {
+            parts.append(note)
+        }
+
+        if configuration.provider.requiresAPIKey {
+            parts.append("Uses the \(configuration.provider.rawValue) key from the API Keys section.")
+        } else {
+            parts.append("This provider does not require an API key.")
+        }
+
+        return parts.joined(separator: " ")
+    }
+
+    private var modelRowDescription: String {
+        if modelSuggestions.isEmpty {
+            return "Enter a model ID manually for this provider."
+        }
+        return "Choose a preset model or switch to a custom model ID."
+    }
+
+    private var baseURLDescription: String {
+        if configuration.provider == .custom || configuration.provider == .ollama {
+            return "Override the endpoint URL used for this \(title.lowercased()) pipeline."
+        }
+        return "Uses the provider default endpoint."
+    }
+
+    @ViewBuilder
+    private func customModelEditor(width: CGFloat) -> some View {
+        if isEditingCustomModel || modelSuggestions.isEmpty || configuration.model.isEmpty {
+            HStack(spacing: 8) {
+                TextField(modelFieldPlaceholder, text: $customModelDraft)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit { confirmCustomModel() }
+
+                Button("Confirm") { confirmCustomModel() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .onAppear {
+                if configuration.model.isEmpty {
+                    isEditingCustomModel = true
+                }
+            }
+        } else {
+            HStack(spacing: 8) {
+                Text(configuration.model)
+                    .font(.body.monospaced())
+                    .lineLimit(1)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(6)
+
+                Button("Edit") {
+                    customModelDraft = configuration.model
+                    isEditingCustomModel = true
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+        }
+    }
+
+    private var modelFieldPlaceholder: String {
+        modelSuggestions.isEmpty ? "Model ID" : "Enter model ID (e.g. gpt-4o-mini)"
+    }
+}
+
+struct ProviderKeyStatusBadge: View {
+    let provider: APIProvider
+    let isRequired: Bool
+
+    var body: some View {
+        Group {
+            if KeyVault.hasKey(for: provider) {
+                badge("Saved", color: .green)
+            } else if isRequired {
+                badge("Required", color: .orange)
+            } else {
+                badge("Missing", color: .secondary)
+            }
+        }
+    }
+
+    private func badge(_ title: String, color: Color) -> some View {
+        Text(title)
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.12))
+            .foregroundColor(color)
+            .cornerRadius(999)
+    }
+}
+
+struct PipelineKeyStatusBadge: View {
+    let configuration: APIEndpointConfiguration
+    let isSpeechToText: Bool
+
+    var body: some View {
+        if isSpeechToText && !configuration.provider.hasSTTSupport {
+            statusIcon("xmark.circle.fill", color: .orange, tooltip: "STT not supported")
+        } else if !configuration.provider.requiresAPIKey {
+            statusIcon("minus.circle", color: .secondary, tooltip: "No key needed")
+        } else if configuration.hasKey {
+            statusIcon("checkmark.circle.fill", color: .green, tooltip: "Key ready")
+        } else {
+            statusIcon("exclamationmark.circle.fill", color: .orange, tooltip: "Key missing")
+        }
+    }
+
+    private func statusIcon(_ systemName: String, color: Color, tooltip: String) -> some View {
+        Image(systemName: systemName)
+            .font(.body)
+            .foregroundColor(color)
+            .frame(width: 20, height: 20)
+            .fixedSize()
+            .help(tooltip)
+    }
+}
+
 // MARK: - Personalization Page
 
 struct PersonalizationPageView: View {
     @State private var userPrompt = PromptConfig.userPrompt
-    @ObservedObject private var sceneManager = SceneManager.shared
+    @State private var isLocked = PromptConfig.isUserPromptLocked
+    @State private var isEditing = false
+    @State private var stashedPrompt = ""
+    @State private var selectedPresetID: String? = nil
+    @State private var showReplaceAlert = false
+    @State private var pendingPreset: PreferencePreset? = nil
 
     var body: some View {
         ScrollView {
@@ -655,65 +1435,162 @@ struct PersonalizationPageView: View {
                 Text("Personalization")
                     .font(.system(size: 24, weight: .bold))
 
-                // User Prompt
+                // Your Preferences
                 SettingsSection(icon: "person.text.rectangle", title: "Your Preferences") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Customize how your voice input is polished. Examples: \"Technical terms keep English\", \"Use Arabic numerals\", \"Formal business tone\"")
-                                .font(.caption).foregroundColor(.secondary)
-                            Spacer()
-                            Button("Clear") { userPrompt = ""; PromptConfig.userPrompt = "" }
-                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
-                        }
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Customize how your voice input is polished. Examples: \"Technical terms keep English\", \"Use Arabic numerals\", \"Formal business tone\"")
+                            .font(.caption).foregroundColor(.secondary)
+
                         TextEditor(text: $userPrompt)
                             .font(.system(.body, design: .monospaced))
                             .frame(height: 150)
                             .border(Color.secondary.opacity(0.3))
-                            .onChange(of: userPrompt) { _, v in PromptConfig.userPrompt = v }
+                            .disabled(isLocked)
+                            .opacity(isLocked ? 0.6 : 1.0)
+                            .onChange(of: userPrompt) { _, _ in
+                                // Clear preset highlight when user manually edits
+                                selectedPresetID = nil
+                                // Enter editing state if not locked and has content
+                                if !isLocked && !userPrompt.isEmpty && !isEditing {
+                                    isEditing = true
+                                }
+                            }
+
+                        // Action buttons
+                        HStack(spacing: 8) {
+                            if isLocked {
+                                Label("Saved", systemImage: "lock.fill")
+                                    .font(.caption).foregroundColor(.secondary)
+                                Spacer()
+                                Button("Edit") {
+                                    stashedPrompt = userPrompt
+                                    isLocked = false
+                                    PromptConfig.isUserPromptLocked = false
+                                    isEditing = true
+                                }
+                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                                Button("Clear") {
+                                    userPrompt = ""
+                                    PromptConfig.userPrompt = ""
+                                    isLocked = false
+                                    PromptConfig.isUserPromptLocked = false
+                                    isEditing = false
+                                    selectedPresetID = nil
+                                }
+                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                            } else if isEditing {
+                                Spacer()
+                                Button("Cancel") {
+                                    userPrompt = stashedPrompt
+                                    PromptConfig.userPrompt = stashedPrompt
+                                    if !stashedPrompt.isEmpty {
+                                        isLocked = true
+                                        PromptConfig.isUserPromptLocked = true
+                                    }
+                                    isEditing = false
+                                }
+                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                                Button("Save") {
+                                    PromptConfig.userPrompt = userPrompt
+                                    isLocked = true
+                                    PromptConfig.isUserPromptLocked = true
+                                    isEditing = false
+                                }
+                                .font(.caption).buttonStyle(.borderedProminent).controlSize(.small)
+                            } else {
+                                Spacer()
+                            }
+                        }
                     }
                 }
 
-                // Output Scene
-                SettingsSection(icon: "theatermasks", title: "Output Scene") {
+                // Quick Presets
+                SettingsSection(icon: "sparkles.rectangle.stack", title: "Quick Presets") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Choose a scene to automatically adjust output formatting.")
+                        Text("Click a preset to fill your preferences. You can edit before saving.")
                             .font(.caption).foregroundColor(.secondary)
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            ForEach(sceneManager.allScenes) { scene in
-                                SceneCardView(scene: scene, isSelected: sceneManager.currentSceneId == scene.id) {
-                                    sceneManager.select(scene)
+                            ForEach(PreferencePreset.presets) { preset in
+                                Button {
+                                    applyPreset(preset)
+                                } label: {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: preset.icon).font(.title2)
+                                            .foregroundColor(selectedPresetID == preset.id ? .white : .accentColor)
+                                        Text(preset.name).font(.caption)
+                                            .fontWeight(selectedPresetID == preset.id ? .semibold : .regular)
+                                            .foregroundColor(selectedPresetID == preset.id ? .white : .primary)
+                                    }
+                                    .frame(maxWidth: .infinity, minHeight: 70)
+                                    .background(selectedPresetID == preset.id ? Color.accentColor : Color.secondary.opacity(0.1))
+                                    .cornerRadius(10)
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
+                    }
+                }
+
+                // How it works
+                SettingsSection(icon: "lightbulb", title: "How it works") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Your preferences are added to every mode's AI prompt.")
+                            .font(.callout)
+                        Text("They complement mode-specific formatting (like Email or Code Comment), not override it.")
+                            .font(.callout).foregroundColor(.secondary)
+                        Text("Example: \"Formal tone\" here + Email mode → formal email.")
+                            .font(.callout).foregroundColor(.secondary).italic()
                     }
                 }
             }
             .padding(32)
         }
-    }
-}
-
-// MARK: - Scene Card
-
-struct SceneCardView: View {
-    let scene: SceneProfile
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: scene.icon).font(.title2)
-                    .foregroundColor(isSelected ? .white : .accentColor)
-                Text(scene.name).font(.caption)
-                    .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundColor(isSelected ? .white : .primary)
+        .alert("Replace current preferences?", isPresented: $showReplaceAlert) {
+            Button("Replace") {
+                if let preset = pendingPreset {
+                    fillPreset(preset)
+                }
+                pendingPreset = nil
             }
-            .frame(maxWidth: .infinity, minHeight: 70)
-            .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.1))
-            .cornerRadius(10)
+            Button("Cancel", role: .cancel) {
+                pendingPreset = nil
+            }
+        } message: {
+            Text("This will replace your current preference text with the preset.")
         }
-        .buttonStyle(.plain)
+        .onAppear {
+            // Auto-lock if there's saved content
+            let saved = PromptConfig.userPrompt
+            if !saved.isEmpty && PromptConfig.isUserPromptLocked {
+                userPrompt = saved
+                isLocked = true
+            } else if !saved.isEmpty {
+                userPrompt = saved
+                isLocked = true
+                PromptConfig.isUserPromptLocked = true
+            }
+        }
+    }
+
+    private func applyPreset(_ preset: PreferencePreset) {
+        let current = userPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !current.isEmpty {
+            pendingPreset = preset
+            showReplaceAlert = true
+        } else {
+            fillPreset(preset)
+        }
+    }
+
+    private func fillPreset(_ preset: PreferencePreset) {
+        if isLocked {
+            isLocked = false
+            PromptConfig.isUserPromptLocked = false
+        }
+        userPrompt = preset.promptText
+        PromptConfig.userPrompt = preset.promptText
+        selectedPresetID = preset.id
+        isEditing = true
     }
 }
 
@@ -725,34 +1602,112 @@ struct SettingsSection<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
-                Image(systemName: icon).foregroundColor(.secondary)
-                Text(title).font(.headline)
+                Image(systemName: icon)
+                    .foregroundColor(.accentColor)
+                    .font(.body.weight(.semibold))
+                Text(title)
+                    .font(.headline)
             }
-            Divider()
-            content
+            .padding(.horizontal, 4)
+
+            VStack(alignment: .leading, spacing: 0) {
+                content
+                    .padding(16)
+            }
+            .background(Color(.controlBackgroundColor))
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+            )
         }
     }
 }
 
 // MARK: - Settings Row
 
+// MARK: - Appearance Picker
+
+struct AppearancePicker: View {
+    @Binding var selection: String
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        selection = mode.rawValue
+                    }
+                } label: {
+                    Image(systemName: mode.icon)
+                        .font(.caption)
+                        .frame(width: 28, height: 24)
+                        .background(
+                            selection == mode.rawValue
+                                ? Color.accentColor.opacity(0.15)
+                                : Color.clear
+                        )
+                        .foregroundColor(
+                            selection == mode.rawValue
+                                ? .accentColor
+                                : .secondary
+                        )
+                        .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                .help(mode.rawValue)
+            }
+        }
+        .padding(3)
+        .background(Color.secondary.opacity(0.08))
+        .cornerRadius(8)
+    }
+}
+
+/// Layout mode for settings rows.
+/// - `.horizontal`: label left, control right (default for toggles, short pickers)
+/// - `.vertical`: label top, control below full-width (for long content like model selectors, presets)
+enum SettingsRowLayout {
+    case horizontal
+    case vertical
+}
+
 struct SettingsRow<Trailing: View>: View {
     let title: String
     let description: String
+    var layout: SettingsRowLayout = .horizontal
     @ViewBuilder let trailing: Trailing
 
     var body: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.body).fontWeight(.medium)
-                Text(description).font(.caption).foregroundColor(.secondary)
+        Group {
+            switch layout {
+            case .horizontal:
+                HStack(alignment: .top, spacing: 24) {
+                    labelView
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    trailing
+                        .frame(maxWidth: 360, alignment: .trailing)
+                }
+            case .vertical:
+                VStack(alignment: .leading, spacing: 10) {
+                    labelView
+                    trailing
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
-            Spacer()
-            trailing
         }
         .padding(.vertical, 4)
+    }
+
+    private var labelView: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.body).fontWeight(.semibold)
+            if !description.isEmpty {
+                Text(description).font(.caption).foregroundColor(.secondary)
+            }
+        }
     }
 }
 
