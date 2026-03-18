@@ -1090,20 +1090,29 @@ struct PipelineConfigurationEditor: View {
             }
 
             if !modelSuggestions.isEmpty {
-                Picker("Common Models", selection: quickModelBinding) {
+                // Picker with preset models + "Custom…" option
+                Picker("Model", selection: quickModelBinding) {
                     ForEach(modelSuggestions, id: \.self) { model in
-                        if let description = modelDescription(for: model) {
-                            Text("\(model) · \(description)").tag(model)
+                        if let desc = modelDescription(for: model) {
+                            Text("\(model) · \(desc)").tag(model)
                         } else {
                             Text(model).tag(model)
                         }
                     }
-                    Text("Custom").tag(customModelTag)
+                    Divider()
+                    Text("Custom…").tag(customModelTag)
                 }
-            }
 
-            TextField("Model ID", text: modelBinding)
-                .textFieldStyle(.roundedBorder)
+                // Only show text field when "Custom…" is selected
+                if isCustomModel {
+                    TextField("Enter model ID (e.g. gpt-4o-mini)", text: modelBinding)
+                        .textFieldStyle(.roundedBorder)
+                }
+            } else {
+                // No presets for this provider — always show editable text field
+                TextField("Model ID", text: modelBinding)
+                    .textFieldStyle(.roundedBorder)
+            }
 
             if configuration.provider == .custom || configuration.provider == .ollama {
                 TextField("Base URL", text: baseURLBinding)
@@ -1141,6 +1150,11 @@ struct PipelineConfigurationEditor: View {
         isSpeechToText ? configuration.provider.presetSTTModels : configuration.provider.presetPolishModels
     }
 
+    /// True when the current model is not in the preset list (user typed a custom value)
+    private var isCustomModel: Bool {
+        !modelSuggestions.isEmpty && !modelSuggestions.contains(configuration.model)
+    }
+
     private var providerBinding: Binding<APIProvider> {
         Binding(
             get: { configuration.provider },
@@ -1172,8 +1186,12 @@ struct PipelineConfigurationEditor: View {
                 modelSuggestions.contains(configuration.model) ? configuration.model : customModelTag
             },
             set: { selection in
-                guard selection != customModelTag else { return }
-                configuration.model = selection
+                if selection == customModelTag {
+                    // Switch to custom mode — clear model so user types fresh
+                    configuration.model = ""
+                } else {
+                    configuration.model = selection
+                }
             }
         )
     }
