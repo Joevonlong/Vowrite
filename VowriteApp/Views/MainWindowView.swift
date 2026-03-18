@@ -1123,12 +1123,13 @@ struct PipelineConfigurationEditor: View {
                                 .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
                     } else {
-                        // Locked: show model name as read-only label + Edit button
+                        // Locked: show model name as read-only + Edit button (same size as Confirm)
                         HStack(spacing: 8) {
                             Text(configuration.model)
                                 .font(.body.monospaced())
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .padding(.vertical, 6)
                                 .background(Color.secondary.opacity(0.1))
                                 .cornerRadius(6)
 
@@ -1136,8 +1137,8 @@ struct PipelineConfigurationEditor: View {
                                 customModelDraft = configuration.model
                                 isEditingCustomModel = true
                             }
-                            .buttonStyle(.borderless)
-                            .font(.caption)
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                         }
                     }
                 }
@@ -1172,8 +1173,9 @@ struct PipelineConfigurationEditor: View {
                     HStack(spacing: 8) {
                         Text(configuration.model)
                             .font(.body.monospaced())
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 6)
                             .background(Color.secondary.opacity(0.1))
                             .cornerRadius(6)
 
@@ -1181,8 +1183,8 @@ struct PipelineConfigurationEditor: View {
                             customModelDraft = configuration.model
                             isEditingCustomModel = true
                         }
-                        .buttonStyle(.borderless)
-                        .font(.caption)
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     }
                 }
             }
