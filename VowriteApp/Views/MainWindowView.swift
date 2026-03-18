@@ -1422,7 +1422,12 @@ struct PipelineKeyStatusBadge: View {
 
 struct PersonalizationPageView: View {
     @State private var userPrompt = PromptConfig.userPrompt
-    @ObservedObject private var sceneManager = SceneManager.shared
+    @State private var isLocked = PromptConfig.isUserPromptLocked
+    @State private var isEditing = false
+    @State private var stashedPrompt = ""
+    @State private var selectedPresetID: String? = nil
+    @State private var showReplaceAlert = false
+    @State private var pendingPreset: PreferencePreset? = nil
 
     var body: some View {
         ScrollView {
@@ -1430,65 +1435,162 @@ struct PersonalizationPageView: View {
                 Text("Personalization")
                     .font(.system(size: 24, weight: .bold))
 
-                // User Prompt
+                // Your Preferences
                 SettingsSection(icon: "person.text.rectangle", title: "Your Preferences") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Customize how your voice input is polished. Examples: \"Technical terms keep English\", \"Use Arabic numerals\", \"Formal business tone\"")
-                                .font(.caption).foregroundColor(.secondary)
-                            Spacer()
-                            Button("Clear") { userPrompt = ""; PromptConfig.userPrompt = "" }
-                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
-                        }
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Customize how your voice input is polished. Examples: \"Technical terms keep English\", \"Use Arabic numerals\", \"Formal business tone\"")
+                            .font(.caption).foregroundColor(.secondary)
+
                         TextEditor(text: $userPrompt)
                             .font(.system(.body, design: .monospaced))
                             .frame(height: 150)
                             .border(Color.secondary.opacity(0.3))
-                            .onChange(of: userPrompt) { _, v in PromptConfig.userPrompt = v }
+                            .disabled(isLocked)
+                            .opacity(isLocked ? 0.6 : 1.0)
+                            .onChange(of: userPrompt) { _, _ in
+                                // Clear preset highlight when user manually edits
+                                selectedPresetID = nil
+                                // Enter editing state if not locked and has content
+                                if !isLocked && !userPrompt.isEmpty && !isEditing {
+                                    isEditing = true
+                                }
+                            }
+
+                        // Action buttons
+                        HStack(spacing: 8) {
+                            if isLocked {
+                                Label("Saved", systemImage: "lock.fill")
+                                    .font(.caption).foregroundColor(.secondary)
+                                Spacer()
+                                Button("Edit") {
+                                    stashedPrompt = userPrompt
+                                    isLocked = false
+                                    PromptConfig.isUserPromptLocked = false
+                                    isEditing = true
+                                }
+                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                                Button("Clear") {
+                                    userPrompt = ""
+                                    PromptConfig.userPrompt = ""
+                                    isLocked = false
+                                    PromptConfig.isUserPromptLocked = false
+                                    isEditing = false
+                                    selectedPresetID = nil
+                                }
+                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                            } else if isEditing {
+                                Spacer()
+                                Button("Cancel") {
+                                    userPrompt = stashedPrompt
+                                    PromptConfig.userPrompt = stashedPrompt
+                                    if !stashedPrompt.isEmpty {
+                                        isLocked = true
+                                        PromptConfig.isUserPromptLocked = true
+                                    }
+                                    isEditing = false
+                                }
+                                .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                                Button("Save") {
+                                    PromptConfig.userPrompt = userPrompt
+                                    isLocked = true
+                                    PromptConfig.isUserPromptLocked = true
+                                    isEditing = false
+                                }
+                                .font(.caption).buttonStyle(.borderedProminent).controlSize(.small)
+                            } else {
+                                Spacer()
+                            }
+                        }
                     }
                 }
 
-                // Output Scene
-                SettingsSection(icon: "theatermasks", title: "Output Scene") {
+                // Quick Presets
+                SettingsSection(icon: "sparkles.rectangle.stack", title: "Quick Presets") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Choose a scene to automatically adjust output formatting.")
+                        Text("Click a preset to fill your preferences. You can edit before saving.")
                             .font(.caption).foregroundColor(.secondary)
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            ForEach(sceneManager.allScenes) { scene in
-                                SceneCardView(scene: scene, isSelected: sceneManager.currentSceneId == scene.id) {
-                                    sceneManager.select(scene)
+                            ForEach(PreferencePreset.presets) { preset in
+                                Button {
+                                    applyPreset(preset)
+                                } label: {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: preset.icon).font(.title2)
+                                            .foregroundColor(selectedPresetID == preset.id ? .white : .accentColor)
+                                        Text(preset.name).font(.caption)
+                                            .fontWeight(selectedPresetID == preset.id ? .semibold : .regular)
+                                            .foregroundColor(selectedPresetID == preset.id ? .white : .primary)
+                                    }
+                                    .frame(maxWidth: .infinity, minHeight: 70)
+                                    .background(selectedPresetID == preset.id ? Color.accentColor : Color.secondary.opacity(0.1))
+                                    .cornerRadius(10)
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
+                    }
+                }
+
+                // How it works
+                SettingsSection(icon: "lightbulb", title: "How it works") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Your preferences are added to every mode's AI prompt.")
+                            .font(.callout)
+                        Text("They complement mode-specific formatting (like Email or Code Comment), not override it.")
+                            .font(.callout).foregroundColor(.secondary)
+                        Text("Example: \"Formal tone\" here + Email mode → formal email.")
+                            .font(.callout).foregroundColor(.secondary).italic()
                     }
                 }
             }
             .padding(32)
         }
-    }
-}
-
-// MARK: - Scene Card
-
-struct SceneCardView: View {
-    let scene: SceneProfile
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: scene.icon).font(.title2)
-                    .foregroundColor(isSelected ? .white : .accentColor)
-                Text(scene.name).font(.caption)
-                    .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundColor(isSelected ? .white : .primary)
+        .alert("Replace current preferences?", isPresented: $showReplaceAlert) {
+            Button("Replace") {
+                if let preset = pendingPreset {
+                    fillPreset(preset)
+                }
+                pendingPreset = nil
             }
-            .frame(maxWidth: .infinity, minHeight: 70)
-            .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.1))
-            .cornerRadius(10)
+            Button("Cancel", role: .cancel) {
+                pendingPreset = nil
+            }
+        } message: {
+            Text("This will replace your current preference text with the preset.")
         }
-        .buttonStyle(.plain)
+        .onAppear {
+            // Auto-lock if there's saved content
+            let saved = PromptConfig.userPrompt
+            if !saved.isEmpty && PromptConfig.isUserPromptLocked {
+                userPrompt = saved
+                isLocked = true
+            } else if !saved.isEmpty {
+                userPrompt = saved
+                isLocked = true
+                PromptConfig.isUserPromptLocked = true
+            }
+        }
+    }
+
+    private func applyPreset(_ preset: PreferencePreset) {
+        let current = userPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !current.isEmpty {
+            pendingPreset = preset
+            showReplaceAlert = true
+        } else {
+            fillPreset(preset)
+        }
+    }
+
+    private func fillPreset(_ preset: PreferencePreset) {
+        if isLocked {
+            isLocked = false
+            PromptConfig.isUserPromptLocked = false
+        }
+        userPrompt = preset.promptText
+        PromptConfig.userPrompt = preset.promptText
+        selectedPresetID = preset.id
+        isEditing = true
     }
 }
 
