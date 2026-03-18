@@ -36,12 +36,6 @@ final class AIPolishService {
 
         if !config.systemPrompt.isEmpty {
             systemPrompt += "\n\n---\nOutput formatting for current mode (\(config.modeName)):\n\(config.systemPrompt)"
-        } else {
-            // Backward compat: check SceneManager if mode has no custom prompt
-            let scenePrompt = SceneManager.currentScenePrompt
-            if !scenePrompt.isEmpty {
-                systemPrompt += "\n\n---\nOutput formatting for current scene:\n\(scenePrompt)"
-            }
         }
 
         // Mode-specific user prompt
