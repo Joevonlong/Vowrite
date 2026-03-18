@@ -170,7 +170,7 @@ struct HomePageView: View {
                 HStack(spacing: 16) {
                     QuickActionCard(
                         title: "API Status",
-                        description: appState.hasAPIKey ? "Connected and ready" : "Set up your API key to get started",
+                        description: appState.hasAPIKey ? "Connected and ready" : "Set up your provider keys to get started",
                         icon: appState.hasAPIKey ? "checkmark.circle.fill" : "key.fill",
                         iconColor: appState.hasAPIKey ? .green : .orange
                     )
@@ -276,13 +276,6 @@ struct HistoryPageView: View {
 
 struct AccountPageView: View {
     @ObservedObject private var authManager = AuthManager.shared
-    @State private var showAPIKeySetup = false
-    @State private var editProvider: APIProvider = APIConfig.provider
-    @State private var editKey: String = ""
-    @State private var editBaseURL: String = ""
-    @State private var editSTTModel: String = ""
-    @State private var editPolishModel: String = ""
-    @State private var apiSaved = false
 
     var body: some View {
         ScrollView {
@@ -292,23 +285,12 @@ struct AccountPageView: View {
 
                 if authManager.isLoggedIn {
                     profileCard
-                } else if authManager.authMode == .apiKey, let key = KeychainHelper.getAPIKey(), !key.isEmpty {
-                    apiKeySummaryCard(key: key)
                 } else {
-                    Text("Choose how to connect Vowrite to AI models")
-                        .foregroundColor(.secondary)
+                    configurationCard
                 }
-
-                if !authManager.isLoggedIn {
-                    // TODO: Re-enable Google sign-in when backend OAuth service is ready
-                    // googleSignInCard
-                    apiKeyCard
-                }
-
             }
             .padding(32)
         }
-
     }
 
     private var profileCard: some View {
@@ -341,13 +323,17 @@ struct AccountPageView: View {
         .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
     }
 
-    private func apiKeySummaryCard(key: String) -> some View {
-        VStack(spacing: 12) {
+    private var configurationCard: some View {
+        let configuration = APIConfig.current
+        let presetName = APIConfig.activePreset?.name ?? "Custom"
+        let missingProviders = KeyVault.missingProviders(for: configuration)
+
+        return VStack(spacing: 12) {
             HStack(spacing: 16) {
-                Image(systemName: "key.fill").font(.system(size: 36)).foregroundColor(.orange)
+                Image(systemName: "slider.horizontal.3").font(.system(size: 36)).foregroundColor(.accentColor)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Connected via API Key").font(.title3).fontWeight(.semibold)
-                    Text("\(APIConfig.provider.rawValue) \u{00B7} \(maskKey(key))")
+                    Text("Unified Split Configuration").font(.title3).fontWeight(.semibold)
+                    Text("Preset: \(presetName)")
                         .font(.body).foregroundColor(.secondary)
                 }
                 Spacer()
@@ -355,125 +341,36 @@ struct AccountPageView: View {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("STT").font(.caption).foregroundColor(.secondary)
-                    Text(APIConfig.sttModel).font(.caption2).lineLimit(1)
+                    Text("\(configuration.stt.provider.rawValue) · \(configuration.stt.model)")
+                        .font(.caption2)
+                        .lineLimit(1)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Polish").font(.caption).foregroundColor(.secondary)
-                    Text(APIConfig.polishModel).font(.caption2).lineLimit(1)
-                }
-                Spacer()
-                Button("Edit") { loadAPIDefaults(); showAPIKeySetup = true }
-                    .buttonStyle(.bordered).controlSize(.small)
-            }
-        }
-        .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
-    }
-
-    private var googleSignInCard: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
-                Image(systemName: "globe").font(.title2).foregroundColor(.blue)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Sign in with Google").font(.title3).fontWeight(.semibold)
-                    Text("Get started instantly with your Google account")
-                        .font(.caption).foregroundColor(.secondary)
+                    Text("\(configuration.polish.provider.rawValue) · \(configuration.polish.model)")
+                        .font(.caption2)
+                        .lineLimit(1)
                 }
                 Spacer()
             }
-            Button {
-                authManager.signInWithGoogle()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "person.crop.circle.badge.checkmark")
-                    Text("Continue with Google").fontWeight(.medium)
-                }.frame(maxWidth: .infinity, minHeight: 40)
+            Divider()
+            if missingProviders.isEmpty {
+                Label("Required provider keys are ready in Keychain.", systemImage: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.caption)
+            } else {
+                Label(
+                    "Missing keys: \(missingProviders.map(\.rawValue).joined(separator: ", "))",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .foregroundColor(.orange)
+                .font(.caption)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(authManager.isAuthenticating)
-
-            if authManager.isAuthenticating {
-                HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Signing in...").foregroundColor(.secondary) }
-            }
-            if let error = authManager.authError {
-                Text(error).font(.caption).foregroundColor(.red)
-            }
-        }
-        .padding(20).background(Color.blue.opacity(0.08)).cornerRadius(12)
-    }
-
-    private var apiKeyCard: some View {
-        VStack(spacing: 12) {
-            Button { if !showAPIKeySetup { loadAPIDefaults() }; showAPIKeySetup.toggle() } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "key.fill").font(.title2).foregroundColor(.orange)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Use your own API Key").font(.body).fontWeight(.medium)
-                        Text("Connect to OpenAI, OpenRouter, or other providers")
-                            .font(.caption).foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: showAPIKeySetup ? "chevron.up" : "chevron.down").foregroundColor(.secondary)
-                }.contentShape(Rectangle())
-            }.buttonStyle(.plain)
-
-            if showAPIKeySetup {
-                VStack(spacing: 12) {
-                    Divider()
-                    HStack { Text("Provider").frame(width: 80, alignment: .leading)
-                        Picker("", selection: $editProvider) {
-                            ForEach(APIProvider.allCases) { p in Text(p.rawValue).tag(p) }
-                        }.onChange(of: editProvider) { _, v in
-                            editBaseURL = v.defaultBaseURL; editSTTModel = v.defaultSTTModel; editPolishModel = v.defaultPolishModel
-                        }
-                    }
-                    HStack { Text("API Key").frame(width: 80, alignment: .leading)
-                        SecureField(editProvider.keyPlaceholder, text: $editKey).textFieldStyle(.roundedBorder)
-                    }
-                    if editProvider == .custom {
-                        HStack { Text("Base URL").frame(width: 80, alignment: .leading)
-                            TextField("https://...", text: $editBaseURL).textFieldStyle(.roundedBorder)
-                        }
-                    }
-                    HStack { Text("STT Model").frame(width: 80, alignment: .leading)
-                        TextField("", text: $editSTTModel).textFieldStyle(.roundedBorder)
-                    }
-                    HStack { Text("Polish").frame(width: 80, alignment: .leading)
-                        TextField("", text: $editPolishModel).textFieldStyle(.roundedBorder)
-                    }
-                    if let note = editProvider.sttSupportNote {
-                        HStack(spacing: 6) {
-                            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange).font(.caption)
-                            Text(note).font(.caption).foregroundColor(.orange)
-                        }
-                    }
-                    if !editProvider.keyURL.isEmpty {
-                        Link("Get API Key \u{2192}", destination: URL(string: editProvider.keyURL)!).font(.caption)
-                    }
-                    HStack {
-                        Spacer()
-                        if apiSaved { Label("Saved!", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption) }
-                        Button("Save & Connect") { saveAPIKey() }.buttonStyle(.borderedProminent).disabled(editKey.isEmpty)
-                    }
-                }
-            }
+            Text("Manage providers, presets, and API keys from the Settings sidebar.")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         .padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(12)
-    }
-
-    private func maskKey(_ key: String) -> String {
-        guard key.count > 8 else { return "\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}" }
-        return "\(key.prefix(4))\u{2022}\u{2022}\u{2022}\u{2022}\(key.suffix(4))"
-    }
-    private func loadAPIDefaults() {
-        editProvider = APIConfig.provider; editKey = ""
-        editBaseURL = APIConfig.baseURL; editSTTModel = APIConfig.sttModel; editPolishModel = APIConfig.polishModel
-    }
-    private func saveAPIKey() {
-        APIConfig.provider = editProvider; APIConfig.baseURL = editBaseURL
-        APIConfig.sttModel = editSTTModel; APIConfig.polishModel = editPolishModel
-        if !editKey.isEmpty { _ = KeychainHelper.saveAPIKey(editKey) }
-        authManager.setAuthMode(.apiKey); apiSaved = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { apiSaved = false; showAPIKeySetup = false }
     }
 }
 
@@ -481,6 +378,14 @@ struct AccountPageView: View {
 
 struct SettingsPageView: View {
     @EnvironmentObject var appState: AppState
+    @State private var workingConfig = APIConfig.current
+    @State private var selectedPresetID = customPresetID
+    @State private var newPresetName = ""
+    @State private var keyInputs: [APIProvider: String] = [:]
+    @State private var configSaved = false
+    @State private var keysSaved = false
+
+    private static let customPresetID = "__custom_preset__"
 
     var body: some View {
         ScrollView {
@@ -488,17 +393,34 @@ struct SettingsPageView: View {
                 Text("Settings")
                     .font(.system(size: 24, weight: .bold))
 
-                SettingsSection(icon: "cpu", title: "Models") {
-                    ModelsContent()
+                SettingsSection(icon: "square.stack.3d.up", title: "Presets") {
+                    presetsContent
+                }
+
+                SettingsSection(icon: "waveform", title: "STT") {
+                    PipelineConfigurationEditor(
+                        title: "Speech-to-text",
+                        description: "Choose the provider and model used for transcription.",
+                        isSpeechToText: true,
+                        configuration: $workingConfig.stt
+                    )
+                }
+
+                SettingsSection(icon: "sparkles", title: "Polish") {
+                    PipelineConfigurationEditor(
+                        title: "Cleanup and rewrite",
+                        description: "Choose the provider and model used for text polish.",
+                        isSpeechToText: false,
+                        configuration: $workingConfig.polish
+                    )
+                }
+
+                SettingsSection(icon: "key", title: "API Keys") {
+                    apiKeysContent
                 }
 
                 SettingsSection(icon: "globe", title: "Language") {
                     LanguageContent()
-                }
-
-                // F-019: Dual API Provider Configuration
-                SettingsSection(icon: "arrow.triangle.branch", title: "Advanced: Dual Provider") {
-                    DualAPIConfigView()
                 }
 
                 SettingsSection(icon: "keyboard", title: "Keyboard shortcuts") {
@@ -538,74 +460,163 @@ struct SettingsPageView: View {
             }
             .padding(32)
         }
+        .onAppear(perform: loadState)
+        .onChange(of: workingConfig) { _, newValue in
+            selectedPresetID = APIPresetStore.matchingPreset(for: newValue)?.id ?? Self.customPresetID
+            APIConfig.clearSelectedPresetIfNeeded(for: newValue)
+        }
     }
-}
 
-// MARK: - Models Content (OpenRouter + manual)
-
-struct ModelsContent: View {
-    @ObservedObject private var modelManager = ModelManager.shared
-    @State private var editSTT: String = APIConfig.sttModel
-    @State private var editPolish: String = APIConfig.polishModel
-    @State private var saved = false
-
-    var body: some View {
-        VStack(spacing: 12) {
-            if APIConfig.provider == .openrouter {
-                HStack {
-                    Button {
-                        Task { await modelManager.refreshModels() }
-                    } label: {
-                        HStack(spacing: 4) {
-                            if modelManager.isLoading { ProgressView().controlSize(.small) }
-                            Text(modelManager.isLoading ? "Loading..." : "Refresh Models from OpenRouter")
-                        }
+    private var presetsContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SettingsRow(title: "Preset", description: "Apply a built-in or saved split-provider configuration.") {
+                Picker("", selection: $selectedPresetID) {
+                    Text("Custom").tag(Self.customPresetID)
+                    ForEach(APIPresetStore.allPresets) { preset in
+                        Text("\(preset.name) · \(preset.summary)").tag(preset.id)
                     }
-                    .disabled(modelManager.isLoading)
-                    Spacer()
-                    if let e = modelManager.error { Text(e).font(.caption).foregroundColor(.red) }
+                }
+                .frame(width: 320)
+                .onChange(of: selectedPresetID) { _, newValue in
+                    guard newValue != Self.customPresetID,
+                          let preset = APIPresetStore.preset(for: newValue) else {
+                        return
+                    }
+                    workingConfig = preset.configuration
                 }
             }
 
-            if !modelManager.sttModels.isEmpty {
-                SettingsRow(title: "STT Model", description: "Speech-to-text") {
-                    Picker("", selection: $editSTT) {
-                        ForEach(modelManager.sttModels) { m in
-                            Text(modelManager.isRecommendedSTTModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
-                        }
-                    }.frame(width: 280)
-                }
+            if let preset = APIPresetStore.preset(for: selectedPresetID) {
+                Text(preset.summary)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             } else {
-                SettingsRow(title: "STT Model", description: "Speech-to-text") {
-                    TextField("", text: $editSTT).textFieldStyle(.roundedBorder).frame(width: 240)
-                }
+                Text("Manual configuration. Save it as a preset if you want to reuse it.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
-            if !modelManager.polishModels.isEmpty {
-                SettingsRow(title: "Polish Model", description: "Text cleanup") {
-                    Picker("", selection: $editPolish) {
-                        ForEach(modelManager.polishModels) { m in
-                            Text(modelManager.isRecommendedPolishModel(m) ? "⭐ \(m.name)" : m.name).tag(m.id)
-                        }
-                    }.frame(width: 280)
+            HStack(spacing: 12) {
+                TextField("Preset name", text: $newPresetName)
+                    .textFieldStyle(.roundedBorder)
+                Button("Save as Preset") {
+                    let preset = APIPresetStore.saveUserPreset(name: newPresetName, configuration: workingConfig)
+                    selectedPresetID = APIPresetStore.userPresetID(for: preset.id)
+                    newPresetName = ""
                 }
-            } else {
-                SettingsRow(title: "Polish Model", description: "Text cleanup") {
-                    TextField("", text: $editPolish).textFieldStyle(.roundedBorder).frame(width: 240)
+                .buttonStyle(.bordered)
+                Button("Delete Selected") {
+                    deleteSelectedPreset()
+                }
+                .buttonStyle(.bordered)
+                .disabled(selectedUserPresetID == nil)
+                Spacer()
+                if configSaved {
+                    Label("Saved", systemImage: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                }
+                Button("Save Configuration") {
+                    saveConfiguration()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+
+    private var apiKeysContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Keys are stored in macOS Keychain once per provider. The STT and Polish sections only reference them.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            ForEach(KeyVault.managedProviders) { provider in
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(provider.rawValue)
+                            .font(.body.weight(.medium))
+                        Spacer()
+                        ProviderKeyStatusBadge(provider: provider)
+                        if let maskedKey = KeyVault.maskedKey(for: provider) {
+                            Text(maskedKey)
+                                .font(.caption.monospaced())
+                                .foregroundColor(.secondary)
+                        }
+                        Button("Clear") {
+                            _ = KeyVault.deleteKey(for: provider)
+                            keyInputs[provider] = ""
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(!KeyVault.hasKey(for: provider))
+                    }
+
+                    SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
+                        .textFieldStyle(.roundedBorder)
+
+                    if !provider.keyURL.isEmpty {
+                        Link("Get \(provider.rawValue) key →", destination: URL(string: provider.keyURL)!)
+                            .font(.caption)
+                    }
                 }
             }
 
             HStack {
                 Spacer()
-                if saved { Label("Saved", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption) }
-                Button("Save Models") {
-                    APIConfig.sttModel = editSTT
-                    APIConfig.polishModel = editPolish
-                    saved = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { saved = false }
-                }.buttonStyle(.borderedProminent)
+                if keysSaved {
+                    Label("Keys saved", systemImage: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                }
+                Button("Save Keys") {
+                    saveKeys()
+                }
+                .buttonStyle(.borderedProminent)
             }
         }
+    }
+
+    private var selectedUserPresetID: UUID? {
+        APIPresetStore.preset(for: selectedPresetID)?.userPresetID
+    }
+
+    private func keyBinding(for provider: APIProvider) -> Binding<String> {
+        Binding(
+            get: { keyInputs[provider] ?? "" },
+            set: { keyInputs[provider] = $0 }
+        )
+    }
+
+    private func loadState() {
+        workingConfig = APIConfig.current
+        selectedPresetID = APIConfig.activePreset?.id ?? Self.customPresetID
+        keyInputs = Dictionary(uniqueKeysWithValues: KeyVault.managedProviders.map { ($0, "") })
+    }
+
+    private func saveConfiguration() {
+        let presetID = APIPresetStore.matchingPreset(for: workingConfig)?.id
+        APIConfig.apply(workingConfig, presetID: presetID)
+        AuthManager.shared.setAuthMode(.apiKey)
+        configSaved = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { configSaved = false }
+    }
+
+    private func saveKeys() {
+        for provider in KeyVault.managedProviders {
+            let value = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !value.isEmpty {
+                _ = KeyVault.saveKey(value, for: provider)
+                keyInputs[provider] = ""
+            }
+        }
+        AuthManager.shared.setAuthMode(.apiKey)
+        keysSaved = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { keysSaved = false }
+    }
+
+    private func deleteSelectedPreset() {
+        guard let userPresetID = selectedUserPresetID else { return }
+        APIPresetStore.deleteUserPreset(id: userPresetID)
+        selectedPresetID = APIPresetStore.matchingPreset(for: workingConfig)?.id ?? Self.customPresetID
     }
 }
 
@@ -640,6 +651,177 @@ struct LanguageContent: View {
                 }
             }
         }
+    }
+}
+
+struct PipelineConfigurationEditor: View {
+    let title: String
+    let description: String
+    let isSpeechToText: Bool
+    @Binding var configuration: APIEndpointConfiguration
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body.weight(.medium))
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                PipelineKeyStatusBadge(configuration: configuration, isSpeechToText: isSpeechToText)
+            }
+
+            Picker("Provider", selection: providerBinding) {
+                ForEach(APIProvider.allCases) { provider in
+                    Text(provider.rawValue).tag(provider)
+                }
+            }
+
+            if !modelSuggestions.isEmpty {
+                Picker("Common Models", selection: quickModelBinding) {
+                    ForEach(modelSuggestions, id: \.self) { model in
+                        if let description = modelDescription(for: model) {
+                            Text("\(model) · \(description)").tag(model)
+                        } else {
+                            Text(model).tag(model)
+                        }
+                    }
+                    Text("Custom").tag(customModelTag)
+                }
+            }
+
+            TextField("Model ID", text: modelBinding)
+                .textFieldStyle(.roundedBorder)
+
+            if configuration.provider == .custom || configuration.provider == .ollama {
+                TextField("Base URL", text: baseURLBinding)
+                    .textFieldStyle(.roundedBorder)
+            } else {
+                LabeledContent("Base URL") {
+                    Text(configuration.resolvedBaseURL)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            if isSpeechToText, let note = configuration.provider.sttSupportNote {
+                Text(note)
+                    .font(.caption)
+                    .foregroundColor(configuration.provider.hasSTTSupport ? .secondary : .orange)
+            }
+
+            if configuration.provider.requiresAPIKey {
+                Text("Uses the \(configuration.provider.rawValue) key from the API Keys section.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("This provider does not require an API key.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+
+    private let customModelTag = "__custom_model__"
+
+    private var modelSuggestions: [String] {
+        isSpeechToText ? configuration.provider.presetSTTModels : configuration.provider.presetPolishModels
+    }
+
+    private var providerBinding: Binding<APIProvider> {
+        Binding(
+            get: { configuration.provider },
+            set: { newProvider in
+                configuration.provider = newProvider
+                configuration.baseURL = newProvider.defaultBaseURL
+                configuration.model = isSpeechToText ? newProvider.defaultSTTModel : newProvider.defaultPolishModel
+            }
+        )
+    }
+
+    private var modelBinding: Binding<String> {
+        Binding(
+            get: { configuration.model },
+            set: { configuration.model = $0 }
+        )
+    }
+
+    private var baseURLBinding: Binding<String> {
+        Binding(
+            get: { configuration.baseURL },
+            set: { configuration.baseURL = $0 }
+        )
+    }
+
+    private var quickModelBinding: Binding<String> {
+        Binding(
+            get: {
+                modelSuggestions.contains(configuration.model) ? configuration.model : customModelTag
+            },
+            set: { selection in
+                guard selection != customModelTag else { return }
+                configuration.model = selection
+            }
+        )
+    }
+
+    private func modelDescription(for model: String) -> String? {
+        isSpeechToText ? APIProvider.sttModelDescription(model) : APIProvider.polishModelDescription(model)
+    }
+}
+
+struct ProviderKeyStatusBadge: View {
+    let provider: APIProvider
+
+    var body: some View {
+        Group {
+            if KeyVault.hasKey(for: provider) {
+                badge("Saved", color: .green)
+            } else {
+                badge("Missing", color: .orange)
+            }
+        }
+    }
+
+    private func badge(_ title: String, color: Color) -> some View {
+        Text(title)
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.12))
+            .foregroundColor(color)
+            .cornerRadius(999)
+    }
+}
+
+struct PipelineKeyStatusBadge: View {
+    let configuration: APIEndpointConfiguration
+    let isSpeechToText: Bool
+
+    var body: some View {
+        if isSpeechToText && !configuration.provider.hasSTTSupport {
+            badge("Unsupported", color: .orange)
+        } else if !configuration.provider.requiresAPIKey {
+            badge("No key", color: .secondary)
+        } else if configuration.hasKey {
+            badge("Key ready", color: .green)
+        } else {
+            badge("Key missing", color: .orange)
+        }
+    }
+
+    private func badge(_ title: String, color: Color) -> some View {
+        Text(title)
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.12))
+            .foregroundColor(color)
+            .cornerRadius(999)
     }
 }
 

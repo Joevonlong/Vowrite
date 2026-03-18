@@ -1,18 +1,19 @@
 import Foundation
 
 final class WhisperService {
-    func transcribe(audioURL: URL, apiKey: String, language: String? = nil, prompt: String? = nil) async throws -> String {
-        // F-019: Use dual API config for STT pipeline
-        let effectiveKey = DualAPIConfig.effectiveSTTAPIKey ?? apiKey
-        let baseURL = DualAPIConfig.effectiveSTTBaseURL
-        let model = DualAPIConfig.effectiveSTTModel
-        let provider = DualAPIConfig.effectiveSTTProvider
+    func transcribe(audioURL: URL, language: String? = nil, prompt: String? = nil) async throws -> String {
+        let configuration = APIConfig.stt
+        let baseURL = configuration.resolvedBaseURL
+        let model = configuration.model
+        let provider = configuration.provider
         let endpoint = "\(baseURL)/audio/transcriptions"
 
         let boundary = UUID().uuidString
         var request = URLRequest(url: URL(string: endpoint)!)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(effectiveKey)", forHTTPHeaderField: "Authorization")
+        if let apiKey = configuration.key {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         // Longer timeout for large audio files (upload + server processing)
         request.timeoutInterval = 180

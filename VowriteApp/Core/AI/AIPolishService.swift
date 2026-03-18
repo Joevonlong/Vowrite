@@ -1,20 +1,21 @@
 import Foundation
 
 final class AIPolishService {
-    func polish(text: String, apiKey: String, modeConfig: ModeConfig? = nil) async throws -> String {
-        // F-019: Use dual API config for Polish pipeline
-        let effectiveKey = DualAPIConfig.effectivePolishAPIKey ?? apiKey
-        let baseURL = DualAPIConfig.effectivePolishBaseURL
-        let provider = DualAPIConfig.effectivePolishProvider
+    func polish(text: String, modeConfig: ModeConfig? = nil) async throws -> String {
+        let configuration = APIConfig.polish
+        let baseURL = configuration.resolvedBaseURL
+        let provider = configuration.provider
         let config = modeConfig ?? ModeManager.currentModeConfig
 
         // Use mode-specific polish model or fall back to effective config
-        let model = config.polishModel ?? DualAPIConfig.effectivePolishModel
+        let model = config.polishModel ?? configuration.model
         let endpoint = "\(baseURL)/chat/completions"
 
         var request = URLRequest(url: URL(string: endpoint)!)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(effectiveKey)", forHTTPHeaderField: "Authorization")
+        if let apiKey = configuration.key {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         // Longer timeout for large text (more tokens = longer generation)
         request.timeoutInterval = 120

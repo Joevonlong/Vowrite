@@ -30,7 +30,7 @@ struct MenuBarView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "key.fill")
                         .foregroundColor(.orange)
-                    Text("Set your API Key in Settings to get started.")
+                    Text("Set your provider keys in Settings to get started.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

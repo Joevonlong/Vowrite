@@ -3,7 +3,6 @@ import Foundation
 
 enum KeychainHelper {
     private static let service = "com.vowrite.api-key"
-    private static let account = "openai"
 
     // MARK: - Generic Keychain Helpers
 
@@ -53,20 +52,6 @@ enum KeychainHelper {
         SecItemDelete(query as CFDictionary)
     }
 
-    // MARK: - API Key
-
-    static func saveAPIKey(_ key: String) -> Bool {
-        save(service: service, account: account, value: key)
-    }
-
-    static func getAPIKey() -> String? {
-        load(service: service, account: account)
-    }
-
-    static func deleteAPIKey() {
-        delete(service: service, account: account)
-    }
-
     // MARK: - Google OAuth Tokens
 
     private static let googleService = "com.vowrite.google-oauth"
@@ -104,7 +89,7 @@ enum KeychainHelper {
         delete(service: googleService, account: "id_token")
     }
 
-    // MARK: - Generic Value (for DualAPIConfig)
+    // MARK: - Generic Value
 
     @discardableResult
     static func saveValue(_ value: String, forAccount acct: String) -> Bool {
