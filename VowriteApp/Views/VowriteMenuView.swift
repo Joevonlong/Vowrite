@@ -33,7 +33,7 @@ struct VowriteMenuView: View {
 
         // Status info
         if !appState.hasAPIKey {
-            Text("⚠️ Set API Key in Settings")
+            Text("⚠️ Set provider keys in Settings")
                 .foregroundColor(.secondary)
         }
 

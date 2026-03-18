@@ -4,9 +4,9 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var currentStep = 0
     @State private var selectedLanguage: SupportedLanguage = .auto
-    @State private var editProvider: APIProvider = .groq
-    @State private var editKey = ""
-    @State private var editBaseURL = APIProvider.groq.defaultBaseURL
+    @State private var selectedPresetID = BuiltInAPIPreset.recommended.id
+    @State private var onboardingConfig = BuiltInAPIPreset.recommended.configuration
+    @State private var keyInputs: [APIProvider: String] = [:]
     @State private var testResult: (success: Bool, message: String)?
     @State private var testing = false
     @State private var hasMicrophone = false
@@ -55,6 +55,7 @@ struct OnboardingView: View {
             selectedLanguage = LanguageConfig.globalLanguage
             hasMicrophone = PermissionManager.hasMicrophoneAccess()
             hasAccessibility = PermissionManager.hasAccessibilityAccess()
+            keyInputs = Dictionary(uniqueKeysWithValues: KeyVault.managedProviders.map { ($0, "") })
         }
     }
 
@@ -62,7 +63,7 @@ struct OnboardingView: View {
 
     private var canProceed: Bool {
         switch currentStep {
-        case 3: return !editProvider.requiresAPIKey || !editKey.isEmpty
+        case 3: return missingProviders.isEmpty
         default: return true
         }
     }
@@ -279,54 +280,83 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Connect to AI")
                 .font(.title2.bold())
-            Text("Vowrite uses your own API key (BYOK). Choose a provider and enter your key.")
+            Text("Choose a preset, then save the provider keys it needs in macOS Keychain.")
                 .foregroundColor(.secondary)
 
-            Picker("Provider", selection: $editProvider) {
-                ForEach(APIProvider.allCases) { p in
-                    Text(p.rawValue).tag(p)
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(APIPresetStore.builtInPresets) { preset in
+                    Button {
+                        selectedPresetID = preset.id
+                        onboardingConfig = preset.configuration
+                        testResult = nil
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: selectedPresetID == preset.id ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(selectedPresetID == preset.id ? .accentColor : .secondary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(preset.name)
+                                    .foregroundColor(.primary)
+                                Text(preset.summary)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                        }
+                        .padding(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(selectedPresetID == preset.id ? Color.accentColor.opacity(0.08) : Color.secondary.opacity(0.06))
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .onChange(of: editProvider) { _, v in
-                editBaseURL = v.defaultBaseURL
-                testResult = nil
-            }
 
-            if editProvider == .groq {
-                Text("✨ Recommended — fastest & cheapest transcription. Pair with DeepSeek polish via Dual Provider in Settings for best results.")
-                    .font(.caption).foregroundColor(.green)
-            } else if editProvider == .openai {
-                Text("🎯 One key for both transcription and polish — simplest setup")
-                    .font(.caption).foregroundColor(.blue)
-            } else if editProvider == .deepseek {
-                Text("💎 Best value polish — pair with Groq STT via Dual Provider in Settings")
-                    .font(.caption).foregroundColor(.green)
-            } else if editProvider == .ollama {
-                Text("🏠 100% local & free — requires Ollama running on your Mac. No API key needed.")
-                    .font(.caption).foregroundColor(.purple)
-            }
-
-            if editProvider.requiresAPIKey {
-                SecureField(editProvider.keyPlaceholder, text: $editKey)
-                    .textFieldStyle(.roundedBorder)
-
-                if !editProvider.keyURL.isEmpty {
-                    Link("Get your \(editProvider.rawValue) API key →", destination: URL(string: editProvider.keyURL)!)
-                        .font(.caption)
+            GroupBox {
+                VStack(alignment: .leading, spacing: 10) {
+                    LabeledContent("STT") {
+                        Text("\(onboardingConfig.stt.provider.rawValue) · \(onboardingConfig.stt.model)")
+                            .foregroundColor(.secondary)
+                    }
+                    LabeledContent("Polish") {
+                        Text("\(onboardingConfig.polish.provider.rawValue) · \(onboardingConfig.polish.model)")
+                            .foregroundColor(.secondary)
+                    }
                 }
+                .padding(8)
+            }
 
-                Text("Your API key is stored securely in macOS Keychain.")
+            if requiredProviders.isEmpty {
+                Text("This preset does not need API keys. Make sure the local service is running before you continue.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
-                if !editProvider.keyURL.isEmpty {
-                    Link("Download \(editProvider.rawValue) →", destination: URL(string: editProvider.keyURL)!)
-                        .font(.caption)
+                ForEach(requiredProviders) { provider in
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text(provider.rawValue)
+                                .font(.body.weight(.medium))
+                            Spacer()
+                            if KeyVault.hasKey(for: provider) {
+                                Label("Saved", systemImage: "checkmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                        }
+
+                        SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
+                            .textFieldStyle(.roundedBorder)
+
+                        if !provider.keyURL.isEmpty {
+                            Link("Get your \(provider.rawValue) API key →", destination: URL(string: provider.keyURL)!)
+                                .font(.caption)
+                        }
+                    }
                 }
 
-                TextField("Base URL", text: $editBaseURL)
-                    .textFieldStyle(.roundedBorder)
+                Text("Keys are stored securely in macOS Keychain and reused anywhere this provider is selected.")
                     .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
             // Test button
@@ -346,17 +376,21 @@ struct OnboardingView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled((editProvider.requiresAPIKey && editKey.isEmpty) || testing)
+                .disabled(!missingProviders.isEmpty || testing)
             }
         }
     }
 
     private func saveAPIConfig() {
-        APIConfig.provider = editProvider
-        APIConfig.baseURL = editBaseURL
-        APIConfig.sttModel = editProvider.defaultSTTModel
-        APIConfig.polishModel = editProvider.defaultPolishModel
-        if !editKey.isEmpty { _ = KeychainHelper.saveAPIKey(editKey) }
+        APIConfig.apply(onboardingConfig, presetID: selectedPresetID)
+        for provider in requiredProviders {
+            let key = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !key.isEmpty {
+                _ = KeyVault.saveKey(key, for: provider)
+                keyInputs[provider] = ""
+            }
+        }
+        AuthManager.shared.setAuthMode(.apiKey)
     }
 
     private func saveAndTest() {
@@ -367,33 +401,10 @@ struct OnboardingView: View {
         testResult = nil
         Task {
             do {
-                let model = editProvider.defaultPolishModel
-                let endpoint = "\(editBaseURL)/chat/completions"
-                guard let url = URL(string: endpoint) else {
-                    await MainActor.run {
-                        testResult = (false, "Invalid URL")
-                        testing = false
-                    }
-                    return
-                }
-                var request = URLRequest(url: url)
-                request.httpMethod = "POST"
-                request.setValue("Bearer \(editKey)", forHTTPHeaderField: "Authorization")
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.timeoutInterval = 15
-                let payload: [String: Any] = [
-                    "model": model,
-                    "messages": [["role": "user", "content": "Hi"]],
-                    "max_tokens": 5
-                ]
-                request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-                let (_, response) = try await URLSession.shared.data(for: request)
+                try await APIConnectionTester.testChatCompletion(configuration: onboardingConfig.polish)
                 await MainActor.run {
-                    if let http = response as? HTTPURLResponse, http.statusCode == 200 {
-                        testResult = (true, "Connected to \(editProvider.rawValue)!")
-                    } else {
-                        testResult = (false, "Connection failed — check your API key")
-                    }
+                    let presetName = APIPresetStore.preset(for: selectedPresetID)?.name ?? "preset"
+                    testResult = (true, "Connected using \(presetName)!")
                     testing = false
                 }
             } catch {
@@ -403,6 +414,25 @@ struct OnboardingView: View {
                 }
             }
         }
+    }
+
+    private var requiredProviders: [APIProvider] {
+        KeyVault.requiredProviders(for: onboardingConfig)
+    }
+
+    private var missingProviders: [APIProvider] {
+        requiredProviders.filter { provider in
+            if KeyVault.hasKey(for: provider) { return false }
+            let input = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return input.isEmpty
+        }
+    }
+
+    private func keyBinding(for provider: APIProvider) -> Binding<String> {
+        Binding(
+            get: { keyInputs[provider] ?? "" },
+            set: { keyInputs[provider] = $0 }
+        )
     }
 
     // MARK: - Step 4: Test Recording
