@@ -45,7 +45,10 @@ Nicht mehr tippen. Einfach sprechen.
 | ⌨️ | **Eigenes Tastenkürzel** | Standard: `⌥ Leertaste` — frei konfigurierbar |
 | ⎋ | **ESC zum Abbrechen** | Aufnahme jederzeit sofort abbrechen |
 | 📊 | **Verlauf** | Vergangene Diktate durchsuchen |
-| 🔌 | **Multi-Provider** | OpenAI, Groq, DeepSeek und mehr |
+| 🔌 | **Multi-Provider** | OpenAI, Groq, DeepSeek, Ollama und mehr |
+| 🔑 | **Schlüsseltresor** | API-Keys pro Anbieter im macOS-Schlüsselbund — einmal eingeben, überall nutzen |
+| ⚡ | **Voreinstellungen** | Ein-Klick-Setup (⭐ Groq STT + DeepSeek Polish, OpenAI All-in-One, Lokales Ollama) |
+| 🎨 | **Personalisierung** | Schnelle Präferenz-Vorlagen (Business, Casual, Akademisch, Kreativ, Technisch) |
 
 ## 🚀 Schnellstart
 
@@ -64,21 +67,21 @@ cd Vowrite/VowriteApp
 ### Einrichtung
 
 1. Starte Vowrite — es erscheint als 🎤 in der Menüleiste
-2. Öffne **Einstellungen** → gib deinen API-Schlüssel ein ([von OpenAI holen](https://platform.openai.com/api-keys))
+2. Öffne **Einstellungen** → wähle eine Voreinstellung oder gib deine API-Keys ein (⭐ empfohlen: [Groq](https://console.groq.com/keys) STT + [DeepSeek](https://platform.deepseek.com/api_keys) Polish)
 3. Erteile **Mikrofon**- und **Bedienungshilfen**-Berechtigungen
 4. Drücke `⌥ Leertaste` zum Starten der Aufnahme, erneut zum Stoppen
 5. Text wird automatisch an der Cursor-Position eingefügt ✨
 
 ## 🔌 Unterstützte Anbieter
 
-| Anbieter | STT-Modell | Polier-Modell |
-|----------|-----------|-------------|
-| **OpenAI** | whisper-1 | gpt-4o-mini |
-| OpenRouter | whisper-large-v3 | gpt-4o-mini |
-| Groq | whisper-large-v3-turbo | llama-3.1-8b-instant |
-| Together AI | whisper-large-v3 | Llama-3.1-8B-Instruct-Turbo |
-| DeepSeek | whisper-1 | deepseek-chat |
-| Benutzerdefiniert | konfigurierbar | konfigurierbar |
+| Anbieter | STT-Modell | Polier-Modell | Hinweis |
+|----------|-----------|-------------|---------|
+| **⭐ Groq + DeepSeek** | whisper-large-v3-turbo | deepseek-chat | Empfohlene Kombination |
+| **OpenAI** | whisper-1 | gpt-4o-mini | All-in-One |
+| **Ollama** | — | Lokale Modelle | 100% offline, auf dem Gerät |
+| OpenRouter | whisper-large-v3 | gpt-4o-mini | Multi-Modell |
+| Together AI | whisper-large-v3 | Llama-3.1-8B-Instruct-Turbo | Open-Source-Modelle |
+| Benutzerdefiniert | konfigurierbar | konfigurierbar | Jeder OpenAI-kompatible Endpunkt |
 
 ## 🔧 Funktionsweise
 

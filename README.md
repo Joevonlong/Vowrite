@@ -45,7 +45,10 @@ No more typing. Just speak.
 | ⌨️ | **Custom Hotkey** | Default: `⌥ Space` — fully configurable |
 | ⎋ | **ESC to Cancel** | Instantly cancel any recording |
 | 📊 | **History** | Browse and search past dictations |
-| 🔌 | **Multi-Provider** | OpenAI, Groq, DeepSeek, and more |
+| 🔌 | **Multi-Provider** | OpenAI, Groq, DeepSeek, Ollama, and more |
+| 🔑 | **Key Vault** | API keys stored per-provider in macOS Keychain — enter once, reuse everywhere |
+| ⚡ | **Presets** | One-click API setup (⭐ Groq STT + DeepSeek Polish, OpenAI All-in-One, Local Ollama) |
+| 🎨 | **Personalization** | Quick preference presets (Business, Casual, Academic, Creative, Technical) |
 
 ## 🚀 Quick Start
 
@@ -64,21 +67,21 @@ cd Vowrite/VowriteApp
 ### Setup
 
 1. Launch Vowrite — it appears in the menu bar as 🎤
-2. Open **Settings** → enter your API key ([get one from OpenAI](https://platform.openai.com/api-keys))
+2. Open **Settings** → pick a preset or enter your API keys (⭐ recommended: [Groq](https://console.groq.com/keys) STT + [DeepSeek](https://platform.deepseek.com/api_keys) Polish)
 3. Grant **Microphone** and **Accessibility** permissions when prompted
 4. Press `⌥ Space` to start recording, press again to stop
 5. Text is automatically inserted at your cursor ✨
 
 ## 🔌 Supported Providers
 
-| Provider | STT Model | Polish Model |
-|----------|-----------|-------------|
-| **OpenAI** | whisper-1 | gpt-4o-mini |
-| OpenRouter | whisper-large-v3 | gpt-4o-mini |
-| Groq | whisper-large-v3-turbo | llama-3.1-8b-instant |
-| Together AI | whisper-large-v3 | Llama-3.1-8B-Instruct-Turbo |
-| DeepSeek | whisper-1 | deepseek-chat |
-| Custom | configurable | configurable |
+| Provider | STT Model | Polish Model | Notes |
+|----------|-----------|-------------|-------|
+| **⭐ Groq + DeepSeek** | whisper-large-v3-turbo | deepseek-chat | Recommended combo |
+| **OpenAI** | whisper-1 | gpt-4o-mini | All-in-one |
+| **Ollama** | — | local models | 100% offline, on-device |
+| OpenRouter | whisper-large-v3 | gpt-4o-mini | Multi-model access |
+| Together AI | whisper-large-v3 | Llama-3.1-8B-Instruct-Turbo | Open source models |
+| Custom | configurable | configurable | Any OpenAI-compatible endpoint |
 
 ## 🔧 How It Works
 
