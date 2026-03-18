@@ -482,124 +482,137 @@ struct SettingsPageView: View {
 
     private var presetsContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 8) {
-                Picker("Preset", selection: $selectedPresetID) {
-                    Text("Custom").tag(Self.customPresetID)
-                    ForEach(APIPresetStore.allPresets) { preset in
-                        Text(presetPickerLabel(for: preset)).tag(preset.id)
-                    }
-                }
-                .onChange(of: selectedPresetID) { _, newValue in
-                    guard newValue != Self.customPresetID,
-                          let preset = APIPresetStore.preset(for: newValue) else {
-                        return
-                    }
-                    workingConfig = preset.configuration
-                }
-
-                Button("Reset to Recommended") {
-                    applyRecommendedPreset()
-                }
-                .buttonStyle(.link)
-                .font(.caption)
-                .disabled(
-                    selectedPresetID == BuiltInAPIPreset.recommended.id &&
-                    !isSelectedPresetModified
-                )
-            }
-
-            if let preset = APIPresetStore.preset(for: selectedPresetID) {
-                Text(presetSummaryText(for: preset))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } else {
-                Text("Manual configuration. Save it as a preset if you want to reuse it.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            // Row 1: Save as preset
-            HStack(spacing: 8) {
-                TextField("Preset name", text: $newPresetName)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 200)
-                Button("Save as Preset") {
-                    let preset = APIPresetStore.saveUserPreset(name: newPresetName, configuration: workingConfig)
-                    selectedPresetID = APIPresetStore.userPresetID(for: preset.id)
-                    newPresetName = ""
-                }
-                .buttonStyle(.bordered)
-                Button("Delete Selected") {
-                    deleteSelectedPreset()
-                }
-                .buttonStyle(.bordered)
-                .disabled(selectedUserPresetID == nil)
-            }
-
-            // Row 2: Test + Save
-            HStack(spacing: 8) {
-                Button {
-                    testEndpoint(.stt)
-                } label: {
-                    HStack(spacing: 4) {
-                        if sttTestState.isTesting {
-                            ProgressView().controlSize(.small)
+            SettingsRow(
+                title: "Active Preset",
+                description: currentPresetDescription
+            ) {
+                VStack(alignment: .trailing, spacing: 6) {
+                    Picker("Preset", selection: $selectedPresetID) {
+                        Text("Custom").tag(Self.customPresetID)
+                        ForEach(APIPresetStore.allPresets) { preset in
+                            Text(presetPickerLabel(for: preset)).tag(preset.id)
                         }
-                        Text("Test STT")
                     }
-                }
-                .buttonStyle(.bordered)
-                .disabled(!canTest(.stt) || sttTestState.isTesting)
-
-                EndpointTestBadge(state: sttTestState)
-
-                Button {
-                    testEndpoint(.polish)
-                } label: {
-                    HStack(spacing: 4) {
-                        if polishTestState.isTesting {
-                            ProgressView().controlSize(.small)
+                    .frame(width: 280)
+                    .labelsHidden()
+                    .onChange(of: selectedPresetID) { _, newValue in
+                        guard newValue != Self.customPresetID,
+                              let preset = APIPresetStore.preset(for: newValue) else {
+                            return
                         }
-                        Text("Test Polish")
+                        workingConfig = preset.configuration
+                    }
+
+                    Button("Reset to Recommended") {
+                        applyRecommendedPreset()
+                    }
+                    .buttonStyle(.link)
+                    .font(.caption)
+                    .disabled(
+                        selectedPresetID == BuiltInAPIPreset.recommended.id &&
+                        !isSelectedPresetModified
+                    )
+                }
+            }
+
+            SettingsRow(
+                title: "Actions",
+                description: "Save this configuration as a reusable preset, validate both endpoints, or apply the current split setup."
+            ) {
+                VStack(alignment: .trailing, spacing: 8) {
+                    HStack(spacing: 8) {
+                        TextField("Preset name", text: $newPresetName)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 220)
+
+                        Button("Save as Preset") {
+                            let preset = APIPresetStore.saveUserPreset(name: newPresetName, configuration: workingConfig)
+                            selectedPresetID = APIPresetStore.userPresetID(for: preset.id)
+                            newPresetName = ""
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button("Delete Selected") {
+                            deleteSelectedPreset()
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(selectedUserPresetID == nil)
+                    }
+
+                    HStack(spacing: 8) {
+                        Button {
+                            testEndpoint(.stt)
+                        } label: {
+                            HStack(spacing: 4) {
+                                if sttTestState.isTesting {
+                                    ProgressView().controlSize(.small)
+                                }
+                                Text("Test STT")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!canTest(.stt) || sttTestState.isTesting)
+
+                        EndpointTestBadge(state: sttTestState)
+
+                        Button {
+                            testEndpoint(.polish)
+                        } label: {
+                            HStack(spacing: 4) {
+                                if polishTestState.isTesting {
+                                    ProgressView().controlSize(.small)
+                                }
+                                Text("Test Polish")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!canTest(.polish) || polishTestState.isTesting)
+
+                        EndpointTestBadge(state: polishTestState)
+
+                        if configSaved {
+                            Label("Saved", systemImage: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                        }
+
+                        Button("Save Configuration") {
+                            saveConfiguration()
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
                 }
-                .buttonStyle(.bordered)
-                .disabled(!canTest(.polish) || polishTestState.isTesting)
-
-                EndpointTestBadge(state: polishTestState)
-
-                Spacer()
-
-                if configSaved {
-                    Label("Saved", systemImage: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .font(.caption)
-                }
-                Button("Save Configuration") {
-                    saveConfiguration()
-                }
-                .buttonStyle(.borderedProminent)
             }
         }
     }
 
     private var apiKeysContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Keys are stored in macOS Keychain once per provider. The STT and Polish sections only reference them.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-            ForEach(KeyVault.managedProviders) { provider in
-                providerKeyRow(for: provider)
-            }
-
-            HStack {
-                Spacer()
+        VStack(alignment: .leading, spacing: 12) {
+            SettingsRow(
+                title: "Storage",
+                description: "Keys are stored in macOS Keychain once per provider. The STT and Polish sections only reference them."
+            ) {
                 if keysSaved {
                     Label("Keys saved", systemImage: "checkmark.circle.fill")
                         .foregroundColor(.green)
                         .font(.caption)
                 }
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(Array(KeyVault.managedProviders.enumerated()), id: \.element.id) { index, provider in
+                    providerKeyRow(for: provider)
+
+                    if index < KeyVault.managedProviders.count - 1 {
+                        Divider()
+                    }
+                }
+            }
+
+            SettingsRow(
+                title: "Save Pending Keys",
+                description: "Commit any newly entered provider keys to Keychain."
+            ) {
                 Button("Save Keys") {
                     saveKeys()
                 }
@@ -706,72 +719,64 @@ struct SettingsPageView: View {
         workingConfig = BuiltInAPIPreset.recommended.configuration
     }
 
+    private var currentPresetDescription: String {
+        if let preset = APIPresetStore.preset(for: selectedPresetID) {
+            return presetSummaryText(for: preset)
+        }
+        return "Manual configuration. Save it as a preset if you want to reuse it."
+    }
+
     private func providerKeyRow(for provider: APIProvider) -> some View {
         let isConfigured = KeyVault.hasKey(for: provider)
-        let isInUse = providerIsInUse(provider)
         let isExpanded = isKeyEditorExpanded(for: provider)
 
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(provider.rawValue)
-                        .font(.body.weight(.medium))
+        return SettingsRow(
+            title: provider.rawValue,
+            description: providerKeyDescription(for: provider)
+        ) {
+            VStack(alignment: .trailing, spacing: 8) {
+                HStack(spacing: 8) {
+                    ProviderKeyStatusBadge(
+                        provider: provider,
+                        isRequired: providerIsInUse(provider)
+                    )
 
-                    if isInUse {
-                        Text(providerUsageText(for: provider))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Spacer()
-
-                if isConfigured {
-                    Text("✅ Configured")
-                        .font(.caption)
-                        .foregroundColor(.green)
-
-                    if let maskedKey = KeyVault.maskedKey(for: provider) {
+                    if let maskedKey = KeyVault.maskedKey(for: provider), isConfigured {
                         Text(maskedKey)
                             .font(.caption.monospaced())
                             .foregroundColor(.secondary)
                     }
 
-                    Button("Edit") {
-                        keyEditorExpanded[provider] = true
-                    }
-                    .buttonStyle(.borderless)
+                    if isConfigured {
+                        Button("Edit") {
+                            keyEditorExpanded[provider] = true
+                        }
+                        .buttonStyle(.borderless)
 
-                    Button("Clear") {
-                        _ = KeyVault.deleteKey(for: provider)
-                        keyInputs[provider] = ""
-                        keyEditorExpanded[provider] = false
+                        Button("Clear") {
+                            _ = KeyVault.deleteKey(for: provider)
+                            keyInputs[provider] = ""
+                            keyEditorExpanded[provider] = false
+                        }
+                        .buttonStyle(.borderless)
+                    } else {
+                        Button("Add Key") {
+                            keyEditorExpanded[provider] = true
+                        }
+                        .buttonStyle(.borderless)
                     }
-                    .buttonStyle(.borderless)
-                } else if isInUse {
-                    Text("⚠️ Required")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                } else {
-                    Text("— Not configured")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Button("Add Key") {
-                        keyEditorExpanded[provider] = true
-                    }
-                    .buttonStyle(.borderless)
                 }
-            }
 
-            if isExpanded {
-                SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
-                    .textFieldStyle(.roundedBorder)
-            }
+                if isExpanded {
+                    SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 280)
+                }
 
-            if !provider.keyURL.isEmpty {
-                Link("Get \(provider.rawValue) key →", destination: URL(string: provider.keyURL)!)
-                    .font(.caption)
+                if !provider.keyURL.isEmpty {
+                    Link("Get \(provider.rawValue) key →", destination: URL(string: provider.keyURL)!)
+                        .font(.caption)
+                }
             }
         }
     }
@@ -791,6 +796,14 @@ struct SettingsPageView: View {
         case (false, false):
             return ""
         }
+    }
+
+    private func providerKeyDescription(for provider: APIProvider) -> String {
+        let usage = providerUsageText(for: provider)
+        if usage.isEmpty {
+            return "Stored once in Keychain for this provider."
+        }
+        return "\(usage). Stored once in Keychain for this provider."
     }
 
     private func isKeyEditorExpanded(for provider: APIProvider) -> Bool {
@@ -1077,145 +1090,76 @@ struct PipelineConfigurationEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.body.weight(.medium))
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                Spacer()
-                PipelineKeyStatusBadge(configuration: configuration, isSpeechToText: isSpeechToText)
-            }
+            SettingsRow(
+                title: "Provider",
+                description: providerRowDescription
+            ) {
+                HStack(spacing: 8) {
+                    PipelineKeyStatusBadge(configuration: configuration, isSpeechToText: isSpeechToText)
 
-            Picker("Provider", selection: providerBinding) {
-                ForEach(APIProvider.allCases) { provider in
-                    Text(provider.rawValue).tag(provider)
+                    Picker("Provider", selection: providerBinding) {
+                        ForEach(APIProvider.allCases) { provider in
+                            Text(provider.rawValue).tag(provider)
+                        }
+                    }
+                    .frame(width: 220)
+                    .labelsHidden()
                 }
             }
 
             if !modelSuggestions.isEmpty {
-                // Picker with preset models + "Custom…" option
-                Picker("Model", selection: quickModelBinding) {
-                    ForEach(modelSuggestions, id: \.self) { model in
-                        if let desc = modelDescription(for: model) {
-                            Text("\(model) · \(desc)").tag(model)
-                        } else {
-                            Text(model).tag(model)
+                SettingsRow(
+                    title: "Model",
+                    description: modelRowDescription
+                ) {
+                    Picker("Model", selection: quickModelBinding) {
+                        ForEach(modelSuggestions, id: \.self) { model in
+                            if let desc = modelDescription(for: model) {
+                                Text("\(model) · \(desc)").tag(model)
+                            } else {
+                                Text(model).tag(model)
+                            }
                         }
+                        Divider()
+                        Text("Custom…").tag(customModelTag)
                     }
-                    Divider()
-                    Text("Custom…").tag(customModelTag)
+                    .frame(width: 320)
+                    .labelsHidden()
                 }
 
-                // Custom model: three states
                 if isCustomModel {
-                    if isEditingCustomModel {
-                        // Editing: show TextField + Confirm button
-                        HStack(spacing: 8) {
-                            TextField("Enter model ID (e.g. gpt-4o-mini)", text: $customModelDraft)
-                                .textFieldStyle(.roundedBorder)
-                                .onSubmit { confirmCustomModel() }
-
-                            Button("Confirm") { confirmCustomModel() }
-                                .buttonStyle(.borderedProminent)
-                                .controlSize(.small)
-                                .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        }
-                    } else {
-                        // Locked: show model name as read-only + Edit button (same size as Confirm)
-                        HStack(spacing: 8) {
-                            Text(configuration.model)
-                                .font(.body.monospaced())
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 6)
-                                .background(Color.secondary.opacity(0.1))
-                                .cornerRadius(6)
-
-                            Button("Edit") {
-                                customModelDraft = configuration.model
-                                isEditingCustomModel = true
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                        }
+                    SettingsRow(
+                        title: "Custom Model",
+                        description: "Use any provider-specific model identifier when the preset list is not enough."
+                    ) {
+                        customModelEditor(width: 320)
                     }
                 }
             } else {
-                // No presets for this provider (Custom/OpenRouter) — inline edit with lock
-                if isEditingCustomModel {
-                    HStack(spacing: 8) {
-                        TextField("Model ID", text: $customModelDraft)
-                            .textFieldStyle(.roundedBorder)
-                            .onSubmit { confirmCustomModel() }
-
-                        Button("Confirm") { confirmCustomModel() }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                            .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    }
-                } else if configuration.model.isEmpty {
-                    // No model set yet — auto-open editor
-                    HStack(spacing: 8) {
-                        TextField("Model ID", text: $customModelDraft)
-                            .textFieldStyle(.roundedBorder)
-                            .onSubmit { confirmCustomModel() }
-
-                        Button("Confirm") { confirmCustomModel() }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                            .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    }
-                    .onAppear { isEditingCustomModel = true }
-                } else {
-                    // Locked display
-                    HStack(spacing: 8) {
-                        Text(configuration.model)
-                            .font(.body.monospaced())
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 6)
-                            .background(Color.secondary.opacity(0.1))
-                            .cornerRadius(6)
-
-                        Button("Edit") {
-                            customModelDraft = configuration.model
-                            isEditingCustomModel = true
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
+                SettingsRow(
+                    title: "Custom Model",
+                    description: "This provider uses a free-form model identifier."
+                ) {
+                    customModelEditor(width: 320)
                 }
             }
 
-            if configuration.provider == .custom || configuration.provider == .ollama {
-                TextField("Base URL", text: baseURLBinding)
-                    .textFieldStyle(.roundedBorder)
-            } else {
-                LabeledContent("Base URL") {
+            SettingsRow(
+                title: "Base URL",
+                description: baseURLDescription
+            ) {
+                if configuration.provider == .custom || configuration.provider == .ollama {
+                    TextField("Base URL", text: baseURLBinding)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 320)
+                } else {
                     Text(configuration.resolvedBaseURL)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
+                        .frame(width: 320, alignment: .trailing)
+                        .textSelection(.enabled)
                 }
-            }
-
-            if isSpeechToText, let note = configuration.provider.sttSupportNote {
-                Text(note)
-                    .font(.caption)
-                    .foregroundColor(configuration.provider.hasSTTSupport ? .secondary : .orange)
-            }
-
-            if configuration.provider.requiresAPIKey {
-                Text("Uses the \(configuration.provider.rawValue) key from the API Keys section.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } else {
-                Text("This provider does not require an API key.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
         }
     }
@@ -1284,17 +1228,94 @@ struct PipelineConfigurationEditor: View {
     private func modelDescription(for model: String) -> String? {
         isSpeechToText ? APIProvider.sttModelDescription(model) : APIProvider.polishModelDescription(model)
     }
+
+    private var providerRowDescription: String {
+        var parts = [description]
+
+        if isSpeechToText, let note = configuration.provider.sttSupportNote {
+            parts.append(note)
+        }
+
+        if configuration.provider.requiresAPIKey {
+            parts.append("Uses the \(configuration.provider.rawValue) key from the API Keys section.")
+        } else {
+            parts.append("This provider does not require an API key.")
+        }
+
+        return parts.joined(separator: " ")
+    }
+
+    private var modelRowDescription: String {
+        if modelSuggestions.isEmpty {
+            return "Enter a model ID manually for this provider."
+        }
+        return "Choose a preset model or switch to a custom model ID."
+    }
+
+    private var baseURLDescription: String {
+        if configuration.provider == .custom || configuration.provider == .ollama {
+            return "Override the endpoint URL used for this \(title.lowercased()) pipeline."
+        }
+        return "Uses the provider default endpoint."
+    }
+
+    @ViewBuilder
+    private func customModelEditor(width: CGFloat) -> some View {
+        if isEditingCustomModel || modelSuggestions.isEmpty || configuration.model.isEmpty {
+            HStack(spacing: 8) {
+                TextField(modelFieldPlaceholder, text: $customModelDraft)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: width)
+                    .onSubmit { confirmCustomModel() }
+
+                Button("Confirm") { confirmCustomModel() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .onAppear {
+                if configuration.model.isEmpty {
+                    isEditingCustomModel = true
+                }
+            }
+        } else {
+            HStack(spacing: 8) {
+                Text(configuration.model)
+                    .font(.body.monospaced())
+                    .lineLimit(1)
+                    .frame(width: width, alignment: .leading)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(6)
+
+                Button("Edit") {
+                    customModelDraft = configuration.model
+                    isEditingCustomModel = true
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+        }
+    }
+
+    private var modelFieldPlaceholder: String {
+        modelSuggestions.isEmpty ? "Model ID" : "Enter model ID (e.g. gpt-4o-mini)"
+    }
 }
 
 struct ProviderKeyStatusBadge: View {
     let provider: APIProvider
+    let isRequired: Bool
 
     var body: some View {
         Group {
             if KeyVault.hasKey(for: provider) {
                 badge("Saved", color: .green)
+            } else if isRequired {
+                badge("Required", color: .orange)
             } else {
-                badge("Missing", color: .orange)
+                badge("Missing", color: .secondary)
             }
         }
     }
@@ -1438,13 +1459,15 @@ struct SettingsRow<Trailing: View>: View {
     @ViewBuilder let trailing: Trailing
 
     var body: some View {
-        HStack(alignment: .center) {
+        HStack(alignment: .top, spacing: 24) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.body).fontWeight(.medium)
+                Text(title).font(.body).fontWeight(.semibold)
                 Text(description).font(.caption).foregroundColor(.secondary)
             }
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             trailing
+                .frame(maxWidth: 360, alignment: .trailing)
         }
         .padding(.vertical, 4)
     }
