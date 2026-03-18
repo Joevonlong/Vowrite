@@ -382,8 +382,11 @@ struct SettingsPageView: View {
     @State private var selectedPresetID = customPresetID
     @State private var newPresetName = ""
     @State private var keyInputs: [APIProvider: String] = [:]
+    @State private var keyEditorExpanded: [APIProvider: Bool] = [:]
     @State private var configSaved = false
     @State private var keysSaved = false
+    @State private var sttTestState: EndpointTestState = .idle
+    @State private var polishTestState: EndpointTestState = .idle
 
     private static let customPresetID = "__custom_preset__"
 
@@ -392,6 +395,10 @@ struct SettingsPageView: View {
             VStack(alignment: .leading, spacing: 32) {
                 Text("Settings")
                     .font(.system(size: 24, weight: .bold))
+
+                Text(configurationSummaryLine)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundColor(.secondary)
 
                 SettingsSection(icon: "square.stack.3d.up", title: "Presets") {
                     presetsContent
@@ -462,32 +469,49 @@ struct SettingsPageView: View {
         }
         .onAppear(perform: loadState)
         .onChange(of: workingConfig) { _, newValue in
-            selectedPresetID = APIPresetStore.matchingPreset(for: newValue)?.id ?? Self.customPresetID
-            APIConfig.clearSelectedPresetIfNeeded(for: newValue)
+            // Keep the chosen preset selected while the user edits away from it,
+            // but snap back if the working config exactly matches a known preset.
+            if let matchingPreset = APIPresetStore.matchingPreset(for: newValue) {
+                selectedPresetID = matchingPreset.id
+            }
+            configSaved = false
+            sttTestState = .idle
+            polishTestState = .idle
         }
     }
 
     private var presetsContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             SettingsRow(title: "Preset", description: "Apply a built-in or saved split-provider configuration.") {
-                Picker("", selection: $selectedPresetID) {
-                    Text("Custom").tag(Self.customPresetID)
-                    ForEach(APIPresetStore.allPresets) { preset in
-                        Text("\(preset.name) · \(preset.summary)").tag(preset.id)
+                HStack(alignment: .center, spacing: 12) {
+                    Picker("", selection: $selectedPresetID) {
+                        Text("Custom").tag(Self.customPresetID)
+                        ForEach(APIPresetStore.allPresets) { preset in
+                            Text(presetPickerLabel(for: preset)).tag(preset.id)
+                        }
                     }
-                }
-                .frame(width: 320)
-                .onChange(of: selectedPresetID) { _, newValue in
-                    guard newValue != Self.customPresetID,
-                          let preset = APIPresetStore.preset(for: newValue) else {
-                        return
+                    .frame(width: 320)
+                    .onChange(of: selectedPresetID) { _, newValue in
+                        guard newValue != Self.customPresetID,
+                              let preset = APIPresetStore.preset(for: newValue) else {
+                            return
+                        }
+                        workingConfig = preset.configuration
                     }
-                    workingConfig = preset.configuration
+
+                    Button("Reset to Recommended") {
+                        applyRecommendedPreset()
+                    }
+                    .buttonStyle(.link)
+                    .disabled(
+                        selectedPresetID == BuiltInAPIPreset.recommended.id &&
+                        !isSelectedPresetModified
+                    )
                 }
             }
 
             if let preset = APIPresetStore.preset(for: selectedPresetID) {
-                Text(preset.summary)
+                Text(presetSummaryText(for: preset))
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
@@ -510,7 +534,41 @@ struct SettingsPageView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(selectedUserPresetID == nil)
+
                 Spacer()
+
+                HStack(spacing: 8) {
+                    Button {
+                        testEndpoint(.stt)
+                    } label: {
+                        HStack(spacing: 4) {
+                            if sttTestState.isTesting {
+                                ProgressView().controlSize(.small)
+                            }
+                            Text("Test STT")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!canTest(.stt) || sttTestState.isTesting)
+
+                    EndpointTestBadge(state: sttTestState)
+
+                    Button {
+                        testEndpoint(.polish)
+                    } label: {
+                        HStack(spacing: 4) {
+                            if polishTestState.isTesting {
+                                ProgressView().controlSize(.small)
+                            }
+                            Text("Test Polish")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!canTest(.polish) || polishTestState.isTesting)
+
+                    EndpointTestBadge(state: polishTestState)
+                }
+
                 if configSaved {
                     Label("Saved", systemImage: "checkmark.circle.fill")
                         .foregroundColor(.green)
@@ -531,33 +589,7 @@ struct SettingsPageView: View {
                 .foregroundColor(.secondary)
 
             ForEach(KeyVault.managedProviders) { provider in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(provider.rawValue)
-                            .font(.body.weight(.medium))
-                        Spacer()
-                        ProviderKeyStatusBadge(provider: provider)
-                        if let maskedKey = KeyVault.maskedKey(for: provider) {
-                            Text(maskedKey)
-                                .font(.caption.monospaced())
-                                .foregroundColor(.secondary)
-                        }
-                        Button("Clear") {
-                            _ = KeyVault.deleteKey(for: provider)
-                            keyInputs[provider] = ""
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(!KeyVault.hasKey(for: provider))
-                    }
-
-                    SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
-                        .textFieldStyle(.roundedBorder)
-
-                    if !provider.keyURL.isEmpty {
-                        Link("Get \(provider.rawValue) key →", destination: URL(string: provider.keyURL)!)
-                            .font(.caption)
-                    }
-                }
+                providerKeyRow(for: provider)
             }
 
             HStack {
@@ -571,6 +603,7 @@ struct SettingsPageView: View {
                     saveKeys()
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(!hasPendingKeyChanges)
             }
         }
     }
@@ -588,8 +621,11 @@ struct SettingsPageView: View {
 
     private func loadState() {
         workingConfig = APIConfig.current
-        selectedPresetID = APIConfig.activePreset?.id ?? Self.customPresetID
+        selectedPresetID = APIConfig.activePreset?.id ?? APIPresetStore.matchingPreset(for: workingConfig)?.id ?? Self.customPresetID
         keyInputs = Dictionary(uniqueKeysWithValues: KeyVault.managedProviders.map { ($0, "") })
+        keyEditorExpanded = Dictionary(uniqueKeysWithValues: KeyVault.managedProviders.map { ($0, false) })
+        sttTestState = .idle
+        polishTestState = .idle
     }
 
     private func saveConfiguration() {
@@ -606,6 +642,7 @@ struct SettingsPageView: View {
             if !value.isEmpty {
                 _ = KeyVault.saveKey(value, for: provider)
                 keyInputs[provider] = ""
+                keyEditorExpanded[provider] = false
             }
         }
         AuthManager.shared.setAuthMode(.apiKey)
@@ -617,6 +654,378 @@ struct SettingsPageView: View {
         guard let userPresetID = selectedUserPresetID else { return }
         APIPresetStore.deleteUserPreset(id: userPresetID)
         selectedPresetID = APIPresetStore.matchingPreset(for: workingConfig)?.id ?? Self.customPresetID
+    }
+
+    private var configurationSummaryLine: String {
+        "\(workingConfig.stt.provider.rawValue) STT · \(workingConfig.polish.provider.rawValue) Polish · \(summaryKeyStatus)"
+    }
+
+    private var summaryKeyStatus: String {
+        let requiredProviders = KeyVault.requiredProviders(for: workingConfig)
+        guard !requiredProviders.isEmpty else { return "No keys needed" }
+
+        let readyCount = requiredProviders.filter(providerHasReadyKey).count
+        return readyCount == requiredProviders.count
+            ? "\(readyCount) keys ready"
+            : "\(readyCount)/\(requiredProviders.count) keys ready"
+    }
+
+    private var hasPendingKeyChanges: Bool {
+        KeyVault.managedProviders.contains { provider in
+            !(keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    private var isSelectedPresetModified: Bool {
+        guard let preset = APIPresetStore.preset(for: selectedPresetID) else { return false }
+        return preset.configuration != workingConfig
+    }
+
+    private func presetPickerLabel(for preset: APIPresetOption) -> String {
+        let baseName = presetDisplayName(for: preset)
+        return "\(baseName) · \(preset.summary)"
+    }
+
+    private func presetDisplayName(for preset: APIPresetOption) -> String {
+        let isRecommendedPreset = preset.id == BuiltInAPIPreset.recommended.id
+        let prefix = isRecommendedPreset ? "⭐ " : ""
+        let suffix = selectedPresetID == preset.id && preset.configuration != workingConfig ? " (modified)" : ""
+        return "\(prefix)\(preset.name)\(suffix)"
+    }
+
+    private func presetSummaryText(for preset: APIPresetOption) -> String {
+        if preset.configuration != workingConfig {
+            return "\(preset.summary) · Current settings are modified from this preset."
+        }
+        return preset.summary
+    }
+
+    private func applyRecommendedPreset() {
+        selectedPresetID = BuiltInAPIPreset.recommended.id
+        workingConfig = BuiltInAPIPreset.recommended.configuration
+    }
+
+    private func providerKeyRow(for provider: APIProvider) -> some View {
+        let isConfigured = KeyVault.hasKey(for: provider)
+        let isInUse = providerIsInUse(provider)
+        let isExpanded = isKeyEditorExpanded(for: provider)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(provider.rawValue)
+                        .font(.body.weight(.medium))
+
+                    if isInUse {
+                        Text(providerUsageText(for: provider))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if isConfigured {
+                    Text("✅ Configured")
+                        .font(.caption)
+                        .foregroundColor(.green)
+
+                    if let maskedKey = KeyVault.maskedKey(for: provider) {
+                        Text(maskedKey)
+                            .font(.caption.monospaced())
+                            .foregroundColor(.secondary)
+                    }
+
+                    Button("Edit") {
+                        keyEditorExpanded[provider] = true
+                    }
+                    .buttonStyle(.borderless)
+
+                    Button("Clear") {
+                        _ = KeyVault.deleteKey(for: provider)
+                        keyInputs[provider] = ""
+                        keyEditorExpanded[provider] = false
+                    }
+                    .buttonStyle(.borderless)
+                } else if isInUse {
+                    Text("⚠️ Required")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                } else {
+                    Text("— Not configured")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Button("Add Key") {
+                        keyEditorExpanded[provider] = true
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+
+            if isExpanded {
+                SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
+                    .textFieldStyle(.roundedBorder)
+            }
+
+            if !provider.keyURL.isEmpty {
+                Link("Get \(provider.rawValue) key →", destination: URL(string: provider.keyURL)!)
+                    .font(.caption)
+            }
+        }
+    }
+
+    private func providerIsInUse(_ provider: APIProvider) -> Bool {
+        workingConfig.stt.provider == provider || workingConfig.polish.provider == provider
+    }
+
+    private func providerUsageText(for provider: APIProvider) -> String {
+        switch (workingConfig.stt.provider == provider, workingConfig.polish.provider == provider) {
+        case (true, true):
+            return "Used for STT and Polish"
+        case (true, false):
+            return "Used for STT"
+        case (false, true):
+            return "Used for Polish"
+        case (false, false):
+            return ""
+        }
+    }
+
+    private func isKeyEditorExpanded(for provider: APIProvider) -> Bool {
+        let hasSavedKey = KeyVault.hasKey(for: provider)
+        if !hasSavedKey && providerIsInUse(provider) {
+            return true
+        }
+        return keyEditorExpanded[provider] ?? false
+    }
+
+    private func providerHasReadyKey(_ provider: APIProvider) -> Bool {
+        if KeyVault.hasKey(for: provider) {
+            return true
+        }
+        return !(keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func canTest(_ endpoint: SettingsEndpoint) -> Bool {
+        switch endpoint {
+        case .stt:
+            return workingConfig.stt.provider.hasSTTSupport && endpointHasRequiredKey(workingConfig.stt)
+        case .polish:
+            return endpointHasRequiredKey(workingConfig.polish)
+        }
+    }
+
+    private func endpointHasRequiredKey(_ configuration: APIEndpointConfiguration) -> Bool {
+        !configuration.provider.requiresAPIKey || providerHasReadyKey(configuration.provider)
+    }
+
+    private func testEndpoint(_ endpoint: SettingsEndpoint) {
+        switch endpoint {
+        case .stt:
+            sttTestState = .testing
+        case .polish:
+            polishTestState = .testing
+        }
+
+        let configuration = endpoint.configuration(from: workingConfig)
+        let apiKeyOverride = keyInputOverride(for: configuration.provider)
+
+        Task {
+            do {
+                switch endpoint {
+                case .stt:
+                    try await SettingsConnectionTester.testSpeechToText(
+                        configuration: configuration,
+                        apiKeyOverride: apiKeyOverride
+                    )
+                case .polish:
+                    try await SettingsConnectionTester.testChatCompletion(
+                        configuration: configuration,
+                        apiKeyOverride: apiKeyOverride
+                    )
+                }
+
+                await MainActor.run {
+                    switch endpoint {
+                    case .stt:
+                        sttTestState = .result(success: true, message: "✅ Ready")
+                    case .polish:
+                        polishTestState = .result(success: true, message: "✅ Ready")
+                    }
+                }
+            } catch {
+                let message = error.localizedDescription
+                await MainActor.run {
+                    switch endpoint {
+                    case .stt:
+                        sttTestState = .result(success: false, message: "❌ \(message)")
+                    case .polish:
+                        polishTestState = .result(success: false, message: "❌ \(message)")
+                    }
+                }
+            }
+        }
+    }
+
+    private func keyInputOverride(for provider: APIProvider) -> String? {
+        let trimmed = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+enum SettingsEndpoint {
+    case stt
+    case polish
+
+    func configuration(from splitConfiguration: SplitAPIConfiguration) -> APIEndpointConfiguration {
+        switch self {
+        case .stt:
+            return splitConfiguration.stt
+        case .polish:
+            return splitConfiguration.polish
+        }
+    }
+}
+
+enum EndpointTestState: Equatable {
+    case idle
+    case testing
+    case result(success: Bool, message: String)
+
+    var isTesting: Bool {
+        if case .testing = self {
+            return true
+        }
+        return false
+    }
+}
+
+struct EndpointTestBadge: View {
+    let state: EndpointTestState
+
+    var body: some View {
+        switch state {
+        case .idle, .testing:
+            EmptyView()
+        case .result(let success, let message):
+            Text(message)
+                .font(.caption)
+                .foregroundColor(success ? .green : .red)
+        }
+    }
+}
+
+enum SettingsConnectionTester {
+    static func testChatCompletion(
+        configuration: APIEndpointConfiguration,
+        apiKeyOverride: String? = nil
+    ) async throws {
+        try await APIConnectionTester.testChatCompletion(
+            configuration: configuration,
+            apiKeyOverride: apiKeyOverride
+        )
+    }
+
+    static func testSpeechToText(
+        configuration: APIEndpointConfiguration,
+        apiKeyOverride: String? = nil
+    ) async throws {
+        let endpoint = "\(configuration.resolvedBaseURL)/audio/transcriptions"
+        guard let url = URL(string: endpoint) else {
+            throw VowriteError.apiError("Invalid base URL")
+        }
+
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        if let apiKey = resolvedAPIKey(for: configuration, override: apiKeyOverride) {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        if configuration.provider == .openrouter {
+            request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
+            request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
+        }
+
+        request.httpBody = transcriptionProbeBody(boundary: boundary, model: configuration.model)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VowriteError.networkError("Invalid response")
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw VowriteError.apiError("Error \(httpResponse.statusCode): \(body)")
+        }
+    }
+
+    private static func resolvedAPIKey(
+        for configuration: APIEndpointConfiguration,
+        override: String?
+    ) -> String? {
+        let trimmedOverride = override?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let trimmedOverride, !trimmedOverride.isEmpty {
+            return trimmedOverride
+        }
+        return configuration.key
+    }
+
+    private static func transcriptionProbeBody(boundary: String, model: String) -> Data {
+        var body = Data()
+        body.appendMultipart(boundary: boundary, name: "model", value: model)
+        body.appendMultipart(boundary: boundary, name: "response_format", value: "text")
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"probe.wav\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: audio/wav\r\n\r\n".data(using: .utf8)!)
+        body.append(silentWAVData())
+        body.append("\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        return body
+    }
+
+    // A tiny valid WAV keeps the STT probe cheap while still exercising the real endpoint.
+    private static func silentWAVData(
+        sampleRate: UInt32 = 16_000,
+        durationSeconds: Double = 0.1
+    ) -> Data {
+        let samples = max(1, Int(Double(sampleRate) * durationSeconds))
+        let bitsPerSample: UInt16 = 16
+        let channels: UInt16 = 1
+        let byteRate = sampleRate * UInt32(channels) * UInt32(bitsPerSample / 8)
+        let blockAlign = channels * (bitsPerSample / 8)
+        let dataSize = UInt32(samples) * UInt32(blockAlign)
+
+        var data = Data()
+        data.append("RIFF".data(using: .ascii)!)
+        data.appendLE(UInt32(36) + dataSize)
+        data.append("WAVE".data(using: .ascii)!)
+        data.append("fmt ".data(using: .ascii)!)
+        data.appendLE(UInt32(16))
+        data.appendLE(UInt16(1))
+        data.appendLE(channels)
+        data.appendLE(sampleRate)
+        data.appendLE(byteRate)
+        data.appendLE(blockAlign)
+        data.appendLE(bitsPerSample)
+        data.append("data".data(using: .ascii)!)
+        data.appendLE(dataSize)
+        data.append(Data(count: Int(dataSize)))
+        return data
+    }
+}
+
+private extension Data {
+    mutating func appendLE<T: FixedWidthInteger>(_ value: T) {
+        var littleEndianValue = value.littleEndian
+        Swift.withUnsafeBytes(of: &littleEndianValue) { buffer in
+            append(contentsOf: buffer)
+        }
     }
 }
 
