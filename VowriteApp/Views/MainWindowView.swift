@@ -1398,24 +1398,23 @@ struct PipelineKeyStatusBadge: View {
 
     var body: some View {
         if isSpeechToText && !configuration.provider.hasSTTSupport {
-            badge("Unsupported", color: .orange)
+            statusIcon("xmark.circle.fill", color: .orange, tooltip: "STT not supported")
         } else if !configuration.provider.requiresAPIKey {
-            badge("No key", color: .secondary)
+            statusIcon("minus.circle", color: .secondary, tooltip: "No key needed")
         } else if configuration.hasKey {
-            badge("Key ready", color: .green)
+            statusIcon("checkmark.circle.fill", color: .green, tooltip: "Key ready")
         } else {
-            badge("Key missing", color: .orange)
+            statusIcon("exclamationmark.circle.fill", color: .orange, tooltip: "Key missing")
         }
     }
 
-    private func badge(_ title: String, color: Color) -> some View {
-        Text(title)
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(color.opacity(0.12))
+    private func statusIcon(_ systemName: String, color: Color, tooltip: String) -> some View {
+        Image(systemName: systemName)
+            .font(.body)
             .foregroundColor(color)
-            .cornerRadius(999)
+            .frame(width: 20, height: 20)
+            .fixedSize()
+            .help(tooltip)
     }
 }
 
