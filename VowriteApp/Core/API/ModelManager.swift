@@ -13,8 +13,9 @@ final class ModelManager: ObservableObject {
     private init() {}
 
     func refreshModels() async {
-        guard APIConfig.provider == .openrouter else { return }
-        guard let apiKey = KeychainHelper.getAPIKey(), !apiKey.isEmpty else {
+        let usesOpenRouter = APIConfig.stt.provider == .openrouter || APIConfig.polish.provider == .openrouter
+        guard usesOpenRouter else { return }
+        guard let apiKey = KeyVault.key(for: .openrouter), !apiKey.isEmpty else {
             error = "API key required to fetch models"
             return
         }
