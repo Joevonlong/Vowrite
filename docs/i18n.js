@@ -88,12 +88,17 @@ const i18n = {
     'faq.q6': '我的数据安全吗？',
     'faq.a6': '你的听写历史仅存储在本地 Mac 上。音频只发送给你选择的 AI 服务商进行转录——Vowrite 本身不会存储或传输你的数据到任何服务器。',
 
+    // Providers (new)
+    'prov.allone': '一站式',
+    'prov.ollamad': '本地模型 · 完全离线',
+    'prov.local': '100% 本地',
+
     // Coming soon
     'soon.title': '即将推出',
-    'soon.s1t': '风格模式',
-    'soon.s1d': '在休闲、正式和简洁输出风格间切换。',
-    'soon.s2t': '工作流集成',
-    'soon.s2d': '将 Vowrite 连接到你最爱的工具和自动化流程。',
+    'soon.s1t': '语音搜索',
+    'soon.s1d': '用语音提问，无需离开当前应用即可获得答案。',
+    'soon.s2t': '自动更新',
+    'soon.s2d': '通过 Sparkle 无缝更新，始终保持最新版本。',
 
     // Download
     'dl.title': '准备好告别打字了吗？',
@@ -211,12 +216,17 @@ const i18n = {
     'faq.q6': 'Sind meine Daten privat?',
     'faq.a6': 'Dein Diktatverlauf wird lokal auf deinem Mac gespeichert. Audio wird nur zum Transkribieren an deinen gew\u00e4hlten KI-Anbieter gesendet \u2014 Vowrite selbst speichert oder \u00fcbertr\u00e4gt deine Daten niemals an einen Server.',
 
+    // Providers (new)
+    'prov.allone': 'All-in-One',
+    'prov.ollamad': 'Lokale Modelle \u00b7 komplett offline',
+    'prov.local': '100% Lokal',
+
     // Coming soon
     'soon.title': 'Demn\u00e4chst',
-    'soon.s1t': 'Stilmodi',
-    'soon.s1d': 'Zwischen l\u00e4ssigem, formellem und knappem Ausgabestil wechseln.',
-    'soon.s2t': 'Workflow-Integration',
-    'soon.s2d': 'Vowrite mit deinen Lieblings-Tools und Automatisierungen verbinden.',
+    'soon.s1t': 'Sprachgesteuerte Suche',
+    'soon.s1d': 'Stelle Fragen per Sprache und erhalte sofort Antworten, ohne die App zu verlassen.',
+    'soon.s2t': 'Auto-Update',
+    'soon.s2d': 'Immer aktuell mit nahtlosen In-App-Updates \u00fcber Sparkle.',
 
     // Download
     'dl.title': 'Bereit, das Tippen sein zu lassen?',
