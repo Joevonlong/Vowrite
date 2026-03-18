@@ -1069,6 +1069,11 @@ struct PipelineConfigurationEditor: View {
     let isSpeechToText: Bool
     @Binding var configuration: APIEndpointConfiguration
 
+    /// Controls whether the custom model text field is in editing mode
+    @State private var isEditingCustomModel = false
+    /// Draft text while editing custom model
+    @State private var customModelDraft = ""
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -1103,15 +1108,83 @@ struct PipelineConfigurationEditor: View {
                     Text("Custom…").tag(customModelTag)
                 }
 
-                // Only show text field when "Custom…" is selected
+                // Custom model: three states
                 if isCustomModel {
-                    TextField("Enter model ID (e.g. gpt-4o-mini)", text: modelBinding)
-                        .textFieldStyle(.roundedBorder)
+                    if isEditingCustomModel {
+                        // Editing: show TextField + Confirm button
+                        HStack(spacing: 8) {
+                            TextField("Enter model ID (e.g. gpt-4o-mini)", text: $customModelDraft)
+                                .textFieldStyle(.roundedBorder)
+                                .onSubmit { confirmCustomModel() }
+
+                            Button("Confirm") { confirmCustomModel() }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                                .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                    } else {
+                        // Locked: show model name as read-only label + Edit button
+                        HStack(spacing: 8) {
+                            Text(configuration.model)
+                                .font(.body.monospaced())
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.secondary.opacity(0.1))
+                                .cornerRadius(6)
+
+                            Button("Edit") {
+                                customModelDraft = configuration.model
+                                isEditingCustomModel = true
+                            }
+                            .buttonStyle(.borderless)
+                            .font(.caption)
+                        }
+                    }
                 }
             } else {
-                // No presets for this provider — always show editable text field
-                TextField("Model ID", text: modelBinding)
-                    .textFieldStyle(.roundedBorder)
+                // No presets for this provider (Custom/OpenRouter) — inline edit with lock
+                if isEditingCustomModel {
+                    HStack(spacing: 8) {
+                        TextField("Model ID", text: $customModelDraft)
+                            .textFieldStyle(.roundedBorder)
+                            .onSubmit { confirmCustomModel() }
+
+                        Button("Confirm") { confirmCustomModel() }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                } else if configuration.model.isEmpty {
+                    // No model set yet — auto-open editor
+                    HStack(spacing: 8) {
+                        TextField("Model ID", text: $customModelDraft)
+                            .textFieldStyle(.roundedBorder)
+                            .onSubmit { confirmCustomModel() }
+
+                        Button("Confirm") { confirmCustomModel() }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                    .onAppear { isEditingCustomModel = true }
+                } else {
+                    // Locked display
+                    HStack(spacing: 8) {
+                        Text(configuration.model)
+                            .font(.body.monospaced())
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.secondary.opacity(0.1))
+                            .cornerRadius(6)
+
+                        Button("Edit") {
+                            customModelDraft = configuration.model
+                            isEditingCustomModel = true
+                        }
+                        .buttonStyle(.borderless)
+                        .font(.caption)
+                    }
+                }
             }
 
             if configuration.provider == .custom || configuration.provider == .ollama {
@@ -1144,15 +1217,25 @@ struct PipelineConfigurationEditor: View {
         }
     }
 
+    // MARK: - Private
+
     private let customModelTag = "__custom_model__"
 
     private var modelSuggestions: [String] {
         isSpeechToText ? configuration.provider.presetSTTModels : configuration.provider.presetPolishModels
     }
 
-    /// True when the current model is not in the preset list (user typed a custom value)
+    /// True when the current model is not in the preset list
     private var isCustomModel: Bool {
         !modelSuggestions.isEmpty && !modelSuggestions.contains(configuration.model)
+    }
+
+    /// Confirm the custom model draft and lock the field
+    private func confirmCustomModel() {
+        let trimmed = customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        configuration.model = trimmed
+        isEditingCustomModel = false
     }
 
     private var providerBinding: Binding<APIProvider> {
@@ -1162,14 +1245,10 @@ struct PipelineConfigurationEditor: View {
                 configuration.provider = newProvider
                 configuration.baseURL = newProvider.defaultBaseURL
                 configuration.model = isSpeechToText ? newProvider.defaultSTTModel : newProvider.defaultPolishModel
+                // Reset custom editing state when provider changes
+                isEditingCustomModel = false
+                customModelDraft = ""
             }
-        )
-    }
-
-    private var modelBinding: Binding<String> {
-        Binding(
-            get: { configuration.model },
-            set: { configuration.model = $0 }
         )
     }
 
@@ -1187,10 +1266,13 @@ struct PipelineConfigurationEditor: View {
             },
             set: { selection in
                 if selection == customModelTag {
-                    // Switch to custom mode — clear model so user types fresh
+                    // Enter custom editing mode
+                    customModelDraft = ""
+                    isEditingCustomModel = true
                     configuration.model = ""
                 } else {
                     configuration.model = selection
+                    isEditingCustomModel = false
                 }
             }
         )
