@@ -2,6 +2,30 @@ import SwiftUI
 import Carbon.HIToolbox
 import ServiceManagement
 
+// MARK: - Appearance Mode
+
+enum AppearanceMode: String, CaseIterable {
+    case system = "System"
+    case light = "Light"
+    case dark = "Dark"
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .system: return "laptopcomputer"
+        case .light: return "sun.max.fill"
+        case .dark: return "moon.fill"
+        }
+    }
+}
+
 // MARK: - Sidebar Navigation
 
 enum SidebarItem: String, CaseIterable, Identifiable {
@@ -31,6 +55,11 @@ enum SidebarItem: String, CaseIterable, Identifiable {
 struct MainWindowView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedItem: SidebarItem = .home
+    @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
+
+    private var currentAppearance: AppearanceMode {
+        AppearanceMode(rawValue: appearanceMode) ?? .system
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -39,6 +68,7 @@ struct MainWindowView: View {
             detailView
         }
         .frame(minWidth: 780, minHeight: 520)
+        .preferredColorScheme(currentAppearance.colorScheme)
     }
 
     // MARK: Sidebar
@@ -387,18 +417,25 @@ struct SettingsPageView: View {
     @State private var keysSaved = false
     @State private var sttTestState: EndpointTestState = .idle
     @State private var polishTestState: EndpointTestState = .idle
+    @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
 
     private static let customPresetID = "__custom_preset__"
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 32) {
-                Text("Settings")
-                    .font(.system(size: 24, weight: .bold))
-
-                Text(configurationSummaryLine)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 28) {
+                // Header with appearance toggle
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Settings")
+                            .font(.system(size: 24, weight: .bold))
+                        Text(configurationSummaryLine)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    AppearancePicker(selection: $appearanceMode)
+                }
 
                 SettingsSection(icon: "square.stack.3d.up", title: "Presets") {
                     presetsContent
@@ -481,19 +518,19 @@ struct SettingsPageView: View {
     }
 
     private var presetsContent: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             SettingsRow(
                 title: "Active Preset",
-                description: currentPresetDescription
+                description: currentPresetDescription,
+                layout: .vertical
             ) {
-                VStack(alignment: .trailing, spacing: 6) {
+                HStack(spacing: 10) {
                     Picker("Preset", selection: $selectedPresetID) {
                         Text("Custom").tag(Self.customPresetID)
                         ForEach(APIPresetStore.allPresets) { preset in
                             Text(presetPickerLabel(for: preset)).tag(preset.id)
                         }
                     }
-                    .frame(width: 280)
                     .labelsHidden()
                     .onChange(of: selectedPresetID) { _, newValue in
                         guard newValue != Self.customPresetID,
@@ -515,15 +552,19 @@ struct SettingsPageView: View {
                 }
             }
 
+            Divider()
+
             SettingsRow(
-                title: "Actions",
-                description: "Save this configuration as a reusable preset, validate both endpoints, or apply the current split setup."
+                title: "Save & Test",
+                description: "",
+                layout: .vertical
             ) {
-                VStack(alignment: .trailing, spacing: 8) {
+                VStack(alignment: .leading, spacing: 10) {
+                    // Save as preset row
                     HStack(spacing: 8) {
                         TextField("Preset name", text: $newPresetName)
                             .textFieldStyle(.roundedBorder)
-                            .frame(width: 220)
+                            .frame(maxWidth: 240)
 
                         Button("Save as Preset") {
                             let preset = APIPresetStore.saveUserPreset(name: newPresetName, configuration: workingConfig)
@@ -539,6 +580,7 @@ struct SettingsPageView: View {
                         .disabled(selectedUserPresetID == nil)
                     }
 
+                    // Test & apply row
                     HStack(spacing: 8) {
                         Button {
                             testEndpoint(.stt)
@@ -570,6 +612,8 @@ struct SettingsPageView: View {
 
                         EndpointTestBadge(state: polishTestState)
 
+                        Spacer()
+
                         if configSaved {
                             Label("Saved", systemImage: "checkmark.circle.fill")
                                 .foregroundColor(.green)
@@ -588,10 +632,13 @@ struct SettingsPageView: View {
 
     private var apiKeysContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SettingsRow(
-                title: "Storage",
-                description: "Keys are stored in macOS Keychain once per provider. The STT and Polish sections only reference them."
-            ) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Storage").font(.body).fontWeight(.semibold)
+                    Text("Keys are stored in macOS Keychain once per provider.")
+                        .font(.caption).foregroundColor(.secondary)
+                }
+                Spacer()
                 if keysSaved {
                     Label("Keys saved", systemImage: "checkmark.circle.fill")
                         .foregroundColor(.green)
@@ -599,9 +646,10 @@ struct SettingsPageView: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(KeyVault.managedProviders.enumerated()), id: \.element.id) { index, provider in
                     providerKeyRow(for: provider)
+                        .padding(.vertical, 8)
 
                     if index < KeyVault.managedProviders.count - 1 {
                         Divider()
@@ -609,10 +657,8 @@ struct SettingsPageView: View {
                 }
             }
 
-            SettingsRow(
-                title: "Save Pending Keys",
-                description: "Commit any newly entered provider keys to Keychain."
-            ) {
+            HStack {
+                Spacer()
                 Button("Save Keys") {
                     saveKeys()
                 }
@@ -730,52 +776,63 @@ struct SettingsPageView: View {
         let isConfigured = KeyVault.hasKey(for: provider)
         let isExpanded = isKeyEditorExpanded(for: provider)
 
-        return SettingsRow(
-            title: provider.rawValue,
-            description: providerKeyDescription(for: provider)
-        ) {
-            VStack(alignment: .trailing, spacing: 8) {
-                HStack(spacing: 8) {
-                    ProviderKeyStatusBadge(
-                        provider: provider,
-                        isRequired: providerIsInUse(provider)
-                    )
+        return HStack(alignment: .top, spacing: 12) {
+            // Left: provider name + status
+            HStack(spacing: 8) {
+                Text(provider.rawValue)
+                    .font(.body).fontWeight(.medium)
 
-                    if let maskedKey = KeyVault.maskedKey(for: provider), isConfigured {
-                        Text(maskedKey)
-                            .font(.caption.monospaced())
-                            .foregroundColor(.secondary)
-                    }
+                ProviderKeyStatusBadge(
+                    provider: provider,
+                    isRequired: providerIsInUse(provider)
+                )
+            }
+            .frame(minWidth: 140, alignment: .leading)
 
-                    if isConfigured {
-                        Button("Edit") {
-                            keyEditorExpanded[provider] = true
-                        }
-                        .buttonStyle(.borderless)
-
-                        Button("Clear") {
-                            _ = KeyVault.deleteKey(for: provider)
-                            keyInputs[provider] = ""
-                            keyEditorExpanded[provider] = false
-                        }
-                        .buttonStyle(.borderless)
-                    } else {
-                        Button("Add Key") {
-                            keyEditorExpanded[provider] = true
-                        }
-                        .buttonStyle(.borderless)
-                    }
+            // Middle: masked key or input
+            VStack(alignment: .leading, spacing: 6) {
+                if isConfigured, let maskedKey = KeyVault.maskedKey(for: provider), !isExpanded {
+                    Text(maskedKey)
+                        .font(.caption.monospaced())
+                        .foregroundColor(.secondary)
                 }
 
                 if isExpanded {
                     SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 280)
+                        .frame(maxWidth: 320)
                 }
 
-                if !provider.keyURL.isEmpty {
+                if !provider.keyURL.isEmpty && !isConfigured {
                     Link("Get \(provider.rawValue) key →", destination: URL(string: provider.keyURL)!)
                         .font(.caption)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Right: actions
+            HStack(spacing: 6) {
+                if isConfigured {
+                    Button("Edit") {
+                        keyEditorExpanded[provider] = true
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+
+                    Button("Clear") {
+                        _ = KeyVault.deleteKey(for: provider)
+                        keyInputs[provider] = ""
+                        keyEditorExpanded[provider] = false
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+                    .foregroundColor(.red.opacity(0.8))
+                } else if !isExpanded {
+                    Button("Add") {
+                        keyEditorExpanded[provider] = true
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
                 }
             }
         }
@@ -1107,10 +1164,13 @@ struct PipelineConfigurationEditor: View {
                 }
             }
 
+            Divider()
+
             if !modelSuggestions.isEmpty {
                 SettingsRow(
                     title: "Model",
-                    description: modelRowDescription
+                    description: modelRowDescription,
+                    layout: .vertical
                 ) {
                     Picker("Model", selection: quickModelBinding) {
                         ForEach(modelSuggestions, id: \.self) { model in
@@ -1123,41 +1183,43 @@ struct PipelineConfigurationEditor: View {
                         Divider()
                         Text("Custom…").tag(customModelTag)
                     }
-                    .frame(width: 320)
                     .labelsHidden()
                 }
 
                 if isCustomModel {
                     SettingsRow(
                         title: "Custom Model",
-                        description: "Use any provider-specific model identifier when the preset list is not enough."
+                        description: "Use any provider-specific model identifier when the preset list is not enough.",
+                        layout: .vertical
                     ) {
-                        customModelEditor(width: 320)
+                        customModelEditor(width: .infinity)
                     }
                 }
             } else {
                 SettingsRow(
                     title: "Custom Model",
-                    description: "This provider uses a free-form model identifier."
+                    description: "This provider uses a free-form model identifier.",
+                    layout: .vertical
                 ) {
-                    customModelEditor(width: 320)
+                    customModelEditor(width: .infinity)
                 }
             }
 
+            Divider()
+
             SettingsRow(
                 title: "Base URL",
-                description: baseURLDescription
+                description: baseURLDescription,
+                layout: .vertical
             ) {
                 if configuration.provider == .custom || configuration.provider == .ollama {
                     TextField("Base URL", text: baseURLBinding)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 320)
                 } else {
                     Text(configuration.resolvedBaseURL)
-                        .font(.caption)
+                        .font(.caption.monospaced())
                         .foregroundColor(.secondary)
                         .lineLimit(1)
-                        .frame(width: 320, alignment: .trailing)
                         .textSelection(.enabled)
                 }
             }
@@ -1265,7 +1327,6 @@ struct PipelineConfigurationEditor: View {
             HStack(spacing: 8) {
                 TextField(modelFieldPlaceholder, text: $customModelDraft)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: width)
                     .onSubmit { confirmCustomModel() }
 
                 Button("Confirm") { confirmCustomModel() }
@@ -1283,9 +1344,9 @@ struct PipelineConfigurationEditor: View {
                 Text(configuration.model)
                     .font(.body.monospaced())
                     .lineLimit(1)
-                    .frame(width: width, alignment: .leading)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.secondary.opacity(0.1))
                     .cornerRadius(6)
 
@@ -1440,36 +1501,112 @@ struct SettingsSection<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
-                Image(systemName: icon).foregroundColor(.secondary)
-                Text(title).font(.headline)
+                Image(systemName: icon)
+                    .foregroundColor(.accentColor)
+                    .font(.body.weight(.semibold))
+                Text(title)
+                    .font(.headline)
             }
-            Divider()
-            content
+            .padding(.horizontal, 4)
+
+            VStack(alignment: .leading, spacing: 0) {
+                content
+                    .padding(16)
+            }
+            .background(Color(.controlBackgroundColor))
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+            )
         }
     }
 }
 
 // MARK: - Settings Row
 
+// MARK: - Appearance Picker
+
+struct AppearancePicker: View {
+    @Binding var selection: String
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        selection = mode.rawValue
+                    }
+                } label: {
+                    Image(systemName: mode.icon)
+                        .font(.caption)
+                        .frame(width: 28, height: 24)
+                        .background(
+                            selection == mode.rawValue
+                                ? Color.accentColor.opacity(0.15)
+                                : Color.clear
+                        )
+                        .foregroundColor(
+                            selection == mode.rawValue
+                                ? .accentColor
+                                : .secondary
+                        )
+                        .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                .help(mode.rawValue)
+            }
+        }
+        .padding(3)
+        .background(Color.secondary.opacity(0.08))
+        .cornerRadius(8)
+    }
+}
+
+/// Layout mode for settings rows.
+/// - `.horizontal`: label left, control right (default for toggles, short pickers)
+/// - `.vertical`: label top, control below full-width (for long content like model selectors, presets)
+enum SettingsRowLayout {
+    case horizontal
+    case vertical
+}
+
 struct SettingsRow<Trailing: View>: View {
     let title: String
     let description: String
+    var layout: SettingsRowLayout = .horizontal
     @ViewBuilder let trailing: Trailing
 
     var body: some View {
-        HStack(alignment: .top, spacing: 24) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.body).fontWeight(.semibold)
-                Text(description).font(.caption).foregroundColor(.secondary)
+        Group {
+            switch layout {
+            case .horizontal:
+                HStack(alignment: .top, spacing: 24) {
+                    labelView
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    trailing
+                        .frame(maxWidth: 360, alignment: .trailing)
+                }
+            case .vertical:
+                VStack(alignment: .leading, spacing: 10) {
+                    labelView
+                    trailing
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            trailing
-                .frame(maxWidth: 360, alignment: .trailing)
         }
         .padding(.vertical, 4)
+    }
+
+    private var labelView: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.body).fontWeight(.semibold)
+            if !description.isEmpty {
+                Text(description).font(.caption).foregroundColor(.secondary)
+            }
+        }
     }
 }
 
