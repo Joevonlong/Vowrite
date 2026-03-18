@@ -482,32 +482,30 @@ struct SettingsPageView: View {
 
     private var presetsContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SettingsRow(title: "Preset", description: "Apply a built-in or saved split-provider configuration.") {
-                HStack(alignment: .center, spacing: 12) {
-                    Picker("", selection: $selectedPresetID) {
-                        Text("Custom").tag(Self.customPresetID)
-                        ForEach(APIPresetStore.allPresets) { preset in
-                            Text(presetPickerLabel(for: preset)).tag(preset.id)
-                        }
+            VStack(alignment: .leading, spacing: 8) {
+                Picker("Preset", selection: $selectedPresetID) {
+                    Text("Custom").tag(Self.customPresetID)
+                    ForEach(APIPresetStore.allPresets) { preset in
+                        Text(presetPickerLabel(for: preset)).tag(preset.id)
                     }
-                    .frame(width: 320)
-                    .onChange(of: selectedPresetID) { _, newValue in
-                        guard newValue != Self.customPresetID,
-                              let preset = APIPresetStore.preset(for: newValue) else {
-                            return
-                        }
-                        workingConfig = preset.configuration
-                    }
-
-                    Button("Reset to Recommended") {
-                        applyRecommendedPreset()
-                    }
-                    .buttonStyle(.link)
-                    .disabled(
-                        selectedPresetID == BuiltInAPIPreset.recommended.id &&
-                        !isSelectedPresetModified
-                    )
                 }
+                .onChange(of: selectedPresetID) { _, newValue in
+                    guard newValue != Self.customPresetID,
+                          let preset = APIPresetStore.preset(for: newValue) else {
+                        return
+                    }
+                    workingConfig = preset.configuration
+                }
+
+                Button("Reset to Recommended") {
+                    applyRecommendedPreset()
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+                .disabled(
+                    selectedPresetID == BuiltInAPIPreset.recommended.id &&
+                    !isSelectedPresetModified
+                )
             }
 
             if let preset = APIPresetStore.preset(for: selectedPresetID) {
@@ -520,9 +518,11 @@ struct SettingsPageView: View {
                     .foregroundColor(.secondary)
             }
 
-            HStack(spacing: 12) {
+            // Row 1: Save as preset
+            HStack(spacing: 8) {
                 TextField("Preset name", text: $newPresetName)
                     .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 200)
                 Button("Save as Preset") {
                     let preset = APIPresetStore.saveUserPreset(name: newPresetName, configuration: workingConfig)
                     selectedPresetID = APIPresetStore.userPresetID(for: preset.id)
@@ -534,40 +534,41 @@ struct SettingsPageView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(selectedUserPresetID == nil)
+            }
+
+            // Row 2: Test + Save
+            HStack(spacing: 8) {
+                Button {
+                    testEndpoint(.stt)
+                } label: {
+                    HStack(spacing: 4) {
+                        if sttTestState.isTesting {
+                            ProgressView().controlSize(.small)
+                        }
+                        Text("Test STT")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(!canTest(.stt) || sttTestState.isTesting)
+
+                EndpointTestBadge(state: sttTestState)
+
+                Button {
+                    testEndpoint(.polish)
+                } label: {
+                    HStack(spacing: 4) {
+                        if polishTestState.isTesting {
+                            ProgressView().controlSize(.small)
+                        }
+                        Text("Test Polish")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(!canTest(.polish) || polishTestState.isTesting)
+
+                EndpointTestBadge(state: polishTestState)
 
                 Spacer()
-
-                HStack(spacing: 8) {
-                    Button {
-                        testEndpoint(.stt)
-                    } label: {
-                        HStack(spacing: 4) {
-                            if sttTestState.isTesting {
-                                ProgressView().controlSize(.small)
-                            }
-                            Text("Test STT")
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(!canTest(.stt) || sttTestState.isTesting)
-
-                    EndpointTestBadge(state: sttTestState)
-
-                    Button {
-                        testEndpoint(.polish)
-                    } label: {
-                        HStack(spacing: 4) {
-                            if polishTestState.isTesting {
-                                ProgressView().controlSize(.small)
-                            }
-                            Text("Test Polish")
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(!canTest(.polish) || polishTestState.isTesting)
-
-                    EndpointTestBadge(state: polishTestState)
-                }
 
                 if configSaved {
                     Label("Saved", systemImage: "checkmark.circle.fill")
