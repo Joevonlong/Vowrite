@@ -7,6 +7,7 @@ struct OnboardingView: View {
     @State private var selectedPresetID = BuiltInAPIPreset.recommended.id
     @State private var onboardingConfig = BuiltInAPIPreset.recommended.configuration
     @State private var keyInputs: [APIProvider: String] = [:]
+    @State private var keyEditorExpanded: [APIProvider: Bool] = [:]
     @State private var testResult: (success: Bool, message: String)?
     @State private var testing = false
     @State private var hasMicrophone = false
@@ -56,6 +57,7 @@ struct OnboardingView: View {
             hasMicrophone = PermissionManager.hasMicrophoneAccess()
             hasAccessibility = PermissionManager.hasAccessibilityAccess()
             keyInputs = Dictionary(uniqueKeysWithValues: KeyVault.managedProviders.map { ($0, "") })
+            keyEditorExpanded = Dictionary(uniqueKeysWithValues: KeyVault.managedProviders.map { ($0, false) })
         }
     }
 
@@ -294,7 +296,7 @@ struct OnboardingView: View {
                             Image(systemName: selectedPresetID == preset.id ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(selectedPresetID == preset.id ? .accentColor : .secondary)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(preset.name)
+                                Text(presetDisplayName(for: preset))
                                     .foregroundColor(.primary)
                                 Text(preset.summary)
                                     .font(.caption)
@@ -332,20 +334,47 @@ struct OnboardingView: View {
                     .foregroundColor(.secondary)
             } else {
                 ForEach(requiredProviders) { provider in
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let hasSavedKey = KeyVault.hasKey(for: provider)
+
                         HStack {
                             Text(provider.rawValue)
                                 .font(.body.weight(.medium))
                             Spacer()
-                            if KeyVault.hasKey(for: provider) {
-                                Label("Saved", systemImage: "checkmark.circle.fill")
+
+                            if hasSavedKey {
+                                Text("✅ Configured")
                                     .font(.caption)
                                     .foregroundColor(.green)
+
+                                if let maskedKey = KeyVault.maskedKey(for: provider) {
+                                    Text(maskedKey)
+                                        .font(.caption.monospaced())
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Button("Edit") {
+                                    keyEditorExpanded[provider] = true
+                                }
+                                .buttonStyle(.borderless)
+
+                                Button("Clear") {
+                                    _ = KeyVault.deleteKey(for: provider)
+                                    keyInputs[provider] = ""
+                                    keyEditorExpanded[provider] = false
+                                }
+                                .buttonStyle(.borderless)
+                            } else {
+                                Text("⚠️ Required")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
                             }
                         }
 
-                        SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
-                            .textFieldStyle(.roundedBorder)
+                        if isKeyEditorExpanded(for: provider) {
+                            SecureField(provider.keyPlaceholder, text: keyBinding(for: provider))
+                                .textFieldStyle(.roundedBorder)
+                        }
 
                         if !provider.keyURL.isEmpty {
                             Link("Get your \(provider.rawValue) API key →", destination: URL(string: provider.keyURL)!)
@@ -388,6 +417,7 @@ struct OnboardingView: View {
             if !key.isEmpty {
                 _ = KeyVault.saveKey(key, for: provider)
                 keyInputs[provider] = ""
+                keyEditorExpanded[provider] = false
             }
         }
         AuthManager.shared.setAuthMode(.apiKey)
@@ -433,6 +463,14 @@ struct OnboardingView: View {
             get: { keyInputs[provider] ?? "" },
             set: { keyInputs[provider] = $0 }
         )
+    }
+
+    private func presetDisplayName(for preset: APIPresetOption) -> String {
+        preset.id == BuiltInAPIPreset.recommended.id ? "⭐ \(preset.name)" : preset.name
+    }
+
+    private func isKeyEditorExpanded(for provider: APIProvider) -> Bool {
+        !KeyVault.hasKey(for: provider) || (keyEditorExpanded[provider] ?? false)
     }
 
     // MARK: - Step 4: Test Recording
