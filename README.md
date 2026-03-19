@@ -99,26 +99,41 @@ Voice → Whisper STT → GPT Polish → Cursor Injection
 ## 📁 Project Structure
 
 ```
-VowriteApp/
-├── App/                    # App lifecycle & state
-├── Core/
-│   ├── Audio/              # Microphone recording (AVAudioEngine)
-│   ├── STT/                # Speech-to-text (Whisper API)
-│   ├── AI/                 # Text polishing (GPT)
-│   ├── TextInjection/      # Cursor text injection
-│   ├── Hotkey/             # Global hotkey management
-│   └── Keychain/           # Secure API key storage
-├── Views/                  # SwiftUI views
-├── Models/                 # SwiftData models
-└── Resources/              # Info.plist, entitlements, icons
+Vowrite/
+├── VowriteKit/                 # Shared core library (macOS + iOS)
+│   └── Sources/VowriteKit/
+│       ├── Audio/              # Microphone recording (AVAudioEngine)
+│       ├── Services/           # STT (Whisper) + AI Polish + Connection Tester
+│       ├── Config/             # API config, presets, key vault, modes, prompts
+│       ├── Engine/             # DictationEngine — platform-agnostic core
+│       ├── Models/             # SwiftData models (DictationRecord, Mode, etc.)
+│       └── Protocols/          # Platform abstractions (TextOutput, Permissions, etc.)
+├── VowriteMac/                 # macOS app (menu bar + settings window)
+│   └── Sources/
+│       ├── App/                # App lifecycle, state, window management
+│       ├── Platform/           # macOS-specific: hotkeys, text injection, overlay, Sparkle
+│       └── Views/              # SwiftUI views (settings, history, onboarding, etc.)
+├── VowriteIOS/                 # iOS app (tab-based UI)
+│   └── Sources/
+│       ├── App/                # App lifecycle, state
+│       ├── Platform/           # iOS-specific: clipboard output, haptics, permissions
+│       └── Views/              # SwiftUI views (home, recording, settings, etc.)
+├── VowriteApp/                 # Legacy single-platform app (pre-refactor, retained for reference)
+└── docs/                       # Website (GitHub Pages → vowrite.com)
 ```
 
 ## 📋 Requirements
 
+### macOS
 - macOS 14.0 (Sonoma) or later
 - API key from a supported provider
 - Microphone permission
 - Accessibility permission *(recommended, not required)*
+
+### iOS
+- iOS 17.0 or later
+- API key from a supported provider
+- Microphone permission
 
 ## 🗺️ Roadmap
 
