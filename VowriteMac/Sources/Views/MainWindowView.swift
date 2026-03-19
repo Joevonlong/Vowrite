@@ -1797,9 +1797,16 @@ struct AboutPageView: View {
                 Button("Check for Updates...") {
                     (NSApp.delegate as? AppDelegate)?.checkForUpdates()
                 }
-                Text("Automatic updates via Sparkle (coming soon)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Toggle("Automatically check for updates", isOn: Binding(
+                    get: {
+                        (NSApp.delegate as? AppDelegate)?.updateManager.updaterController.updater.automaticallyChecksForUpdates ?? false
+                    },
+                    set: { newValue in
+                        (NSApp.delegate as? AppDelegate)?.updateManager.updaterController.updater.automaticallyChecksForUpdates = newValue
+                    }
+                ))
+                .toggleStyle(.checkbox)
+                .fixedSize()
             }
             Divider().frame(width: 200)
             HStack(spacing: 24) {

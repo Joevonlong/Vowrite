@@ -5,99 +5,133 @@
 	};
 	objectVersion = 56;
 	objects = {
+
+/* Begin PBXBuildFile section */
+		A1B00001 /* VowriteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00001; };
+		A1B00002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00002; };
+		A1B00003 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00003; };
+		A1B00004 /* RecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00004; };
+		A1B00005 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00005; };
+		A1B00006 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00006; };
+		A1B00007 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00007; };
+		A1B00008 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00008; };
+		A1B00009 /* iOSClipboardOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00009; };
+		A1B0000A /* iOSPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000A; };
+		A1B0000B /* iOSFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000B; };
+		A1B0000C /* iOSOverlayProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000C; };
+		A1B0000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1F0000D; };
+		A1B0000E /* VowriteKit in Frameworks */ = {isa = PBXBuildFile; productRef = A1D00001; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		3D123456A1000000000ABC00 /* VowriteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/App/VowriteApp.swift"; sourceTree = "<group>"; };
-		3D123456B1000000000ABC00 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/App/AppState.swift"; sourceTree = "<group>"; };
-		3D123456C1000000000ABC00 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/HomeView.swift"; sourceTree = "<group>"; };
-		3D123456D1000000000ABC00 /* RecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/RecordingView.swift"; sourceTree = "<group>"; };
-		3D123456E1000000000ABC00 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/ResultView.swift"; sourceTree = "<group>"; };
-		3D123456F1000000000ABC00 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/SettingsView.swift"; sourceTree = "<group>"; };
-		3D123456G1000000000ABC00 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/OnboardingView.swift"; sourceTree = "<group>"; };
-		3D123456H1000000000ABC00 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/HistoryView.swift"; sourceTree = "<group>"; };
-		3D123456I1000000000ABC00 /* iOSClipboardOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Platform/iOSClipboardOutput.swift"; sourceTree = "<group>"; };
-		3D123456J1000000000ABC00 /* iOSPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Platform/iOSPermissionManager.swift"; sourceTree = "<group>"; };
-		3D123456K1000000000ABC00 /* iOSFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Platform/iOSFeedback.swift"; sourceTree = "<group>"; };
-		3D123456L1000000000ABC00 /* iOSOverlayProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Platform/iOSOverlayProvider.swift"; sourceTree = "<group>"; };
-		3D000001A1000000000ABC00 /* VowriteIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "VowriteIOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3D000002A1000000000ABC00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "VowriteIOS/Info.plist"; sourceTree = "<group>"; };
-		3D000003A1000000000ABC00 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "VowriteIOS/Assets.xcassets"; sourceTree = "<group>"; };
+		A1F00001 /* VowriteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VowriteApp.swift; sourceTree = "<group>"; };
+		A1F00002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		A1F00003 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A1F00004 /* RecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingView.swift; sourceTree = "<group>"; };
+		A1F00005 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		A1F00006 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A1F00007 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		A1F00008 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		A1F00009 /* iOSClipboardOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSClipboardOutput.swift; sourceTree = "<group>"; };
+		A1F0000A /* iOSPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSPermissionManager.swift; sourceTree = "<group>"; };
+		A1F0000B /* iOSFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSFeedback.swift; sourceTree = "<group>"; };
+		A1F0000C /* iOSOverlayProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSOverlayProvider.swift; sourceTree = "<group>"; };
+		A1F0000D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1F0000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1P00001 /* VowriteIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VowriteIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1PH0001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B0000E /* VowriteKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
-		3D000000A1000000000ABC00 = {
+		A1G00000 /* root */ = {
 			isa = PBXGroup;
 			children = (
-				3D000005A1000000000ABC00 /* Sources */,
-				3D000006A1000000000ABC00 /* VowriteIOS */,
-				3D000001A1000000000ABC00 /* Products */,
+				A1G00001 /* Sources */,
+				A1G00005 /* Resources */,
+				A1G00099 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		3D000001A1000000000ABC00 = {
+		A1G00099 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3D000001A1000000000ABC00 /* VowriteIOS.app */,
+				A1P00001 /* VowriteIOS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		3D000005A1000000000ABC00 = {
+		A1G00001 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				3D000009A1000000000ABC00 /* App */,
-				3D000010A1000000000ABC00 /* Views */,
-				3D000011A1000000000ABC00 /* Platform */,
+				A1G00002 /* App */,
+				A1G00003 /* Views */,
+				A1G00004 /* Platform */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		3D000006A1000000000ABC00 = {
+		A1G00002 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				3D000002A1000000000ABC00 /* Info.plist */,
-				3D000003A1000000000ABC00 /* Assets.xcassets */,
-			);
-			path = VowriteIOS;
-			sourceTree = "<group>";
-		};
-		3D000009A1000000000ABC00 = {
-			isa = PBXGroup;
-			children = (
-				3D123456A1000000000ABC00 /* VowriteApp.swift */,
-				3D123456B1000000000ABC00 /* AppState.swift */,
+				A1F00001 /* VowriteApp.swift */,
+				A1F00002 /* AppState.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
 		};
-		3D000010A1000000000ABC00 = {
+		A1G00003 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				3D123456C1000000000ABC00 /* HomeView.swift */,
-				3D123456D1000000000ABC00 /* RecordingView.swift */,
-				3D123456E1000000000ABC00 /* ResultView.swift */,
-				3D123456F1000000000ABC00 /* SettingsView.swift */,
-				3D123456G1000000000ABC00 /* OnboardingView.swift */,
-				3D123456H1000000000ABC00 /* HistoryView.swift */,
+				A1F00003 /* HomeView.swift */,
+				A1F00004 /* RecordingView.swift */,
+				A1F00005 /* ResultView.swift */,
+				A1F00006 /* SettingsView.swift */,
+				A1F00007 /* OnboardingView.swift */,
+				A1F00008 /* HistoryView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
 		};
-		3D000011A1000000000ABC00 = {
+		A1G00004 /* Platform */ = {
 			isa = PBXGroup;
 			children = (
-				3D123456I1000000000ABC00 /* iOSClipboardOutput.swift */,
-				3D123456J1000000000ABC00 /* iOSPermissionManager.swift */,
-				3D123456K1000000000ABC00 /* iOSFeedback.swift */,
-				3D123456L1000000000ABC00 /* iOSOverlayProvider.swift */,
+				A1F00009 /* iOSClipboardOutput.swift */,
+				A1F0000A /* iOSPermissionManager.swift */,
+				A1F0000B /* iOSFeedback.swift */,
+				A1F0000C /* iOSOverlayProvider.swift */,
 			);
 			path = Platform;
 			sourceTree = "<group>";
 		};
+		A1G00005 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A1F0000D /* Assets.xcassets */,
+				A1F0000E /* Info.plist */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
 /* Begin PBXNativeTarget section */
-		3D000002A1000000000ABC00 /* VowriteIOS */ = {
+		A1T00001 /* VowriteIOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3D000008A1000000000ABC00;
+			buildConfigurationList = A1CL0002 /* Build configuration list for PBXNativeTarget "VowriteIOS" */;
 			buildPhases = (
+				A1PH0002 /* Sources */,
+				A1PH0001 /* Frameworks */,
+				A1PH0003 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -105,26 +139,27 @@
 			);
 			name = VowriteIOS;
 			packageProductDependencies = (
+				A1D00001 /* VowriteKit */,
 			);
-			productInstantiationName = "VowriteIOS App";
 			productName = VowriteIOS;
-			productReference = 3D000001A1000000000ABC00;
+			productReference = A1P00001 /* VowriteIOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
+
 /* Begin PBXProject section */
-		3D000000A1000000000ABC00 = {
+		A1PR0001 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
-					3D000002A1000000000ABC00 = {
-						CreatedOnToolsVersion = 15.0;
+					A1T00001 = {
+						CreatedOnToolsVersion = 16.0;
 					};
 				};
 			};
-			buildConfigurationList = 3D000003A1000000000ABC00;
+			buildConfigurationList = A1CL0001 /* Build configuration list for PBXProject "VowriteIOS" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -132,23 +167,59 @@
 				en,
 				Base,
 			);
-			mainGroup = 3D000000A1000000000ABC00;
-			productRefGroup = 3D000001A1000000000ABC00;
+			mainGroup = A1G00000 /* root */;
+			packageReferences = (
+				A1PKG001 /* VowriteKit */,
+			);
+			productRefGroup = A1G00099 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3D000002A1000000000ABC00 /* VowriteIOS */,
+				A1T00001 /* VowriteIOS */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A1PH0003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B0000D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A1PH0002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B00001 /* VowriteApp.swift in Sources */,
+				A1B00002 /* AppState.swift in Sources */,
+				A1B00003 /* HomeView.swift in Sources */,
+				A1B00004 /* RecordingView.swift in Sources */,
+				A1B00005 /* ResultView.swift in Sources */,
+				A1B00006 /* SettingsView.swift in Sources */,
+				A1B00007 /* OnboardingView.swift in Sources */,
+				A1B00008 /* HistoryView.swift in Sources */,
+				A1B00009 /* iOSClipboardOutput.swift in Sources */,
+				A1B0000A /* iOSPermissionManager.swift in Sources */,
+				A1B0000B /* iOSFeedback.swift in Sources */,
+				A1B0000C /* iOSOverlayProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
 /* Begin XCBuildConfiguration section */
-		3D000004A1000000000ABC00 /* Debug */ = {
+		A1BC0001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_DIALECT = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -157,7 +228,6 @@
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DEPRECATED_OBJC_METHODS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -172,16 +242,14 @@
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_DIALECT = gnu11;
+				GCC_C_LANGUAGE_DIALECT = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -196,26 +264,17 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				INFOPLIST_FILE = "VowriteIOS/Info.plist";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIMainStoryboardFile = "";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLe ft UIInterfaceOrientationLandscapeRight";
-				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SWIFT_VERSION = 5.10;
 			};
 			name = Debug;
 		};
-		3D000005A1000000000ABC00 /* Release */ = {
+		A1BC0002 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -224,37 +283,60 @@
 				CLANG_CXX_LANGUAGE_DIALECT = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
-				GCC_C_LANGUAGE_DIALECT = gnu11;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_DIALECT = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				INFOPLIST_FILE = "VowriteIOS/Info.plist";
-				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SWIFT_VERSION = 5.10;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
-		3D000008A1000000000ABC00 /* Debug */ = {
+		A1BC0003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = "VowriteIOS/Info.plist";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -263,18 +345,20 @@
 				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.9;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.10;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		3D000009A1000000000ABC00 /* Release */ = {
+		A1BC0004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = "VowriteIOS/Info.plist";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -283,32 +367,49 @@
 				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.9;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.10;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
+
 /* Begin XCConfigurationList section */
-		3D000003A1000000000ABC00 /* Build configuration list for PBXProject "VowriteIOS" */ = {
+		A1CL0001 /* Build configuration list for PBXProject "VowriteIOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				3D000004A1000000000ABC00 /* Debug */,
-				3D000005A1000000000ABC00 /* Release */,
+				A1BC0001 /* Debug */,
+				A1BC0002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
-		3D000008A1000000000ABC00 /* Build configuration list for PBXNativeTarget "VowriteIOS" */ = {
+		A1CL0002 /* Build configuration list for PBXNativeTarget "VowriteIOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				3D000008A1000000000ABC00 /* Debug */,
-				3D000009A1000000000ABC00 /* Release */,
+				A1BC0003 /* Debug */,
+				A1BC0004 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A1PKG001 /* VowriteKit */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../VowriteKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1D00001 /* VowriteKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VowriteKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 	};
-	rootObject = 3D000000A1000000000ABC00;
+	rootObject = A1PR0001 /* Project object */;
 }
