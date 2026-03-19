@@ -1,0 +1,314 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+/* Begin PBXFileReference section */
+		3D123456A1000000000ABC00 /* VowriteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/App/VowriteApp.swift"; sourceTree = "<group>"; };
+		3D123456B1000000000ABC00 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/App/AppState.swift"; sourceTree = "<group>"; };
+		3D123456C1000000000ABC00 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/HomeView.swift"; sourceTree = "<group>"; };
+		3D123456D1000000000ABC00 /* RecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/RecordingView.swift"; sourceTree = "<group>"; };
+		3D123456E1000000000ABC00 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/ResultView.swift"; sourceTree = "<group>"; };
+		3D123456F1000000000ABC00 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/SettingsView.swift"; sourceTree = "<group>"; };
+		3D123456G1000000000ABC00 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/OnboardingView.swift"; sourceTree = "<group>"; };
+		3D123456H1000000000ABC00 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Views/HistoryView.swift"; sourceTree = "<group>"; };
+		3D123456I1000000000ABC00 /* iOSClipboardOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Platform/iOSClipboardOutput.swift"; sourceTree = "<group>"; };
+		3D123456J1000000000ABC00 /* iOSPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Platform/iOSPermissionManager.swift"; sourceTree = "<group>"; };
+		3D123456K1000000000ABC00 /* iOSFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Platform/iOSFeedback.swift"; sourceTree = "<group>"; };
+		3D123456L1000000000ABC00 /* iOSOverlayProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/Platform/iOSOverlayProvider.swift"; sourceTree = "<group>"; };
+		3D000001A1000000000ABC00 /* VowriteIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "VowriteIOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D000002A1000000000ABC00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "VowriteIOS/Info.plist"; sourceTree = "<group>"; };
+		3D000003A1000000000ABC00 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "VowriteIOS/Assets.xcassets"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+/* Begin PBXGroup section */
+		3D000000A1000000000ABC00 = {
+			isa = PBXGroup;
+			children = (
+				3D000005A1000000000ABC00 /* Sources */,
+				3D000006A1000000000ABC00 /* VowriteIOS */,
+				3D000001A1000000000ABC00 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3D000001A1000000000ABC00 = {
+			isa = PBXGroup;
+			children = (
+				3D000001A1000000000ABC00 /* VowriteIOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3D000005A1000000000ABC00 = {
+			isa = PBXGroup;
+			children = (
+				3D000009A1000000000ABC00 /* App */,
+				3D000010A1000000000ABC00 /* Views */,
+				3D000011A1000000000ABC00 /* Platform */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		3D000006A1000000000ABC00 = {
+			isa = PBXGroup;
+			children = (
+				3D000002A1000000000ABC00 /* Info.plist */,
+				3D000003A1000000000ABC00 /* Assets.xcassets */,
+			);
+			path = VowriteIOS;
+			sourceTree = "<group>";
+		};
+		3D000009A1000000000ABC00 = {
+			isa = PBXGroup;
+			children = (
+				3D123456A1000000000ABC00 /* VowriteApp.swift */,
+				3D123456B1000000000ABC00 /* AppState.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		3D000010A1000000000ABC00 = {
+			isa = PBXGroup;
+			children = (
+				3D123456C1000000000ABC00 /* HomeView.swift */,
+				3D123456D1000000000ABC00 /* RecordingView.swift */,
+				3D123456E1000000000ABC00 /* ResultView.swift */,
+				3D123456F1000000000ABC00 /* SettingsView.swift */,
+				3D123456G1000000000ABC00 /* OnboardingView.swift */,
+				3D123456H1000000000ABC00 /* HistoryView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		3D000011A1000000000ABC00 = {
+			isa = PBXGroup;
+			children = (
+				3D123456I1000000000ABC00 /* iOSClipboardOutput.swift */,
+				3D123456J1000000000ABC00 /* iOSPermissionManager.swift */,
+				3D123456K1000000000ABC00 /* iOSFeedback.swift */,
+				3D123456L1000000000ABC00 /* iOSOverlayProvider.swift */,
+			);
+			path = Platform;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+/* Begin PBXNativeTarget section */
+		3D000002A1000000000ABC00 /* VowriteIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3D000008A1000000000ABC00;
+			buildPhases = (
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VowriteIOS;
+			packageProductDependencies = (
+			);
+			productInstantiationName = "VowriteIOS App";
+			productName = VowriteIOS;
+			productReference = 3D000001A1000000000ABC00;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+/* Begin PBXProject section */
+		3D000000A1000000000ABC00 = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					3D000002A1000000000ABC00 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 3D000003A1000000000ABC00;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3D000000A1000000000ABC00;
+			productRefGroup = 3D000001A1000000000ABC00;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3D000002A1000000000ABC00 /* VowriteIOS */,
+			);
+		};
+/* End PBXProject section */
+/* Begin XCBuildConfiguration section */
+		3D000004A1000000000ABC00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_DIALECT = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DEPRECATED_OBJC_METHODS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_DIALECT = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				INFOPLIST_FILE = "VowriteIOS/Info.plist";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLe ft UIInterfaceOrientationLandscapeRight";
+				MARKETING_VERSION = 0.2.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3D000005A1000000000ABC00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_DIALECT = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_DIALECT = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				INFOPLIST_FILE = "VowriteIOS/Info.plist";
+				MARKETING_VERSION = 0.2.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		3D000008A1000000000ABC00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = "VowriteIOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3D000009A1000000000ABC00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = "VowriteIOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+/* Begin XCConfigurationList section */
+		3D000003A1000000000ABC00 /* Build configuration list for PBXProject "VowriteIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D000004A1000000000ABC00 /* Debug */,
+				3D000005A1000000000ABC00 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3D000008A1000000000ABC00 /* Build configuration list for PBXNativeTarget "VowriteIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D000008A1000000000ABC00 /* Debug */,
+				3D000009A1000000000ABC00 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 3D000000A1000000000ABC00;
+}
