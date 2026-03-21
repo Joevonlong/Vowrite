@@ -25,11 +25,14 @@ final class AppState: ObservableObject {
     var totalDictations: Int { engine.totalDictations }
 
     init() {
-        APIConfigMigration.runIfNeeded()
-
         do {
             let schema = Schema([DictationRecord.self])
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            let config: ModelConfiguration
+            if let storeURL = VowriteStorage.swiftDataURL {
+                config = ModelConfiguration(schema: schema, url: storeURL, isStoredInMemoryOnly: false)
+            } else {
+                config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            }
             modelContainer = try ModelContainer(for: schema, configurations: [config])
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
@@ -68,4 +71,22 @@ final class AppState: ObservableObject {
     func startRecording() { engine.startRecording() }
     func stopRecording() { engine.stopRecording() }
     func cancelRecording() { engine.cancelRecording() }
+
+    /// Import pending records written by keyboard extension
+    func importPendingRecords() {
+        let pending = PendingRecordStore.consumeAll()
+        guard !pending.isEmpty else { return }
+
+        let context = modelContainer.mainContext
+        for pending in pending {
+            let record = DictationRecord(
+                rawTranscript: pending.rawTranscript,
+                polishedText: pending.polishedText,
+                duration: pending.duration,
+                detectedLanguage: nil
+            )
+            context.insert(record)
+        }
+        try? context.save()
+    }
 }

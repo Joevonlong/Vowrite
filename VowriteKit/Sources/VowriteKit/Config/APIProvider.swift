@@ -111,6 +111,20 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         self != .ollama
     }
 
+    /// Providers available on the current platform (iOS excludes Ollama)
+    public static var availableCases: [APIProvider] {
+        #if os(iOS)
+        return allCases.filter { $0 != .ollama }
+        #else
+        return allCases
+        #endif
+    }
+
+    /// Providers that support STT on the current platform
+    public static var availableSTTCases: [APIProvider] {
+        availableCases.filter(\.hasSTTSupport)
+    }
+
     public var keyURL: String {
         switch self {
         case .openai: return "https://platform.openai.com/api-keys"

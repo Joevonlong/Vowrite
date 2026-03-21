@@ -71,19 +71,19 @@ public enum PromptConfig {
     """
 
     public static var userPrompt: String {
-        get { UserDefaults.standard.string(forKey: userPromptKey) ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: userPromptKey) }
+        get { VowriteStorage.defaults.string(forKey: userPromptKey) ?? "" }
+        set { VowriteStorage.defaults.set(newValue, forKey: userPromptKey) }
     }
 
     public static var isUserPromptLocked: Bool {
-        get { UserDefaults.standard.bool(forKey: "promptUserPromptLocked") }
-        set { UserDefaults.standard.set(newValue, forKey: "promptUserPromptLocked") }
+        get { VowriteStorage.defaults.bool(forKey: "promptUserPromptLocked") }
+        set { VowriteStorage.defaults.set(newValue, forKey: "promptUserPromptLocked") }
     }
 
     /// Remove any legacy user-modified system prompt from UserDefaults.
     /// Call once at app launch to clean up.
     public static func migrateLegacySystemPrompt() {
-        UserDefaults.standard.removeObject(forKey: legacySystemPromptKey)
+        VowriteStorage.defaults.removeObject(forKey: legacySystemPromptKey)
     }
 
     public static var effectiveSystemPrompt: String {

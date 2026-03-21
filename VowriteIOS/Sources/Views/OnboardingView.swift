@@ -7,12 +7,11 @@ struct OnboardingView: View {
 
     @EnvironmentObject private var appState: AppState
     @State private var currentStep = 0
-    @State private var selectedLanguage: SupportedLanguage = .auto
     @State private var micGranted = false
     @State private var selectedPreset: APIPresetOption?
     @State private var apiKey = ""
 
-    private let totalSteps = 4
+    private let totalSteps = 6
     private let permissionManager = iOSPermissionManager()
 
     var body: some View {
@@ -22,9 +21,11 @@ struct OnboardingView: View {
 
             TabView(selection: $currentStep) {
                 welcomeStep.tag(0)
-                languageStep.tag(1)
-                permissionStep.tag(2)
+                addKeyboardStep.tag(1)
+                fullAccessStep.tag(2)
                 apiStep.tag(3)
+                microphoneStep.tag(4)
+                doneStep.tag(5)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.easeInOut, value: currentStep)
@@ -49,16 +50,16 @@ struct OnboardingView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(systemName: "mic.badge.plus")
+            Image(systemName: "keyboard.badge.ellipsis")
                 .font(.system(size: 72))
                 .foregroundColor(.accentColor)
                 .symbolRenderingMode(.hierarchical)
 
-            Text("Welcome to Vowrite")
+            Text("Vowrite")
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            Text("Transform your voice into polished text.\nRecord, transcribe, and refine — all in one tap.")
+            Text("Your intelligent voice keyboard.\nSpeak in any app, text appears instantly.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -71,54 +72,168 @@ struct OnboardingView: View {
         .padding(.bottom, 40)
     }
 
-    // MARK: - Step 2: Language
+    // MARK: - Step 2: Add Keyboard
 
-    private var languageStep: some View {
+    private var addKeyboardStep: some View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(systemName: "globe")
+            Image(systemName: "plus.rectangle.on.rectangle")
                 .font(.system(size: 56))
                 .foregroundColor(.accentColor)
 
-            Text("Choose Your Language")
+            Text("Add Vowrite Keyboard")
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Select the language you'll speak most often.\nYou can change this later in Settings.")
+            KeyboardSetupGuide(step: .addKeyboard)
+
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+
+            Spacer()
+
+            nextButton("I've Added It")
+        }
+        .padding(.bottom, 40)
+    }
+
+    // MARK: - Step 3: Full Access
+
+    private var fullAccessStep: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            Image(systemName: "lock.open.fill")
+                .font(.system(size: 56))
+                .foregroundColor(.accentColor)
+
+            Text("Enable Full Access")
+                .font(.title2)
+                .fontWeight(.bold)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Microphone access for voice recording", systemImage: "mic.fill")
+                Label("Network access for STT & AI processing", systemImage: "globe")
+                Label("Vowrite never collects typing data", systemImage: "lock.shield.fill")
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 40)
+
+            Button("Open Keyboard Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+
+            Spacer()
+
+            nextButton("I've Enabled It")
+        }
+        .padding(.bottom, 40)
+    }
+
+    // MARK: - Step 4: API Configuration
+
+    private var apiStep: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            Image(systemName: "key.fill")
+                .font(.system(size: 56))
+                .foregroundColor(.accentColor)
+
+            Text("API Configuration")
+                .font(.title2)
+                .fontWeight(.bold)
+
+            Text("Choose a preset and enter your API key.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
-            languageList
+            presetList
+
+            apiKeyField
 
             Spacer()
 
             nextButton("Continue") {
-                LanguageConfig.globalLanguage = selectedLanguage
+                if let preset = selectedPreset,
+                   let provider = KeyVault.requiredProviders(for: preset.configuration).first,
+                   !apiKey.isEmpty {
+                    _ = KeyVault.saveKey(apiKey, for: provider)
+                }
             }
         }
         .padding(.bottom, 40)
     }
 
-    private var languageList: some View {
-        ScrollView {
-            LazyVStack(spacing: 2) {
-                ForEach(SupportedLanguage.allCases, id: \.rawValue) { lang in
-                    LanguageRow(lang: lang, isSelected: selectedLanguage == lang) {
-                        selectedLanguage = lang
+    private var presetList: some View {
+        VStack(spacing: 8) {
+            ForEach(APIPresetStore.builtInPresets, id: \.id) { preset in
+                Button {
+                    selectedPreset = preset
+                    APIConfig.apply(preset)
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(preset.name)
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.primary)
+                            Text(preset.summary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if selectedPreset?.id == preset.id {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.accentColor)
+                        }
                     }
+                    .padding(14)
+                    .background(
+                        selectedPreset?.id == preset.id ? Color.accentColor.opacity(0.1) : Color(.secondarySystemBackground),
+                        in: RoundedRectangle(cornerRadius: 12)
+                    )
                 }
             }
-            .padding(.horizontal, 24)
         }
-        .frame(maxHeight: 300)
+        .padding(.horizontal, 24)
     }
 
-    // MARK: - Step 3: Permission
+    @ViewBuilder
+    private var apiKeyField: some View {
+        if let preset = selectedPreset {
+            let providers = KeyVault.requiredProviders(for: preset.configuration)
+            if let provider = providers.first, provider.requiresAPIKey {
+                SecureField(provider.keyPlaceholder, text: $apiKey)
+                    .textContentType(.password)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .padding(.horizontal, 24)
+                    .onSubmit {
+                        if !apiKey.isEmpty {
+                            _ = KeyVault.saveKey(apiKey, for: provider)
+                        }
+                    }
+            }
+        }
+    }
 
-    private var permissionStep: some View {
+    // MARK: - Step 5: Microphone
+
+    private var microphoneStep: some View {
         VStack(spacing: 24) {
             Spacer()
 
@@ -131,7 +246,7 @@ struct OnboardingView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Vowrite needs microphone access to record your voice for transcription.")
+            Text("The keyboard will also request microphone permission on first use.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -161,84 +276,41 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 4: API Setup
+    // MARK: - Step 6: Done
 
-    private var apiStep: some View {
+    private var doneStep: some View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(systemName: "key.fill")
-                .font(.system(size: 56))
-                .foregroundColor(.accentColor)
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 72))
+                .foregroundColor(.green)
+                .symbolRenderingMode(.hierarchical)
 
-            Text("API Configuration")
-                .font(.title2)
+            Text("All Set!")
+                .font(.largeTitle)
                 .fontWeight(.bold)
 
-            Text("Choose a preset or configure your own API provider.")
-                .font(.subheadline)
+            Text("Switch to Vowrite keyboard in any app and start speaking.")
+                .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
-            presetList
-
-            apiKeyField
-
             Spacer()
 
-            doneButton
+            Button {
+                onComplete()
+            } label: {
+                Text("Start Using Vowrite")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .padding(.horizontal, 24)
         }
         .padding(.bottom, 40)
-    }
-
-    private var presetList: some View {
-        VStack(spacing: 8) {
-            ForEach(APIPresetStore.builtInPresets, id: \.id) { preset in
-                PresetRow(preset: preset, isSelected: selectedPreset?.id == preset.id) {
-                    selectedPreset = preset
-                    APIConfig.apply(preset)
-                }
-            }
-        }
-        .padding(.horizontal, 24)
-    }
-
-    @ViewBuilder
-    private var apiKeyField: some View {
-        if let preset = selectedPreset {
-            let providers = KeyVault.requiredProviders(for: preset.configuration)
-            if let provider = providers.first, provider.requiresAPIKey {
-                SecureField(provider.keyPlaceholder, text: $apiKey)
-                    .textContentType(.password)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .padding(.horizontal, 24)
-                    .onSubmit {
-                        if !apiKey.isEmpty {
-                            _ = KeyVault.saveKey(apiKey, for: provider)
-                        }
-                    }
-            }
-        }
-    }
-
-    private var doneButton: some View {
-        Button {
-            if let preset = selectedPreset,
-               let provider = KeyVault.requiredProviders(for: preset.configuration).first,
-               !apiKey.isEmpty {
-                _ = KeyVault.saveKey(apiKey, for: provider)
-            }
-            onComplete()
-        } label: {
-            Text("Start Using Vowrite")
-                .fontWeight(.semibold)
-                .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .padding(.horizontal, 24)
     }
 
     // MARK: - Helpers
@@ -257,65 +329,5 @@ struct OnboardingView: View {
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .padding(.horizontal, 24)
-    }
-}
-
-// MARK: - Extracted Row Views
-
-private struct LanguageRow: View {
-    let lang: SupportedLanguage
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                Text(lang.displayName)
-                    .foregroundStyle(.primary)
-                Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(.accentColor)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(
-                isSelected ? Color.accentColor.opacity(0.1) : Color.clear,
-                in: RoundedRectangle(cornerRadius: 10)
-            )
-        }
-    }
-}
-
-private struct PresetRow: View {
-    let preset: APIPresetOption
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(preset.name)
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-                    Text(preset.summary)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.accentColor)
-                }
-            }
-            .padding(14)
-            .background(
-                isSelected ? Color.accentColor.opacity(0.1) : Color(.secondarySystemBackground),
-                in: RoundedRectangle(cornerRadius: 12)
-            )
-        }
     }
 }

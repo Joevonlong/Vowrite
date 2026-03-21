@@ -3,42 +3,102 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1B00001 /* VowriteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00001; };
-		A1B00002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00002; };
-		A1B00003 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00003; };
-		A1B00004 /* RecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00004; };
-		A1B00005 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00005; };
-		A1B00006 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00006; };
-		A1B00007 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00007; };
-		A1B00008 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00008; };
-		A1B00009 /* iOSClipboardOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00009; };
-		A1B0000A /* iOSPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000A; };
-		A1B0000B /* iOSFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000B; };
-		A1B0000C /* iOSOverlayProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000C; };
-		A1B0000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1F0000D; };
-		A1B0000E /* VowriteKit in Frameworks */ = {isa = PBXBuildFile; productRef = A1D00001; };
+		A1B00001 /* VowriteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00001 /* VowriteApp.swift */; };
+		A1B00002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00002 /* AppState.swift */; };
+		A1B00005 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00005 /* ResultView.swift */; };
+		A1B00006 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00006 /* SettingsView.swift */; };
+		A1B00007 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00007 /* OnboardingView.swift */; };
+		A1B00008 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00008 /* HistoryView.swift */; };
+		A1B0000A /* iOSPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000A /* iOSPermissionManager.swift */; };
+		A1B0000B /* iOSFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000B /* iOSFeedback.swift */; };
+		A1B0000C /* iOSOverlayProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0000C /* iOSOverlayProvider.swift */; };
+		A1B00009 /* iOSClipboardOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00009 /* iOSClipboardOutput.swift */; };
+		A1B0000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1F0000D /* Assets.xcassets */; };
+		A1B0000E /* VowriteKit in Frameworks */ = {isa = PBXBuildFile; productRef = A1D00001 /* VowriteKit */; };
+		A1B00101 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00101 /* DashboardView.swift */; };
+		A1B00102 /* PersonalizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00102 /* PersonalizationView.swift */; };
+		A1B00103 /* KeyboardSetupGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00103 /* KeyboardSetupGuide.swift */; };
+		A1B00199 /* VowriteKeyboard.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A1P00002 /* VowriteKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A1B00201 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00201 /* KeyboardViewController.swift */; };
+		A1B00202 /* KeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00202 /* KeyboardView.swift */; };
+		A1B00203 /* KeyboardState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00203 /* KeyboardState.swift */; };
+		A1B00204 /* KeyboardTextOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00204 /* KeyboardTextOutput.swift */; };
+		A1B00205 /* KeyboardPermissionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00205 /* KeyboardPermissionProvider.swift */; };
+		A1B00206 /* KeyboardOverlayProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00206 /* KeyboardOverlayProvider.swift */; };
+		A1B00207 /* KeyboardFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00207 /* KeyboardFeedback.swift */; };
+		A1B00208 /* TopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00208 /* TopBar.swift */; };
+		A1B00209 /* RecordArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00209 /* RecordArea.swift */; };
+		A1B0020A /* BottomBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020A /* BottomBar.swift */; };
+		A1B0020B /* ModePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020B /* ModePopover.swift */; };
+		A1B0020C /* StylePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020C /* StylePopover.swift */; };
+		A1B0020D /* StatusBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020D /* StatusBanner.swift */; };
+		A1B0020E /* MemoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020E /* MemoryMonitor.swift */; };
+		A1B0020F /* VowriteKit in Frameworks */ = {isa = PBXBuildFile; productRef = A1D00002 /* VowriteKit */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A1CI0001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1PR0001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1T00002;
+			remoteInfo = VowriteKeyboard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A1CP0001 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A1B00199 /* VowriteKeyboard.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A1F00001 /* VowriteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VowriteApp.swift; sourceTree = "<group>"; };
 		A1F00002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		A1F00003 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		A1F00004 /* RecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingView.swift; sourceTree = "<group>"; };
 		A1F00005 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		A1F00006 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1F00007 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		A1F00008 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
-		A1F00009 /* iOSClipboardOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSClipboardOutput.swift; sourceTree = "<group>"; };
 		A1F0000A /* iOSPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSPermissionManager.swift; sourceTree = "<group>"; };
 		A1F0000B /* iOSFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSFeedback.swift; sourceTree = "<group>"; };
 		A1F0000C /* iOSOverlayProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSOverlayProvider.swift; sourceTree = "<group>"; };
+		A1F00009 /* iOSClipboardOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSClipboardOutput.swift; sourceTree = "<group>"; };
 		A1F0000D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1F0000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1F00101 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		A1F00102 /* PersonalizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalizationView.swift; sourceTree = "<group>"; };
+		A1F00103 /* KeyboardSetupGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSetupGuide.swift; sourceTree = "<group>"; };
+		A1F00104 /* VowriteIOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VowriteIOS.entitlements; sourceTree = "<group>"; };
+		A1F00201 /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
+		A1F00202 /* KeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardView.swift; sourceTree = "<group>"; };
+		A1F00203 /* KeyboardState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardState.swift; sourceTree = "<group>"; };
+		A1F00204 /* KeyboardTextOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardTextOutput.swift; sourceTree = "<group>"; };
+		A1F00205 /* KeyboardPermissionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardPermissionProvider.swift; sourceTree = "<group>"; };
+		A1F00206 /* KeyboardOverlayProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardOverlayProvider.swift; sourceTree = "<group>"; };
+		A1F00207 /* KeyboardFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardFeedback.swift; sourceTree = "<group>"; };
+		A1F00208 /* TopBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopBar.swift; sourceTree = "<group>"; };
+		A1F00209 /* RecordArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordArea.swift; sourceTree = "<group>"; };
+		A1F0020A /* BottomBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomBar.swift; sourceTree = "<group>"; };
+		A1F0020B /* ModePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModePopover.swift; sourceTree = "<group>"; };
+		A1F0020C /* StylePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StylePopover.swift; sourceTree = "<group>"; };
+		A1F0020D /* StatusBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBanner.swift; sourceTree = "<group>"; };
+		A1F0020E /* MemoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMonitor.swift; sourceTree = "<group>"; };
+		A1F0020F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../VowriteKeyboard/Info.plist; sourceTree = "<group>"; };
+		A1F00210 /* VowriteKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = VowriteKeyboard.entitlements; path = ../VowriteKeyboard/Entitlements/VowriteKeyboard.entitlements; sourceTree = "<group>"; };
 		A1P00001 /* VowriteIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VowriteIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1P00002 /* VowriteKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VowriteKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,24 +110,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1PH0004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B0020F /* VowriteKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A1G00000 /* root */ = {
+		A1G00000 = {
 			isa = PBXGroup;
 			children = (
 				A1G00001 /* Sources */,
 				A1G00005 /* Resources */,
+				A1G00006 /* Entitlements */,
+				A1G00200 /* VowriteKeyboard */,
 				A1G00099 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		A1G00099 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				A1P00001 /* VowriteIOS.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		A1G00001 /* Sources */ = {
@@ -92,12 +154,13 @@
 		A1G00003 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				A1F00003 /* HomeView.swift */,
-				A1F00004 /* RecordingView.swift */,
+				A1F00101 /* DashboardView.swift */,
 				A1F00005 /* ResultView.swift */,
 				A1F00006 /* SettingsView.swift */,
 				A1F00007 /* OnboardingView.swift */,
 				A1F00008 /* HistoryView.swift */,
+				A1F00102 /* PersonalizationView.swift */,
+				A1F00103 /* KeyboardSetupGuide.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -122,6 +185,71 @@
 			name = Resources;
 			sourceTree = "<group>";
 		};
+		A1G00006 /* Entitlements */ = {
+			isa = PBXGroup;
+			children = (
+				A1F00104 /* VowriteIOS.entitlements */,
+			);
+			path = Entitlements;
+			sourceTree = "<group>";
+		};
+		A1G00099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A1P00001 /* VowriteIOS.app */,
+				A1P00002 /* VowriteKeyboard.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A1G00200 /* VowriteKeyboard */ = {
+			isa = PBXGroup;
+			children = (
+				A1G00201 /* Sources */,
+				A1F0020F /* Info.plist */,
+				A1F00210 /* VowriteKeyboard.entitlements */,
+			);
+			name = VowriteKeyboard;
+			path = ../VowriteKeyboard;
+			sourceTree = "<group>";
+		};
+		A1G00201 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				A1F00201 /* KeyboardViewController.swift */,
+				A1F00202 /* KeyboardView.swift */,
+				A1F00203 /* KeyboardState.swift */,
+				A1F00204 /* KeyboardTextOutput.swift */,
+				A1F00205 /* KeyboardPermissionProvider.swift */,
+				A1F00206 /* KeyboardOverlayProvider.swift */,
+				A1F00207 /* KeyboardFeedback.swift */,
+				A1G00202 /* Components */,
+				A1G00203 /* Utilities */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		A1G00202 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				A1F00208 /* TopBar.swift */,
+				A1F00209 /* RecordArea.swift */,
+				A1F0020A /* BottomBar.swift */,
+				A1F0020B /* ModePopover.swift */,
+				A1F0020C /* StylePopover.swift */,
+				A1F0020D /* StatusBanner.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A1G00203 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				A1F0020E /* MemoryMonitor.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -132,10 +260,12 @@
 				A1PH0002 /* Sources */,
 				A1PH0001 /* Frameworks */,
 				A1PH0003 /* Resources */,
+				A1CP0001 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A1TD0001 /* PBXTargetDependency */,
 			);
 			name = VowriteIOS;
 			packageProductDependencies = (
@@ -145,6 +275,25 @@
 			productReference = A1P00001 /* VowriteIOS.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A1T00002 /* VowriteKeyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1CL0003 /* Build configuration list for PBXNativeTarget "VowriteKeyboard" */;
+			buildPhases = (
+				A1PH0005 /* Sources */,
+				A1PH0004 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VowriteKeyboard;
+			packageProductDependencies = (
+				A1D00002 /* VowriteKit */,
+			);
+			productName = VowriteKeyboard;
+			productReference = A1P00002 /* VowriteKeyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -152,9 +301,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					A1T00001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					A1T00002 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -167,15 +319,16 @@
 				en,
 				Base,
 			);
-			mainGroup = A1G00000 /* root */;
+			mainGroup = A1G00000;
 			packageReferences = (
-				A1PKG001 /* VowriteKit */,
+				A1PKG001 /* XCLocalSwiftPackageReference "../VowriteKit" */,
 			);
 			productRefGroup = A1G00099 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				A1T00001 /* VowriteIOS */,
+				A1T00002 /* VowriteKeyboard */,
 			);
 		};
 /* End PBXProject section */
@@ -198,12 +351,13 @@
 			files = (
 				A1B00001 /* VowriteApp.swift in Sources */,
 				A1B00002 /* AppState.swift in Sources */,
-				A1B00003 /* HomeView.swift in Sources */,
-				A1B00004 /* RecordingView.swift in Sources */,
+				A1B00101 /* DashboardView.swift in Sources */,
 				A1B00005 /* ResultView.swift in Sources */,
 				A1B00006 /* SettingsView.swift in Sources */,
 				A1B00007 /* OnboardingView.swift in Sources */,
 				A1B00008 /* HistoryView.swift in Sources */,
+				A1B00102 /* PersonalizationView.swift in Sources */,
+				A1B00103 /* KeyboardSetupGuide.swift in Sources */,
 				A1B00009 /* iOSClipboardOutput.swift in Sources */,
 				A1B0000A /* iOSPermissionManager.swift in Sources */,
 				A1B0000B /* iOSFeedback.swift in Sources */,
@@ -211,7 +365,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1PH0005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B00201 /* KeyboardViewController.swift in Sources */,
+				A1B00202 /* KeyboardView.swift in Sources */,
+				A1B00203 /* KeyboardState.swift in Sources */,
+				A1B00204 /* KeyboardTextOutput.swift in Sources */,
+				A1B00205 /* KeyboardPermissionProvider.swift in Sources */,
+				A1B00206 /* KeyboardOverlayProvider.swift in Sources */,
+				A1B00207 /* KeyboardFeedback.swift in Sources */,
+				A1B00208 /* TopBar.swift in Sources */,
+				A1B00209 /* RecordArea.swift in Sources */,
+				A1B0020A /* BottomBar.swift in Sources */,
+				A1B0020B /* ModePopover.swift in Sources */,
+				A1B0020C /* StylePopover.swift in Sources */,
+				A1B0020D /* StatusBanner.swift in Sources */,
+				A1B0020E /* MemoryMonitor.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1TD0001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1T00002 /* VowriteKeyboard */;
+			targetProxy = A1CI0001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A1BC0001 /* Debug */ = {
@@ -247,8 +430,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = C2H6PL267S;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_DIALECT = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -268,6 +453,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.10;
@@ -307,8 +493,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = C2H6PL267S;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_DIALECT = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = s;
@@ -322,6 +510,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.10;
@@ -332,7 +521,9 @@
 		A1BC0003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Entitlements/VowriteIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -354,7 +545,9 @@
 		A1BC0004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Entitlements/VowriteIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -367,6 +560,54 @@
 				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.10;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A1BC0005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ../VowriteKeyboard/Entitlements/VowriteKeyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ../VowriteKeyboard/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios.keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.10;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A1BC0006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ../VowriteKeyboard/Entitlements/VowriteKeyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ../VowriteKeyboard/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vowrite.ios.keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.10;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -394,10 +635,19 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		A1CL0003 /* Build configuration list for PBXNativeTarget "VowriteKeyboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1BC0005 /* Debug */,
+				A1BC0006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		A1PKG001 /* VowriteKit */ = {
+		A1PKG001 /* XCLocalSwiftPackageReference "../VowriteKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../VowriteKit;
 		};
@@ -408,8 +658,11 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = VowriteKit;
 		};
+		A1D00002 /* VowriteKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VowriteKit;
+		};
 /* End XCSwiftPackageProductDependency section */
-
 	};
 	rootObject = A1PR0001 /* Project object */;
 }

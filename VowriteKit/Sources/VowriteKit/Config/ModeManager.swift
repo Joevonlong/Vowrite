@@ -13,7 +13,7 @@ public final class ModeManager: ObservableObject {
     }
 
     @Published public var currentModeId: UUID {
-        didSet { UserDefaults.standard.set(currentModeId.uuidString, forKey: Self.currentModeIdKey) }
+        didSet { VowriteStorage.defaults.set(currentModeId.uuidString, forKey: Self.currentModeIdKey) }
     }
 
     public var currentMode: Mode {
@@ -22,7 +22,7 @@ public final class ModeManager: ObservableObject {
 
     private init() {
         // Load saved modes or use builtins
-        if let data = UserDefaults.standard.data(forKey: Self.modesKey),
+        if let data = VowriteStorage.defaults.data(forKey: Self.modesKey),
            let saved = try? JSONDecoder().decode([Mode].self, from: data),
            !saved.isEmpty {
             self.modes = Self.mergeBuiltins(saved: saved)
@@ -31,7 +31,7 @@ public final class ModeManager: ObservableObject {
         }
 
         // Load current mode selection
-        if let idStr = UserDefaults.standard.string(forKey: Self.currentModeIdKey),
+        if let idStr = VowriteStorage.defaults.string(forKey: Self.currentModeIdKey),
            let id = UUID(uuidString: idStr) {
             self.currentModeId = id
         } else {
@@ -72,6 +72,21 @@ public final class ModeManager: ObservableObject {
         }
     }
 
+    /// Reload all data from UserDefaults.
+    /// Used by iOS keyboard extension: user may have changed config in Container App.
+    public func reload() {
+        if let data = VowriteStorage.defaults.data(forKey: Self.modesKey),
+           let saved = try? JSONDecoder().decode([Mode].self, from: data),
+           !saved.isEmpty {
+            self.modes = Self.mergeBuiltins(saved: saved)
+        }
+
+        if let idStr = VowriteStorage.defaults.string(forKey: Self.currentModeIdKey),
+           let id = UUID(uuidString: idStr) {
+            self.currentModeId = id
+        }
+    }
+
     public func resetBuiltinMode(_ mode: Mode) {
         guard mode.isBuiltin,
               let original = Mode.builtinModes.first(where: { $0.id == mode.id }),
@@ -81,7 +96,7 @@ public final class ModeManager: ObservableObject {
 
     private func saveModes() {
         if let data = try? JSONEncoder().encode(modes) {
-            UserDefaults.standard.set(data, forKey: Self.modesKey)
+            VowriteStorage.defaults.set(data, forKey: Self.modesKey)
         }
     }
 
@@ -90,7 +105,7 @@ public final class ModeManager: ObservableObject {
     /// Thread-safe access to current mode config. Reads directly from UserDefaults.
     nonisolated public static var currentModeConfig: ModeConfig {
         let currentId: UUID
-        if let idStr = UserDefaults.standard.string(forKey: currentModeIdKey),
+        if let idStr = VowriteStorage.defaults.string(forKey: currentModeIdKey),
            let id = UUID(uuidString: idStr) {
             currentId = id
         } else {
@@ -98,7 +113,7 @@ public final class ModeManager: ObservableObject {
         }
 
         // Try to load from saved modes
-        if let data = UserDefaults.standard.data(forKey: modesKey),
+        if let data = VowriteStorage.defaults.data(forKey: modesKey),
            let modes = try? JSONDecoder().decode([Mode].self, from: data),
            let mode = modes.first(where: { $0.id == currentId }) {
             return ModeConfig(from: mode)

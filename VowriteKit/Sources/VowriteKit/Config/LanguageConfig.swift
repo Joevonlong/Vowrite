@@ -64,10 +64,10 @@ public enum LanguageConfig {
 
     public static var globalLanguage: SupportedLanguage {
         get {
-            guard let raw = UserDefaults.standard.string(forKey: globalLanguageKey),
+            guard let raw = VowriteStorage.defaults.string(forKey: globalLanguageKey),
                   let lang = SupportedLanguage(rawValue: raw) else { return .auto }
             return lang
         }
-        set { UserDefaults.standard.set(newValue.rawValue, forKey: globalLanguageKey) }
+        set { VowriteStorage.defaults.set(newValue.rawValue, forKey: globalLanguageKey) }
     }
 }
