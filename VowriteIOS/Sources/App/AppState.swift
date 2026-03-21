@@ -29,7 +29,7 @@ final class AppState: ObservableObject {
             let schema = Schema([DictationRecord.self])
             let config: ModelConfiguration
             if let storeURL = VowriteStorage.swiftDataURL {
-                config = ModelConfiguration(schema: schema, url: storeURL, isStoredInMemoryOnly: false)
+                config = ModelConfiguration(storeURL.lastPathComponent, schema: schema, isStoredInMemoryOnly: false, groupContainer: .identifier(VowriteStorage.appGroupID))
             } else {
                 config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             }

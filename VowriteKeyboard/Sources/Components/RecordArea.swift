@@ -21,7 +21,7 @@ struct RecordArea: View {
                     icon: "exclamationmark.triangle.fill",
                     message: "Please enable Full Access for Vowrite keyboard",
                     actionLabel: "Open Vowrite",
-                    action: openContainerApp
+                    action: { openContainerApp() }
                 )
             case .noAPIKey:
                 StatusBanner(
@@ -121,7 +121,7 @@ struct RecordArea: View {
                     }
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.accentColor)
+                    .foregroundStyle(Color.accentColor)
                 }
             }
         }
