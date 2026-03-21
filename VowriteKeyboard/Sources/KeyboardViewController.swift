@@ -48,8 +48,8 @@ class KeyboardViewController: UIInputViewController {
         VowriteStorage.defaults.set(hasFullAccess, forKey: "keyboard_full_access")
     }
 
-    override func textDocumentProxyDidChange() {
-        super.textDocumentProxyDidChange()
+    override func textWillChange(_ textInput: (any UITextInput)?) {
+        super.textWillChange(textInput)
         keyboardState.updateProxy(textDocumentProxy)
     }
 }

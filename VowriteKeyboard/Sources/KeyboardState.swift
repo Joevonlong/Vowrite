@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import VowriteKit
 
 @MainActor
@@ -163,5 +164,3 @@ final class KeyboardState: ObservableObject {
         inputViewController?.textDocumentProxy.deleteBackward()
     }
 }
-
-import Combine
