@@ -11,7 +11,7 @@ public final class OutputStyleManager: ObservableObject {
     }
 
     private init() {
-        if let data = UserDefaults.standard.data(forKey: Self.stylesKey),
+        if let data = VowriteStorage.defaults.data(forKey: Self.stylesKey),
            let saved = try? JSONDecoder().decode([OutputStyle].self, from: data),
            !saved.isEmpty {
             self.styles = Self.mergeBuiltins(saved: saved)
@@ -46,6 +46,16 @@ public final class OutputStyleManager: ObservableObject {
         styles.removeAll { $0.id == style.id }
     }
 
+    /// Reload all data from UserDefaults.
+    /// Used by iOS keyboard extension: user may have changed config in Container App.
+    public func reload() {
+        if let data = VowriteStorage.defaults.data(forKey: Self.stylesKey),
+           let saved = try? JSONDecoder().decode([OutputStyle].self, from: data),
+           !saved.isEmpty {
+            self.styles = Self.mergeBuiltins(saved: saved)
+        }
+    }
+
     public func resetBuiltinStyle(_ style: OutputStyle) {
         guard style.isBuiltin,
               let original = OutputStyle.builtinStyles.first(where: { $0.id == style.id }),
@@ -55,7 +65,7 @@ public final class OutputStyleManager: ObservableObject {
 
     private func saveStyles() {
         if let data = try? JSONEncoder().encode(styles) {
-            UserDefaults.standard.set(data, forKey: Self.stylesKey)
+            VowriteStorage.defaults.set(data, forKey: Self.stylesKey)
         }
     }
 
@@ -65,7 +75,7 @@ public final class OutputStyleManager: ObservableObject {
     nonisolated public static func templatePrompt(for styleId: UUID?) -> String? {
         guard let styleId = styleId, styleId != OutputStyle.noneId else { return nil }
 
-        if let data = UserDefaults.standard.data(forKey: stylesKey),
+        if let data = VowriteStorage.defaults.data(forKey: stylesKey),
            let styles = try? JSONDecoder().decode([OutputStyle].self, from: data),
            let style = styles.first(where: { $0.id == styleId }) {
             return style.templatePrompt.isEmpty ? nil : style.templatePrompt

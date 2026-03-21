@@ -41,14 +41,22 @@ public final class DictationEngine: ObservableObject {
 
     // MARK: Stats
     public var totalDictationTime: TimeInterval {
-        UserDefaults.standard.double(forKey: "totalDictationTime")
+        VowriteStorage.defaults.double(forKey: "totalDictationTime")
     }
     public var totalWords: Int {
-        UserDefaults.standard.integer(forKey: "totalWords")
+        VowriteStorage.defaults.integer(forKey: "totalWords")
     }
     public var totalDictations: Int {
-        UserDefaults.standard.integer(forKey: "totalDictations")
+        VowriteStorage.defaults.integer(forKey: "totalDictations")
     }
+
+    /// External override for polishEnabled. nil = use Mode default.
+    /// Used by keyboard extension's temporary AI toggle.
+    public var polishEnabledOverride: Bool? = nil
+
+    /// When true, always insert text regardless of Mode's autoPaste setting.
+    /// Keyboard extension sets this to true (not inserting text makes no sense in a keyboard).
+    public var forceAutoPaste: Bool = false
 
     public var hasAPIKey: Bool {
         isReadyForCurrentMode
@@ -64,9 +72,9 @@ public final class DictationEngine: ObservableObject {
 
     private func updateStats(duration: TimeInterval, text: String) {
         let wordCount = text.split(separator: " ").count + text.split(separator: "\u{3000}").count
-        UserDefaults.standard.set(totalDictationTime + duration, forKey: "totalDictationTime")
-        UserDefaults.standard.set(totalWords + wordCount, forKey: "totalWords")
-        UserDefaults.standard.set(totalDictations + 1, forKey: "totalDictations")
+        VowriteStorage.defaults.set(totalDictationTime + duration, forKey: "totalDictationTime")
+        VowriteStorage.defaults.set(totalWords + wordCount, forKey: "totalWords")
+        VowriteStorage.defaults.set(totalDictations + 1, forKey: "totalDictations")
         objectWillChange.send()
     }
 
@@ -192,7 +200,8 @@ public final class DictationEngine: ObservableObject {
 
                 // Step 2: AI Polish (skip if mode has polishEnabled=false)
                 var finalText = rawTranscript
-                if modeConfig.polishEnabled {
+                let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
+                if effectivePolishEnabled {
                     do {
                         #if DEBUG
                         print("[Vowrite] Starting AI polish...")
@@ -218,7 +227,7 @@ public final class DictationEngine: ObservableObject {
                 overlay.hide()
 
                 // Step 4: Output text (inject or copy)
-                if modeConfig.autoPaste {
+                if forceAutoPaste || modeConfig.autoPaste {
                     await textOutput.output(text: finalText)
                 }
 

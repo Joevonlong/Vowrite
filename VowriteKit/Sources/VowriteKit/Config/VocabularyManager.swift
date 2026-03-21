@@ -11,7 +11,13 @@ public final class VocabularyManager: ObservableObject {
     }
 
     private init() {
-        self.words = UserDefaults.standard.stringArray(forKey: Self.storageKey) ?? []
+        self.words = VowriteStorage.defaults.stringArray(forKey: Self.storageKey) ?? []
+    }
+
+    /// Reload all data from UserDefaults.
+    /// Used by iOS keyboard extension: user may have changed config in Container App.
+    public func reload() {
+        self.words = VowriteStorage.defaults.stringArray(forKey: Self.storageKey) ?? []
     }
 
     public func add(_ word: String) {
@@ -36,13 +42,13 @@ public final class VocabularyManager: ObservableObject {
     }
 
     private func save() {
-        UserDefaults.standard.set(words, forKey: Self.storageKey)
+        VowriteStorage.defaults.set(words, forKey: Self.storageKey)
     }
 
     /// Build a prompt string from vocabulary for Whisper API guidance.
     /// Thread-safe: reads directly from UserDefaults.
     nonisolated public static var whisperPrompt: String? {
-        guard let words = UserDefaults.standard.stringArray(forKey: storageKey), !words.isEmpty else {
+        guard let words = VowriteStorage.defaults.stringArray(forKey: storageKey), !words.isEmpty else {
             return nil
         }
         return words.joined(separator: ", ")

@@ -3,7 +3,6 @@ import VowriteKit
 
 struct SettingsView: View {
     @EnvironmentObject private var appState: AppState
-    @StateObject private var modeManager = ModeManager.shared
 
     @State private var sttProvider: APIProvider = APIConfig.sttProvider
     @State private var sttModel: String = APIConfig.sttModel
@@ -11,7 +10,6 @@ struct SettingsView: View {
     @State private var polishModel: String = APIConfig.polishModel
     @State private var sttAPIKey: String = ""
     @State private var polishAPIKey: String = ""
-    @State private var showSavedToast = false
 
     var body: some View {
         NavigationStack {
@@ -45,7 +43,7 @@ struct SettingsView: View {
                 // STT Configuration
                 Section("Speech-to-Text") {
                     Picker("Provider", selection: $sttProvider) {
-                        ForEach(APIProvider.allCases.filter(\.hasSTTSupport), id: \.self) { provider in
+                        ForEach(APIProvider.availableSTTCases, id: \.self) { provider in
                             Text(provider.rawValue).tag(provider)
                         }
                     }
@@ -82,7 +80,7 @@ struct SettingsView: View {
                 // Polish Configuration
                 Section("AI Polish") {
                     Picker("Provider", selection: $polishProvider) {
-                        ForEach(APIProvider.allCases, id: \.self) { provider in
+                        ForEach(APIProvider.availableCases, id: \.self) { provider in
                             Text(provider.rawValue).tag(provider)
                         }
                     }
@@ -112,38 +110,6 @@ struct SettingsView: View {
                             Label("Key saved", systemImage: "checkmark.circle.fill")
                                 .font(.caption)
                                 .foregroundStyle(.green)
-                        }
-                    }
-                }
-
-                // Modes
-                Section("Dictation Mode") {
-                    ForEach(modeManager.modes) { mode in
-                        Button {
-                            modeManager.select(mode)
-                        } label: {
-                            HStack {
-                                Text(mode.icon)
-                                Text(mode.name)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                if mode.id == modeManager.currentModeId {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.accentColor)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Language
-                Section("Language") {
-                    Picker("Recognition Language", selection: Binding(
-                        get: { LanguageConfig.globalLanguage },
-                        set: { LanguageConfig.globalLanguage = $0 }
-                    )) {
-                        ForEach(SupportedLanguage.allCases, id: \.self) { lang in
-                            Text(lang.displayName).tag(lang)
                         }
                     }
                 }

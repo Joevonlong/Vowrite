@@ -102,41 +102,41 @@ public enum APIConfig {
 
     public static var sttProvider: APIProvider {
         get { provider(forKey: sttProviderKey, fallback: .groq) }
-        set { UserDefaults.standard.set(newValue.rawValue, forKey: sttProviderKey) }
+        set { VowriteStorage.defaults.set(newValue.rawValue, forKey: sttProviderKey) }
     }
 
     public static var sttModel: String {
         get { string(forKey: sttModelKey) ?? "whisper-large-v3-turbo" }
-        set { UserDefaults.standard.set(newValue, forKey: sttModelKey) }
+        set { VowriteStorage.defaults.set(newValue, forKey: sttModelKey) }
     }
 
     public static var sttBaseURL: String {
         get { string(forKey: sttBaseURLKey) ?? sttProvider.defaultBaseURL }
-        set { UserDefaults.standard.set(newValue, forKey: sttBaseURLKey) }
+        set { VowriteStorage.defaults.set(newValue, forKey: sttBaseURLKey) }
     }
 
     public static var polishProvider: APIProvider {
         get { provider(forKey: polishProviderKey, fallback: .deepseek) }
-        set { UserDefaults.standard.set(newValue.rawValue, forKey: polishProviderKey) }
+        set { VowriteStorage.defaults.set(newValue.rawValue, forKey: polishProviderKey) }
     }
 
     public static var polishModel: String {
         get { string(forKey: polishModelKey) ?? "deepseek-chat" }
-        set { UserDefaults.standard.set(newValue, forKey: polishModelKey) }
+        set { VowriteStorage.defaults.set(newValue, forKey: polishModelKey) }
     }
 
     public static var polishBaseURL: String {
         get { string(forKey: polishBaseURLKey) ?? polishProvider.defaultBaseURL }
-        set { UserDefaults.standard.set(newValue, forKey: polishBaseURLKey) }
+        set { VowriteStorage.defaults.set(newValue, forKey: polishBaseURLKey) }
     }
 
     public static var selectedPresetID: String? {
         get { string(forKey: selectedPresetKey) }
         set {
             if let newValue {
-                UserDefaults.standard.set(newValue, forKey: selectedPresetKey)
+                VowriteStorage.defaults.set(newValue, forKey: selectedPresetKey)
             } else {
-                UserDefaults.standard.removeObject(forKey: selectedPresetKey)
+                VowriteStorage.defaults.removeObject(forKey: selectedPresetKey)
             }
         }
     }
@@ -166,11 +166,11 @@ public enum APIConfig {
     }
 
     private static func string(forKey key: String) -> String? {
-        UserDefaults.standard.string(forKey: key)
+        VowriteStorage.defaults.string(forKey: key)
     }
 
     private static func provider(forKey key: String, fallback: APIProvider) -> APIProvider {
-        guard let rawValue = UserDefaults.standard.string(forKey: key),
+        guard let rawValue = VowriteStorage.defaults.string(forKey: key),
               let provider = APIProvider(rawValue: rawValue) else {
             return fallback
         }

@@ -21,13 +21,13 @@ public enum APIConfigMigration {
     private static let legacyPolishAccounts = ["vowrite_polish_api_key"]
 
     public static func runIfNeeded() {
-        guard !UserDefaults.standard.bool(forKey: migrationFlagKey) else { return }
+        guard !VowriteStorage.defaults.bool(forKey: migrationFlagKey) else { return }
 
         let configuration = migratedConfiguration()
         APIConfig.apply(configuration, presetID: APIPresetStore.matchingPreset(for: configuration)?.id)
         migrateKeys(for: configuration)
 
-        UserDefaults.standard.set(true, forKey: migrationFlagKey)
+        VowriteStorage.defaults.set(true, forKey: migrationFlagKey)
     }
 
     private static func migratedConfiguration() -> SplitAPIConfiguration {

@@ -29,7 +29,7 @@ public final class AuthManager: NSObject, ObservableObject {
     private static let googleNameKey = "googleUserName"
 
     private override init() {
-        let raw = UserDefaults.standard.string(forKey: Self.authModeKey) ?? AuthMode.apiKey.rawValue
+        let raw = VowriteStorage.defaults.string(forKey: Self.authModeKey) ?? AuthMode.apiKey.rawValue
         self.authMode = AuthMode(rawValue: raw) ?? .apiKey
         super.init()
         restoreGoogleSession()
@@ -40,8 +40,8 @@ public final class AuthManager: NSObject, ObservableObject {
     private func restoreGoogleSession() {
         if KeychainHelper.getGoogleAccessToken() != nil {
             isLoggedIn = true
-            userEmail = UserDefaults.standard.string(forKey: Self.googleEmailKey)
-            userName = UserDefaults.standard.string(forKey: Self.googleNameKey)
+            userEmail = VowriteStorage.defaults.string(forKey: Self.googleEmailKey)
+            userName = VowriteStorage.defaults.string(forKey: Self.googleNameKey)
         }
     }
 
@@ -132,8 +132,8 @@ public final class AuthManager: NSObject, ObservableObject {
                 if let userInfo = GoogleAuthService.decodeIDToken(idToken) {
                     userEmail = userInfo.email
                     userName = userInfo.name
-                    UserDefaults.standard.set(userInfo.email, forKey: Self.googleEmailKey)
-                    UserDefaults.standard.set(userInfo.name, forKey: Self.googleNameKey)
+                    VowriteStorage.defaults.set(userInfo.email, forKey: Self.googleEmailKey)
+                    VowriteStorage.defaults.set(userInfo.name, forKey: Self.googleNameKey)
                 }
             }
 
@@ -151,8 +151,8 @@ public final class AuthManager: NSObject, ObservableObject {
 
     public func signOut() {
         KeychainHelper.deleteGoogleTokens()
-        UserDefaults.standard.removeObject(forKey: Self.googleEmailKey)
-        UserDefaults.standard.removeObject(forKey: Self.googleNameKey)
+        VowriteStorage.defaults.removeObject(forKey: Self.googleEmailKey)
+        VowriteStorage.defaults.removeObject(forKey: Self.googleNameKey)
         isLoggedIn = false
         userEmail = nil
         userName = nil
@@ -163,7 +163,7 @@ public final class AuthManager: NSObject, ObservableObject {
 
     public func setAuthMode(_ mode: AuthMode) {
         authMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: Self.authModeKey)
+        VowriteStorage.defaults.set(mode.rawValue, forKey: Self.authModeKey)
     }
 }
 

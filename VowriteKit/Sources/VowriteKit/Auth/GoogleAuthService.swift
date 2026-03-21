@@ -74,11 +74,11 @@ public enum GoogleAuthService {
     public static var clientID: String? {
         get {
             // Allow override via UserDefaults (for development), fallback to bundled
-            let override = UserDefaults.standard.string(forKey: clientIDKey) ?? ""
+            let override = VowriteStorage.defaults.string(forKey: clientIDKey) ?? ""
             if !override.isEmpty { return override }
             return bundledClientID.isEmpty ? nil : bundledClientID
         }
-        set { UserDefaults.standard.set(newValue, forKey: clientIDKey) }
+        set { VowriteStorage.defaults.set(newValue, forKey: clientIDKey) }
     }
 
     // MARK: - PKCE

@@ -88,21 +88,29 @@ public enum APIPresetStore {
     private static let userPresetsKey = "splitAPI.userPresets"
 
     public static var builtInPresets: [APIPresetOption] {
-        BuiltInAPIPreset.allCases.map {
-            APIPresetOption(
-                id: $0.id,
-                name: $0.name,
-                summary: $0.summary,
-                configuration: $0.configuration,
-                isBuiltIn: true,
-                userPresetID: nil
-            )
-        }
+        BuiltInAPIPreset.allCases
+            .filter { preset in
+                #if os(iOS)
+                return preset != .localOllama
+                #else
+                return true
+                #endif
+            }
+            .map {
+                APIPresetOption(
+                    id: $0.id,
+                    name: $0.name,
+                    summary: $0.summary,
+                    configuration: $0.configuration,
+                    isBuiltIn: true,
+                    userPresetID: nil
+                )
+            }
     }
 
     public static var userPresets: [UserAPIPreset] {
         get {
-            guard let data = UserDefaults.standard.data(forKey: userPresetsKey),
+            guard let data = VowriteStorage.defaults.data(forKey: userPresetsKey),
                   let presets = try? JSONDecoder().decode([UserAPIPreset].self, from: data) else {
                 return []
             }
@@ -110,7 +118,7 @@ public enum APIPresetStore {
         }
         set {
             guard let data = try? JSONEncoder().encode(newValue) else { return }
-            UserDefaults.standard.set(data, forKey: userPresetsKey)
+            VowriteStorage.defaults.set(data, forKey: userPresetsKey)
         }
     }
 
