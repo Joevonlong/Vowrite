@@ -50,17 +50,21 @@ struct PersonalizationView: View {
 
                 // Quick Presets
                 Section("Quick Presets") {
-                    ForEach(PreferencePreset.allPresets, id: \.name) { preset in
+                    ForEach(PreferencePreset.presets) { preset in
                         Button {
                             applyPreset(preset)
                         } label: {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(preset.name)
-                                    .font(.body)
-                                    .foregroundStyle(.primary)
-                                Text(preset.description)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                            HStack(spacing: 8) {
+                                Image(systemName: preset.icon)
+                                    .frame(width: 20)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(preset.name)
+                                        .font(.body)
+                                        .foregroundStyle(.primary)
+                                    Text(preset.promptText)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
@@ -122,11 +126,10 @@ struct PersonalizationView: View {
     }
 
     private func applyPreset(_ preset: PreferencePreset) {
-        // Apply preset settings to current mode
-        if let modeIndex = modeManager.modes.firstIndex(where: { $0.id == modeManager.currentModeId }) {
-            var mode = modeManager.modes[modeIndex]
-            mode.temperature = preset.temperature
-            modeManager.updateMode(mode)
-        }
+        // Apply preset prompt text as user prompt
+        userPrompt = preset.promptText
+        PromptConfig.userPrompt = preset.promptText
+        isUserPromptLocked = true
+        PromptConfig.isUserPromptLocked = true
     }
 }
