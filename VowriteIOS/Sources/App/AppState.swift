@@ -15,6 +15,7 @@ final class AppState: ObservableObject {
     @Published var bgServiceActive = false
     @Published var bgServiceRecording = false
     @Published var bgServiceError: String?
+    @Published var bgServiceRemainingTime: TimeInterval? = nil
 
     let modelContainer: ModelContainer
     let engine: DictationEngine
@@ -62,6 +63,7 @@ final class AppState: ObservableObject {
         backgroundService.$isActive.assign(to: &$bgServiceActive)
         backgroundService.$isRecording.assign(to: &$bgServiceRecording)
         backgroundService.$activationError.assign(to: &$bgServiceError)
+        backgroundService.$remainingTime.assign(to: &$bgServiceRemainingTime)
 
         // Wire history save callback
         engine.onRecordComplete = { [weak self] rawTranscript, finalText, duration in

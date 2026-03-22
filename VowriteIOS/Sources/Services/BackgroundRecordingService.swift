@@ -2,6 +2,30 @@ import AVFoundation
 import SwiftUI
 import VowriteKit
 
+// MARK: - BGServiceDuration
+
+enum BGServiceDuration: Int, CaseIterable, Identifiable {
+    case oneMinute = 60
+    case fiveMinutes = 300
+    case tenMinutes = 600
+    case always = 0
+
+    var id: Int { rawValue }
+
+    var label: String {
+        switch self {
+        case .oneMinute:   return "1 min"
+        case .fiveMinutes: return "5 min"
+        case .tenMinutes:  return "10 min"
+        case .always:      return "Always"
+        }
+    }
+
+    var seconds: TimeInterval? {
+        self == .always ? nil : TimeInterval(rawValue)
+    }
+}
+
 /// Main App background recording service.
 /// Listens for commands from keyboard extension via Darwin Notifications,
 /// records audio, processes STT + AI polish, and writes results back via IPC.
@@ -23,6 +47,7 @@ final class BackgroundRecordingService: ObservableObject {
     @Published var isActive = false
     @Published var isRecording = false
     @Published var activationError: String?
+    @Published var remainingTime: TimeInterval? = nil
 
     private let ipc = BackgroundRecordingIPC.shared
     private let whisperService = WhisperService()
@@ -36,6 +61,8 @@ final class BackgroundRecordingService: ObservableObject {
     private var audioFile: AVAudioFile?     // non-nil = actively writing audio to file
     private var inputFormat: AVAudioFormat?
     private nonisolated(unsafe) var lastRMSLevel: Float = 0
+    /// Peak RMS observed during current recording session — for silence detection.
+    private nonisolated(unsafe) var peakRMS: Float = 0
     private let fileLock = NSLock()         // protects audioFile across audio render + main threads
 
     /// Silent audio player to keep the app alive in background (UIBackgroundModes: audio)
@@ -48,14 +75,23 @@ final class BackgroundRecordingService: ObservableObject {
     private var recordingURL: URL?
     private var interruptionObserver: NSObjectProtocol?
 
+    // MARK: - Auto-deactivation timer
+    private var countdownTimer: Timer?
+    private var activatedAt: Date?
+    private var activeDuration: BGServiceDuration = .always
+    private var pendingAutoDeactivation = false
+
     init() {}
 
     // MARK: - Activate / Deactivate
 
-    func activate() {
-        guard !isActive else {
+    func activate(duration: BGServiceDuration = .always) {
+        // If already active, just update the timer (e.g. user changed duration picker)
+        if isActive {
+            activeDuration = duration
+            setupAutoDeactivation(duration: duration)
             #if DEBUG
-            print("[Vowrite BG] activate() called but already active, skipping")
+            print("[Vowrite BG] activate() called while active, updated duration to \(duration.label)")
             #endif
             return
         }
@@ -81,7 +117,7 @@ final class BackgroundRecordingService: ObservableObject {
             AVAudioApplication.requestRecordPermission { [weak self] granted in
                 Task { @MainActor in
                     if granted {
-                        self?.activate()
+                        self?.activate(duration: duration)
                     } else {
                         self?.activationError = "Microphone access denied."
                     }
@@ -124,9 +160,12 @@ final class BackgroundRecordingService: ObservableObject {
             inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
                 guard let self else { return }
 
-                // Calculate RMS for waveform display (only when recording)
+                // Calculate RMS for waveform display + silence detection (only when recording)
                 if self.isRecording {
-                    self.lastRMSLevel = self.calculateRMS(buffer: buffer)
+                    let rms = self.calculateRMS(buffer: buffer)
+                    self.lastRMSLevel = rms
+                    // Track peak RMS across session for silence detection
+                    if rms > self.peakRMS { self.peakRMS = rms }
                 }
 
                 // Write to file only when audioFile is set (= recording active)
@@ -189,8 +228,10 @@ final class BackgroundRecordingService: ObservableObject {
         }
 
         isActive = true
+        activeDuration = duration
+        setupAutoDeactivation(duration: duration)
         #if DEBUG
-        print("[Vowrite BG] Background recording service ACTIVATED successfully")
+        print("[Vowrite BG] Background recording service ACTIVATED successfully (duration: \(duration.label))")
         #endif
     }
 
@@ -200,6 +241,13 @@ final class BackgroundRecordingService: ObservableObject {
         if isRecording {
             cancelRecording()
         }
+
+        // Clean up auto-deactivation timers
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        remainingTime = nil
+        activatedAt = nil
+        pendingAutoDeactivation = false
 
         heartbeatTimer?.invalidate()
         heartbeatTimer = nil
@@ -230,6 +278,82 @@ final class BackgroundRecordingService: ObservableObject {
         #if DEBUG
         print("[Vowrite BG] Background recording service deactivated")
         #endif
+    }
+
+    // MARK: - Auto-Deactivation Timer
+
+    private func setupAutoDeactivation(duration: BGServiceDuration) {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+
+        if let seconds = duration.seconds {
+            // Check if resuming from a persisted activation timestamp
+            let persistedAt = VowriteStorage.defaults.double(forKey: "bgServiceActivatedAt")
+            if persistedAt > 0 {
+                let elapsed = Date().timeIntervalSince(Date(timeIntervalSince1970: persistedAt))
+                let remaining = seconds - elapsed
+                if remaining <= 0 {
+                    // Timer already expired (e.g. app was killed)
+                    performAutoDeactivation()
+                    return
+                }
+                activatedAt = Date(timeIntervalSince1970: persistedAt)
+            } else {
+                activatedAt = Date()
+                VowriteStorage.defaults.set(Date().timeIntervalSince1970, forKey: "bgServiceActivatedAt")
+            }
+            startCountdown(totalSeconds: seconds)
+        } else {
+            // "Always" mode — no timer
+            activatedAt = nil
+            remainingTime = nil
+            VowriteStorage.defaults.removeObject(forKey: "bgServiceActivatedAt")
+        }
+    }
+
+    private func startCountdown(totalSeconds: TimeInterval) {
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, let activated = self.activatedAt else { return }
+                let elapsed = Date().timeIntervalSince(activated)
+                let remaining = totalSeconds - elapsed
+                if remaining <= 0 {
+                    self.autoDeactivate()
+                } else {
+                    self.remainingTime = remaining
+                }
+            }
+        }
+        // Set initial remaining time
+        if let activated = activatedAt {
+            remainingTime = totalSeconds - Date().timeIntervalSince(activated)
+        } else {
+            remainingTime = totalSeconds
+        }
+    }
+
+    private func autoDeactivate() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        remainingTime = 0
+
+        if isRecording {
+            pendingAutoDeactivation = true
+            #if DEBUG
+            print("[Vowrite BG] Timer expired during recording, will deactivate after recording completes")
+            #endif
+        } else {
+            performAutoDeactivation()
+        }
+    }
+
+    private func performAutoDeactivation() {
+        #if DEBUG
+        print("[Vowrite BG] Auto-deactivated (timer expired)")
+        #endif
+        deactivate()
+        VowriteStorage.defaults.set(false, forKey: "bgServiceEnabled")
+        VowriteStorage.defaults.removeObject(forKey: "bgServiceActivatedAt")
     }
 
     // MARK: - Silent Audio (Background Keep-Alive)
@@ -396,6 +520,7 @@ final class BackgroundRecordingService: ObservableObject {
         }
 
         isRecording = true
+        peakRMS = 0
         recordingStartTime = Date()
         ipc.state = .recording
         ipc.recordingDuration = 0
@@ -439,9 +564,11 @@ final class BackgroundRecordingService: ObservableObject {
 
         recordingTimer?.invalidate()
         levelTimer?.invalidate()
-        isRecording = false
 
         let duration = ipc.recordingDuration
+        let wasSilent = peakRMS < 0.01
+
+        isRecording = false
 
         // Close audio file (stop writing, flush data)
         fileLock.lock()
@@ -454,10 +581,34 @@ final class BackgroundRecordingService: ObservableObject {
             return
         }
 
+        // Layer 2: Minimum duration check — block accidental taps
+        guard duration >= 0.5 else {
+            try? FileManager.default.removeItem(at: audioURL)
+            recordingURL = nil
+            ipc.state = .error
+            ipc.errorMessage = "Recording too short"
+            #if DEBUG
+            print("[Vowrite BG] Recording too short (\(String(format: "%.1f", duration))s), skipping")
+            #endif
+            return
+        }
+
+        // Layer 1: Pre-API silence detection — skip Whisper if no speech detected
+        guard !wasSilent else {
+            try? FileManager.default.removeItem(at: audioURL)
+            recordingURL = nil
+            ipc.state = .error
+            ipc.errorMessage = "No speech detected"
+            #if DEBUG
+            print("[Vowrite BG] Silent recording (peakRMS=\(peakRMS)), skipping Whisper")
+            #endif
+            return
+        }
+
         ipc.state = .processing
 
         #if DEBUG
-        print("[Vowrite BG] Recording stopped (\(String(format: "%.1f", duration))s), processing...")
+        print("[Vowrite BG] Recording stopped (\(String(format: "%.1f", duration))s, peakRMS=\(peakRMS)), processing...")
         #endif
 
         processAudio(url: audioURL, duration: duration)
@@ -481,6 +632,11 @@ final class BackgroundRecordingService: ObservableObject {
         #if DEBUG
         print("[Vowrite BG] Recording cancelled")
         #endif
+
+        if pendingAutoDeactivation {
+            pendingAutoDeactivation = false
+            performAutoDeactivation()
+        }
     }
 
     // MARK: - Audio Level (RMS from engine tap buffer)
@@ -545,6 +701,16 @@ final class BackgroundRecordingService: ObservableObject {
                     return
                 }
 
+                // Layer 3: Post-transcription hallucination filter
+                guard !HallucinationFilter.isHallucination(rawTranscript) else {
+                    #if DEBUG
+                    print("[Vowrite BG] Hallucination filtered: '\(rawTranscript)'")
+                    #endif
+                    ipc.state = .error
+                    ipc.errorMessage = "No speech detected"
+                    return
+                }
+
                 ipc.rawTranscript = rawTranscript
 
                 // Step 2: AI Polish
@@ -599,6 +765,11 @@ final class BackgroundRecordingService: ObservableObject {
                 ipc.state = .error
                 let desc = error.localizedDescription
                 ipc.errorMessage = desc.count > 80 ? String(desc.prefix(80)) + "..." : desc
+            }
+
+            if pendingAutoDeactivation {
+                pendingAutoDeactivation = false
+                performAutoDeactivation()
             }
         }
     }

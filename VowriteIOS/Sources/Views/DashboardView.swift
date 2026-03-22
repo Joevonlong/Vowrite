@@ -7,6 +7,10 @@ struct DashboardView: View {
     @State private var sttTestResult: TestResult?
     @State private var polishTestResult: TestResult?
     @State private var isTesting = false
+    @State private var selectedDuration: BGServiceDuration = {
+        let raw = VowriteStorage.defaults.integer(forKey: "bgServiceDuration")
+        return BGServiceDuration(rawValue: raw) ?? .always
+    }()
 
     private var keyboardActive: Bool {
         // Primary: check system input modes for our keyboard bundle ID
@@ -68,11 +72,13 @@ struct DashboardView: View {
                 get: { appState.bgServiceActive },
                 set: { newValue in
                     if newValue {
-                        appState.backgroundService.activate()
+                        appState.backgroundService.activate(duration: selectedDuration)
                         VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
+                        VowriteStorage.defaults.set(selectedDuration.rawValue, forKey: "bgServiceDuration")
                     } else {
                         appState.backgroundService.deactivate()
                         VowriteStorage.defaults.set(false, forKey: "bgServiceEnabled")
+                        VowriteStorage.defaults.removeObject(forKey: "bgServiceActivatedAt")
                     }
                 }
             )) {
@@ -83,6 +89,32 @@ struct DashboardView: View {
                     Text(appState.bgServiceActive ? "Active" : "Inactive")
                         .font(.subheadline)
                         .foregroundStyle(appState.bgServiceActive ? .primary : .secondary)
+                }
+            }
+
+            if appState.bgServiceActive {
+                Picker("Duration", selection: $selectedDuration) {
+                    ForEach(BGServiceDuration.allCases) { duration in
+                        Text(duration.label).tag(duration)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: selectedDuration) { _, newValue in
+                    VowriteStorage.defaults.set(newValue.rawValue, forKey: "bgServiceDuration")
+                    VowriteStorage.defaults.removeObject(forKey: "bgServiceActivatedAt")
+                    appState.backgroundService.activate(duration: newValue)
+                }
+            }
+
+            if let remaining = appState.bgServiceRemainingTime, remaining > 0, appState.bgServiceActive {
+                HStack {
+                    Image(systemName: "timer")
+                        .foregroundStyle(.orange)
+                    Text("Auto-off in \(formatCountdown(remaining))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                    Spacer()
                 }
             }
 
@@ -251,6 +283,13 @@ struct DashboardView: View {
 
             isTesting = false
         }
+    }
+
+    private func formatCountdown(_ seconds: TimeInterval) -> String {
+        let total = max(0, Int(seconds))
+        let m = total / 60
+        let s = total % 60
+        return String(format: "%d:%02d", m, s)
     }
 
     private func formatDuration(_ seconds: TimeInterval) -> String {

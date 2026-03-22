@@ -131,12 +131,12 @@ struct RecordArea: View {
             Text("松手取消")
                 .font(.caption)
         }
-        .foregroundStyle(isInDeleteZone ? .white : Color(white: 0.5))
+        .foregroundStyle(isInDeleteZone ? .white : Color(UIColor.secondaryLabel))
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isInDeleteZone ? Color.red.opacity(0.8) : Color(white: 0.15))
+                .fill(isInDeleteZone ? Color.red.opacity(0.8) : Color(UIColor.tertiarySystemFill))
         )
         .padding(.bottom, 4)
     }
@@ -213,7 +213,6 @@ private struct OrbView: View {
         case idle, recording, processing
     }
 
-    @State private var breathingPhase: CGFloat = 0
     @State private var pulseScale: CGFloat = 1.0
 
     var body: some View {
@@ -235,6 +234,7 @@ private struct OrbView: View {
             // White orb
             Circle()
                 .fill(KeyboardTheme.orbFill)
+                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
                 .frame(width: KeyboardTheme.orbDiameter,
                        height: KeyboardTheme.orbDiameter)
 
@@ -242,7 +242,7 @@ private struct OrbView: View {
             Group {
                 switch mode {
                 case .idle:
-                    WaveformView(level: breathingLevel, color: KeyboardTheme.orbWaveformColor)
+                    WaveformView(level: 0, color: KeyboardTheme.orbWaveformColor)
                 case .recording:
                     WaveformView(level: audioLevel, color: KeyboardTheme.waveformActiveColor)
                 case .processing:
@@ -254,51 +254,75 @@ private struct OrbView: View {
             .frame(width: KeyboardTheme.orbDiameter * 0.65)
             .clipShape(Circle())
         }
-        .onAppear {
-            if mode == .idle {
-                withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
-                    breathingPhase = 1.0
-                }
-            }
-        }
-        .onChange(of: mode == .idle) { isIdle in
-            if isIdle {
-                breathingPhase = 0
-                withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
-                    breathingPhase = 1.0
-                }
-            }
-        }
-    }
-
-    private var breathingLevel: Float {
-        Float(0.15 + 0.1 * breathingPhase)
     }
 }
 
-// MARK: - Waveform
+// MARK: - Waveform (Sine Wave)
 
 private struct WaveformView: View {
     let level: Float
-    var color: Color = Color(white: 0.55)
-    private let barCount = 16
+    var color: Color = Color(UIColor.systemGray)
+
+    @State private var phase: CGFloat = 0
 
     var body: some View {
-        HStack(spacing: 3) {
-            ForEach(0..<barCount, id: \.self) { i in
-                RoundedRectangle(cornerRadius: 1.5)
-                    .fill(color)
-                    .frame(width: 3, height: barHeight(for: i))
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+            SineWaveShape(
+                amplitude: amplitude,
+                frequency: 2.5,
+                phase: phase
+            )
+            .stroke(color, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+            .onChange(of: timeline.date) { _ in
+                if level > 0.05 {
+                    phase += 0.08
+                }
             }
         }
     }
 
-    private func barHeight(for index: Int) -> CGFloat {
-        let normalizedLevel = CGFloat(min(max(level, 0), 1))
-        let centerIndex = CGFloat(barCount) / 2.0
-        let distance = abs(CGFloat(index) - centerIndex) / centerIndex
-        let base: CGFloat = 4
-        let maxExtra: CGFloat = 32
-        return base + maxExtra * normalizedLevel * (1.0 - distance * 0.6)
+    private var amplitude: CGFloat {
+        let normalized = CGFloat(min(max(level, 0), 1))
+        let idle: CGFloat = 0.15
+        let active: CGFloat = 0.85
+        return idle + (active - idle) * normalized
+    }
+}
+
+private struct SineWaveShape: Shape {
+    var amplitude: CGFloat
+    var frequency: CGFloat
+    var phase: CGFloat
+
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(amplitude, phase) }
+        set {
+            amplitude = newValue.first
+            phase = newValue.second
+        }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let midY = rect.midY
+        let maxAmp = rect.height * 0.45 * amplitude
+        let steps = Int(rect.width)
+
+        for x in 0...steps {
+            let normalizedX = CGFloat(x) / CGFloat(steps)
+            // Composite wave: primary + harmonic for organic feel
+            let primary = sin(normalizedX * frequency * 2 * .pi + phase)
+            let harmonic = sin(normalizedX * frequency * 1.5 * 2 * .pi + phase * 1.3) * 0.3
+            // Envelope: fade at edges
+            let envelope = sin(normalizedX * .pi)
+            let y = midY + maxAmp * (primary + harmonic) * envelope
+
+            if x == 0 {
+                path.move(to: CGPoint(x: CGFloat(x), y: y))
+            } else {
+                path.addLine(to: CGPoint(x: CGFloat(x), y: y))
+            }
+        }
+        return path
     }
 }
