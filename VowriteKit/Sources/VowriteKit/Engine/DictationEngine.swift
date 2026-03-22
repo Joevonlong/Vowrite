@@ -128,7 +128,12 @@ public final class DictationEngine: ObservableObject {
                 }
             }
         } catch {
-            state = .error("录音失败，请检查麦克风权限")
+            #if DEBUG
+            print("[Vowrite] startRecording failed: \(error)")
+            #endif
+            let desc = error.localizedDescription
+            let truncated = desc.count > 80 ? String(desc.prefix(80)) + "..." : desc
+            state = .error("录音失败: \(truncated)")
         }
     }
 

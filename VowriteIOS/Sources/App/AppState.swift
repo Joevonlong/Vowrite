@@ -13,6 +13,7 @@ final class AppState: ObservableObject {
 
     let modelContainer: ModelContainer
     let engine: DictationEngine
+    let backgroundService = BackgroundRecordingService()
 
     private var cancellables = Set<AnyCancellable>()
 

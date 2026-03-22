@@ -16,6 +16,13 @@ struct RecordArea: View {
                 processingContent
             case .error(let message):
                 errorContent(message)
+            case .noMicAccess:
+                StatusBanner(
+                    icon: "mic.slash.fill",
+                    message: "Microphone access denied. Go to Settings → Vowrite → Microphone to enable.",
+                    actionLabel: "Open Settings",
+                    action: { openContainerApp(path: "settings") }
+                )
             case .noFullAccess:
                 StatusBanner(
                     icon: "exclamationmark.triangle.fill",
@@ -29,6 +36,13 @@ struct RecordArea: View {
                     message: "Please configure API Key in Vowrite App",
                     actionLabel: "Open Vowrite",
                     action: { openContainerApp(path: "settings") }
+                )
+            case .bgServiceNotRunning:
+                StatusBanner(
+                    icon: "antenna.radiowaves.left.and.right.slash",
+                    message: "Background Recording is not active. Tap to activate.",
+                    actionLabel: "Activate",
+                    action: { openContainerApp(path: "activate") }
                 )
             }
         }
@@ -173,12 +187,18 @@ struct RecordArea: View {
 
     private func openContainerApp(path: String = "setup") {
         guard let url = URL(string: "vowrite://\(path)") else { return }
-        // Extension cannot directly open URLs; use shared UIApplication via selector
-        let selector = NSSelectorFromString("openURL:")
+        // Walk responder chain to find UIApplication and open URL.
+        // iOS 18+ broke the old "openURL:" selector; use "open:options:completionHandler:" first.
+        let selectorModern = NSSelectorFromString("open:options:completionHandler:")
+        let selectorLegacy = NSSelectorFromString("openURL:")
         var responder: UIResponder? = state.inputViewController
         while let r = responder {
-            if r.responds(to: selector) {
-                r.perform(selector, with: url)
+            if r.responds(to: selectorModern) {
+                r.perform(selectorModern, with: url, with: NSDictionary())
+                return
+            }
+            if r.responds(to: selectorLegacy) {
+                r.perform(selectorLegacy, with: url)
                 return
             }
             responder = r.next
