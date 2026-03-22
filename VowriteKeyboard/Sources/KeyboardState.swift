@@ -9,6 +9,7 @@ final class KeyboardState: ObservableObject {
     @Published var viewState: ViewState = .idle
     @Published var audioLevel: Float = 0
     @Published var recordingDuration: TimeInterval = 0
+    @Published var showGlobe: Bool = true
 
     // Configuration state
     @Published var currentMode: Mode = Mode.builtinModes[1] // Clean
@@ -231,6 +232,11 @@ final class KeyboardState: ObservableObject {
 
     func advanceToNextKeyboard() {
         inputViewController?.advanceToNextInputMode()
+    }
+
+    /// Returns the UIInputViewController for UIKit globe button integration
+    var viewController: UIInputViewController? {
+        inputViewController
     }
 
     func insertSpace() {

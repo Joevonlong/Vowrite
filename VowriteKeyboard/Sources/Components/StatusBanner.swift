@@ -14,7 +14,7 @@ struct StatusBanner: View {
 
             Text(message)
                 .font(.caption)
-                .foregroundStyle(Color(white: 0.6))
+                .foregroundStyle(KeyboardTheme.subtitleColor)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
 
@@ -26,7 +26,7 @@ struct StatusBanner: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(
-                        Color(white: 0.2),
+                        KeyboardTheme.buttonFill,
                         in: RoundedRectangle(cornerRadius: 8)
                     )
             }

@@ -4,14 +4,14 @@ import VowriteKit
 // MARK: - Theme
 
 enum KeyboardTheme {
-    static let background = Color.black
-    static let buttonFill = Color(white: 0.2)
-    static let titleColor = Color.white
-    static let subtitleColor = Color(white: 0.6)
-    static let iconColor = Color.white
+    static let background = Color(red: 28/255, green: 28/255, blue: 30/255)
+    static let buttonFill = Color(red: 44/255, green: 44/255, blue: 46/255)
+    static let titleColor = Color(UIColor.label)
+    static let subtitleColor = Color(UIColor.secondaryLabel)
+    static let iconColor = Color(UIColor.label)
     static let orbFill = Color.white
-    static let orbWaveformColor = Color(white: 0.55)
-    static let waveformActiveColor = Color(white: 0.4)
+    static let orbWaveformColor = Color(UIColor.systemGray)
+    static let waveformActiveColor = Color(UIColor.systemGray2)
 
     static let orbDiameter: CGFloat = 126
     static let actionButtonSize: CGFloat = 44
@@ -36,7 +36,6 @@ struct KeyboardView: View {
             BottomBar(state: state)
                 .frame(height: 48)
         }
-        .background(KeyboardTheme.background)
-        .preferredColorScheme(.dark)
+        .background(KeyboardTheme.background.ignoresSafeArea())
     }
 }

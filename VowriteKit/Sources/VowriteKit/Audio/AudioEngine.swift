@@ -10,6 +10,13 @@ public final class AudioEngine {
     private var usingRecorderFallback = false
     public private(set) var currentLevel: Float = 0
 
+    /// Peak RMS audio level observed during the current recording session.
+    /// Used to detect silence — if peakRMS < 0.01 after recording, no speech was detected.
+    public private(set) var peakRMS: Float = 0
+
+    /// Returns true if the recording session contained no meaningful audio (all silence).
+    public var wasSilent: Bool { peakRMS < 0.01 }
+
     /// When false, AudioEngine will NOT configure or deactivate the AVAudioSession.
     /// Set to false when an external caller (e.g. BackgroundRecordingService) manages the session.
     public var manageAudioSession: Bool = true
@@ -38,6 +45,8 @@ public final class AudioEngine {
             #endif
         }
         #endif
+
+        peakRMS = 0
 
         // Try AVAudioEngine first; always fall back to AVAudioRecorder on failure.
         // AVAudioEngine can fail even in the main app on some devices/iOS versions.
@@ -112,12 +121,15 @@ public final class AudioEngine {
 
         // Poll meters for audio level
         let timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self, weak recorder] _ in
-            guard let recorder = recorder, recorder.isRecording else { return }
+            guard let self, let recorder = recorder, recorder.isRecording else { return }
             recorder.updateMeters()
             let db = recorder.averagePower(forChannel: 0)
+            // Convert dB to linear RMS for silence detection (dB is negative, -160 = silence)
+            let rms = pow(10.0, db / 20.0)
+            self.peakRMS = max(self.peakRMS, rms)
             let output: Float = db > -45 ? Float.random(in: 0.6...1.0) : 0.0
             DispatchQueue.main.async {
-                self?.currentLevel = output
+                self.currentLevel = output
             }
         }
 
@@ -162,10 +174,17 @@ public final class AudioEngine {
         let count = Int(buffer.frameLength)
 
         var peak: Float = 0
+        var sum: Float = 0
         for i in 0..<count {
-            let abs = fabsf(channelData[i])
+            let sample = channelData[i]
+            let abs = fabsf(sample)
             if abs > peak { peak = abs }
+            sum += sample * sample
         }
+
+        // Track peak RMS across the entire recording session for silence detection
+        let rms = count > 0 ? sqrt(sum / Float(count)) : 0
+        peakRMS = max(peakRMS, rms)
 
         // Any sound above noise floor → random high value (0.6-1.0) each frame
         // Silent → 0. This keeps the waveform constantly jumping while speaking.

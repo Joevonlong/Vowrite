@@ -48,17 +48,16 @@ struct VowriteApp: App {
                     }
                     .onAppear {
                         appState.importPendingRecords()
-                        // Auto-activate background recording service
-                        if VowriteStorage.defaults.bool(forKey: "bgServiceEnabled") {
-                            appState.backgroundService.activate()
-                        }
+                        // Auto-activate background recording service with saved duration
+                        autoActivateIfNeeded()
                     }
                     .onChange(of: pendingDeepLink) { _, link in
                         if let link, link == "activate" {
-                            // Deep link from keyboard extension: activate bg service
+                            // Deep link from keyboard extension: activate bg service (Always duration)
                             if !appState.backgroundService.isActive {
-                                appState.backgroundService.activate()
+                                appState.backgroundService.activate(duration: .always)
                                 VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
+                                VowriteStorage.defaults.set(BGServiceDuration.always.rawValue, forKey: "bgServiceDuration")
                             }
                             pendingDeepLink = nil
                         }
@@ -67,9 +66,8 @@ struct VowriteApp: App {
                         if newPhase == .active {
                             // App returned to foreground: import pending records & re-activate service if needed
                             appState.importPendingRecords()
-                            if VowriteStorage.defaults.bool(forKey: "bgServiceEnabled")
-                                && !appState.backgroundService.isActive {
-                                appState.backgroundService.activate()
+                            if !appState.backgroundService.isActive {
+                                autoActivateIfNeeded()
                             }
                         }
                     }
@@ -110,6 +108,30 @@ struct VowriteApp: App {
         }
     }
 
+    /// Auto-activate background service if enabled, respecting saved duration and checking for expiry.
+    private func autoActivateIfNeeded() {
+        guard VowriteStorage.defaults.bool(forKey: "bgServiceEnabled") else { return }
+
+        let durationRaw = VowriteStorage.defaults.integer(forKey: "bgServiceDuration")
+        let duration = BGServiceDuration(rawValue: durationRaw) ?? .always
+
+        // For finite durations, check if the timer has already expired
+        if let seconds = duration.seconds {
+            let activatedAt = VowriteStorage.defaults.double(forKey: "bgServiceActivatedAt")
+            if activatedAt > 0 {
+                let elapsed = Date().timeIntervalSince1970 - activatedAt
+                if elapsed >= seconds {
+                    // Timer expired while app was not running — don't reactivate
+                    VowriteStorage.defaults.set(false, forKey: "bgServiceEnabled")
+                    VowriteStorage.defaults.removeObject(forKey: "bgServiceActivatedAt")
+                    return
+                }
+            }
+        }
+
+        appState.backgroundService.activate(duration: duration)
+    }
+
     private func handleDeepLink(_ url: URL) {
         guard url.scheme == "vowrite" else { return }
         #if DEBUG
@@ -121,10 +143,11 @@ struct VowriteApp: App {
         case "setup":
             hasCompletedOnboarding = false
         case "activate":
-            // Keyboard extension requested bg service activation
+            // Keyboard extension requested bg service activation (use Always duration)
             if !appState.backgroundService.isActive {
-                appState.backgroundService.activate()
+                appState.backgroundService.activate(duration: .always)
                 VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
+                VowriteStorage.defaults.set(BGServiceDuration.always.rawValue, forKey: "bgServiceDuration")
             }
             pendingDeepLink = "activate"
         default:

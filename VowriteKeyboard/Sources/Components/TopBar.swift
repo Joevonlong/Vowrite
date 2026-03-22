@@ -43,7 +43,6 @@ struct TopBar: View {
                         }
                 )
 
-                // Dismiss keyboard
                 actionButton(symbol: "chevron.down") {
                     state.dismissKeyboard()
                 }

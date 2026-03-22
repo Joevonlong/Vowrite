@@ -186,8 +186,25 @@ final class AppState: ObservableObject {
         if let m = escGlobalMonitor { NSEvent.removeMonitor(m); escGlobalMonitor = nil }
         if let m = escLocalMonitor { NSEvent.removeMonitor(m); escLocalMonitor = nil }
 
+        let wasSilent = audioEngine.wasSilent
         guard let audioURL = audioEngine.stopRecording() else {
             state = .error("未录到音频，请重试")
+            RecordingOverlayController.shared.hide()
+            return
+        }
+
+        // Layer 2: Minimum duration check — block accidental taps
+        guard recordingDuration >= 0.5 else {
+            try? FileManager.default.removeItem(at: audioURL)
+            state = .error("录音太短，请重试")
+            RecordingOverlayController.shared.hide()
+            return
+        }
+
+        // Layer 1: Pre-API silence detection — skip Whisper if no speech detected
+        guard !wasSilent else {
+            try? FileManager.default.removeItem(at: audioURL)
+            state = .error("未检测到语音，请重试")
             RecordingOverlayController.shared.hide()
             return
         }
@@ -242,6 +259,16 @@ final class AppState: ObservableObject {
                 #endif
 
                 guard !rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    state = .error("未检测到语音，请重试")
+                    RecordingOverlayController.shared.hide()
+                    return
+                }
+
+                // Layer 3: Post-transcription hallucination filter
+                guard !HallucinationFilter.isHallucination(rawTranscript) else {
+                    #if DEBUG
+                    print("[Vowrite] Hallucination filtered: '\(rawTranscript)'")
+                    #endif
                     state = .error("未检测到语音，请重试")
                     RecordingOverlayController.shared.hide()
                     return
