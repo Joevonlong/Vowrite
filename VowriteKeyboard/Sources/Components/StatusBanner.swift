@@ -14,7 +14,7 @@ struct StatusBanner: View {
 
             Text(message)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color(white: 0.6))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
 
@@ -22,9 +22,14 @@ struct StatusBanner: View {
                 Text(actionLabel)
                     .font(.caption)
                     .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        Color(white: 0.2),
+                        in: RoundedRectangle(cornerRadius: 8)
+                    )
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
         }
     }
 }

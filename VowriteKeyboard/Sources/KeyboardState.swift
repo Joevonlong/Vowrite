@@ -244,4 +244,12 @@ final class KeyboardState: ObservableObject {
     func deleteBackward() {
         inputViewController?.textDocumentProxy.deleteBackward()
     }
+
+    func insertText(_ text: String) {
+        inputViewController?.textDocumentProxy.insertText(text)
+    }
+
+    func dismissKeyboard() {
+        inputViewController?.dismissKeyboard()
+    }
 }

@@ -3,7 +3,12 @@ import VowriteKit
 
 struct RecordArea: View {
     @ObservedObject var state: KeyboardState
-    @State private var isPushToTalk = false
+
+    // Drag-to-cancel state
+    @State private var dragOffset: CGFloat = 0
+    @State private var isDragging = false
+
+    private let cancelThreshold: CGFloat = 80
 
     var body: some View {
         Group {
@@ -53,103 +58,98 @@ struct RecordArea: View {
 
     private var idleContent: some View {
         VStack(spacing: 12) {
-            recordButton
-            Text("Tap to record")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-    }
+            Text("点击说话")
+                .font(.subheadline)
+                .foregroundStyle(KeyboardTheme.subtitleColor)
 
-    private var recordButton: some View {
-        ZStack {
-            Circle()
-                .fill(Color.accentColor)
-                .frame(width: 80, height: 80)
-                .shadow(color: .accentColor.opacity(0.3), radius: 8, y: 2)
-
-            Image(systemName: "mic.fill")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(.white)
-        }
-        .simultaneousGesture(
-            LongPressGesture(minimumDuration: 0.3)
-                .onEnded { _ in
-                    isPushToTalk = true
+            OrbView(mode: .idle, audioLevel: 0)
+                .onTapGesture {
                     state.startRecording()
                 }
-        )
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onEnded { _ in
-                    if isPushToTalk {
-                        state.stopRecording()
-                        isPushToTalk = false
-                    }
-                }
-        )
-        .onTapGesture {
-            if state.viewState == .idle {
-                state.startRecording()
-            }
         }
     }
 
     // MARK: - Recording
 
     private var recordingContent: some View {
-        VStack(spacing: 16) {
-            // Timer
-            HStack {
-                Spacer()
+        ZStack {
+            VStack(spacing: 12) {
+                // Timer
                 Text(formatDuration(state.recordingDuration))
                     .font(.caption)
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(KeyboardTheme.subtitleColor)
+
+                // Orb with drag gesture
+                OrbView(mode: .recording, audioLevel: state.audioLevel)
+                    .scaleEffect(isDragging && isInDeleteZone ? 0.7 : 1.0)
+                    .offset(y: isDragging ? min(dragOffset, cancelThreshold + 20) : 0)
+                    .onTapGesture {
+                        state.stopRecording()
+                    }
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 10)
+                            .onChanged { value in
+                                let yOffset = value.translation.height
+                                if yOffset > 0 {
+                                    isDragging = true
+                                    dragOffset = yOffset
+                                }
+                            }
+                            .onEnded { _ in
+                                if isInDeleteZone {
+                                    state.cancelRecording()
+                                }
+                                withAnimation(.spring(response: 0.3)) {
+                                    isDragging = false
+                                    dragOffset = 0
+                                }
+                            }
+                    )
+                    .animation(.interactiveSpring(), value: isDragging)
             }
-            .padding(.horizontal, 16)
 
-            // Waveform placeholder
-            WaveformView(level: state.audioLevel)
-                .frame(height: 40)
-                .padding(.horizontal, 24)
-
-            // Controls
-            HStack(spacing: 40) {
-                Button {
-                    state.cancelRecording()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "xmark")
-                        Text("Cancel")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.red)
+            // Delete zone (appears when dragging)
+            if isDragging {
+                VStack {
+                    Spacer()
+                    deleteZone
                 }
-
-                Button {
-                    state.stopRecording()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "stop.fill")
-                        Text("Done")
-                    }
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(Color.accentColor)
-                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+    }
+
+    private var isInDeleteZone: Bool {
+        dragOffset > cancelThreshold
+    }
+
+    private var deleteZone: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "trash.fill")
+                .font(.caption)
+            Text("松手取消")
+                .font(.caption)
+        }
+        .foregroundStyle(isInDeleteZone ? .white : Color(white: 0.5))
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isInDeleteZone ? Color.red.opacity(0.8) : Color(white: 0.15))
+        )
+        .padding(.bottom, 4)
     }
 
     // MARK: - Processing
 
     private var processingContent: some View {
         VStack(spacing: 12) {
-            ProgressView()
-                .scaleEffect(1.2)
-            Text("Processing...")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text("处理中...")
+                .font(.subheadline)
+                .foregroundStyle(KeyboardTheme.subtitleColor)
+
+            OrbView(mode: .processing, audioLevel: 0)
         }
     }
 
@@ -162,12 +162,11 @@ struct RecordArea: View {
                 .foregroundStyle(.red)
             Text(message)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(KeyboardTheme.subtitleColor)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
         }
         .onAppear {
-            // Auto-dismiss error after 3 seconds
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 if case .error = state.viewState {
                     state.reloadConfiguration()
@@ -187,8 +186,6 @@ struct RecordArea: View {
 
     private func openContainerApp(path: String = "setup") {
         guard let url = URL(string: "vowrite://\(path)") else { return }
-        // Walk responder chain to find UIApplication and open URL.
-        // iOS 18+ broke the old "openURL:" selector; use "open:options:completionHandler:" first.
         let selectorModern = NSSelectorFromString("open:options:completionHandler:")
         let selectorLegacy = NSSelectorFromString("openURL:")
         var responder: UIResponder? = state.inputViewController
@@ -206,17 +203,91 @@ struct RecordArea: View {
     }
 }
 
+// MARK: - Orb View
+
+private struct OrbView: View {
+    let mode: OrbMode
+    let audioLevel: Float
+
+    enum OrbMode {
+        case idle, recording, processing
+    }
+
+    @State private var breathingPhase: CGFloat = 0
+    @State private var pulseScale: CGFloat = 1.0
+
+    var body: some View {
+        ZStack {
+            // Outer pulse ring (recording only)
+            if mode == .recording {
+                Circle()
+                    .stroke(Color.white.opacity(0.15), lineWidth: 2)
+                    .frame(width: KeyboardTheme.orbDiameter + 16,
+                           height: KeyboardTheme.orbDiameter + 16)
+                    .scaleEffect(pulseScale)
+                    .onAppear {
+                        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                            pulseScale = 1.1
+                        }
+                    }
+            }
+
+            // White orb
+            Circle()
+                .fill(KeyboardTheme.orbFill)
+                .frame(width: KeyboardTheme.orbDiameter,
+                       height: KeyboardTheme.orbDiameter)
+
+            // Content inside orb
+            Group {
+                switch mode {
+                case .idle:
+                    WaveformView(level: breathingLevel, color: KeyboardTheme.orbWaveformColor)
+                case .recording:
+                    WaveformView(level: audioLevel, color: KeyboardTheme.waveformActiveColor)
+                case .processing:
+                    ProgressView()
+                        .tint(KeyboardTheme.orbWaveformColor)
+                        .scaleEffect(1.2)
+                }
+            }
+            .frame(width: KeyboardTheme.orbDiameter * 0.65)
+            .clipShape(Circle())
+        }
+        .onAppear {
+            if mode == .idle {
+                withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                    breathingPhase = 1.0
+                }
+            }
+        }
+        .onChange(of: mode == .idle) { isIdle in
+            if isIdle {
+                breathingPhase = 0
+                withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                    breathingPhase = 1.0
+                }
+            }
+        }
+    }
+
+    private var breathingLevel: Float {
+        Float(0.15 + 0.1 * breathingPhase)
+    }
+}
+
 // MARK: - Waveform
 
 private struct WaveformView: View {
     let level: Float
-    private let barCount = 20
+    var color: Color = Color(white: 0.55)
+    private let barCount = 16
 
     var body: some View {
         HStack(spacing: 3) {
             ForEach(0..<barCount, id: \.self) { i in
                 RoundedRectangle(cornerRadius: 1.5)
-                    .fill(Color.accentColor.opacity(0.7))
+                    .fill(color)
                     .frame(width: 3, height: barHeight(for: i))
             }
         }
