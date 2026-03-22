@@ -9,10 +9,17 @@ struct DashboardView: View {
     @State private var isTesting = false
 
     private var keyboardActive: Bool {
-        VowriteStorage.defaults.bool(forKey: "keyboard_active")
+        // Primary: check system input modes for our keyboard bundle ID
+        let systemDetected = UITextInputMode.activeInputModes.contains { mode in
+            let identifier = mode.value(forKey: "identifier") as? String ?? ""
+            return identifier.contains("com.vowrite")
+        }
+        // Fallback: UserDefaults written by the extension
+        return systemDetected || VowriteStorage.defaults.bool(forKey: "keyboard_active")
     }
 
     private var keyboardFullAccess: Bool {
+        // Only the extension knows this; requires the keyboard to have been opened at least once
         VowriteStorage.defaults.bool(forKey: "keyboard_full_access")
     }
 
@@ -24,6 +31,9 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    // Background Recording Service
+                    backgroundRecordingCard
+
                     // Keyboard Status Card
                     statusCard
 
@@ -37,6 +47,83 @@ struct DashboardView: View {
             }
             .navigationTitle("Dashboard")
         }
+    }
+
+    // MARK: - Background Recording Card
+
+    private var backgroundRecordingCard: some View {
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Background Recording", systemImage: "waveform.circle.fill")
+                        .font(.headline)
+                    Text("Keep Vowrite running in background for keyboard recording")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+
+            HStack(spacing: 16) {
+                // Status indicator
+                Circle()
+                    .fill(appState.backgroundService.isActive ? Color.green : Color.gray.opacity(0.4))
+                    .frame(width: 12, height: 12)
+
+                Text(appState.backgroundService.isActive ? "Active" : "Inactive")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(appState.backgroundService.isActive ? .primary : .secondary)
+
+                Spacer()
+
+                // Toggle button
+                Button {
+                    if appState.backgroundService.isActive {
+                        appState.backgroundService.deactivate()
+                        VowriteStorage.defaults.set(false, forKey: "bgServiceEnabled")
+                    } else {
+                        appState.backgroundService.activate()
+                        VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
+                    }
+                } label: {
+                    Text(appState.backgroundService.isActive ? "Turn Off" : "Turn On")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(
+                            appState.backgroundService.isActive ? Color.red : Color.accentColor,
+                            in: Capsule()
+                        )
+                }
+            }
+
+            if appState.backgroundService.isRecording {
+                HStack {
+                    Image(systemName: "mic.fill")
+                        .foregroundStyle(.red)
+                    Text("Recording in progress...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+            }
+
+            if let error = appState.backgroundService.activationError {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.red)
+                        .font(.caption)
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - Status Card
@@ -65,6 +152,13 @@ struct DashboardView: View {
                     }
                 }
             )
+
+            if !keyboardFullAccess {
+                Text("Please open the Vowrite keyboard at least once to sync status")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 24)
+            }
 
             StatusRow(
                 title: "API Configured",

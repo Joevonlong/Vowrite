@@ -38,6 +38,7 @@
 		A1B0020D /* StatusBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020D /* StatusBanner.swift */; };
 		A1B0020E /* MemoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020E /* MemoryMonitor.swift */; };
 		A1B0020F /* VowriteKit in Frameworks */ = {isa = PBXBuildFile; productRef = A1D00002 /* VowriteKit */; };
+		A1B00301 /* BackgroundRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00301 /* BackgroundRecordingService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +98,7 @@
 		A1F0020E /* MemoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMonitor.swift; sourceTree = "<group>"; };
 		A1F0020F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../VowriteKeyboard/Info.plist; sourceTree = "<group>"; };
 		A1F00210 /* VowriteKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = VowriteKeyboard.entitlements; path = ../VowriteKeyboard/Entitlements/VowriteKeyboard.entitlements; sourceTree = "<group>"; };
+		A1F00301 /* BackgroundRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRecordingService.swift; sourceTree = "<group>"; };
 		A1P00001 /* VowriteIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VowriteIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1P00002 /* VowriteKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VowriteKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -138,8 +140,17 @@
 				A1G00002 /* App */,
 				A1G00003 /* Views */,
 				A1G00004 /* Platform */,
+				A1G00007 /* Services */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		A1G00007 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A1F00301 /* BackgroundRecordingService.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		A1G00002 /* App */ = {
@@ -362,6 +373,7 @@
 				A1B0000A /* iOSPermissionManager.swift in Sources */,
 				A1B0000B /* iOSFeedback.swift in Sources */,
 				A1B0000C /* iOSOverlayProvider.swift in Sources */,
+				A1B00301 /* BackgroundRecordingService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

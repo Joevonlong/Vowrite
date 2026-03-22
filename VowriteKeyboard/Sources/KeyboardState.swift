@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import AVFoundation
 import VowriteKit
 
 @MainActor
@@ -8,7 +9,6 @@ final class KeyboardState: ObservableObject {
     @Published var viewState: ViewState = .idle
     @Published var audioLevel: Float = 0
     @Published var recordingDuration: TimeInterval = 0
-    @Published var processingStage: ProcessingStage = .stt
 
     // Configuration state
     @Published var currentMode: Mode = Mode.builtinModes[1] // Clean
@@ -19,61 +19,27 @@ final class KeyboardState: ObservableObject {
     @Published var hasFullAccess: Bool = false
     @Published var isConfigured: Bool = false
 
-    // Engine
-    let engine: DictationEngine
-    private var textOutput: KeyboardTextOutput
+    // IPC
+    private let ipc = BackgroundRecordingIPC.shared
+    private var pollTimer: Timer?
+    private var serviceCheckTimer: Timer?
+
     weak var inputViewController: UIInputViewController?
 
     enum ViewState: Equatable {
-        case idle, recording, processing, error(String), noFullAccess, noAPIKey
-    }
-
-    enum ProcessingStage {
-        case stt, polish
+        case idle, recording, processing, error(String)
+        case noFullAccess, noAPIKey, noMicAccess, bgServiceNotRunning
     }
 
     init(inputViewController: UIInputViewController) {
         self.inputViewController = inputViewController
-        self.textOutput = KeyboardTextOutput(proxy: inputViewController.textDocumentProxy)
-
-        self.engine = DictationEngine(
-            textOutput: textOutput,
-            permissions: KeyboardPermissionProvider(),
-            overlay: KeyboardOverlayProvider(),
-            feedback: KeyboardFeedback()
-        )
-
-        // Force auto-paste in keyboard (inserting text is the whole point)
-        engine.forceAutoPaste = true
-
-        // Save pending records instead of writing SwiftData directly
-        engine.onRecordComplete = { rawTranscript, finalText, duration in
-            let record = PendingRecord(
-                rawTranscript: rawTranscript,
-                polishedText: finalText,
-                duration: duration
-            )
-            PendingRecordStore.save(record)
-        }
-
-        // Forward engine state
-        engine.$state.receive(on: RunLoop.main).sink { [weak self] state in
-            guard let self else { return }
-            switch state {
-            case .idle: self.viewState = self.hasFullAccess ? (self.isConfigured ? .idle : .noAPIKey) : .noFullAccess
-            case .recording: self.viewState = .recording
-            case .processing: self.viewState = .processing
-            case .error(let msg): self.viewState = .error(msg)
-            }
-        }.store(in: &cancellables)
-
-        engine.$audioLevel.receive(on: RunLoop.main).assign(to: &$audioLevel)
-        engine.$recordingDuration.receive(on: RunLoop.main).assign(to: &$recordingDuration)
-
         reloadConfiguration()
+        startServiceCheckTimer()
     }
 
-    private var cancellables = Set<AnyCancellable>()
+    deinit {
+        serviceCheckTimer?.invalidate()
+    }
 
     func reloadConfiguration() {
         hasFullAccess = inputViewController?.hasFullAccess ?? false
@@ -100,10 +66,18 @@ final class KeyboardState: ObservableObject {
             currentStyleName = "Default"
         }
 
-        isConfigured = engine.hasAPIKey
+        // Check API config
+        let sttConfig = APIConfig.stt
+        isConfigured = sttConfig.provider.hasSTTSupport && (sttConfig.key != nil || !sttConfig.requiresAPIKey)
 
         if !isConfigured {
             viewState = .noAPIKey
+            return
+        }
+
+        // Check if background service is running
+        if !ipc.isServiceAlive {
+            viewState = .bgServiceNotRunning
             return
         }
 
@@ -111,7 +85,7 @@ final class KeyboardState: ObservableObject {
     }
 
     func updateProxy(_ proxy: UITextDocumentProxy) {
-        textOutput.proxy = proxy
+        // Keep reference for text insertion via inputViewController
     }
 
     func switchMode(to mode: Mode) {
@@ -123,35 +97,142 @@ final class KeyboardState: ObservableObject {
         } else {
             currentStyleName = "Default"
         }
+        // Write requested mode to IPC so main app picks it up
+        ipc.requestedModeId = mode.id.uuidString
     }
 
     func toggleAI() {
         aiEnabled.toggle()
-        // Temporary state, not persisted. Resets to Mode default when keyboard reopens.
+        ipc.requestedAIEnabled = aiEnabled
     }
 
+    // MARK: - Recording via IPC
+
     func startRecording() {
-        // Memory check
-        if MemoryMonitor.isUnderPressure {
-            aiEnabled = false  // Force downgrade
+        // Check if background service is alive
+        if !ipc.isServiceAlive {
+            #if DEBUG
+            print("[Vowrite KB] startRecording: bg service not alive, showing banner")
+            #endif
+            viewState = .bgServiceNotRunning
+            return
         }
-        engine.polishEnabledOverride = aiEnabled ? nil : false
-        engine.startRecording()
+
+        #if DEBUG
+        print("[Vowrite KB] startRecording: service alive, sending .start command")
+        print("[Vowrite KB]   mode=\(currentMode.name), aiEnabled=\(aiEnabled)")
+        #endif
+
+        // Write config for main app
+        ipc.requestedAIEnabled = aiEnabled
+        ipc.requestedModeId = currentMode.id.uuidString
+
+        // Send start command
+        ipc.sendCommand(.start)
+        viewState = .recording
+        audioLevel = 0
+        recordingDuration = 0
+
+        // Start polling IPC state
+        startPolling()
     }
 
     func stopRecording() {
-        engine.stopRecording()
+        ipc.sendCommand(.stop)
+        // Polling will pick up state change
     }
 
     func cancelRecording() {
-        engine.cancelRecording()
+        ipc.sendCommand(.cancel)
+        stopPolling()
+        viewState = .idle
     }
+
+    // MARK: - Service Alive Check
+
+    /// Periodically re-check if the background service is alive,
+    /// so the UI updates when the user activates it via deep link and returns.
+    private func startServiceCheckTimer() {
+        serviceCheckTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                // Only re-check when we're showing bgServiceNotRunning or idle
+                if self.viewState == .bgServiceNotRunning {
+                    if self.ipc.isServiceAlive {
+                        #if DEBUG
+                        print("[Vowrite KB] Background service detected alive, switching to idle")
+                        #endif
+                        self.viewState = .idle
+                    }
+                } else if self.viewState == .idle {
+                    if !self.ipc.isServiceAlive {
+                        #if DEBUG
+                        print("[Vowrite KB] Background service heartbeat lost, showing not running")
+                        #endif
+                        self.viewState = .bgServiceNotRunning
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - IPC Polling
+
+    private func startPolling() {
+        stopPolling()
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.pollIPCState()
+            }
+        }
+    }
+
+    private func stopPolling() {
+        pollTimer?.invalidate()
+        pollTimer = nil
+    }
+
+    private func pollIPCState() {
+        let ipcState = ipc.state
+
+        switch ipcState {
+        case .idle:
+            // If we were recording/processing and now idle, it was cancelled
+            if viewState == .recording || viewState == .processing {
+                viewState = .idle
+                stopPolling()
+            }
+
+        case .recording:
+            viewState = .recording
+            audioLevel = ipc.audioLevel
+            recordingDuration = ipc.recordingDuration
+
+        case .processing:
+            viewState = .processing
+
+        case .done:
+            if let result = ipc.result, !result.isEmpty {
+                inputViewController?.textDocumentProxy.insertText(result)
+            }
+            ipc.clearResult()
+            stopPolling()
+            viewState = .idle
+
+        case .error:
+            let message = ipc.errorMessage ?? "Unknown error"
+            viewState = .error(message)
+            ipc.clearResult()
+            stopPolling()
+        }
+    }
+
+    // MARK: - Keyboard actions
 
     func advanceToNextKeyboard() {
         inputViewController?.advanceToNextInputMode()
     }
 
-    // Bottom bar actions
     func insertSpace() {
         inputViewController?.textDocumentProxy.insertText(" ")
     }

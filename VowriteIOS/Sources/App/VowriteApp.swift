@@ -9,6 +9,8 @@ struct VowriteApp: App {
     @AppStorage("hasCompletedOnboarding", store: UserDefaults(suiteName: VowriteStorage.appGroupID))
     private var hasCompletedOnboarding = false
 
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var selectedTab: Tab = .dashboard
     @State private var pendingDeepLink: String?
 
@@ -46,6 +48,30 @@ struct VowriteApp: App {
                     }
                     .onAppear {
                         appState.importPendingRecords()
+                        // Auto-activate background recording service
+                        if VowriteStorage.defaults.bool(forKey: "bgServiceEnabled") {
+                            appState.backgroundService.activate()
+                        }
+                    }
+                    .onChange(of: pendingDeepLink) { _, link in
+                        if let link, link == "activate" {
+                            // Deep link from keyboard extension: activate bg service
+                            if !appState.backgroundService.isActive {
+                                appState.backgroundService.activate()
+                                VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
+                            }
+                            pendingDeepLink = nil
+                        }
+                    }
+                    .onChange(of: scenePhase) { _, newPhase in
+                        if newPhase == .active {
+                            // App returned to foreground: import pending records & re-activate service if needed
+                            appState.importPendingRecords()
+                            if VowriteStorage.defaults.bool(forKey: "bgServiceEnabled")
+                                && !appState.backgroundService.isActive {
+                                appState.backgroundService.activate()
+                            }
+                        }
                     }
             } else {
                 OnboardingView {
@@ -86,11 +112,21 @@ struct VowriteApp: App {
 
     private func handleDeepLink(_ url: URL) {
         guard url.scheme == "vowrite" else { return }
+        #if DEBUG
+        print("[Vowrite App] Deep link received: \(url.absoluteString)")
+        #endif
         switch url.host {
         case "settings":
             selectedTab = .settings
         case "setup":
             hasCompletedOnboarding = false
+        case "activate":
+            // Keyboard extension requested bg service activation
+            if !appState.backgroundService.isActive {
+                appState.backgroundService.activate()
+                VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
+            }
+            pendingDeepLink = "activate"
         default:
             break
         }
