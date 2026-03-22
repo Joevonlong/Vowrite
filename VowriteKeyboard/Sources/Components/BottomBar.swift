@@ -1,89 +1,154 @@
 import SwiftUI
+import VowriteKit
 
 struct BottomBar: View {
     @ObservedObject var state: KeyboardState
-    @State private var deleteTimer: Timer?
-    @State private var deleteSpeed: TimeInterval = 0.1
+    @State private var showSettingsPopover = false
 
     var body: some View {
-        HStack(spacing: 0) {
-            // Globe (next keyboard)
+        HStack {
+            // Globe — keyboard switcher
             Button {
                 state.advanceToNextKeyboard()
             } label: {
                 Image(systemName: "globe")
-                    .font(.system(size: 16))
-                    .frame(maxHeight: .infinity)
-                    .frame(width: 44)
+                    .font(.system(size: 20, weight: .regular))
+                    .foregroundStyle(KeyboardTheme.iconColor)
+                    .frame(width: 44, height: 44)
             }
 
-            // Space bar
-            Button {
-                state.insertSpace()
-            } label: {
-                Text("space")
-                    .font(.caption)
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 6))
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 4)
-            }
+            Spacer()
 
-            // Return
+            // Return button — "换行"
             Button {
                 state.insertReturn()
             } label: {
-                Image(systemName: "return")
-                    .font(.system(size: 14))
-                    .frame(maxHeight: .infinity)
-                    .frame(width: 44)
+                Text("换行")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(KeyboardTheme.subtitleColor)
+                    .frame(width: KeyboardTheme.returnButtonWidth,
+                           height: KeyboardTheme.returnButtonHeight)
+                    .background(
+                        KeyboardTheme.buttonFill,
+                        in: RoundedRectangle(cornerRadius: KeyboardTheme.returnButtonCornerRadius)
+                    )
             }
 
-            // Delete (with long-press repeat)
+            Spacer()
+
+            // Sparkle — quick settings
             Button {
-                state.deleteBackward()
+                showSettingsPopover = true
             } label: {
-                Image(systemName: "delete.left")
-                    .font(.system(size: 14))
-                    .frame(maxHeight: .infinity)
-                    .frame(width: 44)
+                Image(systemName: "sparkle")
+                    .font(.system(size: 18, weight: .regular))
+                    .foregroundStyle(KeyboardTheme.subtitleColor)
+                    .frame(width: 44, height: 44)
             }
-            .simultaneousGesture(
-                LongPressGesture(minimumDuration: 0.3)
-                    .onEnded { _ in
-                        startContinuousDelete()
-                    }
-            )
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onEnded { _ in
-                        stopContinuousDelete()
-                    }
-            )
+            .popover(isPresented: $showSettingsPopover) {
+                QuickSettingsPopover(state: state, isPresented: $showSettingsPopover)
+            }
         }
-        .foregroundStyle(.primary)
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 12)
     }
+}
 
-    private func startContinuousDelete() {
-        deleteSpeed = 0.1
-        deleteTimer = Timer.scheduledTimer(withTimeInterval: deleteSpeed, repeats: true) { _ in
-            state.deleteBackward()
-            // Accelerate
-            if deleteSpeed > 0.05 {
-                deleteSpeed -= 0.01
-                deleteTimer?.invalidate()
-                deleteTimer = Timer.scheduledTimer(withTimeInterval: deleteSpeed, repeats: true) { _ in
-                    state.deleteBackward()
+// MARK: - Quick Settings Popover
+
+private struct QuickSettingsPopover: View {
+    @ObservedObject var state: KeyboardState
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // AI Toggle
+            HStack {
+                Text("AI Polish")
+                    .font(.subheadline)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { state.aiEnabled },
+                    set: { _ in state.toggleAI() }
+                ))
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            Divider()
+
+            // Mode section
+            Text("Mode")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
+            ForEach(state.modes) { mode in
+                Button {
+                    state.switchMode(to: mode)
+                    isPresented = false
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(mode.icon)
+                            .font(.body)
+                        Text(mode.name)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        if mode.id == state.currentMode.id {
+                            Image(systemName: "checkmark")
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                }
+            }
+
+            // Style section (when AI is on)
+            if state.aiEnabled {
+                Divider()
+                    .padding(.top, 4)
+
+                Text("Style")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+
+                ForEach(state.styles) { style in
+                    Button {
+                        state.currentStyleName = style.name
+                        isPresented = false
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(style.icon)
+                                .font(.body)
+                            Text(style.name)
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            if style.name == state.currentStyleName {
+                                Image(systemName: "checkmark")
+                                    .font(.caption)
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                    }
                 }
             }
         }
-    }
-
-    private func stopContinuousDelete() {
-        deleteTimer?.invalidate()
-        deleteTimer = nil
-        deleteSpeed = 0.1
+        .frame(width: 240)
+        .presentationCompactAdaptation(.popover)
     }
 }

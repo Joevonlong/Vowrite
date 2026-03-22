@@ -11,6 +11,11 @@ final class AppState: ObservableObject {
     @Published var lastResult: String?
     @Published var lastRawTranscript: String?
 
+    // Forwarded from backgroundService (nested ObservableObject won't trigger view updates otherwise)
+    @Published var bgServiceActive = false
+    @Published var bgServiceRecording = false
+    @Published var bgServiceError: String?
+
     let modelContainer: ModelContainer
     let engine: DictationEngine
     let backgroundService = BackgroundRecordingService()
@@ -52,6 +57,11 @@ final class AppState: ObservableObject {
         engine.$recordingDuration.assign(to: &$recordingDuration)
         engine.$lastResult.assign(to: &$lastResult)
         engine.$lastRawTranscript.assign(to: &$lastRawTranscript)
+
+        // Forward backgroundService state so SwiftUI views react to changes
+        backgroundService.$isActive.assign(to: &$bgServiceActive)
+        backgroundService.$isRecording.assign(to: &$bgServiceRecording)
+        backgroundService.$activationError.assign(to: &$bgServiceError)
 
         // Wire history save callback
         engine.onRecordComplete = { [weak self] rawTranscript, finalText, duration in

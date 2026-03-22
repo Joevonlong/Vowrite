@@ -64,43 +64,29 @@ struct DashboardView: View {
                 Spacer()
             }
 
-            HStack(spacing: 16) {
-                // Status indicator
-                Circle()
-                    .fill(appState.backgroundService.isActive ? Color.green : Color.gray.opacity(0.4))
-                    .frame(width: 12, height: 12)
-
-                Text(appState.backgroundService.isActive ? "Active" : "Inactive")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(appState.backgroundService.isActive ? .primary : .secondary)
-
-                Spacer()
-
-                // Toggle button
-                Button {
-                    if appState.backgroundService.isActive {
-                        appState.backgroundService.deactivate()
-                        VowriteStorage.defaults.set(false, forKey: "bgServiceEnabled")
-                    } else {
+            Toggle(isOn: Binding(
+                get: { appState.bgServiceActive },
+                set: { newValue in
+                    if newValue {
                         appState.backgroundService.activate()
                         VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
+                    } else {
+                        appState.backgroundService.deactivate()
+                        VowriteStorage.defaults.set(false, forKey: "bgServiceEnabled")
                     }
-                } label: {
-                    Text(appState.backgroundService.isActive ? "Turn Off" : "Turn On")
+                }
+            )) {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(appState.bgServiceActive ? Color.green : Color.gray.opacity(0.4))
+                        .frame(width: 10, height: 10)
+                    Text(appState.bgServiceActive ? "Active" : "Inactive")
                         .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
-                        .background(
-                            appState.backgroundService.isActive ? Color.red : Color.accentColor,
-                            in: Capsule()
-                        )
+                        .foregroundStyle(appState.bgServiceActive ? .primary : .secondary)
                 }
             }
 
-            if appState.backgroundService.isRecording {
+            if appState.bgServiceRecording {
                 HStack {
                     Image(systemName: "mic.fill")
                         .foregroundStyle(.red)
@@ -111,7 +97,7 @@ struct DashboardView: View {
                 }
             }
 
-            if let error = appState.backgroundService.activationError {
+            if let error = appState.bgServiceError {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.red)
@@ -213,10 +199,10 @@ struct DashboardView: View {
             .disabled(isTesting)
 
             if let sttResult = sttTestResult {
-                testResultRow("STT", result: sttResult)
+                testResultRow("STT (\(APIConfig.sttProvider.rawValue))", result: sttResult)
             }
             if let polishResult = polishTestResult {
-                testResultRow("Polish", result: polishResult)
+                testResultRow("Polish (\(APIConfig.polishProvider.rawValue))", result: polishResult)
             }
         }
         .padding()
@@ -247,23 +233,20 @@ struct DashboardView: View {
         polishTestResult = nil
 
         Task {
-            // Test Polish (chat completion)
+            // Test Polish (chat completion — real API call)
             do {
                 try await APIConnectionTester.testChatCompletion(configuration: APIConfig.polish)
                 polishTestResult = .success
             } catch {
-                polishTestResult = .failure(error.localizedDescription.prefix(60).description)
+                polishTestResult = .failure(error.localizedDescription.prefix(80).description)
             }
 
-            // STT test — we don't have a testSTT static method on APIConnectionTester,
-            // so just verify the config is valid
-            let sttConfig = APIConfig.stt
-            if sttConfig.provider.hasSTTSupport && sttConfig.hasKey {
+            // Test STT (validates API key via /models endpoint)
+            do {
+                try await APIConnectionTester.testSTTConnection(configuration: APIConfig.stt)
                 sttTestResult = .success
-            } else if !sttConfig.provider.hasSTTSupport {
-                sttTestResult = .failure("\(sttConfig.provider.rawValue) doesn't support STT")
-            } else {
-                sttTestResult = .failure("Missing API key")
+            } catch {
+                sttTestResult = .failure(error.localizedDescription.prefix(80).description)
             }
 
             isTesting = false
