@@ -72,7 +72,7 @@ Types:
 
 ### Development Build
 ```bash
-cd VowriteApp && ./build.sh
+cd VowriteMac && swift build
 ```
 
 ---
@@ -173,7 +173,7 @@ The script automatically performs:
 
 | What I Want To Do | What To Run |
 |-------------------|-------------|
-| Daily development build | `cd VowriteApp && ./build.sh` |
+| Daily development build | `cd VowriteMac && swift build` |
 | Run tests | `ops/scripts/test.sh` |
 | Release a new version | `ops/scripts/release.sh v0.x.y.z` |
 | Clean build artifacts | `ops/scripts/clean.sh` |

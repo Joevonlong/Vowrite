@@ -17,7 +17,7 @@ if [ ! -f "$SOURCE" ]; then
   echo "❌ Source image not found: $SOURCE"
   echo ""
   echo "Please place a 1024x1024 PNG icon at:"
-  echo "  VowriteApp/Resources/AppIcon-source.png"
+  echo "  VowriteMac/Resources/AppIcon-source.png"
   echo ""
   echo "Or specify a path: ./scripts/generate-icon.sh /path/to/icon.png"
   exit 1

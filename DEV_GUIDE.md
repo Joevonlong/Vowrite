@@ -4,7 +4,7 @@
 
 ### Compile
 ```bash
-cd /Users/unclejoe/Dev_Workspace/Vowrite/VowriteApp
+cd /Users/unclejoe/Dev_Workspace/Vowrite-Workspace/Vowrite/VowriteMac
 swift build
 ```
 

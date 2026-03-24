@@ -53,7 +53,7 @@
 
 ```bash
 # Check for hardcoded keys in code
-grep -rn "sk-\|api_key\|apiKey.*=.*\"" VowriteApp/ --include="*.swift" | grep -v "Keychain\|placeholder\|example"
+grep -rn "sk-\|api_key\|apiKey.*=.*\"" VowriteKit/Sources/ VowriteMac/Sources/ --include="*.swift" | grep -v "Keychain\|placeholder\|example"
 
 # Check Git history
 git log -p | grep -i "sk-" | head -10

@@ -11,9 +11,14 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - **Multi-platform architecture**: Refactored into VowriteKit (shared core) + VowriteMac + VowriteIOS — all three targets build independently.
 - **iOS Keyboard Extension** (F-032): Complete keyboard extension implementation with voice input, mode/style switching, and text insertion via `textDocumentProxy`.
 - **iOS Container App**: Dashboard, Settings, Personalization, History, Onboarding, and Keyboard Setup Guide views.
+- **Settings Reorganization** (F-037): Sidebar expanded from 6 to 7 pages (Overview, General, History, API Keys, Models, Personalization, About).
 
 ### Changed
 - **README**: Updated project structure documentation for multi-platform architecture.
+
+### Removed
+- **VowriteApp (legacy) deleted**: All 38 Swift files (6795 lines) were fully superseded by VowriteKit (37 files) + VowriteMac (24 files). VowriteKit also added 12 new files (Protocols, DictationEngine, IPC, etc.) that VowriteApp never had. Freed ~370MB including build cache.
+- **ops scripts migrated**: `clean.sh`, `beta-build.sh`, `test.sh` now reference VowriteKit/VowriteMac instead of VowriteApp.
 
 ### Fixed
 - Rebuilt iOS xcodeproj (resolved ID conflicts and missing build phases).

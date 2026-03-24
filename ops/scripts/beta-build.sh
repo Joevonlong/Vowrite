@@ -12,9 +12,9 @@ set -e
 
 # --- Config ---
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_DIR="$PROJECT_ROOT/VowriteApp"
-APP_BUNDLE="$APP_DIR/Vowrite.app"
-ENTITLEMENTS="$APP_DIR/Resources/Vowrite.entitlements"
+MAC_DIR="$PROJECT_ROOT/VowriteMac"
+APP_BUNDLE="$MAC_DIR/Vowrite.app"
+ENTITLEMENTS="$MAC_DIR/Resources/Vowrite.entitlements"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
 DMG_PATH="$DMG_OUTPUT_DIR/Vowrite-dev.dmg"
 
@@ -25,7 +25,7 @@ echo "════════════════════════�
 # --- Step 1: Release build ---
 echo ""
 echo "▶ Step 1: Building (release config)..."
-cd "$APP_DIR"
+cd "$MAC_DIR"
 swift build -c release 2>&1
 echo "  ✓ Release build complete"
 
@@ -33,7 +33,8 @@ echo "  ✓ Release build complete"
 echo ""
 echo "▶ Step 2: Copying binary to app bundle..."
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
-cp .build/arm64-apple-macosx/release/Vowrite "$APP_BUNDLE/Contents/MacOS/Vowrite"
+# VowriteMac produces a binary named "VowriteMac", rename to "Vowrite"
+cp .build/arm64-apple-macosx/release/VowriteMac "$APP_BUNDLE/Contents/MacOS/Vowrite"
 cp Resources/Info.plist "$APP_BUNDLE/Contents/Info.plist"
 echo "  ✓ Binary and Info.plist copied"
 

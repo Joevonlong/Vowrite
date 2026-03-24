@@ -14,7 +14,7 @@ Recommended prompt example:
 Put the PNG file at:
 
 ```
-VowriteApp/Resources/AppIcon-source.png
+VowriteMac/Resources/AppIcon-source.png
 ```
 
 This is the only step you need to do manually.
@@ -24,7 +24,7 @@ This is the only step you need to do manually.
 Run the build script and the icon will be converted automatically:
 
 ```bash
-cd VowriteApp
+cd VowriteMac
 ./build.sh
 ```
 
@@ -51,7 +51,7 @@ The script will automatically:
 ## File Structure
 
 ```
-VowriteApp/
+VowriteMac/
 ├── Resources/
 │   ├── AppIcon-source.png    ← Place your icon here (1024x1024 PNG)
 │   └── Info.plist            ← Already includes CFBundleIconFile config
