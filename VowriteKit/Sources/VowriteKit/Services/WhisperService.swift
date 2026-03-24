@@ -20,11 +20,8 @@ public final class WhisperService {
         // Longer timeout for large audio files (upload + server processing)
         request.timeoutInterval = 180
 
-        // OpenRouter requires HTTP-Referer
-        if provider == .openrouter {
-            request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
-            request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
-        }
+        // Provider-specific headers (e.g. OpenRouter requires HTTP-Referer)
+        provider.applyHeaders(to: &request)
 
         let audioData = try Data(contentsOf: audioURL)
 

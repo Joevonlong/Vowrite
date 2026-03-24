@@ -22,11 +22,8 @@ public final class AIPolishService {
         // Longer timeout for large text (more tokens = longer generation)
         request.timeoutInterval = 120
 
-        // OpenRouter requires these headers
-        if provider == .openrouter {
-            request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
-            request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
-        }
+        // Provider-specific headers (e.g. OpenRouter requires HTTP-Referer)
+        provider.applyHeaders(to: &request)
 
         // Build system prompt: base + output style + mode-specific override or scene fallback
         var systemPrompt = PromptConfig.effectiveSystemPrompt
