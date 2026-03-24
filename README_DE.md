@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="VowriteApp/Resources/AppIcon-source.png" alt="Vowrite" width="128">
+  <img src="VowriteMac/Resources/AppIcon-source.png" alt="Vowrite" width="128">
 </p>
 
 <h1 align="center">Vowrite</h1>
@@ -60,7 +60,7 @@ Lade die neueste `.dmg` von [**Releases**](https://github.com/Joevonlong/Vowrite
 
 ```bash
 git clone https://github.com/Joevonlong/Vowrite.git
-cd Vowrite/VowriteApp
+cd Vowrite/VowriteMac
 ./build.sh
 ```
 

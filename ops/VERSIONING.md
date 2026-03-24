@@ -147,8 +147,8 @@ For each PATCH+ release, update version in **all** of these:
 
 | Location | Field |
 |----------|-------|
-| `VowriteApp/Resources/Info.plist` | `CFBundleShortVersionString` |
-| `VowriteApp/Views/SettingsView.swift` | Version display in AboutTab |
+| `VowriteMac/Resources/Info.plist` | `CFBundleShortVersionString` |
+| `VowriteKit/Sources/VowriteKit/Version.swift` | Version display in AboutTab |
 | `CHANGELOG.md` | New version entry |
 | Git tag | `v0.1.x.0` |
 | GitHub Release | Created with changelog content |

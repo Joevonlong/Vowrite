@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="VowriteApp/Resources/AppIcon-source.png" alt="Vowrite" width="128">
+  <img src="VowriteMac/Resources/AppIcon-source.png" alt="Vowrite" width="128">
 </p>
 
 <h1 align="center">Vowrite</h1>
@@ -60,7 +60,7 @@ Grab the latest `.dmg` from [**Releases**](https://github.com/Joevonlong/Vowrite
 
 ```bash
 git clone https://github.com/Joevonlong/Vowrite.git
-cd Vowrite/VowriteApp
+cd Vowrite/VowriteMac
 ./build.sh
 ```
 
@@ -118,7 +118,6 @@ Vowrite/
 │       ├── App/                # App lifecycle, state
 │       ├── Platform/           # iOS-specific: clipboard output, haptics, permissions
 │       └── Views/              # SwiftUI views (home, recording, settings, etc.)
-├── VowriteApp/                 # Legacy single-platform app (pre-refactor, retained for reference)
 └── docs/                       # Website (GitHub Pages → vowrite.com)
 ```
 
