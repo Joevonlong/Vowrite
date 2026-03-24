@@ -65,7 +65,7 @@ enum GoogleAuthService {
     private static let tokenEndpoint = "https://oauth2.googleapis.com/token"
 
     // MARK: - Client ID
-    // TODO: Replace with your Google Cloud OAuth Client ID for com.vowrite.app
+    // NOTE: Google OAuth Client ID will be configured when backend OAuth service is ready (F-006).
     // Create at: console.cloud.google.com → APIs & Services → Credentials → OAuth 2.0 (macOS)
     private static let bundledClientID = ""  // FILL IN AFTER CREATING GOOGLE CLOUD PROJECT
 
