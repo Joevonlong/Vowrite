@@ -41,5 +41,8 @@ VowriteApp/Vowrite.app/Contents/MacOS/Vowrite
 VowriteApp/Vowrite.app/Contents/MacOS/Vowrite.bak
 VowriteApp/Vowrite.app/Contents/Frameworks/
 VowriteApp/Vowrite.app/Contents/_CodeSignature/
+VowriteMac/Vowrite.app/Contents/MacOS/Vowrite
+VowriteMac/Vowrite.app/Contents/Frameworks/
+VowriteMac/Vowrite.app/Contents/_CodeSignature/
 tracking/
 releases/*.dmg
