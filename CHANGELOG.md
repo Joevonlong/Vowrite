@@ -22,6 +22,23 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Fixed iOS input UI — empty input handling, duplicate bottom bar, setting button active/inactive states.
 - Fixed keyboard extension compile errors and Xcode build errors.
 
+## [0.1.9.1] — 2026-03-24
+
+### Added
+- **China Providers** (F-030): First-class support for Chinese AI providers:
+  - **SiliconFlow (硅基流动)** — STT (SenseVoice) + Polish (Qwen/DeepSeek/GLM)
+  - **Kimi (月之暗面)** — Polish only (kimi-k2.5, moonshot series)
+  - **MiniMax** — Polish only (MiniMax-Text-02)
+- **🇨🇳 China Recommended preset**: One-click setup with SiliconFlow SenseVoice STT + Kimi kimi-k2.5 Polish — optimized for Chinese users.
+- Model descriptions for all new provider models in the settings UI.
+
+### Changed
+- **Provider header logic centralized**: Extracted provider-specific HTTP headers into `APIProvider.applyHeaders(to:)` — cleaner code, easier to extend.
+- Added `isOpenAICompatible` marker on `APIProvider` for future non-OpenAI protocol support.
+
+### Removed
+- **F-031 (Provider Protocol Abstraction) cancelled**: After evaluation, all current and planned providers use OpenAI-compatible APIs. Protocol abstraction is over-engineering at this stage — will be introduced when a non-OpenAI protocol (e.g. 讯飞 WebSocket) is actually needed.
+
 ## [0.1.9.0] — 2026-03-18
 
 ### Added
