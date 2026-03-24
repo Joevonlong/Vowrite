@@ -16,7 +16,7 @@
 
 | ID | Feature | 描述 | 优先级 | 状态 | 提出日期 | 备注 |
 |----|---------|------|--------|------|----------|------|
-| — | _暂无_ | 等待新需求提出 | — | — | — | — |
+| F-037 | Settings 界面重组 | Sidebar 从 6 项→7 项（Overview/General/History/API Keys/Models/Personalization/About），Settings 大拆分，文件解耦 | 🔴 高 | ✅ 已确认 | 2026-03-24 | Spec: `Vowrite-internal/tracking/features/F-037-settings-reorganization.md` |
 
 ## 📌 说明
 
