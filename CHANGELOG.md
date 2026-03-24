@@ -7,6 +7,21 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Added
+- **Multi-platform architecture**: Refactored into VowriteKit (shared core) + VowriteMac + VowriteIOS — all three targets build independently.
+- **iOS Keyboard Extension** (F-032): Complete keyboard extension implementation with voice input, mode/style switching, and text insertion via `textDocumentProxy`.
+- **iOS Container App**: Dashboard, Settings, Personalization, History, Onboarding, and Keyboard Setup Guide views.
+
+### Changed
+- **README**: Updated project structure documentation for multi-platform architecture.
+
+### Fixed
+- Rebuilt iOS xcodeproj (resolved ID conflicts and missing build phases).
+- Restored Sparkle auto-update toggle in macOS Settings after refactor.
+- Fixed iOS voice input (AVAudioRecorder.record() returning false).
+- Fixed iOS input UI — empty input handling, duplicate bottom bar, setting button active/inactive states.
+- Fixed keyboard extension compile errors and Xcode build errors.
+
 ## [0.1.9.0] — 2026-03-18
 
 ### Added
