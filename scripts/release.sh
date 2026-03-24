@@ -21,10 +21,14 @@ set -euo pipefail
 # ══════════════════════════════════════════════════════════
 
 APP_NAME="Vowrite"
-APP_PACKAGE="VowriteApp"
+# --- Build target (VowriteMac package, produces "VowriteMac" binary) ---
+APP_PACKAGE="VowriteMac"
+APP_BINARY_NAME="VowriteMac"
 APP_BUNDLE="${APP_PACKAGE}/Vowrite.app"
-VERSION_FILE="${APP_PACKAGE}/Core/Version.swift"
+# --- Version lives in VowriteKit now ---
+VERSION_FILE="VowriteKit/Sources/VowriteKit/Version.swift"
 PLIST_FILE="${APP_PACKAGE}/Resources/Info.plist"
+ENTITLEMENTS="${APP_PACKAGE}/Resources/Vowrite.entitlements"
 CHANGELOG="CHANGELOG.md"
 DMG_DIR="releases"
 
@@ -87,10 +91,21 @@ if ! grep -q "\[${NEW_VERSION}\]" "$CHANGELOG"; then
     exit 1
 fi
 
+# Check required files exist
+if [ ! -f "$ENTITLEMENTS" ]; then
+    echo "❌ Entitlements file not found: $ENTITLEMENTS"
+    exit 1
+fi
+if [ ! -f "$PLIST_FILE" ]; then
+    echo "❌ Info.plist not found: $PLIST_FILE"
+    exit 1
+fi
+
 echo "   ✅ gh CLI available"
 echo "   ✅ Git working tree clean"
 echo "   ✅ Tag $TAG is new"
 echo "   ✅ CHANGELOG has entry for $NEW_VERSION"
+echo "   ✅ Entitlements and Info.plist found"
 echo ""
 
 if $DRY_RUN; then
@@ -107,11 +122,12 @@ sed -i '' "/<key>CFBundleShortVersionString<\/key>/{n;s/<string>.*<\/string>/<st
 # ── Step 2: Build release binary ──────────────────────────
 echo "🔨 Step 2: Building release binary..."
 cd "$APP_PACKAGE"
-swift build -c release 2>&1 | tail -3
+swift build -c release 2>&1 | tail -5
 cd ..
 
-# Copy release binary into app bundle
-cp "${APP_PACKAGE}/.build/arm64-apple-macosx/release/${APP_NAME}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
+# Copy release binary into app bundle (rename VowriteMac → Vowrite)
+mkdir -p "${APP_BUNDLE}/Contents/MacOS"
+cp "${APP_PACKAGE}/.build/arm64-apple-macosx/release/${APP_BINARY_NAME}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 cp "$PLIST_FILE" "${APP_BUNDLE}/Contents/Info.plist"
 
 # Embed Sparkle.framework into app bundle
@@ -130,12 +146,6 @@ else
 fi
 
 # ── Step 3: Code sign (with entitlements) ─────────────────
-ENTITLEMENTS="${APP_PACKAGE}/Resources/Vowrite.entitlements"
-if [ ! -f "$ENTITLEMENTS" ]; then
-    echo "❌ Entitlements file not found: $ENTITLEMENTS"
-    exit 1
-fi
-
 # F-024: Use stable self-signed cert for persistent permissions
 SIGN_KEYCHAIN="$HOME/Library/Keychains/vowrite-signing.keychain-db"
 if [ -f "$SIGN_KEYCHAIN" ]; then
@@ -162,8 +172,10 @@ cp -R "${APP_BUNDLE}" "${STAGING}/${APP_NAME}.app"
 codesign --force --deep --sign "${SIGN_IDENTITY}" ${KEYCHAIN_FLAG} --entitlements "$ENTITLEMENTS" "${STAGING}/${APP_NAME}.app"
 ln -s /Applications "${STAGING}/Applications"
 # Include install script for easy updates (quit → replace → relaunch)
-cp scripts/install.sh "${STAGING}/Install ${APP_NAME}.command"
-chmod +x "${STAGING}/Install ${APP_NAME}.command"
+if [ -f "scripts/install.sh" ]; then
+    cp scripts/install.sh "${STAGING}/Install ${APP_NAME}.command"
+    chmod +x "${STAGING}/Install ${APP_NAME}.command"
+fi
 
 mkdir -p "$DMG_DIR"
 rm -f "$DMG_PATH"

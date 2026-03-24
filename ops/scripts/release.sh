@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Vowrite Release Script
+# Vowrite Release Script (ops)
 # Usage: ./ops/scripts/release.sh v0.1.6.0 "Short release description"
 #        ./ops/scripts/release.sh --beta v0.1.9.0-beta.1 "Beta description"
 #
 # Automates:
 #   1. Version validation (4-segment format, with optional -beta.N suffix)
 #   2. CHANGELOG.md: [Unreleased] → [X.Y.Z.W] — date (relaxed for beta)
-#   3. Info.plist + SettingsView version bump
+#   3. Info.plist + Version.swift bump
 #   4. Release build + code signing + DMG packaging
 #   5. Git commit (v0.1.6.0: description) + annotated tag
 #   6. Summary with next steps
@@ -16,16 +16,18 @@ set -e
 
 # --- Config ---
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_DIR="$PROJECT_ROOT/VowriteApp"
+APP_DIR="$PROJECT_ROOT/VowriteMac"
 APP_BUNDLE="$APP_DIR/Vowrite.app"
 ENTITLEMENTS="$APP_DIR/Resources/Vowrite.entitlements"
 INFO_PLIST="$APP_DIR/Resources/Info.plist"
-SETTINGS_VIEW="$APP_DIR/Views/SettingsView.swift"
+VERSION_SWIFT="$PROJECT_ROOT/VowriteKit/Sources/VowriteKit/Version.swift"
 CHANGELOG="$PROJECT_ROOT/CHANGELOG.md"
-VERSION_SWIFT="$APP_DIR/Core/Version.swift"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
 APPCAST_STABLE="$PROJECT_ROOT/docs/appcast.xml"
 APPCAST_BETA="$PROJECT_ROOT/docs/appcast-beta.xml"
+
+# Binary name produced by VowriteMac package
+APP_BINARY_NAME="VowriteMac"
 
 # --- Parse --beta flag ---
 IS_BETA=false
@@ -85,6 +87,16 @@ if [ -n "$(git -C "$PROJECT_ROOT" status --porcelain)" ]; then
     [[ $REPLY =~ ^[Yy]$ ]] || exit 1
 fi
 
+# Check required files
+if [ ! -f "$ENTITLEMENTS" ]; then
+    echo "❌ Entitlements not found: $ENTITLEMENTS"
+    exit 1
+fi
+if [ ! -f "$INFO_PLIST" ]; then
+    echo "❌ Info.plist not found: $INFO_PLIST"
+    exit 1
+fi
+
 # Check that release checklist has been reviewed
 echo ""
 echo "📋 Have you completed ops/CHECKLIST_RELEASE.md? (y/N)"
@@ -127,12 +139,9 @@ else
         sed -i '' "s/## \[Unreleased\]/## [Unreleased]\n\n## [$VERSION_NUM] — $TODAY/" "$CHANGELOG"
 
         # Update comparison links at bottom
-        # Add new unreleased link and version link
         PREV_VERSION=$(grep -oE '\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\]' "$CHANGELOG" | head -2 | tail -1 | tr -d '[]')
         if [ -n "$PREV_VERSION" ]; then
-            # Update [Unreleased] link
             sed -i '' "s|^\[Unreleased\]:.*|[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/$VERSION...HEAD|" "$CHANGELOG"
-            # Add version comparison link if not exists
             if ! grep -q "^\[$VERSION_NUM\]:" "$CHANGELOG"; then
                 sed -i '' "/^\[Unreleased\]:/a\\
 [$VERSION_NUM]: https://github.com/Joevonlong/Vowrite/compare/v$PREV_VERSION...$VERSION" "$CHANGELOG"
@@ -151,11 +160,9 @@ echo ""
 echo "▶ Step 2: Updating version to $VERSION_NUM..."
 # Info.plist uses base version (no -beta suffix) for macOS compatibility
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_BASE" "$INFO_PLIST"
-/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_BASE" "$APP_BUNDLE/Contents/Info.plist"
-echo "  ✓ App bundle Info.plist updated"
 echo "  ✓ Info.plist updated"
 
-# --- Step 3: Update version in SettingsView.swift ---
+# --- Step 3: Update version in Version.swift ---
 echo ""
 echo "▶ Step 3: Updating Version.swift..."
 # Version.swift shows full version string including -beta.N
@@ -172,7 +179,9 @@ echo "  ✓ Release build complete"
 # --- Step 5: Copy binary + embed Sparkle ---
 echo ""
 echo "▶ Step 5: Copying binary to app bundle..."
-cp .build/arm64-apple-macosx/release/Vowrite "$APP_BUNDLE/Contents/MacOS/Vowrite"
+mkdir -p "$APP_BUNDLE/Contents/MacOS"
+# VowriteMac binary → rename to Vowrite in the app bundle
+cp ".build/arm64-apple-macosx/release/${APP_BINARY_NAME}" "$APP_BUNDLE/Contents/MacOS/Vowrite"
 cp "$INFO_PLIST" "$APP_BUNDLE/Contents/Info.plist"
 echo "  ✓ Binary and Info.plist copied"
 
@@ -248,7 +257,7 @@ git tag -a "$VERSION" -m "$VERSION — $DESCRIPTION" 2>/dev/null || {
 }
 echo "  ✓ Committed and tagged $VERSION"
 
-# --- Step 10: Summary ---
+# --- Step 9: Summary ---
 echo ""
 echo "═══════════════════════════════════════"
 echo "  ✅ Release $VERSION [$RELEASE_TYPE] complete!"
