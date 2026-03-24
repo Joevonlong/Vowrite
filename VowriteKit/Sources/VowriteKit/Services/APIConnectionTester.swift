@@ -20,10 +20,8 @@ public enum APIConnectionTester {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         }
 
-        if configuration.provider == .openrouter {
-            request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
-            request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
-        }
+        // Provider-specific headers (e.g. OpenRouter requires HTTP-Referer)
+        configuration.provider.applyHeaders(to: &request)
 
         let payload: [String: Any] = [
             "model": configuration.model,
