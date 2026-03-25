@@ -192,8 +192,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case "whisper-large-v3-turbo": return "Fastest Groq/Ollama option"
         case "whisper-large-v3": return "Higher accuracy"
         case "whisper-base": return "Lightweight local model"
-        case "FunAudioLLM/SenseVoiceSmall": return "Alibaba SenseVoice — excellent Chinese STT"
-        case "TeleAI/TeleSpeechASR": return "China Telecom ASR model"
+        case "FunAudioLLM/SenseVoiceSmall": return "Alibaba SenseVoice — excellent multilingual STT"
+        case "TeleAI/TeleSpeechASR": return "TeleAI ASR model"
         default: return nil
         }
     }

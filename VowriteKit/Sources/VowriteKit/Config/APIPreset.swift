@@ -15,7 +15,7 @@ public struct UserAPIPreset: Codable, Identifiable, Equatable {
 public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
     case recommended
     case openAIAllInOne
-    case chinaRecommended
+    case siliconflowKimi
     case localOllama
 
     public var id: String {
@@ -26,7 +26,7 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
         switch self {
         case .recommended: return "Recommended"
         case .openAIAllInOne: return "OpenAI all-in-one"
-        case .chinaRecommended: return "🇨🇳 China Recommended"
+        case .siliconflowKimi: return "SiliconFlow + Kimi"
         case .localOllama: return "Local Ollama"
         }
     }
@@ -37,7 +37,7 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
             return "Groq STT + DeepSeek polish"
         case .openAIAllInOne:
             return "OpenAI handles both STT and polish"
-        case .chinaRecommended:
+        case .siliconflowKimi:
             return "SiliconFlow STT (SenseVoice) + Kimi polish"
         case .localOllama:
             return "Run both pipelines locally on Ollama"
@@ -53,7 +53,7 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
                 stt: APIEndpointConfiguration(provider: .openai, model: "gpt-4o-mini-transcribe"),
                 polish: APIEndpointConfiguration(provider: .openai, model: "gpt-4o-mini")
             )
-        case .chinaRecommended:
+        case .siliconflowKimi:
             return SplitAPIConfiguration(
                 stt: APIEndpointConfiguration(provider: .siliconflow, model: "FunAudioLLM/SenseVoiceSmall"),
                 polish: APIEndpointConfiguration(provider: .kimi, model: "kimi-k2.5")

@@ -158,6 +158,13 @@ public enum APIConfig {
         apply(preset.configuration, presetID: preset.id)
     }
 
+    /// Migrate renamed builtin preset IDs (chinaRecommended → siliconflowKimi)
+    public static func migratePresetIDs() {
+        if selectedPresetID == "builtin:chinaRecommended" {
+            selectedPresetID = "builtin:siliconflowKimi"
+        }
+    }
+
     public static func clearSelectedPresetIfNeeded(for configuration: SplitAPIConfiguration) {
         if let activePreset, activePreset.configuration == configuration {
             return

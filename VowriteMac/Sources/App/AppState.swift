@@ -30,6 +30,7 @@ final class AppState: ObservableObject {
 
     init() {
         APIConfigMigration.runIfNeeded()
+        APIConfig.migratePresetIDs()
 
         do {
             let schema = Schema([DictationRecord.self])
