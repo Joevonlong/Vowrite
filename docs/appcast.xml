@@ -6,12 +6,29 @@
     <description>Vowrite release feed</description>
     <language>en</language>
     <!--
-      To add a new release:
-      1. Build the DMG with release.sh
-      2. Sign it: generate_appcast /path/to/releases/
-         OR manually: sign_update Vowrite-vX.Y.Z.W.dmg
-      3. Add a new <item> block below with the edSignature and length
-      4. Push to GitHub Pages (docs/)
+      Managed by release.sh — do not edit manually.
+      Each release: sign_update signs the DMG, release.sh inserts the <item>.
     -->
+    <item>
+      <title>Vowrite 0.1.9.2</title>
+      <description><![CDATA[
+        <h2>What's New in 0.1.9.2</h2>
+        <ul>
+          <li><b>Fixed</b>: Automatic Updates toggle now works correctly in About page</li>
+          <li><b>Fixed</b>: Sparkle updater now starts on app launch for background checks</li>
+          <li><b>Added</b>: Complete auto-update infrastructure (EdDSA signing, appcast, release automation)</li>
+        </ul>
+      ]]></description>
+      <pubDate>Tue, 25 Mar 2026 01:25:00 +0800</pubDate>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>0.1.9.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/Joevonlong/Vowrite/releases/download/v0.1.9.2/Vowrite-v0.1.9.2.dmg"
+        type="application/octet-stream"
+        sparkle:edSignature="NIGpXN1gzRB1AGJzYTCu+Do438jCcNq1pIGf59VRzmFGxOm3SfJRBZ3h6/yLdFwGv4njM6op5iXatCJusYi4Cg=="
+        length="4522586"
+      />
+    </item>
   </channel>
 </rss>
