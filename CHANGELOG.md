@@ -30,11 +30,11 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 ## [0.1.9.1] — 2026-03-24
 
 ### Added
-- **China Providers** (F-030): First-class support for Chinese AI providers:
+- **New Providers** (F-030): Added SiliconFlow, Kimi, and MiniMax support:
   - **SiliconFlow (硅基流动)** — STT (SenseVoice) + Polish (Qwen/DeepSeek/GLM)
   - **Kimi (月之暗面)** — Polish only (kimi-k2.5, moonshot series)
   - **MiniMax** — Polish only (MiniMax-Text-02)
-- **🇨🇳 China Recommended preset**: One-click setup with SiliconFlow SenseVoice STT + Kimi kimi-k2.5 Polish — optimized for Chinese users.
+- **SiliconFlow + Kimi preset**: One-click setup with SiliconFlow SenseVoice STT + Kimi kimi-k2.5 Polish.
 - Model descriptions for all new provider models in the settings UI.
 
 ### Changed

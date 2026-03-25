@@ -32,6 +32,7 @@ struct VowriteApp: App {
 
         // 4. Run v0.1.x legacy migration (if needed)
         APIConfigMigration.runIfNeeded()
+        APIConfig.migratePresetIDs()
 
         // Initialize AppState after all migrations
         _appState = StateObject(wrappedValue: AppState())
