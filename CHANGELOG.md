@@ -27,6 +27,17 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Fixed iOS input UI — empty input handling, duplicate bottom bar, setting button active/inactive states.
 - Fixed keyboard extension compile errors and Xcode build errors.
 
+## [0.1.9.2] — 2026-03-25
+
+### Fixed
+- **Sparkle auto-update toggle**: Fixed "Automatic Updates" toggle not responding in About page — `MacUpdateManager` refactored to `ObservableObject` with Combine KVO bindings for proper SwiftUI reactivity.
+- **Updater not starting**: Changed `startingUpdater: false` → `true` so Sparkle performs background update checks on app launch.
+- **"Check Now" button**: Now disables during an active check to prevent duplicate requests.
+
+### Added
+- **Auto-update infrastructure complete** (F-026): EdDSA-signed appcast.xml with v0.1.9.1 entry, enabling end-to-end Sparkle updates via GitHub Releases + GitHub Pages.
+- **release.sh automation**: Automatic EdDSA DMG signing, appcast.xml generation, CFBundleVersion auto-increment, and interactive GitHub Release creation.
+
 ## [0.1.9.1] — 2026-03-24
 
 ### Added
@@ -261,7 +272,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.8.0...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.2...HEAD
+[0.1.9.2]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.1...v0.1.9.2
+[0.1.9.1]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.0...v0.1.9.1
+[0.1.9.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.8.3...v0.1.9.0
 [0.1.8.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.2...v0.1.8.0
 [0.1.7.2]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.1...v0.1.7.2
 [0.1.7.1]: https://github.com/Joevonlong/Vowrite/compare/v0.1.7.0...v0.1.7.1

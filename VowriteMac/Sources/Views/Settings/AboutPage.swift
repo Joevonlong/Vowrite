@@ -4,6 +4,13 @@ import SwiftUI
 // MARK: - About Page
 
 struct AboutPageView: View {
+    @ObservedObject private var updateManager: MacUpdateManager
+
+    init() {
+        let manager = (NSApp.delegate as? AppDelegate)?.updateManager ?? MacUpdateManager()
+        _updateManager = ObservedObject(wrappedValue: manager)
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
@@ -35,18 +42,15 @@ struct AboutPageView: View {
                         Divider()
                         SettingsRow(title: "Check for Updates", description: "Download the latest version if available") {
                             Button("Check Now...") {
-                                (NSApp.delegate as? AppDelegate)?.checkForUpdates()
+                                updateManager.checkForUpdates()
                             }
                             .buttonStyle(.bordered)
+                            .disabled(!updateManager.canCheckForUpdates)
                         }
                         SettingsRow(title: "Automatic Updates", description: "Periodically check for new versions") {
                             Toggle("", isOn: Binding(
-                                get: {
-                                    (NSApp.delegate as? AppDelegate)?.updateManager.updaterController.updater.automaticallyChecksForUpdates ?? false
-                                },
-                                set: { newValue in
-                                    (NSApp.delegate as? AppDelegate)?.updateManager.updaterController.updater.automaticallyChecksForUpdates = newValue
-                                }
+                                get: { updateManager.automaticallyChecksForUpdates },
+                                set: { updateManager.setAutomaticChecks($0) }
                             ))
                             .toggleStyle(.switch)
                         }

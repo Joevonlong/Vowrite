@@ -7,10 +7,12 @@
 # Automates:
 #   1. Version validation (4-segment format, with optional -beta.N suffix)
 #   2. CHANGELOG.md: [Unreleased] → [X.Y.Z.W] — date (relaxed for beta)
-#   3. Info.plist + Version.swift bump
+#   3. Info.plist (version + build number) + Version.swift bump
 #   4. Release build + code signing + DMG packaging
-#   5. Git commit (v0.1.6.0: description) + annotated tag
-#   6. Summary with next steps
+#   5. EdDSA signing + appcast.xml update (Sparkle auto-updates)
+#   6. Git commit + annotated tag
+#   7. GitHub Release creation + DMG upload (interactive)
+#   8. Summary with verification steps
 #
 set -e
 
@@ -25,6 +27,14 @@ CHANGELOG="$PROJECT_ROOT/CHANGELOG.md"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
 APPCAST_STABLE="$PROJECT_ROOT/docs/appcast.xml"
 APPCAST_BETA="$PROJECT_ROOT/docs/appcast-beta.xml"
+
+# Sparkle EdDSA signing tools
+SPARKLE_BIN="$APP_DIR/.build/artifacts/sparkle/Sparkle/bin"
+SIGN_UPDATE="$SPARKLE_BIN/sign_update"
+
+# GitHub
+GITHUB_REPO="Joevonlong/Vowrite"
+GITHUB_DOWNLOAD_BASE="https://github.com/$GITHUB_REPO/releases/download"
 
 # Binary name produced by VowriteMac package
 APP_BINARY_NAME="VowriteMac"
@@ -160,7 +170,12 @@ echo ""
 echo "▶ Step 2: Updating version to $VERSION_NUM..."
 # Info.plist uses base version (no -beta suffix) for macOS compatibility
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_BASE" "$INFO_PLIST"
-echo "  ✓ Info.plist updated"
+
+# Auto-increment CFBundleVersion (build number) — Sparkle uses this for version comparison
+CURRENT_BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST")
+NEW_BUILD=$((CURRENT_BUILD + 1))
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" "$INFO_PLIST"
+echo "  ✓ Info.plist updated (CFBundleVersion: $CURRENT_BUILD → $NEW_BUILD)"
 
 # --- Step 3: Update version in Version.swift ---
 echo ""
@@ -243,9 +258,85 @@ hdiutil create -volname "Vowrite $VERSION" -srcfolder "$DMG_STAGING" -ov -format
 rm -rf "$DMG_STAGING"
 echo "  ✓ DMG created: $DMG_PATH"
 
-# --- Step 8: Git commit + tag ---
+# --- Step 8: EdDSA sign DMG + update appcast ---
 echo ""
-echo "▶ Step 8: Git commit and tag..."
+echo "▶ Step 8: EdDSA signing and appcast update..."
+
+if [ -x "$SIGN_UPDATE" ]; then
+    SIGN_OUTPUT=$("$SIGN_UPDATE" "$DMG_PATH" 2>&1)
+
+    if [ -z "$SIGN_OUTPUT" ]; then
+        echo "  ❌ sign_update produced no output — check Keychain for EdDSA key"
+        echo "  Skipping appcast update."
+    else
+        echo "  ✓ DMG signed: $SIGN_OUTPUT"
+
+        # Extract edSignature and length from sign_update output
+        ED_SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -oE 'sparkle:edSignature="[^"]+"')
+        ED_LENGTH=$(echo "$SIGN_OUTPUT" | grep -oE 'length="[^"]+"')
+
+        # Select target appcast
+        if $IS_BETA; then
+            TARGET_APPCAST="$APPCAST_BETA"
+        else
+            TARGET_APPCAST="$APPCAST_STABLE"
+        fi
+
+        DOWNLOAD_URL="${GITHUB_DOWNLOAD_BASE}/${VERSION}/Vowrite-${VERSION}.dmg"
+        PUB_DATE=$(date "+%a, %d %b %Y %H:%M:%S %z")
+
+        # Extract release notes from CHANGELOG → simple HTML
+        RELEASE_NOTES=""
+        if [ -f "$CHANGELOG" ] && ! $IS_BETA; then
+            CHANGELOG_SECTION=$(sed -n "/## \[$VERSION_NUM\]/,/## \[/p" "$CHANGELOG" | sed '1d;$d' | sed '/^$/d')
+            if [ -n "$CHANGELOG_SECTION" ]; then
+                RELEASE_NOTES="<h2>What's New in $VERSION_NUM</h2><ul>"
+                while IFS= read -r line; do
+                    ITEM=$(echo "$line" | sed -E 's/^- \*\*([^*]+)\*\*(.*)/<li><b>\1<\/b>\2<\/li>/')
+                    ITEM=$(echo "$ITEM" | sed 's/^- /<li>/' | sed 's/^###.*/<\/ul><h3>&<\/h3><ul>/')
+                    RELEASE_NOTES="${RELEASE_NOTES}${ITEM}"
+                done <<< "$CHANGELOG_SECTION"
+                RELEASE_NOTES="${RELEASE_NOTES}</ul>"
+            fi
+        fi
+        if [ -z "$RELEASE_NOTES" ]; then
+            RELEASE_NOTES="<p>$DESCRIPTION</p>"
+        fi
+
+        # Build new appcast: keep header up to -->, replace items with latest only
+        TEMP_APPCAST="/tmp/vowrite-appcast-$$"
+        sed -n '1,/-->/p' "$TARGET_APPCAST" > "$TEMP_APPCAST"
+        cat >> "$TEMP_APPCAST" << APPCAST_EOF
+    <item>
+      <title>Vowrite $VERSION_NUM</title>
+      <description><![CDATA[$RELEASE_NOTES]]></description>
+      <pubDate>$PUB_DATE</pubDate>
+      <sparkle:version>$NEW_BUILD</sparkle:version>
+      <sparkle:shortVersionString>$VERSION_NUM</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="$DOWNLOAD_URL"
+        type="application/octet-stream"
+        $ED_SIGNATURE
+        $ED_LENGTH
+      />
+    </item>
+  </channel>
+</rss>
+APPCAST_EOF
+        mv "$TEMP_APPCAST" "$TARGET_APPCAST"
+        echo "  ✓ Appcast updated: $TARGET_APPCAST"
+        echo "  ✓ Download URL: $DOWNLOAD_URL"
+    fi
+else
+    echo "  ⚠️  sign_update not found at $SIGN_UPDATE"
+    echo "  Run 'swift build' in $APP_DIR first to fetch Sparkle tools."
+    echo "  Skipping appcast update."
+fi
+
+# --- Step 9: Git commit + tag ---
+echo ""
+echo "▶ Step 9: Git commit and tag..."
 cd "$PROJECT_ROOT"
 git add -A
 git commit -m "$VERSION_NUM: $DESCRIPTION" || echo "  (nothing to commit)"
@@ -257,26 +348,63 @@ git tag -a "$VERSION" -m "$VERSION — $DESCRIPTION" 2>/dev/null || {
 }
 echo "  ✓ Committed and tagged $VERSION"
 
-# --- Step 9: Summary ---
+# --- Step 10: GitHub Release (interactive) ---
+echo ""
+echo "▶ Step 10: GitHub Release..."
+
+if command -v gh &> /dev/null; then
+    echo "  Create GitHub Release and upload DMG? (Y/n)"
+    read -p "   " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        GH_FLAGS=""
+        if $IS_BETA; then
+            GH_FLAGS="--prerelease"
+        fi
+
+        # Extract release notes from CHANGELOG for the body
+        GH_NOTES=""
+        if [ -f "$CHANGELOG" ] && ! $IS_BETA; then
+            GH_NOTES=$(sed -n "/## \[$VERSION_NUM\]/,/## \[/p" "$CHANGELOG" | sed '1d;$d')
+        fi
+
+        if [ -n "$GH_NOTES" ]; then
+            echo "$GH_NOTES" | gh release create "$VERSION" "$DMG_PATH" \
+                --repo "$GITHUB_REPO" \
+                --title "Vowrite $VERSION — $DESCRIPTION" \
+                --notes-file - \
+                $GH_FLAGS
+        else
+            gh release create "$VERSION" "$DMG_PATH" \
+                --repo "$GITHUB_REPO" \
+                --title "Vowrite $VERSION — $DESCRIPTION" \
+                --notes "$DESCRIPTION" \
+                $GH_FLAGS
+        fi
+
+        echo "  ✓ GitHub Release created: https://github.com/$GITHUB_REPO/releases/tag/$VERSION"
+    else
+        echo "  Skipped. Create manually:"
+        echo "  gh release create $VERSION $DMG_PATH --title \"Vowrite $VERSION — $DESCRIPTION\""
+    fi
+else
+    echo "  ⚠️  gh CLI not installed. Create release manually:"
+    echo "  gh release create $VERSION $DMG_PATH --title \"Vowrite $VERSION — $DESCRIPTION\""
+fi
+
+# --- Step 11: Summary ---
 echo ""
 echo "═══════════════════════════════════════"
 echo "  ✅ Release $VERSION [$RELEASE_TYPE] complete!"
 echo "═══════════════════════════════════════"
 echo ""
-echo "  DMG:  $DMG_PATH"
-echo "  Size: $(du -h "$DMG_PATH" | cut -f1)"
+echo "  DMG:     $DMG_PATH"
+echo "  Size:    $(du -h "$DMG_PATH" | cut -f1)"
+echo "  Build:   $NEW_BUILD"
 echo ""
 echo "  Next steps:"
 echo "  1. Review:  git log --oneline -3 main"
 echo "  2. Test:    open $DMG_PATH"
 echo "  3. Push:    git push origin main --tags"
-if $IS_BETA; then
-echo "  4. Release: gh release create $VERSION $DMG_PATH --prerelease --title \"Vowrite $VERSION — $DESCRIPTION\""
-echo ""
-echo "  Note: This is a BETA release."
-echo "  - Appcast: docs/appcast-beta.xml (update manually with edSignature)"
-echo "  - To promote to stable: release again without -beta suffix"
-else
-echo "  4. Release: gh release create $VERSION $DMG_PATH --title \"Vowrite $VERSION — $DESCRIPTION\" --notes-file <(sed -n '/## \\[$VERSION_NUM\\]/,/## \\[/p' CHANGELOG.md | sed '\$d')"
-fi
+echo "  4. Verify:  curl -s https://vowrite.com/appcast.xml | head -5"
 echo ""
