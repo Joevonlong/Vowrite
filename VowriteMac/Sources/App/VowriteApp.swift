@@ -72,6 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        SoundFeedback.warmUp()
         // Clean up any legacy user-modified system prompt from UserDefaults
         PromptConfig.migrateLegacySystemPrompt()
 
