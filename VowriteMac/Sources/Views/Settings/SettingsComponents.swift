@@ -33,25 +33,25 @@ struct SettingsSection<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: VW.Spacing.xl) {
+            HStack(spacing: VW.Spacing.md) {
                 Image(systemName: icon)
                     .foregroundColor(.accentColor)
                     .font(.body.weight(.semibold))
                 Text(title)
                     .font(.headline)
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, VW.Spacing.xs)
 
             VStack(alignment: .leading, spacing: 0) {
                 content
-                    .padding(16)
+                    .padding(VW.Spacing.xxl)
             }
             .background(Color(.controlBackgroundColor))
-            .cornerRadius(10)
+            .cornerRadius(VW.Radius.xxl)
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                RoundedRectangle(cornerRadius: VW.Radius.xxl)
+                    .stroke(VW.Colors.Stroke.light, lineWidth: 1)
             )
         }
     }
@@ -84,7 +84,7 @@ struct SettingsRow<Trailing: View>: View {
                         .frame(maxWidth: 360, alignment: .trailing)
                 }
             case .vertical:
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: VW.Spacing.lg) {
                     labelView
                     trailing
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -95,7 +95,7 @@ struct SettingsRow<Trailing: View>: View {
     }
 
     private var labelView: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: VW.Spacing.xxs) {
             Text(title).font(.body).fontWeight(.semibold)
             if !description.isEmpty {
                 Text(description).font(.caption).foregroundColor(.secondary)
@@ -113,7 +113,7 @@ struct AppearancePicker: View {
         HStack(spacing: 2) {
             ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.15)) {
+                    withAnimation(VW.Anim.easeQuick) {
                         selection = mode.rawValue
                     }
                 } label: {
@@ -122,7 +122,7 @@ struct AppearancePicker: View {
                         .frame(width: 28, height: 24)
                         .background(
                             selection == mode.rawValue
-                                ? Color.accentColor.opacity(0.15)
+                                ? VW.Colors.Accent.strong
                                 : Color.clear
                         )
                         .foregroundColor(
@@ -130,15 +130,15 @@ struct AppearancePicker: View {
                                 ? .accentColor
                                 : .secondary
                         )
-                        .cornerRadius(6)
+                        .cornerRadius(VW.Radius.lg)
                 }
                 .buttonStyle(.plain)
                 .help(mode.rawValue)
             }
         }
         .padding(3)
-        .background(Color.secondary.opacity(0.08))
-        .cornerRadius(8)
+        .background(VW.Colors.Background.elevated)
+        .cornerRadius(VW.Radius.xl)
     }
 }
 
@@ -150,17 +150,17 @@ struct StatCard: View {
     let label: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: VW.Spacing.md) {
+            HStack(spacing: VW.Spacing.sm) {
                 Image(systemName: icon).foregroundColor(.secondary).font(.caption)
                 Text(value).font(.system(size: 20, weight: .bold))
             }
             Text(label).font(.caption).foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color.secondary.opacity(0.06))
-        .cornerRadius(12)
+        .padding(VW.Spacing.xxl)
+        .background(VW.Colors.Background.tertiary)
+        .cornerRadius(VW.Radius.xxxl)
     }
 }
 
@@ -173,16 +173,16 @@ struct QuickActionCard: View {
     let iconColor: Color
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: VW.Spacing.xl) {
             Image(systemName: icon).font(.title2).foregroundColor(iconColor).frame(width: 36)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: VW.Spacing.xxs) {
                 Text(title).font(.headline)
                 Text(description).font(.caption).foregroundColor(.secondary)
             }
             Spacer()
         }
-        .padding(16).frame(maxWidth: .infinity)
-        .background(Color.secondary.opacity(0.06)).cornerRadius(12)
+        .padding(VW.Spacing.xxl).frame(maxWidth: .infinity)
+        .background(VW.Colors.Background.tertiary).cornerRadius(VW.Radius.xxxl)
     }
 }
 
@@ -207,11 +207,11 @@ struct ProviderKeyStatusBadge: View {
     private func badge(_ title: String, color: Color) -> some View {
         Text(title)
             .font(.caption)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, VW.Spacing.md)
             .padding(.vertical, 3)
             .background(color.opacity(0.12))
             .foregroundColor(color)
-            .cornerRadius(999)
+            .cornerRadius(VW.Radius.pill)
     }
 }
 

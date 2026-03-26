@@ -92,7 +92,7 @@ struct RecordingBarView: View {
                 EmptyView()
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: appState.state)
+        .animation(VW.Anim.easeStandard, value: appState.state)
     }
 
     private var durationText: String {
@@ -111,7 +111,7 @@ struct RecordingBarView: View {
             Button { appState.cancelRecording() } label: {
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(0.12))
+                        .fill(VW.Colors.Overlay.buttonFill)
                         .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
                     Image(systemName: "xmark")
                         .font(.system(size: isCompact ? 13 : 15, weight: .bold))
@@ -142,7 +142,7 @@ struct RecordingBarView: View {
             Button { appState.stopRecording() } label: {
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(0.12))
+                        .fill(VW.Colors.Overlay.buttonFill)
                         .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
                     Image(systemName: "checkmark")
                         .font(.system(size: isCompact ? 13 : 15, weight: .bold))
@@ -158,11 +158,11 @@ struct RecordingBarView: View {
         )
         .background(
             Capsule()
-                .fill(Color.black.opacity(0.85))
+                .fill(VW.Colors.Overlay.recording)
         )
         .overlay(
             Capsule()
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                .stroke(VW.Colors.Overlay.buttonStroke, lineWidth: 1)
         )
     }
 
@@ -180,11 +180,11 @@ struct RecordingBarView: View {
         .frame(width: 140, height: 36)
         .background(
             Capsule()
-                .fill(Color.black.opacity(0.75))
+                .fill(VW.Colors.Overlay.processing)
         )
         .overlay(
             Capsule()
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                .stroke(VW.Colors.Overlay.buttonStroke, lineWidth: 1)
         )
     }
 }
