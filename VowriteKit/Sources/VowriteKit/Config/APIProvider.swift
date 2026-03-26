@@ -11,6 +11,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     case minimax = "MiniMax"
     case volcengine = "Volcengine (火山引擎)"
     case qwen = "Qwen (通义千问)"
+    case gemini = "Google Gemini"
+    case zhipu = "Zhipu (智谱清言)"
     case ollama = "Ollama (Local)"
     case custom = "Custom"
 
@@ -33,6 +35,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .minimax: return "https://api.minimax.chat/v1"
         case .volcengine: return "https://ark.cn-beijing.volces.com/api/v3"
         case .qwen: return "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        case .gemini: return "https://generativelanguage.googleapis.com/v1beta/openai"
+        case .zhipu: return "https://open.bigmodel.cn/api/paas/v4"
         case .ollama: return "http://localhost:11434/v1"
         case .custom: return ""
         }
@@ -50,6 +54,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .minimax: return ""
         case .volcengine: return "seed-asr-2.0"
         case .qwen: return "qwen3-asr-flash"
+        case .gemini: return ""
+        case .zhipu: return ""
         case .ollama: return "whisper-large-v3-turbo"
         case .custom: return "whisper-1"
         }
@@ -67,6 +73,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .minimax: return "MiniMax-Text-02"
         case .volcengine: return "doubao-1.5-pro-32k-250115"
         case .qwen: return "qwen-turbo"
+        case .gemini: return "gemini-2.0-flash"
+        case .zhipu: return "glm-4-flash"
         case .ollama: return "qwen3:8b"
         case .custom: return "gpt-4o-mini"
         }
@@ -84,6 +92,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .minimax: return []
         case .volcengine: return ["seed-asr-2.0"]
         case .qwen: return ["qwen3-asr-flash", "paraformer-v2", "fun-asr"]
+        case .gemini: return []
+        case .zhipu: return []
         case .ollama: return ["whisper-large-v3-turbo", "whisper-large-v3", "whisper-base"]
         case .custom: return []
         }
@@ -101,6 +111,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .minimax: return ["MiniMax-Text-02", "MiniMax-Text-01"]
         case .volcengine: return ["doubao-1.5-pro-32k-250115", "doubao-seed-2-0-mini-260215", "doubao-seed-2-0-lite-260215"]
         case .qwen: return ["qwen-turbo", "qwen3.5-flash", "qwen-plus", "qwen-max"]
+        case .gemini: return ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-pro"]
+        case .zhipu: return ["glm-4-flash", "glm-4-plus", "glm-4-air"]
         case .ollama: return ["qwen3:8b", "llama3.1:8b", "gemma3:4b", "mistral:7b"]
         case .custom: return []
         }
@@ -110,7 +122,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .openai, .groq, .together, .siliconflow, .ollama, .custom:
             return true
-        case .openrouter, .deepseek, .kimi, .minimax:
+        case .openrouter, .deepseek, .kimi, .minimax, .gemini, .zhipu:
             return false
         case .volcengine, .qwen:
             return true
@@ -127,6 +139,10 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
             return "Kimi (Moonshot) does not offer speech-to-text."
         case .minimax:
             return "MiniMax does not offer OpenAI-compatible speech-to-text."
+        case .gemini:
+            return "Gemini does not offer OpenAI-compatible speech-to-text."
+        case .zhipu:
+            return "Zhipu does not offer speech-to-text."
         case .volcengine:
             return "Volcengine Seed-ASR 2.0 — async processing, 13+ languages. Audio sent as base64."
         case .qwen:
@@ -154,6 +170,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .minimax: return "eyJ..."
         case .volcengine: return "..."
         case .qwen: return "sk-..."
+        case .gemini: return "AI..."
+        case .zhipu: return "..."
         case .ollama: return "No key required"
         case .custom: return "API Key"
         }
@@ -189,6 +207,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .minimax: return "https://platform.minimaxi.com/"
         case .volcengine: return "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey"
         case .qwen: return "https://bailian.console.aliyun.com/?apiKey=1"
+        case .gemini: return "https://aistudio.google.com/apikey"
+        case .zhipu: return "https://bigmodel.cn/usercenter/apikeys"
         case .ollama: return "https://ollama.com/download"
         case .custom: return ""
         }
@@ -254,6 +274,12 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case "llama3.1:8b": return "Local general-purpose"
         case "gemma3:4b": return "Lightweight local option"
         case "mistral:7b": return "Good multilingual local option"
+        case "gemini-2.0-flash": return "Fast and efficient"
+        case "gemini-2.5-flash": return "Latest flash model"
+        case "gemini-1.5-pro": return "High quality, large context"
+        case "glm-4-flash": return "Fast and free"
+        case "glm-4-plus": return "Highest Zhipu quality"
+        case "glm-4-air": return "Balanced quality and speed"
         default: return nil
         }
     }
