@@ -5,6 +5,13 @@ public final class VocabularyManager: ObservableObject {
     public static let shared = VocabularyManager()
 
     nonisolated private static let storageKey = "personalVocabulary"
+    nonisolated private static let seededKey = "vocabularySeeded"
+
+    /// Example words seeded on first launch to demonstrate the feature.
+    private static let seedWords = [
+        "Vowrite", "GPT", "Whisper", "OpenAI", "DeepSeek",
+        "macOS", "Sonoma", "SwiftUI",
+    ]
 
     @Published public var words: [String] {
         didSet { save() }
@@ -12,6 +19,15 @@ public final class VocabularyManager: ObservableObject {
 
     private init() {
         self.words = VowriteStorage.defaults.stringArray(forKey: Self.storageKey) ?? []
+        seedIfNeeded()
+    }
+
+    private func seedIfNeeded() {
+        guard !VowriteStorage.defaults.bool(forKey: Self.seededKey) else { return }
+        VowriteStorage.defaults.set(true, forKey: Self.seededKey)
+        if words.isEmpty {
+            words = Self.seedWords
+        }
     }
 
     /// Reload all data from UserDefaults.
