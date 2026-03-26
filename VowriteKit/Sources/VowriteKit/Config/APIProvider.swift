@@ -48,8 +48,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return "FunAudioLLM/SenseVoiceSmall"
         case .kimi: return ""
         case .minimax: return ""
-        case .volcengine: return ""
-        case .qwen: return ""
+        case .volcengine: return "seed-asr-2.0"
+        case .qwen: return "qwen3-asr-flash"
         case .ollama: return "whisper-large-v3-turbo"
         case .custom: return "whisper-1"
         }
@@ -82,8 +82,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return ["FunAudioLLM/SenseVoiceSmall", "TeleAI/TeleSpeechASR"]
         case .kimi: return []
         case .minimax: return []
-        case .volcengine: return []
-        case .qwen: return []
+        case .volcengine: return ["seed-asr-2.0"]
+        case .qwen: return ["qwen3-asr-flash", "paraformer-v2", "fun-asr"]
         case .ollama: return ["whisper-large-v3-turbo", "whisper-large-v3", "whisper-base"]
         case .custom: return []
         }
@@ -110,8 +110,10 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .openai, .groq, .together, .siliconflow, .ollama, .custom:
             return true
-        case .openrouter, .deepseek, .kimi, .minimax, .volcengine, .qwen:
+        case .openrouter, .deepseek, .kimi, .minimax:
             return false
+        case .volcengine, .qwen:
+            return true
         }
     }
 
@@ -126,9 +128,9 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .minimax:
             return "MiniMax does not offer OpenAI-compatible speech-to-text."
         case .volcengine:
-            return "Volcengine Seed-ASR uses a proprietary async API — adapter coming in a future update."
+            return "Volcengine Seed-ASR 2.0 — async processing, 13+ languages. Audio sent as base64."
         case .qwen:
-            return "Qwen ASR uses DashScope-specific API — adapter coming in a future update."
+            return "Qwen ASR — 30+ languages. Short audio is processed synchronously, longer audio via async task."
         case .siliconflow:
             return "Uses SenseVoice — excellent Chinese speech recognition. Duration ≤ 1 hour, file ≤ 50MB."
         case .ollama:
@@ -214,6 +216,10 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case "whisper-base": return "Lightweight local model"
         case "FunAudioLLM/SenseVoiceSmall": return "Alibaba SenseVoice — excellent multilingual STT"
         case "TeleAI/TeleSpeechASR": return "TeleAI ASR model"
+        case "seed-asr-2.0": return "Volcengine flagship — 13+ languages"
+        case "qwen3-asr-flash": return "Fast Qwen ASR — 30+ languages"
+        case "paraformer-v2": return "Alibaba Paraformer — very cheap"
+        case "fun-asr": return "Alibaba Fun-ASR — multilingual"
         default: return nil
         }
     }
