@@ -19,6 +19,7 @@ public final class DictationEngine: ObservableObject {
     public let audioEngine = AudioEngine()
     public let whisperService = WhisperService()
     public let aiPolishService = AIPolishService()
+    private let speculativePolish = SpeculativePolish()
 
     private let textOutput: TextOutputProvider
     private let permissions: PermissionProvider
@@ -112,6 +113,9 @@ public final class DictationEngine: ObservableObject {
             // Show floating overlay
             overlay.showRecording()
 
+            // Pre-warm Polish API connection during recording
+            speculativePolish.warmUpConnection()
+
             // Start recording sound
             feedback.playStartSound()
 
@@ -168,6 +172,13 @@ public final class DictationEngine: ObservableObject {
         // Overlay stays visible but shows "Thinking"
         overlay.showProcessing()
 
+        // F-033: Pre-build Polish request during STT (runs in parallel)
+        let modeConfig = ModeManager.currentModeConfig
+        let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
+        if effectivePolishEnabled {
+            speculativePolish.prepare(modeConfig: modeConfig)
+        }
+
         processAudio(url: audioURL)
     }
 
@@ -175,6 +186,7 @@ public final class DictationEngine: ObservableObject {
         recordingTimer?.invalidate()
         levelTimer?.invalidate()
         _ = audioEngine.stopRecording()
+        speculativePolish.reset()
         state = .idle
         overlay.hide()
         feedback.playErrorSound()
@@ -231,14 +243,15 @@ public final class DictationEngine: ObservableObject {
                 }
 
                 // Step 2: AI Polish (skip if mode has polishEnabled=false)
+                // F-033: Uses speculative pre-built request for near-instant LLM fire
                 var finalText = rawTranscript
                 let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
                 if effectivePolishEnabled {
                     do {
                         #if DEBUG
-                        print("[Vowrite] Starting AI polish...")
+                        print("[Vowrite] Starting AI polish (speculative)...")
                         #endif
-                        let polished = try await aiPolishService.polish(text: rawTranscript, modeConfig: modeConfig)
+                        let polished = try await speculativePolish.execute(transcript: rawTranscript, modeConfig: modeConfig)
                         finalText = polished
                         #if DEBUG
                         print("[Vowrite] Polish result: '\(polished)'")
@@ -270,6 +283,7 @@ public final class DictationEngine: ObservableObject {
                 updateStats(duration: recordingDuration, text: finalText)
 
                 // Step 7: Success feedback
+                speculativePolish.reset()
                 feedback.playSuccessSound()
                 state = .idle
 
@@ -298,6 +312,7 @@ public final class DictationEngine: ObservableObject {
                     let truncated = desc.count > 80 ? String(desc.prefix(80)) + "..." : desc
                     message = truncated
                 }
+                speculativePolish.reset()
                 state = .error(message)
                 overlay.hide()
                 feedback.playErrorSound()
