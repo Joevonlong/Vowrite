@@ -1,16 +1,15 @@
-import AppKit
 import VowriteKit
 
 final class MacFeedback: FeedbackProvider {
     func playStartSound() {
-        NSSound(named: .init("Tink"))?.play()
+        SoundFeedback.playStart()
     }
 
     func playSuccessSound() {
-        NSSound(named: .init("Tink"))?.play()
+        SoundFeedback.playSuccess()
     }
 
     func playErrorSound() {
-        NSSound(named: .init("Basso"))?.play()
+        SoundFeedback.playError()
     }
 }

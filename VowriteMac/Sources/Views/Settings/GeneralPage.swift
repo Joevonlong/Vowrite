@@ -148,6 +148,13 @@ struct GeneralOptionsContent: View {
                         do { if v { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } } catch {}
                     }
             }
+            SettingsRow(title: "Sound feedback", description: "Play audio cues when recording starts and stops.") {
+                Toggle("", isOn: Binding(
+                    get: { SoundFeedback.isEnabled },
+                    set: { SoundFeedback.isEnabled = $0 }
+                ))
+                .toggleStyle(.switch)
+            }
             SettingsRow(title: "Recording overlay", description: "Size of the floating recording bar") {
                 Picker("", selection: $overlayStyle) {
                     ForEach(OverlayStyle.allCases, id: \.rawValue) { style in
