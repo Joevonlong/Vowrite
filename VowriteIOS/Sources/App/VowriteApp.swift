@@ -54,11 +54,12 @@ struct VowriteApp: App {
                     }
                     .onChange(of: pendingDeepLink) { _, link in
                         if let link, link == "activate" {
-                            // Deep link from keyboard extension: activate bg service (Always duration)
+                            // Deep link from keyboard extension: activate bg service with saved duration
                             if !appState.backgroundService.isActive {
-                                appState.backgroundService.activate(duration: .always)
+                                let duration = savedBGServiceDuration
+                                appState.backgroundService.activate(duration: duration)
                                 VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
-                                VowriteStorage.defaults.set(BGServiceDuration.always.rawValue, forKey: "bgServiceDuration")
+                                VowriteStorage.defaults.set(duration.rawValue, forKey: "bgServiceDuration")
                             }
                             pendingDeepLink = nil
                         }
@@ -133,6 +134,12 @@ struct VowriteApp: App {
         appState.backgroundService.activate(duration: duration)
     }
 
+    /// Reads user's saved duration preference, defaulting to 5 minutes for session-based approach.
+    private var savedBGServiceDuration: BGServiceDuration {
+        let raw = VowriteStorage.defaults.integer(forKey: "bgServiceDuration")
+        return BGServiceDuration(rawValue: raw) ?? .fiveMinutes
+    }
+
     private func handleDeepLink(_ url: URL) {
         guard url.scheme == "vowrite" else { return }
         #if DEBUG
@@ -144,11 +151,12 @@ struct VowriteApp: App {
         case "setup":
             hasCompletedOnboarding = false
         case "activate":
-            // Keyboard extension requested bg service activation (use Always duration)
+            // Keyboard extension requested bg service activation — use user's saved duration preference
             if !appState.backgroundService.isActive {
-                appState.backgroundService.activate(duration: .always)
+                let duration = savedBGServiceDuration
+                appState.backgroundService.activate(duration: duration)
                 VowriteStorage.defaults.set(true, forKey: "bgServiceEnabled")
-                VowriteStorage.defaults.set(BGServiceDuration.always.rawValue, forKey: "bgServiceDuration")
+                VowriteStorage.defaults.set(duration.rawValue, forKey: "bgServiceDuration")
             }
             pendingDeepLink = "activate"
         default:

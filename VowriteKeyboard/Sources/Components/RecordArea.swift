@@ -26,28 +26,28 @@ struct RecordArea: View {
                     icon: "mic.slash.fill",
                     message: "Microphone access denied. Go to Settings → Vowrite → Microphone to enable.",
                     actionLabel: "Open Settings",
-                    action: { openContainerApp(path: "settings") }
+                    action: { state.openContainerApp(path: "settings") }
                 )
             case .noFullAccess:
                 StatusBanner(
                     icon: "exclamationmark.triangle.fill",
                     message: "Please enable Full Access for Vowrite keyboard",
                     actionLabel: "Open Vowrite",
-                    action: { openContainerApp() }
+                    action: { state.openContainerApp(path: "setup") }
                 )
             case .noAPIKey:
                 StatusBanner(
                     icon: "key.fill",
                     message: "Please configure API Key in Vowrite App",
                     actionLabel: "Open Vowrite",
-                    action: { openContainerApp(path: "settings") }
+                    action: { state.openContainerApp(path: "settings") }
                 )
             case .bgServiceNotRunning:
                 StatusBanner(
                     icon: "antenna.radiowaves.left.and.right.slash",
                     message: "Background Recording is not active. Tap to activate.",
                     actionLabel: "Activate",
-                    action: { openContainerApp(path: "activate") }
+                    action: { state.openContainerApp(path: "activate") }
                 )
             }
         }
@@ -58,11 +58,12 @@ struct RecordArea: View {
 
     private var idleContent: some View {
         VStack(spacing: 12) {
-            Text("点击说话")
+            Text(state.needsActivation ? "点击激活" : "点击说话")
                 .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
 
             OrbView(mode: .idle, audioLevel: 0)
+                .opacity(state.needsActivation ? 0.6 : 1.0)
                 .onTapGesture {
                     state.startRecording()
                 }
@@ -184,23 +185,6 @@ struct RecordArea: View {
         return String(format: "%d:%02d.%d", minutes, seconds, tenths)
     }
 
-    private func openContainerApp(path: String = "setup") {
-        guard let url = URL(string: "vowrite://\(path)") else { return }
-        let selectorModern = NSSelectorFromString("open:options:completionHandler:")
-        let selectorLegacy = NSSelectorFromString("openURL:")
-        var responder: UIResponder? = state.inputViewController
-        while let r = responder {
-            if r.responds(to: selectorModern) {
-                r.perform(selectorModern, with: url, with: NSDictionary())
-                return
-            }
-            if r.responds(to: selectorLegacy) {
-                r.perform(selectorLegacy, with: url)
-                return
-            }
-            responder = r.next
-        }
-    }
 }
 
 // MARK: - Orb View

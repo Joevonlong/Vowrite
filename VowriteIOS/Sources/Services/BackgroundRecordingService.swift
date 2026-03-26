@@ -33,10 +33,12 @@ enum BGServiceDuration: Int, CaseIterable, Identifiable {
 /// Architecture: The keyboard extension is a remote control only.
 /// All recording happens here in the main app process.
 ///
-/// Audio strategy (based on Apple docs & production patterns):
+/// Audio strategy — Background Audio Session pattern (industry standard):
 /// - AVAudioEngine with persistent input tap (started in foreground, runs in background)
-/// - Silent AVAudioPlayer for UIBackgroundModes: audio keep-alive
-/// - Recording = routing existing engine input data to file (not starting new recording)
+/// - The engine input tap itself provides UIBackgroundModes: audio activity (no silent player needed)
+/// - Session activated once in foreground, stays warm for configured duration, then auto-closes
+/// - Keyboard auto-jumps to container app for activation when session is not active
+/// - Same approach used by Typeless, Willow, iFlytek (讯飞), Baidu Input
 ///
 /// References:
 /// - https://developer.apple.com/documentation/avfaudio/avaudionode/1387122-installtap
@@ -64,9 +66,6 @@ final class BackgroundRecordingService: ObservableObject {
     /// Peak RMS observed during current recording session — for silence detection.
     private nonisolated(unsafe) var peakRMS: Float = 0
     private let fileLock = NSLock()         // protects audioFile across audio render + main threads
-
-    /// Silent audio player to keep the app alive in background (UIBackgroundModes: audio)
-    private var silentPlayer: AVAudioPlayer?
 
     private var recordingTimer: Timer?
     private var levelTimer: Timer?
@@ -191,10 +190,7 @@ final class BackgroundRecordingService: ObservableObject {
             return
         }
 
-        // 4. Start silent audio loop to maintain background session (UIBackgroundModes: audio)
-        startSilentAudio()
-
-        // 5. Observe audio interruptions (phone calls, etc.)
+        // 4. Observe audio interruptions (phone calls, etc.)
         interruptionObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.interruptionNotification,
             object: nil, queue: .main
@@ -251,9 +247,6 @@ final class BackgroundRecordingService: ObservableObject {
 
         heartbeatTimer?.invalidate()
         heartbeatTimer = nil
-
-        silentPlayer?.stop()
-        silentPlayer = nil
 
         // Stop audio engine and remove input tap
         audioEngine?.inputNode.removeTap(onBus: 0)
@@ -356,54 +349,6 @@ final class BackgroundRecordingService: ObservableObject {
         VowriteStorage.defaults.removeObject(forKey: "bgServiceActivatedAt")
     }
 
-    // MARK: - Silent Audio (Background Keep-Alive)
-
-    /// Play a silent audio loop to keep the app alive in background.
-    /// This is how Typeless and similar apps maintain their background session.
-    private func startSilentAudio() {
-        // Generate 1 second of silence as WAV
-        let sampleRate: Double = 44100
-        let duration: Double = 1.0
-        let numSamples = Int(sampleRate * duration)
-
-        var header = Data()
-        let dataSize = UInt32(numSamples * 2) // 16-bit mono
-        let fileSize = UInt32(36 + dataSize)
-
-        // WAV header
-        header.append(contentsOf: "RIFF".utf8)
-        header.append(contentsOf: withUnsafeBytes(of: fileSize.littleEndian) { Array($0) })
-        header.append(contentsOf: "WAVE".utf8)
-        header.append(contentsOf: "fmt ".utf8)
-        header.append(contentsOf: withUnsafeBytes(of: UInt32(16).littleEndian) { Array($0) }) // chunk size
-        header.append(contentsOf: withUnsafeBytes(of: UInt16(1).littleEndian) { Array($0) })  // PCM
-        header.append(contentsOf: withUnsafeBytes(of: UInt16(1).littleEndian) { Array($0) })  // mono
-        header.append(contentsOf: withUnsafeBytes(of: UInt32(44100).littleEndian) { Array($0) }) // sample rate
-        header.append(contentsOf: withUnsafeBytes(of: UInt32(88200).littleEndian) { Array($0) }) // byte rate
-        header.append(contentsOf: withUnsafeBytes(of: UInt16(2).littleEndian) { Array($0) })  // block align
-        header.append(contentsOf: withUnsafeBytes(of: UInt16(16).littleEndian) { Array($0) }) // bits per sample
-        header.append(contentsOf: "data".utf8)
-        header.append(contentsOf: withUnsafeBytes(of: dataSize.littleEndian) { Array($0) })
-
-        // Silent samples
-        header.append(Data(count: Int(dataSize)))
-
-        do {
-            let player = try AVAudioPlayer(data: header)
-            player.numberOfLoops = -1 // Loop forever
-            player.volume = 0.0
-            player.play()
-            silentPlayer = player
-            #if DEBUG
-            print("[Vowrite BG] Silent audio loop started for background keep-alive")
-            #endif
-        } catch {
-            #if DEBUG
-            print("[Vowrite BG] Failed to start silent audio: \(error)")
-            #endif
-        }
-    }
-
     // MARK: - Audio Interruption Handling
 
     private func handleInterruption(_ notification: Notification) {
@@ -435,7 +380,6 @@ final class BackgroundRecordingService: ObservableObject {
                 do {
                     try AVAudioSession.sharedInstance().setActive(true)
                     try audioEngine?.start()
-                    silentPlayer?.play()
                     #if DEBUG
                     print("[Vowrite BG] Session + engine reactivated after interruption")
                     #endif
@@ -447,7 +391,6 @@ final class BackgroundRecordingService: ObservableObject {
                         try? await Task.sleep(nanoseconds: 500_000_000)
                         try? AVAudioSession.sharedInstance().setActive(true)
                         try? self.audioEngine?.start()
-                        self.silentPlayer?.play()
                     }
                 }
             } else {
@@ -492,9 +435,6 @@ final class BackgroundRecordingService: ObservableObject {
             #endif
             return
         }
-
-        // Do NOT stop silent player — .playAndRecord supports simultaneous play + record.
-        // Silent player keeps app alive; engine input tap keeps mic active.
 
         let tempDir = FileManager.default.temporaryDirectory
         let url = tempDir.appendingPathComponent("vowrite_\(UUID().uuidString).wav")
@@ -544,18 +484,6 @@ final class BackgroundRecordingService: ObservableObject {
 
         #if DEBUG
         print("[Vowrite BG] Recording STARTED (engine input tap routing to file)")
-        #endif
-    }
-
-    /// Ensure silent player is running for background keep-alive.
-    private func resumeBackgroundKeepAlive() {
-        #if os(iOS)
-        if silentPlayer == nil || !(silentPlayer?.isPlaying ?? false) {
-            startSilentAudio()
-        }
-        #if DEBUG
-        print("[Vowrite BG] Background keep-alive verified")
-        #endif
         #endif
     }
 
