@@ -6,6 +6,9 @@ import SwiftUI
 struct PersonalizationPageView: View {
     @ObservedObject private var modeManager = ModeManager.shared
 
+    @ObservedObject private var vocabManager = VocabularyManager.shared
+    @State private var newWord = ""
+
     // Global Preferences state
     @State private var userPrompt = PromptConfig.userPrompt
     @State private var isLocked = PromptConfig.isUserPromptLocked
@@ -27,6 +30,7 @@ struct PersonalizationPageView: View {
                     .font(.system(size: 24, weight: .bold))
 
                 scenesSection
+                vocabularySection
                 globalPreferencesSection
                 howItWorksSection
             }
@@ -149,6 +153,65 @@ struct PersonalizationPageView: View {
                     .foregroundColor(.secondary.opacity(0.6))
             }
         }
+    }
+
+    // MARK: - Vocabulary Section
+
+    private var vocabularySection: some View {
+        SettingsSection(icon: "text.book.closed", title: "Personal Vocabulary") {
+            VStack(alignment: .leading, spacing: VW.Spacing.xl) {
+                Text("Words listed here are sent as hints to the speech-to-text engine, improving recognition of names, jargon, and abbreviations.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                // Tag cloud
+                if !vocabManager.words.isEmpty {
+                    WrappingHStack(items: vocabManager.words, spacing: VW.Spacing.sm) { word in
+                        HStack(spacing: VW.Spacing.xs) {
+                            Text(word).font(.callout)
+                            Button {
+                                withAnimation(VW.Anim.easeQuick) {
+                                    vocabManager.remove(word)
+                                }
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, VW.Spacing.md)
+                        .padding(.vertical, VW.Spacing.xs)
+                        .background(VW.Colors.Background.elevated)
+                        .cornerRadius(VW.Radius.lg)
+                    }
+                }
+
+                // Add input
+                HStack(spacing: VW.Spacing.md) {
+                    TextField("Add word or paste comma-separated list…", text: $newWord)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit { addVocabulary() }
+                    Button("Add") { addVocabulary() }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        .disabled(newWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+
+    private func addVocabulary() {
+        let trimmed = newWord.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        withAnimation(VW.Anim.easeQuick) {
+            if trimmed.contains(",") {
+                vocabManager.addBulk(trimmed)
+            } else {
+                vocabManager.add(trimmed)
+            }
+        }
+        newWord = ""
     }
 
     // MARK: - Global Preferences Section
