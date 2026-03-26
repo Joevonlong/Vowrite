@@ -10,6 +10,9 @@ final class KeyboardState: ObservableObject {
     @Published var audioLevel: Float = 0
     @Published var recordingDuration: TimeInterval = 0
     @Published var showGlobe: Bool = true
+    /// True when background service is not active and user needs to activate it.
+    /// The orb is still shown but with a different label ("点击激活").
+    @Published var needsActivation: Bool = false
 
     // Configuration state
     @Published var currentMode: Mode = Mode.builtinModes[1] // Clean
@@ -76,11 +79,8 @@ final class KeyboardState: ObservableObject {
             return
         }
 
-        // Check if background service is running
-        if !ipc.isServiceAlive {
-            viewState = .bgServiceNotRunning
-            return
-        }
+        // Check if background service is running — sets flag but doesn't block the orb
+        needsActivation = !ipc.isServiceAlive
 
         viewState = .idle
     }
@@ -110,12 +110,12 @@ final class KeyboardState: ObservableObject {
     // MARK: - Recording via IPC
 
     func startRecording() {
-        // Check if background service is alive
+        // Check if background service is alive — auto-jump to activate if not
         if !ipc.isServiceAlive {
             #if DEBUG
-            print("[Vowrite KB] startRecording: bg service not alive, showing banner")
+            print("[Vowrite KB] startRecording: bg service not alive, auto-jumping to container app for activation")
             #endif
-            viewState = .bgServiceNotRunning
+            openContainerApp(path: "activate")
             return
         }
 
@@ -157,21 +157,17 @@ final class KeyboardState: ObservableObject {
         serviceCheckTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
-                // Only re-check when we're showing bgServiceNotRunning or idle
-                if self.viewState == .bgServiceNotRunning {
-                    if self.ipc.isServiceAlive {
-                        #if DEBUG
-                        print("[Vowrite KB] Background service detected alive, switching to idle")
-                        #endif
-                        self.viewState = .idle
-                    }
-                } else if self.viewState == .idle {
-                    if !self.ipc.isServiceAlive {
-                        #if DEBUG
-                        print("[Vowrite KB] Background service heartbeat lost, showing not running")
-                        #endif
-                        self.viewState = .bgServiceNotRunning
-                    }
+                let alive = self.ipc.isServiceAlive
+                if self.needsActivation && alive {
+                    #if DEBUG
+                    print("[Vowrite KB] Background service detected alive, clearing needsActivation")
+                    #endif
+                    self.needsActivation = false
+                } else if !self.needsActivation && !alive && self.viewState == .idle {
+                    #if DEBUG
+                    print("[Vowrite KB] Background service heartbeat lost")
+                    #endif
+                    self.needsActivation = true
                 }
             }
         }
@@ -257,5 +253,27 @@ final class KeyboardState: ObservableObject {
 
     func dismissKeyboard() {
         inputViewController?.dismissKeyboard()
+    }
+
+    // MARK: - Container App Deep Link
+
+    /// Open the container app via URL scheme.
+    /// Used for auto-activation when service is not alive.
+    func openContainerApp(path: String = "activate") {
+        guard let url = URL(string: "vowrite://\(path)") else { return }
+        let selectorModern = NSSelectorFromString("open:options:completionHandler:")
+        let selectorLegacy = NSSelectorFromString("openURL:")
+        var responder: UIResponder? = inputViewController
+        while let r = responder {
+            if r.responds(to: selectorModern) {
+                r.perform(selectorModern, with: url, with: NSDictionary())
+                return
+            }
+            if r.responds(to: selectorLegacy) {
+                r.perform(selectorLegacy, with: url)
+                return
+            }
+            responder = r.next
+        }
     }
 }
