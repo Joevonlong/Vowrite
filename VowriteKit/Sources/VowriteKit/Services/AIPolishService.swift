@@ -78,6 +78,19 @@ public final class AIPolishService {
             throw VowriteError.apiError("Failed to parse polish response")
         }
 
-        return content.trimmingCharacters(in: .whitespacesAndNewlines)
+        return content.strippingThinkTags()
+    }
+}
+
+// MARK: - Think Tag Stripping
+
+extension String {
+    /// Strips `<think>...</think>` tags (used by reasoning models like DeepSeek, QwQ)
+    /// from LLM output. Handles both closed and unclosed/truncated tags.
+    func strippingThinkTags() -> String {
+        self
+            .replacingOccurrences(of: "<think>[\\s\\S]*?</think>", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "<think>[\\s\\S]*$", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

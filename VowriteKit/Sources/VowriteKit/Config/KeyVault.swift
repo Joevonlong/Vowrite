@@ -14,6 +14,8 @@ public enum KeyVault {
         .minimax,
         .volcengine,
         .qwen,
+        .gemini,
+        .zhipu,
         .custom
     ]
 
