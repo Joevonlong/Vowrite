@@ -9,6 +9,11 @@ public enum KeyVault {
         .openai,
         .openrouter,
         .together,
+        .siliconflow,
+        .kimi,
+        .minimax,
+        .volcengine,
+        .qwen,
         .custom
     ]
 

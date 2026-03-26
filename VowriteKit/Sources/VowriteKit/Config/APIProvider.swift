@@ -9,6 +9,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     case siliconflow = "SiliconFlow (硅基流动)"
     case kimi = "Kimi (月之暗面)"
     case minimax = "MiniMax"
+    case volcengine = "Volcengine (火山引擎)"
+    case qwen = "Qwen (通义千问)"
     case ollama = "Ollama (Local)"
     case custom = "Custom"
 
@@ -29,6 +31,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return "https://api.siliconflow.cn/v1"
         case .kimi: return "https://api.moonshot.cn/v1"
         case .minimax: return "https://api.minimax.chat/v1"
+        case .volcengine: return "https://ark.cn-beijing.volces.com/api/v3"
+        case .qwen: return "https://dashscope.aliyuncs.com/compatible-mode/v1"
         case .ollama: return "http://localhost:11434/v1"
         case .custom: return ""
         }
@@ -44,6 +48,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return "FunAudioLLM/SenseVoiceSmall"
         case .kimi: return ""
         case .minimax: return ""
+        case .volcengine: return ""
+        case .qwen: return ""
         case .ollama: return "whisper-large-v3-turbo"
         case .custom: return "whisper-1"
         }
@@ -59,6 +65,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return "Qwen/Qwen2.5-72B-Instruct"
         case .kimi: return "kimi-k2.5"
         case .minimax: return "MiniMax-Text-02"
+        case .volcengine: return "doubao-1.5-pro-32k-250115"
+        case .qwen: return "qwen-turbo"
         case .ollama: return "qwen3:8b"
         case .custom: return "gpt-4o-mini"
         }
@@ -74,6 +82,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return ["FunAudioLLM/SenseVoiceSmall", "TeleAI/TeleSpeechASR"]
         case .kimi: return []
         case .minimax: return []
+        case .volcengine: return []
+        case .qwen: return []
         case .ollama: return ["whisper-large-v3-turbo", "whisper-large-v3", "whisper-base"]
         case .custom: return []
         }
@@ -89,6 +99,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return ["Qwen/Qwen2.5-72B-Instruct", "Qwen/Qwen3-8B", "deepseek-ai/DeepSeek-V3", "THUDM/GLM-4-9B-Chat"]
         case .kimi: return ["kimi-k2.5", "moonshot-v1-128k", "moonshot-v1-32k", "moonshot-v1-8k"]
         case .minimax: return ["MiniMax-Text-02", "MiniMax-Text-01"]
+        case .volcengine: return ["doubao-1.5-pro-32k-250115", "doubao-seed-2-0-mini-260215", "doubao-seed-2-0-lite-260215"]
+        case .qwen: return ["qwen-turbo", "qwen3.5-flash", "qwen-plus", "qwen-max"]
         case .ollama: return ["qwen3:8b", "llama3.1:8b", "gemma3:4b", "mistral:7b"]
         case .custom: return []
         }
@@ -98,7 +110,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .openai, .groq, .together, .siliconflow, .ollama, .custom:
             return true
-        case .openrouter, .deepseek, .kimi, .minimax:
+        case .openrouter, .deepseek, .kimi, .minimax, .volcengine, .qwen:
             return false
         }
     }
@@ -113,6 +125,10 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
             return "Kimi (Moonshot) does not offer speech-to-text."
         case .minimax:
             return "MiniMax does not offer OpenAI-compatible speech-to-text."
+        case .volcengine:
+            return "Volcengine Seed-ASR uses a proprietary async API — adapter coming in a future update."
+        case .qwen:
+            return "Qwen ASR uses DashScope-specific API — adapter coming in a future update."
         case .siliconflow:
             return "Uses SenseVoice — excellent Chinese speech recognition. Duration ≤ 1 hour, file ≤ 50MB."
         case .ollama:
@@ -134,6 +150,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return "sk-..."
         case .kimi: return "sk-..."
         case .minimax: return "eyJ..."
+        case .volcengine: return "..."
+        case .qwen: return "sk-..."
         case .ollama: return "No key required"
         case .custom: return "API Key"
         }
@@ -167,6 +185,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .siliconflow: return "https://cloud.siliconflow.cn/account/ak"
         case .kimi: return "https://platform.moonshot.cn/console/api-keys"
         case .minimax: return "https://platform.minimaxi.com/"
+        case .volcengine: return "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey"
+        case .qwen: return "https://bailian.console.aliyun.com/?apiKey=1"
         case .ollama: return "https://ollama.com/download"
         case .custom: return ""
         }
@@ -217,6 +237,13 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case "moonshot-v1-8k": return "8K context, fastest"
         case "MiniMax-Text-02": return "Latest MiniMax flagship"
         case "MiniMax-Text-01": return "Previous generation"
+        case "doubao-1.5-pro-32k-250115": return "Best quality Doubao model"
+        case "doubao-seed-2-0-mini-260215": return "Cheapest Doubao option"
+        case "doubao-seed-2-0-lite-260215": return "Balanced quality and cost"
+        case "qwen-turbo": return "Cheapest, good quality (1M context)"
+        case "qwen3.5-flash": return "Fast and cheap, latest gen"
+        case "qwen-plus": return "Balanced quality and cost"
+        case "qwen-max": return "Highest Qwen quality (32K context)"
         case "qwen3:8b": return "Local default"
         case "llama3.1:8b": return "Local general-purpose"
         case "gemma3:4b": return "Lightweight local option"
