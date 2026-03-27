@@ -35,20 +35,32 @@ symbol_used_in() {
     grep -rl "$symbol" "$dir" --include="*.swift" >/dev/null 2>&1
 }
 
+# ── Helper: check if used in Mac (VowriteMac + VowriteKit shared code) ──
+symbol_used_on_mac() {
+    local symbol="$1"
+    symbol_used_in "$symbol" "$MAC" || symbol_used_in "$symbol" "$KIT"
+}
+
+# ── Helper: check if used on iOS (VowriteIOS + VowriteKeyboard + VowriteKit shared code) ──
+symbol_used_on_ios() {
+    local symbol="$1"
+    symbol_used_in "$symbol" "$IOS" || symbol_used_in "$symbol" "$KBD"
+}
+
 # ── 1. Key VowriteKit classes/protocols that should be used on both platforms ──
 # Format: "SymbolName|Description|mac-only-ok"
 # mac-only-ok: if "yes", skip iOS check (platform-specific features)
 SYMBOLS=(
-    "PromptContext|Prompt context variable expansion ({selected}/{clipboard})|no"
-    "SpeculativePolish|Pre-built Polish API request for faster response|no"
-    "SoundFeedback|Audio feedback tones (start/success/error)|no"
-    "ModeEditorSheet|Mode/Scene creation and editing UI|no"
-    "DesignTokens\|VW\.|Design tokens (VW.Spacing, VW.Colors, etc.)|no"
-    "HotkeyManager\|MacHotkeyManager|Global hotkey registration (Carbon)|yes"
-    "MacTextInjector|CGEvent keystroke injection|yes"
-    "MacOverlayController|Floating recording overlay window|yes"
-    "MacUpdateManager\|SPUUpdater|Sparkle auto-update|yes"
-    "MenuBarView|macOS menu bar extra|yes"
+    "PromptContext::Prompt context variable expansion::no"
+    "SpeculativePolish::Pre-built Polish API request::no"
+    "SoundFeedback::Audio feedback tones::no"
+    "ModeEditorSheet::Mode/Scene creation and editing UI::no"
+    "VW\.::Design tokens (VW.Spacing, VW.Colors)::no"
+    "MacHotkeyManager::Global hotkey (Carbon)::yes"
+    "MacTextInjector::CGEvent keystroke injection::yes"
+    "MacOverlayController::Floating recording overlay::yes"
+    "SPUUpdater::Sparkle auto-update::yes"
+    "MenuBarView::macOS menu bar extra::yes"
 )
 
 echo "Checking key symbol usage across platforms..."
@@ -57,15 +69,15 @@ printf "%-30s %-8s %-8s %-10s %s\n" "Symbol" "Mac" "iOS" "Keyboard" "Status"
 echo "─────────────────────────────────────────────────────────────────────────"
 
 for entry in "${SYMBOLS[@]}"; do
-    IFS='|' read -r symbol desc mac_only <<< "$entry"
+    IFS='::' read -r symbol _ desc _ mac_only <<< "$entry"
 
     mac_used="-"
     ios_used="-"
     kbd_used="-"
     status=""
 
-    if symbol_used_in "$symbol" "$MAC"; then mac_used="✓"; fi
-    if symbol_used_in "$symbol" "$IOS"; then ios_used="✓"; fi
+    if symbol_used_on_mac "$symbol"; then mac_used="✓"; fi
+    if symbol_used_on_ios "$symbol"; then ios_used="✓"; fi
     if symbol_used_in "$symbol" "$KBD"; then kbd_used="✓"; fi
 
     if [[ "$mac_only" == "yes" ]]; then
@@ -91,32 +103,26 @@ echo ""
 echo "Scanning VowriteKit public API usage patterns..."
 echo ""
 
-# Key integration points to verify
-PATTERNS=(
-    "promptContext|PromptContext capture/usage in recording flow"
-    "speculativePolish\|SpeculativePolish()|Speculative Polish in recording flow"
-    "SoundFeedback.warmUp\|SoundFeedback.play|SoundFeedback initialization and playback"
-    "ModeManager.shared.*addMode\|ModeManager.shared.*updateMode\|ModeManager.shared.*deleteMode|Mode CRUD operations"
-    "totalDictationTime\|totalWords\|totalDictations|Stats display (all 3 metrics)"
-    "VW.Spacing\|VW.Colors\|VW.Radius|Design token usage"
-)
+# Check specific integration patterns
+check_pattern() {
+    local pattern="$1"
+    local desc="$2"
 
-for entry in "${PATTERNS[@]}"; do
-    IFS='|' read -r pattern desc <<< "$entry"
-    # Get the last field as description (handles patterns with | in them)
-    desc="${entry##*|}"
-    # Get everything before the last | as the pattern
-    pattern="${entry%|*}"
-
-    mac_count=$(grep -rc "$pattern" "$MAC" --include="*.swift" 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
-    ios_count=$(grep -rc "$pattern" "$IOS" --include="*.swift" 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+    local mac_count ios_count
+    mac_count=$( (grep -rEc "$pattern" "$MAC" --include="*.swift" 2>/dev/null || true) | awk -F: '{s+=$2} END {print s+0}')
+    ios_count=$( (grep -rEc "$pattern" "$IOS" --include="*.swift" 2>/dev/null || true) | awk -F: '{s+=$2} END {print s+0}')
 
     if [[ "$mac_count" -gt 0 && "$ios_count" -eq 0 ]]; then
         echo -e "  ${RED}⚠${NC} $desc"
-        echo "     Mac: $mac_count references, iOS: 0 references"
+        echo "     Mac: $mac_count refs, iOS: 0 refs"
         ((gaps++)) || true
     fi
-done
+}
+
+# These patterns check iOS-specific integration (not shared DictationEngine code)
+check_pattern "SoundFeedback\.(warmUp|play)" "SoundFeedback initialization and playback"
+check_pattern "ModeManager.shared.*(addMode|updateMode|deleteMode)" "Mode CRUD operations (UI)"
+check_pattern "VW\.(Spacing|Colors|Radius)" "Design token usage in views"
 
 echo ""
 

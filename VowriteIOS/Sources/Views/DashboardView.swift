@@ -34,7 +34,7 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: VW.Spacing.xxxl) {
                     // Background Recording Service
                     backgroundRecordingCard
 
@@ -195,10 +195,11 @@ struct DashboardView: View {
             Label("Usage Statistics", systemImage: "chart.bar.fill")
                 .font(.headline)
 
-            HStack(spacing: 16) {
-                StatItem(value: "\(appState.totalDictations)", label: "Dictations")
-                StatItem(value: formatDuration(appState.totalDictationTime), label: "Total Time")
-                StatItem(value: "\(appState.totalWords)", label: "Words")
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: VW.Spacing.xl) {
+                StatCard(icon: "clock", value: formatDuration(appState.totalDictationTime), label: "Total Time")
+                StatCard(icon: "mic", value: formatWordCount(appState.totalWords), label: "Words Dictated")
+                StatCard(icon: "hourglass", value: formatTimeSaved(appState.totalWords), label: "Time Saved")
+                StatCard(icon: "bolt", value: formatWPM(words: appState.totalWords, seconds: appState.totalDictationTime), label: "Avg Speed")
             }
         }
         .padding()
@@ -293,13 +294,45 @@ struct DashboardView: View {
     }
 
     private func formatDuration(_ seconds: TimeInterval) -> String {
-        let minutes = Int(seconds) / 60
-        if minutes < 60 {
+        let totalMinutes = Int(seconds) / 60
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else if totalMinutes > 0 {
+            return "\(totalMinutes)m"
+        }
+        return "\(Int(seconds))s"
+    }
+
+    private func formatWordCount(_ count: Int) -> String {
+        if count >= 10_000 {
+            return String(format: "%.1fK", Double(count) / 1000.0)
+        } else if count > 0 {
+            return "\(count)"
+        }
+        return "0"
+    }
+
+    private func formatTimeSaved(_ totalWords: Int) -> String {
+        let typingWPM = 40.0
+        let typingMinutes = Double(totalWords) / typingWPM
+        let dictationMinutes = appState.totalDictationTime / 60.0
+        let savedMinutes = max(0, typingMinutes - dictationMinutes)
+        let hours = Int(savedMinutes) / 60
+        let minutes = Int(savedMinutes) % 60
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else if minutes > 0 {
             return "\(minutes)m"
         }
-        let hours = minutes / 60
-        let remainingMinutes = minutes % 60
-        return "\(hours)h \(remainingMinutes)m"
+        return "0m"
+    }
+
+    private func formatWPM(words: Int, seconds: TimeInterval) -> String {
+        guard seconds > 0 && words > 0 else { return "—" }
+        let wpm = Int(Double(words) / (seconds / 60.0))
+        return "\(wpm) WPM"
     }
 }
 
@@ -327,19 +360,26 @@ private struct StatusRow: View {
     }
 }
 
-private struct StatItem: View {
+private struct StatCard: View {
+    let icon: String
     let value: String
     let label: String
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(alignment: .leading, spacing: VW.Spacing.md) {
+            Image(systemName: icon)
+                .foregroundColor(.accentColor)
+                .font(.body)
             Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 20, weight: .bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(VW.Spacing.xl)
+        .background(VW.Colors.Background.tertiary, in: RoundedRectangle(cornerRadius: VW.Radius.xl))
     }
 }
