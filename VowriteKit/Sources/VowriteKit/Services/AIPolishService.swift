@@ -5,7 +5,7 @@ public final class AIPolishService {
 
     public init() {}
 
-    public func polish(text: String, modeConfig: ModeConfig? = nil) async throws -> String {
+    public func polish(text: String, modeConfig: ModeConfig? = nil, promptContext: PromptContext? = nil) async throws -> String {
         let configuration = APIConfig.polish
         let baseURL = configuration.resolvedBaseURL
         let provider = configuration.provider
@@ -22,13 +22,21 @@ public final class AIPolishService {
             systemPrompt += "\n\n---\nOutput style:\n\(stylePrompt)"
         }
 
-        if !config.systemPrompt.isEmpty {
-            systemPrompt += "\n\n---\nOutput formatting for current mode (\(config.modeName)):\n\(config.systemPrompt)"
+        // F-045: Expand context variables in mode prompts
+        var modeSystemPrompt = config.systemPrompt
+        var modeUserPrompt = config.userPrompt
+        if let ctx = promptContext {
+            modeSystemPrompt = ctx.expandAll(modeSystemPrompt, text: text)
+            modeUserPrompt = ctx.expandAll(modeUserPrompt, text: text)
+        }
+
+        if !modeSystemPrompt.isEmpty {
+            systemPrompt += "\n\n---\nOutput formatting for current mode (\(config.modeName)):\n\(modeSystemPrompt)"
         }
 
         // Mode-specific user prompt
-        if !config.userPrompt.isEmpty {
-            systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(config.userPrompt)"
+        if !modeUserPrompt.isEmpty {
+            systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(modeUserPrompt)"
         }
 
         // Wrap transcript in delimiters so the model treats it as data, not conversation

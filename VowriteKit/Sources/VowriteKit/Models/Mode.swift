@@ -138,5 +138,21 @@ public struct Mode: Identifiable, Codable, Equatable {
             outputStyleId: nil,
             shortcutIndex: 6
         ),
+        Mode(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000007")!,
+            name: "Command",
+            icon: "terminal",
+            isBuiltin: true,
+            sttModel: nil,
+            language: nil,
+            polishEnabled: true,
+            polishModel: nil,
+            systemPrompt: "命令如下：{text}\n选择的内容：{selected}\n剪切板的内容：{clipboard}",
+            userPrompt: "",
+            temperature: 0.3,
+            autoPaste: true,
+            outputStyleId: nil,
+            shortcutIndex: 7
+        ),
     ]
 }

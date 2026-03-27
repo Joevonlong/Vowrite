@@ -47,7 +47,7 @@ public final class SpeculativePolish {
 
     /// Pre-builds everything for the Polish request except the transcript text.
     /// Call this right when recording stops — it runs in parallel with STT.
-    public func prepare(modeConfig: ModeConfig) {
+    public func prepare(modeConfig: ModeConfig, promptContext: PromptContext? = nil) {
         let configuration = APIConfig.polish
         let baseURL = configuration.resolvedBaseURL
         let provider = configuration.provider
@@ -86,7 +86,8 @@ public final class SpeculativePolish {
             request: request,
             systemPrompt: systemPrompt,
             model: model,
-            temperature: modeConfig.temperature
+            temperature: modeConfig.temperature,
+            promptContext: promptContext
         )
     }
 
@@ -94,10 +95,16 @@ public final class SpeculativePolish {
 
     /// Fires the pre-built Polish request with the actual transcript.
     /// Falls back to standard AIPolishService if no prepared config exists.
-    public func execute(transcript: String, modeConfig: ModeConfig) async throws -> String {
+    public func execute(transcript: String, modeConfig: ModeConfig, promptContext: PromptContext? = nil) async throws -> String {
         guard let config = preparedConfig else {
             // Fallback: no prepared config, use standard path
-            return try await AIPolishService().polish(text: transcript, modeConfig: modeConfig)
+            return try await AIPolishService().polish(text: transcript, modeConfig: modeConfig, promptContext: promptContext)
+        }
+
+        // F-045: Expand context variables in the pre-built system prompt
+        var expandedSystemPrompt = config.systemPrompt
+        if let ctx = config.promptContext ?? promptContext {
+            expandedSystemPrompt = ctx.expandAll(expandedSystemPrompt, text: transcript)
         }
 
         let wrappedText = """
@@ -111,7 +118,7 @@ public final class SpeculativePolish {
         let payload: [String: Any] = [
             "model": config.model,
             "messages": [
-                ["role": "system", "content": config.systemPrompt],
+                ["role": "system", "content": expandedSystemPrompt],
                 ["role": "user", "content": wrappedText]
             ],
             "temperature": config.temperature,
@@ -153,5 +160,6 @@ public final class SpeculativePolish {
         let systemPrompt: String
         let model: String
         let temperature: Double
+        let promptContext: PromptContext?
     }
 }
