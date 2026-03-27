@@ -9,14 +9,20 @@ struct PersonalizationView: View {
     @State private var userPrompt = PromptConfig.userPrompt
     @State private var isUserPromptLocked = PromptConfig.isUserPromptLocked
 
+    // Mode editor state
+    @State private var editingMode: Mode? = nil
+    @State private var isCreatingNew = false
+
     var body: some View {
         NavigationStack {
             Form {
                 // Modes
-                Section("Dictation Modes") {
+                Section {
                     ForEach(modeManager.modes) { mode in
                         HStack {
-                            Text(mode.icon)
+                            Image(systemName: mode.icon)
+                                .foregroundColor(.accentColor)
+                                .frame(width: 24)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(mode.name)
                                     .font(.body)
@@ -34,14 +40,46 @@ struct PersonalizationView: View {
                         .onTapGesture {
                             modeManager.select(mode)
                         }
+                        .swipeActions(edge: .trailing) {
+                            Button {
+                                editingMode = mode
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            .tint(.blue)
+
+                            if !mode.isBuiltin {
+                                Button(role: .destructive) {
+                                    withAnimation {
+                                        modeManager.deleteMode(mode)
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                        }
                     }
+                } header: {
+                    HStack {
+                        Text("Dictation Modes")
+                        Spacer()
+                        Button {
+                            isCreatingNew = true
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.body)
+                        }
+                    }
+                } footer: {
+                    Text("Tap to select · Swipe for edit/delete")
                 }
 
                 // Output Styles
                 Section("Output Styles") {
                     ForEach(styleManager.styles) { style in
                         HStack {
-                            Text(style.icon)
+                            Image(systemName: style.icon)
+                                .frame(width: 24)
                             Text(style.name)
                             Spacer()
                         }
@@ -122,11 +160,35 @@ struct PersonalizationView: View {
                 }
             }
             .navigationTitle("Personalization")
+            // Edit sheet
+            .sheet(item: $editingMode) { mode in
+                ModeEditorSheet(
+                    existingMode: mode,
+                    onSave: { updated in
+                        modeManager.updateMode(updated)
+                    },
+                    onDelete: { mode in
+                        withAnimation {
+                            modeManager.deleteMode(mode)
+                        }
+                    }
+                )
+            }
+            // Create sheet
+            .sheet(isPresented: $isCreatingNew) {
+                ModeEditorSheet(
+                    existingMode: nil,
+                    onSave: { newMode in
+                        withAnimation {
+                            modeManager.addMode(newMode)
+                        }
+                    }
+                )
+            }
         }
     }
 
     private func applyPreset(_ preset: PreferencePreset) {
-        // Apply preset prompt text as user prompt
         userPrompt = preset.promptText
         PromptConfig.userPrompt = preset.promptText
         isUserPromptLocked = true
