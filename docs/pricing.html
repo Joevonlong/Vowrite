@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provider Pricing — Vowrite</title>
+  <meta name="description" content="Compare STT and AI Polish provider pricing for Vowrite. Bring your own API key and choose the best provider for your budget.">
+  <link rel="canonical" href="https://vowrite.com/pricing">
+  <meta property="og:title" content="Provider Pricing — Vowrite">
+  <meta property="og:description" content="Compare STT and AI Polish provider pricing. Free options available.">
+  <meta property="og:url" content="https://vowrite.com/pricing">
+  <meta property="og:image" content="https://vowrite.com/app-icon-256.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="app-icon-64.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fafafa;
+      --bg-alt: #f5f5f4;
+      --bg-card: #fff;
+      --text: #1d1d1f;
+      --text-muted: #6e6e73;
+      --accent: #1d1d1f;
+      --accent-warm: #c8491c;
+      --border: #d2d2d7;
+      --border-light: rgba(0,0,0,0.08);
+      --radius: 12px;
+      --green: #34a853;
+      --blue: #007aff;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Nav */
+    .nav { padding: 16px 0; border-bottom: 1px solid var(--border-light); }
+    .nav .container { display: flex; align-items: center; gap: 16px; }
+    .nav-logo { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .nav-logo img { width: 28px; height: 28px; border-radius: 6px; }
+    .nav-links { display: flex; gap: 20px; margin-left: auto; font-size: 0.9rem; }
+    .nav-links a { color: var(--text-muted); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    /* Hero */
+    .hero { text-align: center; padding: 64px 0 32px; }
+    .hero h1 { font-size: 2.4rem; letter-spacing: -0.03em; margin-bottom: 12px; }
+    .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 640px; margin: 0 auto; }
+
+    /* Section */
+    .section { padding: 40px 0; }
+    .section-title { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .section-sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 32px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead { background: var(--bg-alt); }
+    th { text-align: left; padding: 10px 14px; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); white-space: nowrap; }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+    tr:hover td { background: rgba(0,0,0,0.015); }
+    .price { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .free { color: var(--green); font-weight: 700; }
+    .badge { display: inline-block; font-size: 0.7rem; padding: 2px 7px; border-radius: 6px; font-weight: 600; }
+    .badge-free { background: #e6f4ea; color: #1e7e34; }
+    .badge-cheap { background: #e8f0fe; color: #1a56db; }
+    .badge-fast { background: #fff3cd; color: #856404; }
+    .badge-best { background: #fce4ec; color: #c62828; }
+    .provider-name { font-weight: 600; }
+    .model-name { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.82rem; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab { padding: 8px 18px; border-radius: 20px; font-size: 0.88rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg-card); transition: all 0.15s; }
+    .tab:hover { background: var(--bg-alt); }
+    .tab.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+    /* Estimate card */
+    .estimate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .estimate-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 20px; }
+    .estimate-card h3 { font-size: 0.95rem; margin-bottom: 4px; }
+    .estimate-card .price-big { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
+    .estimate-card .price-big.free-price { color: var(--green); }
+    .estimate-card p { font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; }
+
+    /* Note */
+    .note { background: var(--bg-alt); border-radius: var(--radius); padding: 20px; font-size: 0.88rem; color: var(--text-muted); margin-top: 24px; line-height: 1.7; }
+    .note strong { color: var(--text); }
+
+    /* Footer */
+    .footer { text-align: center; padding: 40px 0; font-size: 0.82rem; color: var(--text-muted); border-top: 1px solid var(--border-light); }
+    .footer a { color: var(--text-muted); }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.8rem; }
+      .hero { padding: 40px 0 24px; }
+      th, td { padding: 8px 10px; }
+      table { font-size: 0.82rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container">
+    <a href="/" class="nav-logo">
+      <img src="app-icon-64.png" alt="Vowrite" width="28" height="28">
+      Vowrite
+    </a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="why.html">Why</a>
+      <a href="pricing.html" style="color:var(--text);font-weight:600;">Pricing</a>
+      <a href="https://github.com/Joevonlong/Vowrite">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <h1>Provider Pricing</h1>
+    <p>Vowrite is <strong>free and open source</strong>. You bring your own API keys (BYOK) and only pay your chosen providers directly. Here's what they cost.</p>
+  </div>
+</section>
+
+<!-- Monthly cost estimates -->
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Monthly Cost Estimates</h2>
+    <p class="section-sub">Based on ~30 minutes of voice input per day</p>
+    <div class="estimate-grid">
+      <div class="estimate-card">
+        <h3>🆓 Free Combo</h3>
+        <div class="price-big free-price">$0/mo</div>
+        <p>SiliconFlow STT + Zhipu glm-4-flash Polish. Zero cost, unlimited usage.</p>
+      </div>
+      <div class="estimate-card">
+        <h3>💰 Budget</h3>
+        <div class="price-big">~$0.45/mo</div>
+        <p>Groq Whisper STT + DeepSeek Polish. Excellent quality at pennies.</p>
+      </div>
+      <div class="estimate-card">
+        <h3>⚖️ Balanced</h3>
+        <div class="price-big">~$2.88/mo</div>
+        <p>OpenAI mini-transcribe + gpt-4o-mini. Reliable mainstream choice.</p>
+      </div>
+      <div class="estimate-card">
+        <h3>🎯 Premium</h3>
+        <div class="price-big">~$11.43/mo</div>
+        <p>Deepgram Nova-3 + Claude Sonnet. Top accuracy and polish quality.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STT Table -->
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">🎤 Speech-to-Text (STT)</h2>
+    <p class="section-sub">Transcribe your voice to raw text</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Model</th>
+            <th>Price / min</th>
+            <th>Price / hour</th>
+            <th>Languages</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="provider-name">SiliconFlow</td>
+            <td class="model-name">SenseVoiceSmall</td>
+            <td class="price free">Free ✨</td>
+            <td class="price free">Free</td>
+            <td>50+</td>
+            <td><span class="badge badge-free">FREE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Groq</td>
+            <td class="model-name">whisper-large-v3</td>
+            <td class="price">$0.0005</td>
+            <td class="price">$0.03</td>
+            <td>57+</td>
+            <td><span class="badge badge-cheap">CHEAPEST</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Groq</td>
+            <td class="model-name">whisper-large-v3-turbo</td>
+            <td class="price">$0.0007</td>
+            <td class="price">$0.04</td>
+            <td>57+</td>
+            <td><span class="badge badge-fast">FASTEST</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Together AI</td>
+            <td class="model-name">whisper-large-v3</td>
+            <td class="price">$0.0015</td>
+            <td class="price">$0.09</td>
+            <td>57+</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Volcengine</td>
+            <td class="model-name">Seed-ASR 2.0 (file)</td>
+            <td class="price">~$0.0018</td>
+            <td class="price">~$0.11</td>
+            <td>13+</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-4o-mini-transcribe</td>
+            <td class="price">$0.003</td>
+            <td class="price">$0.18</td>
+            <td>57+</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-4o-transcribe</td>
+            <td class="price">$0.006</td>
+            <td class="price">$0.36</td>
+            <td>57+</td>
+            <td><span class="badge badge-best">ACCURATE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">whisper-1</td>
+            <td class="price">$0.006</td>
+            <td class="price">$0.36</td>
+            <td>57+</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Deepgram</td>
+            <td class="model-name">Nova-2</td>
+            <td class="price">$0.0058</td>
+            <td class="price">$0.35</td>
+            <td>36+</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Deepgram</td>
+            <td class="model-name">Nova-3 (Mono)</td>
+            <td class="price">$0.0077</td>
+            <td class="price">$0.46</td>
+            <td>36+</td>
+            <td><span class="badge badge-best">TOP ACCURACY</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Deepgram</td>
+            <td class="model-name">Nova-3 (Multi)</td>
+            <td class="price">$0.0092</td>
+            <td class="price">$0.55</td>
+            <td>45+</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Volcengine</td>
+            <td class="model-name">Seed-ASR 2.0 (stream)</td>
+            <td class="price">~$0.010</td>
+            <td class="price">~$0.62</td>
+            <td>13+</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Ollama</td>
+            <td class="model-name">whisper (local)</td>
+            <td class="price free">Free 🖥️</td>
+            <td class="price free">Free</td>
+            <td>57+</td>
+            <td>Local GPU</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Polish Table -->
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">✨ AI Polish (LLM)</h2>
+    <p class="section-sub">Clean up and refine your transcribed text</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Model</th>
+            <th>Input $/M tokens</th>
+            <th>Output $/M tokens</th>
+            <th>Context</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="provider-name">Zhipu</td>
+            <td class="model-name">glm-4-flash</td>
+            <td class="price free">Free ✨</td>
+            <td class="price free">Free</td>
+            <td>128K</td>
+            <td><span class="badge badge-free">FREE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Groq</td>
+            <td class="model-name">llama-3.1-8b-instant</td>
+            <td class="price">$0.05</td>
+            <td class="price">$0.08</td>
+            <td>128K</td>
+            <td><span class="badge badge-fast">FASTEST</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Qwen</td>
+            <td class="model-name">qwen3.5-flash</td>
+            <td class="price">~$0.03</td>
+            <td class="price">~$0.14</td>
+            <td>128K</td>
+            <td><span class="badge badge-cheap">CHEAP</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-4o-mini</td>
+            <td class="price">$0.15</td>
+            <td class="price">$0.60</td>
+            <td>128K</td>
+            <td>⭐ Recommended</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Gemini</td>
+            <td class="model-name">gemini-2.0-flash</td>
+            <td class="price">$0.10</td>
+            <td class="price">$0.40</td>
+            <td>1M</td>
+            <td><span class="badge badge-free">FREE TIER</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">DeepSeek</td>
+            <td class="model-name">deepseek-chat (V3.2)</td>
+            <td class="price">$0.28</td>
+            <td class="price">$0.42</td>
+            <td>164K</td>
+            <td><span class="badge badge-cheap">VALUE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Volcengine</td>
+            <td class="model-name">doubao-seed-2.0-mini</td>
+            <td class="price">~$0.03</td>
+            <td class="price">~$0.28</td>
+            <td>32K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Groq</td>
+            <td class="model-name">llama-3.3-70b-versatile</td>
+            <td class="price">$0.59</td>
+            <td class="price">$0.79</td>
+            <td>128K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Kimi</td>
+            <td class="model-name">kimi-k2.5</td>
+            <td class="price">$0.60</td>
+            <td class="price">$3.00</td>
+            <td>128K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">MiniMax</td>
+            <td class="model-name">MiniMax-Text-02</td>
+            <td class="price">$0.26</td>
+            <td class="price">$1.00</td>
+            <td>197K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Gemini</td>
+            <td class="model-name">gemini-2.5-flash</td>
+            <td class="price">$0.30</td>
+            <td class="price">$2.50</td>
+            <td>1M</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-4o</td>
+            <td class="price">$2.50</td>
+            <td class="price">$10.00</td>
+            <td>128K</td>
+            <td><span class="badge badge-best">PREMIUM</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Claude</td>
+            <td class="model-name">claude-sonnet-4-5</td>
+            <td class="price">$3.00</td>
+            <td class="price">$15.00</td>
+            <td>200K</td>
+            <td><span class="badge badge-best">PREMIUM</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Claude</td>
+            <td class="model-name">claude-haiku-3-5</td>
+            <td class="price">$0.80</td>
+            <td class="price">$4.00</td>
+            <td>200K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Zhipu</td>
+            <td class="model-name">glm-4-plus</td>
+            <td class="price">~$0.69</td>
+            <td class="price">~$0.69</td>
+            <td>128K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">SiliconFlow</td>
+            <td class="model-name">Qwen2.5-72B-Instruct</td>
+            <td class="price">~$0.57</td>
+            <td class="price">~$0.57</td>
+            <td>128K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Ollama / MLX</td>
+            <td class="model-name">Local models</td>
+            <td class="price free">Free 🖥️</td>
+            <td class="price free">Free</td>
+            <td>Varies</td>
+            <td>Local hardware</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Notes -->
+<section class="section">
+  <div class="container">
+    <div class="note">
+      <strong>💡 How Vowrite pricing works:</strong> Vowrite itself is free and open source. You bring your own API keys (BYOK) and pay providers directly for what you use. Mix and match — use one provider for STT and another for Polish.<br><br>
+      <strong>📌 Notes:</strong> CNY prices converted at ~¥7.2 = $1 USD (March 2026). Prices sourced from official provider pages and may change. Monthly estimates assume ~15 hours STT + ~300K tokens Polish per month.
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Vowrite — Say it once. Mean it perfectly. · <a href="https://github.com/Joevonlong/Vowrite">GitHub</a> · <a href="/">Home</a></p>
+    <p style="margin-top:6px;">Last updated: March 2026</p>
+  </div>
+</footer>
+
+</body>
+</html>
