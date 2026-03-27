@@ -28,6 +28,7 @@ public final class DictationEngine: ObservableObject {
 
     private var recordingTimer: Timer?
     private var levelTimer: Timer?
+    private var promptContext: PromptContext?
 
     public var isRecording: Bool { state == .recording }
 
@@ -104,6 +105,9 @@ public final class DictationEngine: ObservableObject {
         // Remember which app has focus BEFORE we start (so we can paste back into it)
         textOutput.prepareForOutput()
 
+        // F-045: Capture selected text and clipboard before overlay changes focus
+        promptContext = PromptContext.capture()
+
         do {
             try audioEngine.startRecording()
             state = .recording
@@ -176,7 +180,7 @@ public final class DictationEngine: ObservableObject {
         let modeConfig = ModeManager.currentModeConfig
         let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
         if effectivePolishEnabled {
-            speculativePolish.prepare(modeConfig: modeConfig)
+            speculativePolish.prepare(modeConfig: modeConfig, promptContext: promptContext)
         }
 
         processAudio(url: audioURL)
@@ -187,6 +191,7 @@ public final class DictationEngine: ObservableObject {
         levelTimer?.invalidate()
         _ = audioEngine.stopRecording()
         speculativePolish.reset()
+        promptContext = nil
         state = .idle
         overlay.hide()
         feedback.playErrorSound()
@@ -251,7 +256,7 @@ public final class DictationEngine: ObservableObject {
                         #if DEBUG
                         print("[Vowrite] Starting AI polish (speculative)...")
                         #endif
-                        let polished = try await speculativePolish.execute(transcript: rawTranscript, modeConfig: modeConfig)
+                        let polished = try await speculativePolish.execute(transcript: rawTranscript, modeConfig: modeConfig, promptContext: promptContext)
                         finalText = polished
                         #if DEBUG
                         print("[Vowrite] Polish result: '\(polished)'")
@@ -284,6 +289,7 @@ public final class DictationEngine: ObservableObject {
 
                 // Step 7: Success feedback
                 speculativePolish.reset()
+                promptContext = nil
                 feedback.playSuccessSound()
                 state = .idle
 
