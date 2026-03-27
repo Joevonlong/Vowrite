@@ -3,17 +3,17 @@ import VowriteKit
 
 final class iOSFeedback: FeedbackProvider {
     func playStartSound() {
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        SoundFeedback.playStart()
     }
 
     func playSuccessSound() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.success)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        SoundFeedback.playSuccess()
     }
 
     func playErrorSound() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.error)
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+        SoundFeedback.playError()
     }
 }

@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var polishModel: String = APIConfig.polishModel
     @State private var sttAPIKey: String = ""
     @State private var polishAPIKey: String = ""
+    @State private var soundFeedbackEnabled: Bool = SoundFeedback.isEnabled
 
     var body: some View {
         NavigationStack {
@@ -112,6 +113,14 @@ struct SettingsView: View {
                                 .foregroundStyle(.green)
                         }
                     }
+                }
+
+                // Feedback
+                Section("Feedback") {
+                    Toggle("Sound Feedback", isOn: $soundFeedbackEnabled)
+                        .onChange(of: soundFeedbackEnabled) { _, newValue in
+                            SoundFeedback.isEnabled = newValue
+                        }
                 }
 
                 // About
