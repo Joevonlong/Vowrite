@@ -34,6 +34,9 @@ struct VowriteApp: App {
         APIConfigMigration.runIfNeeded()
         APIConfig.migratePresetIDs()
 
+        // Pre-generate sound feedback tones
+        SoundFeedback.warmUp()
+
         // Initialize AppState after all migrations
         _appState = StateObject(wrappedValue: AppState())
     }
