@@ -54,6 +54,7 @@ final class BackgroundRecordingService: ObservableObject {
     private let ipc = BackgroundRecordingIPC.shared
     private let whisperService = WhisperService()
     private let aiPolishService = AIPolishService()
+    private let speculativePolish = SpeculativePolish()
 
     // MARK: - Audio Engine (replaces AVAudioRecorder)
     // AVAudioEngine with input tap keeps microphone active continuously.
@@ -73,6 +74,7 @@ final class BackgroundRecordingService: ObservableObject {
     private var recordingStartTime: Date?
     private var recordingURL: URL?
     private var interruptionObserver: NSObjectProtocol?
+    private var promptContext: PromptContext?
 
     // MARK: - Auto-deactivation timer
     private var countdownTimer: Timer?
@@ -462,6 +464,8 @@ final class BackgroundRecordingService: ObservableObject {
         isRecording = true
         peakRMS = 0
         recordingStartTime = Date()
+        promptContext = PromptContext.capture()
+        speculativePolish.warmUpConnection()
         ipc.state = .recording
         ipc.recordingDuration = 0
         ipc.audioLevel = 0
@@ -535,6 +539,13 @@ final class BackgroundRecordingService: ObservableObject {
 
         ipc.state = .processing
 
+        // F-033: Pre-build Polish request during STT (runs in parallel)
+        let modeConfig = ModeManager.currentModeConfig
+        let effectivePolishEnabled = ipc.requestedAIEnabled && modeConfig.polishEnabled
+        if effectivePolishEnabled {
+            speculativePolish.prepare(modeConfig: modeConfig, promptContext: promptContext)
+        }
+
         #if DEBUG
         print("[Vowrite BG] Recording stopped (\(String(format: "%.1f", duration))s, peakRMS=\(peakRMS)), processing...")
         #endif
@@ -555,6 +566,8 @@ final class BackgroundRecordingService: ObservableObject {
         if let url = recordingURL { try? FileManager.default.removeItem(at: url) }
         recordingURL = nil
         isRecording = false
+        promptContext = nil
+        speculativePolish.reset()
         ipc.clearResult()
 
         #if DEBUG
@@ -641,7 +654,7 @@ final class BackgroundRecordingService: ObservableObject {
 
                 ipc.rawTranscript = rawTranscript
 
-                // Step 2: AI Polish
+                // Step 2: AI Polish (F-033: uses speculative pre-built request)
                 var finalText = rawTranscript
                 let effectivePolishEnabled = aiEnabled && modeConfig.polishEnabled
                 if effectivePolishEnabled {
@@ -650,7 +663,11 @@ final class BackgroundRecordingService: ObservableObject {
                         // Skip polish, use raw
                     } else {
                         do {
-                            finalText = try await aiPolishService.polish(text: rawTranscript, modeConfig: modeConfig)
+                            finalText = try await speculativePolish.execute(
+                                transcript: rawTranscript,
+                                modeConfig: modeConfig,
+                                promptContext: promptContext
+                            )
                         } catch {
                             #if DEBUG
                             print("[Vowrite BG] Polish failed, using raw: \(error)")
@@ -679,7 +696,9 @@ final class BackgroundRecordingService: ObservableObject {
                 VowriteStorage.defaults.set(totalWords, forKey: "totalWords")
                 VowriteStorage.defaults.set(totalDictations, forKey: "totalDictations")
 
-                // Clean up temp file
+                // Clean up
+                speculativePolish.reset()
+                promptContext = nil
                 try? FileManager.default.removeItem(at: url)
 
                 #if DEBUG
