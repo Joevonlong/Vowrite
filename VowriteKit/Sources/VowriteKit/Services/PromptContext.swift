@@ -1,6 +1,8 @@
 #if canImport(AppKit)
 import AppKit
 import ApplicationServices
+#elseif canImport(UIKit)
+import UIKit
 #endif
 
 /// Captures context variables available for prompt template expansion.
@@ -16,16 +18,32 @@ public struct PromptContext: Sendable {
     }
 
     /// Capture the current selected text (via Accessibility) and clipboard content.
-    /// Clipboard is read on MainActor (AppKit requirement).
-    /// AX calls run on a background thread with a short timeout.
+    /// On macOS: reads selected text via Accessibility API + NSPasteboard.
+    /// On iOS: reads UIPasteboard (selected text must be passed separately).
     @MainActor
     public static func capture() -> PromptContext {
         #if canImport(AppKit)
         let clipboard = NSPasteboard.general.string(forType: .string) ?? ""
         let selected = readSelectedTextWithTimeout(ms: 200) ?? ""
         return PromptContext(selectedText: selected, clipboardText: clipboard)
+        #elseif canImport(UIKit)
+        let clipboard = UIPasteboard.general.string ?? ""
+        // On iOS, selected text is not available via system API from the main app.
+        // It must be passed explicitly (e.g. from keyboard extension's textDocumentProxy).
+        return PromptContext(selectedText: "", clipboardText: clipboard)
         #else
         return PromptContext()
+        #endif
+    }
+
+    /// iOS-specific: capture with explicitly provided selected text (e.g. from keyboard extension).
+    @MainActor
+    public static func capture(selectedText: String?) -> PromptContext {
+        #if canImport(UIKit)
+        let clipboard = UIPasteboard.general.string ?? ""
+        return PromptContext(selectedText: selectedText ?? "", clipboardText: clipboard)
+        #else
+        return capture()
         #endif
     }
 
