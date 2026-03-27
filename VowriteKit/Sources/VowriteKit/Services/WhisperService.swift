@@ -3,6 +3,7 @@ import Foundation
 /// Speech-to-text router: delegates to the correct adapter based on provider.
 public final class WhisperService {
     private static let openAIAdapter = OpenAISTTAdapter()
+    private static let deepgramAdapter = DeepgramSTTAdapter()
     private static let volcengineAdapter = VolcengineSTTAdapter()
     private static let qwenAdapter = QwenSTTAdapter()
 
@@ -26,6 +27,8 @@ public final class WhisperService {
 
     private static func adapter(for provider: APIProvider) -> STTAdapter {
         switch provider {
+        case .deepgram:
+            return deepgramAdapter
         case .volcengine:
             return volcengineAdapter
         case .qwen:

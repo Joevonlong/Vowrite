@@ -5,6 +5,7 @@ public enum KeyVault {
 
     public static let managedProviders: [APIProvider] = [
         .groq,
+        .deepgram,
         .deepseek,
         .openai,
         .openrouter,
