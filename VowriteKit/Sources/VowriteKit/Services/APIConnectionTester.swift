@@ -108,6 +108,11 @@ public enum APIConnectionTester {
             throw VowriteError.apiError("\(configuration.provider.rawValue) doesn't support STT")
         }
 
+        if configuration.provider == .deepgram {
+            try await testDeepgramConnection(configuration: configuration)
+            return
+        }
+
         let endpoint = "\(configuration.resolvedBaseURL)/models"
         guard let url = URL(string: endpoint) else {
             throw VowriteError.apiError("Invalid base URL")
@@ -136,4 +141,40 @@ public enum APIConnectionTester {
             throw VowriteError.apiError("STT Error \(httpResponse.statusCode): \(body)")
         }
     }
+
+    // MARK: - Deepgram Connection Test
+
+    /// Deepgram has no /models endpoint; validate via GET /projects with Token auth.
+    private static func testDeepgramConnection(
+        configuration: APIEndpointConfiguration
+    ) async throws {
+        let endpoint = "\(configuration.resolvedBaseURL)/projects"
+        guard let url = URL(string: endpoint) else {
+            throw VowriteError.apiError("Invalid Deepgram base URL")
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 15
+
+        if let apiKey = configuration.key {
+            request.setValue("Token \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VowriteError.networkError("Invalid response")
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+            if httpResponse.statusCode == 401 {
+                let keyStatus = configuration.key != nil ? "key present" : "NO KEY FOUND"
+                throw VowriteError.apiError("Deepgram: 401 Unauthorized [\(keyStatus)]")
+            }
+            throw VowriteError.apiError("Deepgram STT Error \(httpResponse.statusCode): \(body)")
+        }
+    }
+
 }

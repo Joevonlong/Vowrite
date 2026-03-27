@@ -4,6 +4,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     case openai = "OpenAI"
     case openrouter = "OpenRouter"
     case groq = "Groq"
+    case deepgram = "Deepgram"
     case together = "Together AI"
     case deepseek = "DeepSeek"
     case siliconflow = "SiliconFlow (硅基流动)"
@@ -25,8 +26,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     /// the branching point for introducing Protocol abstraction.
     public var isOpenAICompatible: Bool {
         switch self {
-        case .claude: return false
-        default: return true  // MLX Server exposes OpenAI-compatible API
+        case .claude, .deepgram: return false
+        default: return true
         }
     }
 
@@ -35,6 +36,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .openai: return "https://api.openai.com/v1"
         case .openrouter: return "https://openrouter.ai/api/v1"
         case .groq: return "https://api.groq.com/openai/v1"
+        case .deepgram: return "https://api.deepgram.com/v1"
         case .together: return "https://api.together.xyz/v1"
         case .deepseek: return "https://api.deepseek.com/v1"
         case .siliconflow: return "https://api.siliconflow.cn/v1"
@@ -56,6 +58,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .openai: return "gpt-4o-mini-transcribe"
         case .openrouter: return "openai/whisper-large-v3"
         case .groq: return "whisper-large-v3-turbo"
+        case .deepgram: return "nova-3"
         case .together: return "whisper-large-v3"
         case .deepseek: return "whisper-1"
         case .siliconflow: return "FunAudioLLM/SenseVoiceSmall"
@@ -77,6 +80,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .openai: return "gpt-4o-mini"
         case .openrouter: return "openai/gpt-4o-mini"
         case .groq: return "llama-3.3-70b-versatile"
+        case .deepgram: return ""
         case .together: return "meta-llama/Llama-3.1-8B-Instruct-Turbo"
         case .deepseek: return "deepseek-chat"
         case .siliconflow: return "Qwen/Qwen2.5-72B-Instruct"
@@ -98,6 +102,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .openai: return ["gpt-4o-mini-transcribe", "gpt-4o-transcribe", "whisper-1"]
         case .openrouter: return []
         case .groq: return ["whisper-large-v3-turbo", "whisper-large-v3"]
+        case .deepgram: return ["nova-3", "nova-2"]
         case .together: return ["whisper-large-v3"]
         case .deepseek: return []
         case .siliconflow: return ["FunAudioLLM/SenseVoiceSmall", "TeleAI/TeleSpeechASR"]
@@ -119,6 +124,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .openai: return ["gpt-4o-mini", "gpt-4o"]
         case .openrouter: return []
         case .groq: return ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-qwq-32b"]
+        case .deepgram: return []
         case .together: return ["meta-llama/Llama-3.1-8B-Instruct-Turbo"]
         case .deepseek: return ["deepseek-chat", "deepseek-reasoner"]
         case .siliconflow: return ["Qwen/Qwen2.5-72B-Instruct", "Qwen/Qwen3-8B", "deepseek-ai/DeepSeek-V3", "THUDM/GLM-4-9B-Chat"]
@@ -137,7 +143,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
 
     public var hasSTTSupport: Bool {
         switch self {
-        case .openai, .groq, .together, .siliconflow, .ollama, .custom:
+        case .openai, .groq, .deepgram, .together, .siliconflow, .ollama, .custom:
             return true
         case .openrouter, .deepseek, .kimi, .minimax, .gemini, .zhipu, .claude, .mlxServer:
             return false
@@ -162,6 +168,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
             return "Zhipu does not offer speech-to-text."
         case .claude:
             return "Claude does not offer speech-to-text."
+        case .deepgram:
+            return "Deepgram Nova — industry-leading accuracy, 36+ languages. STT only, no text polish."
         case .mlxServer:
             return "MLX servers (oMLX, mlx-lm, vllm-mlx) do not expose an audio transcription endpoint. Use for text polish only."
         case .volcengine:
@@ -184,6 +192,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .openai: return "sk-..."
         case .openrouter: return "sk-or-..."
         case .groq: return "gsk_..."
+        case .deepgram: return "..."
         case .together: return "..."
         case .deepseek: return "sk-..."
         case .siliconflow: return "sk-..."
@@ -204,7 +213,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         self != .ollama && self != .mlxServer
     }
 
-    /// Providers available on the current platform (iOS excludes Ollama)
+    /// Providers available on the current platform (iOS excludes local-only providers)
     public static var availableCases: [APIProvider] {
         #if os(iOS)
         return allCases.filter { $0 != .ollama && $0 != .mlxServer }
@@ -223,6 +232,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .openai: return "https://platform.openai.com/api-keys"
         case .openrouter: return "https://openrouter.ai/keys"
         case .groq: return "https://console.groq.com/keys"
+        case .deepgram: return "https://console.deepgram.com/"
         case .together: return "https://api.together.xyz/settings/api-keys"
         case .deepseek: return "https://platform.deepseek.com/api_keys"
         case .siliconflow: return "https://cloud.siliconflow.cn/account/ak"
@@ -261,6 +271,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case "whisper-base": return "Lightweight local model"
         case "FunAudioLLM/SenseVoiceSmall": return "Alibaba SenseVoice — excellent multilingual STT"
         case "TeleAI/TeleSpeechASR": return "TeleAI ASR model"
+        case "nova-3": return "Best accuracy, 36+ languages"
+        case "nova-2": return "Previous gen, wider language support"
         case "seed-asr-2.0": return "Volcengine flagship — 13+ languages"
         case "qwen3-asr-flash": return "Fast Qwen ASR — 30+ languages"
         case "paraformer-v2": return "Alibaba Paraformer — very cheap"
