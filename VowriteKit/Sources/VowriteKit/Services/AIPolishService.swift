@@ -1,6 +1,8 @@
 import Foundation
 
 public final class AIPolishService {
+    private let claudeService = ClaudePolishService()
+
     public init() {}
 
     public func polish(text: String, modeConfig: ModeConfig? = nil) async throws -> String {
@@ -11,19 +13,6 @@ public final class AIPolishService {
 
         // Use mode-specific polish model or fall back to effective config
         let model = config.polishModel ?? configuration.model
-        let endpoint = "\(baseURL)/chat/completions"
-
-        var request = URLRequest(url: URL(string: endpoint)!)
-        request.httpMethod = "POST"
-        if let apiKey = configuration.key {
-            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        }
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // Longer timeout for large text (more tokens = longer generation)
-        request.timeoutInterval = 120
-
-        // Provider-specific headers (e.g. OpenRouter requires HTTP-Referer)
-        provider.applyHeaders(to: &request)
 
         // Build system prompt: base + output style + mode-specific override or scene fallback
         var systemPrompt = PromptConfig.effectiveSystemPrompt
@@ -50,6 +39,38 @@ public final class AIPolishService {
         \(text)
         --- TRANSCRIPT END ---
         """
+
+        // Claude uses its own Messages API
+        if provider == .claude {
+            guard let apiKey = configuration.key else {
+                throw VowriteError.apiError("No API key configured for Claude")
+            }
+            let result = try await claudeService.polish(
+                text: text,
+                systemPrompt: systemPrompt,
+                userPrompt: wrappedText,
+                apiKey: apiKey,
+                model: model,
+                baseURL: baseURL,
+                temperature: config.temperature
+            )
+            return result.strippingThinkTags()
+        }
+
+        // OpenAI-compatible path
+        let endpoint = "\(baseURL)/chat/completions"
+
+        var request = URLRequest(url: URL(string: endpoint)!)
+        request.httpMethod = "POST"
+        if let apiKey = configuration.key {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // Longer timeout for large text (more tokens = longer generation)
+        request.timeoutInterval = 120
+
+        // Provider-specific headers (e.g. OpenRouter requires HTTP-Referer)
+        provider.applyHeaders(to: &request)
 
         let payload: [String: Any] = [
             "model": model,

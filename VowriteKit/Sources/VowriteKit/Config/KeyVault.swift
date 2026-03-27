@@ -16,6 +16,7 @@ public enum KeyVault {
         .qwen,
         .gemini,
         .zhipu,
+        .claude,
         .custom
     ]
 

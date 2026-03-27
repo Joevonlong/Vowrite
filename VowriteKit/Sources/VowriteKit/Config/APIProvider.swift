@@ -13,6 +13,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     case qwen = "Qwen (通义千问)"
     case gemini = "Google Gemini"
     case zhipu = "Zhipu (智谱清言)"
+    case claude = "Claude (Anthropic)"
     case ollama = "Ollama (Local)"
     case custom = "Custom"
 
@@ -21,7 +22,12 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     /// Whether this provider uses standard OpenAI-compatible API format.
     /// When a non-OpenAI provider is needed (e.g. 讯飞 WebSocket), this becomes
     /// the branching point for introducing Protocol abstraction.
-    public var isOpenAICompatible: Bool { true }
+    public var isOpenAICompatible: Bool {
+        switch self {
+        case .claude: return false
+        default: return true
+        }
+    }
 
     public var defaultBaseURL: String {
         switch self {
@@ -37,6 +43,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .qwen: return "https://dashscope.aliyuncs.com/compatible-mode/v1"
         case .gemini: return "https://generativelanguage.googleapis.com/v1beta/openai"
         case .zhipu: return "https://open.bigmodel.cn/api/paas/v4"
+        case .claude: return "https://api.anthropic.com/v1"
         case .ollama: return "http://localhost:11434/v1"
         case .custom: return ""
         }
@@ -56,6 +63,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .qwen: return "qwen3-asr-flash"
         case .gemini: return ""
         case .zhipu: return ""
+        case .claude: return ""
         case .ollama: return "whisper-large-v3-turbo"
         case .custom: return "whisper-1"
         }
@@ -75,6 +83,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .qwen: return "qwen-turbo"
         case .gemini: return "gemini-2.0-flash"
         case .zhipu: return "glm-4-flash"
+        case .claude: return "claude-sonnet-4-5-20250514"
         case .ollama: return "qwen3:8b"
         case .custom: return "gpt-4o-mini"
         }
@@ -94,6 +103,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .qwen: return ["qwen3-asr-flash", "paraformer-v2", "fun-asr"]
         case .gemini: return []
         case .zhipu: return []
+        case .claude: return []
         case .ollama: return ["whisper-large-v3-turbo", "whisper-large-v3", "whisper-base"]
         case .custom: return []
         }
@@ -113,6 +123,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .qwen: return ["qwen-turbo", "qwen3.5-flash", "qwen-plus", "qwen-max"]
         case .gemini: return ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-pro"]
         case .zhipu: return ["glm-4-flash", "glm-4-plus", "glm-4-air"]
+        case .claude: return ["claude-sonnet-4-5-20250514", "claude-haiku-3-5-20241022"]
         case .ollama: return ["qwen3:8b", "llama3.1:8b", "gemma3:4b", "mistral:7b"]
         case .custom: return []
         }
@@ -122,7 +133,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .openai, .groq, .together, .siliconflow, .ollama, .custom:
             return true
-        case .openrouter, .deepseek, .kimi, .minimax, .gemini, .zhipu:
+        case .openrouter, .deepseek, .kimi, .minimax, .gemini, .zhipu, .claude:
             return false
         case .volcengine, .qwen:
             return true
@@ -143,6 +154,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
             return "Gemini does not offer OpenAI-compatible speech-to-text."
         case .zhipu:
             return "Zhipu does not offer speech-to-text."
+        case .claude:
+            return "Claude does not offer speech-to-text."
         case .volcengine:
             return "Volcengine Seed-ASR 2.0 — async processing, 13+ languages. Audio sent as base64."
         case .qwen:
@@ -172,6 +185,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .qwen: return "sk-..."
         case .gemini: return "AI..."
         case .zhipu: return "..."
+        case .claude: return "sk-ant-..."
         case .ollama: return "No key required"
         case .custom: return "API Key"
         }
@@ -209,6 +223,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .qwen: return "https://bailian.console.aliyun.com/?apiKey=1"
         case .gemini: return "https://aistudio.google.com/apikey"
         case .zhipu: return "https://bigmodel.cn/usercenter/apikeys"
+        case .claude: return "https://console.anthropic.com/settings/keys"
         case .ollama: return "https://ollama.com/download"
         case .custom: return ""
         }
@@ -280,6 +295,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case "glm-4-flash": return "Fast and free"
         case "glm-4-plus": return "Highest Zhipu quality"
         case "glm-4-air": return "Balanced quality and speed"
+        case "claude-sonnet-4-5-20250514": return "Balanced quality and speed"
+        case "claude-haiku-3-5-20241022": return "Fastest, low cost"
         default: return nil
         }
     }
