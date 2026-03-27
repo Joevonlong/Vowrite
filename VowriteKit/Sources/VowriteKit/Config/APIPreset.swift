@@ -17,6 +17,7 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
     case openAIAllInOne
     case siliconflowKimi
     case localOllama
+    case localMLX
 
     public var id: String {
         "builtin:\(rawValue)"
@@ -28,6 +29,7 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
         case .openAIAllInOne: return "OpenAI all-in-one"
         case .siliconflowKimi: return "SiliconFlow + Kimi"
         case .localOllama: return "Local Ollama"
+        case .localMLX: return "Groq STT + MLX Polish"
         }
     }
 
@@ -41,6 +43,8 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
             return "SiliconFlow STT (SenseVoice) + Kimi polish"
         case .localOllama:
             return "Run both pipelines locally on Ollama"
+        case .localMLX:
+            return "Groq STT + local MLX polish (Apple Silicon optimized)"
         }
     }
 
@@ -69,6 +73,15 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
                     provider: .ollama,
                     model: "qwen3:8b",
                     baseURL: APIProvider.ollama.defaultBaseURL
+                )
+            )
+        case .localMLX:
+            return SplitAPIConfiguration(
+                stt: APIEndpointConfiguration(provider: .groq, model: "whisper-large-v3-turbo"),
+                polish: APIEndpointConfiguration(
+                    provider: .mlxServer,
+                    model: "mlx-community/Qwen2.5-7B-Instruct-4bit",
+                    baseURL: APIProvider.mlxServer.defaultBaseURL
                 )
             )
         }
@@ -100,7 +113,7 @@ public enum APIPresetStore {
         BuiltInAPIPreset.allCases
             .filter { preset in
                 #if os(iOS)
-                return preset != .localOllama
+                return preset != .localOllama && preset != .localMLX
                 #else
                 return true
                 #endif

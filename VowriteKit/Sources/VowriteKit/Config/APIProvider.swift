@@ -15,6 +15,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     case zhipu = "Zhipu (智谱清言)"
     case claude = "Claude (Anthropic)"
     case ollama = "Ollama (Local)"
+    case mlxServer = "MLX Server (Local)"
     case custom = "Custom"
 
     public var id: String { rawValue }
@@ -25,7 +26,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     public var isOpenAICompatible: Bool {
         switch self {
         case .claude: return false
-        default: return true
+        default: return true  // MLX Server exposes OpenAI-compatible API
         }
     }
 
@@ -45,6 +46,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .zhipu: return "https://open.bigmodel.cn/api/paas/v4"
         case .claude: return "https://api.anthropic.com/v1"
         case .ollama: return "http://localhost:11434/v1"
+        case .mlxServer: return "http://localhost:8010/v1"
         case .custom: return ""
         }
     }
@@ -65,6 +67,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .zhipu: return ""
         case .claude: return ""
         case .ollama: return "whisper-large-v3-turbo"
+        case .mlxServer: return ""
         case .custom: return "whisper-1"
         }
     }
@@ -85,6 +88,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .zhipu: return "glm-4-flash"
         case .claude: return "claude-sonnet-4-5-20250514"
         case .ollama: return "qwen3:8b"
+        case .mlxServer: return "mlx-community/Qwen2.5-7B-Instruct-4bit"
         case .custom: return "gpt-4o-mini"
         }
     }
@@ -105,6 +109,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .zhipu: return []
         case .claude: return []
         case .ollama: return ["whisper-large-v3-turbo", "whisper-large-v3", "whisper-base"]
+        case .mlxServer: return []
         case .custom: return []
         }
     }
@@ -125,6 +130,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .zhipu: return ["glm-4-flash", "glm-4-plus", "glm-4-air"]
         case .claude: return ["claude-sonnet-4-5-20250514", "claude-haiku-3-5-20241022"]
         case .ollama: return ["qwen3:8b", "llama3.1:8b", "gemma3:4b", "mistral:7b"]
+        case .mlxServer: return ["mlx-community/Qwen2.5-7B-Instruct-4bit", "mlx-community/Llama-3.3-70B-Instruct-4bit", "mlx-community/Mistral-Small-24B-Instruct-2501-4bit", "mlx-community/gemma-3-4b-it-4bit"]
         case .custom: return []
         }
     }
@@ -133,7 +139,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .openai, .groq, .together, .siliconflow, .ollama, .custom:
             return true
-        case .openrouter, .deepseek, .kimi, .minimax, .gemini, .zhipu, .claude:
+        case .openrouter, .deepseek, .kimi, .minimax, .gemini, .zhipu, .claude, .mlxServer:
             return false
         case .volcengine, .qwen:
             return true
@@ -156,6 +162,8 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
             return "Zhipu does not offer speech-to-text."
         case .claude:
             return "Claude does not offer speech-to-text."
+        case .mlxServer:
+            return "MLX servers (oMLX, mlx-lm, vllm-mlx) do not expose an audio transcription endpoint. Use for text polish only."
         case .volcengine:
             return "Volcengine Seed-ASR 2.0 — async processing, 13+ languages. Audio sent as base64."
         case .qwen:
@@ -187,18 +195,19 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .zhipu: return "..."
         case .claude: return "sk-ant-..."
         case .ollama: return "No key required"
+        case .mlxServer: return "No key required"
         case .custom: return "API Key"
         }
     }
 
     public var requiresAPIKey: Bool {
-        self != .ollama
+        self != .ollama && self != .mlxServer
     }
 
     /// Providers available on the current platform (iOS excludes Ollama)
     public static var availableCases: [APIProvider] {
         #if os(iOS)
-        return allCases.filter { $0 != .ollama }
+        return allCases.filter { $0 != .ollama && $0 != .mlxServer }
         #else
         return allCases
         #endif
@@ -225,6 +234,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .zhipu: return "https://bigmodel.cn/usercenter/apikeys"
         case .claude: return "https://console.anthropic.com/settings/keys"
         case .ollama: return "https://ollama.com/download"
+        case .mlxServer: return "https://github.com/jundot/omlx"
         case .custom: return ""
         }
     }
@@ -297,6 +307,10 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case "glm-4-air": return "Balanced quality and speed"
         case "claude-sonnet-4-5-20250514": return "Balanced quality and speed"
         case "claude-haiku-3-5-20241022": return "Fastest, low cost"
+        case "mlx-community/Qwen2.5-7B-Instruct-4bit": return "Fast, great Chinese + English (4GB)"
+        case "mlx-community/Llama-3.3-70B-Instruct-4bit": return "Top quality, needs 40GB+ RAM"
+        case "mlx-community/Mistral-Small-24B-Instruct-2501-4bit": return "Near GPT-4 quality (13GB)"
+        case "mlx-community/gemma-3-4b-it-4bit": return "Lightweight, fast (2.5GB)"
         default: return nil
         }
     }
