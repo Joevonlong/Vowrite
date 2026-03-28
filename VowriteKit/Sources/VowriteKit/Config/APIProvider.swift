@@ -18,6 +18,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     case ollama = "Ollama (Local)"
     case mlxServer = "MLX Server (Local)"
     case iflytek = "iFlytek (讯飞)"
+    case sherpa = "Sherpa (Offline)"
     case custom = "Custom"
 
     public var id: String { rawValue }
@@ -44,6 +45,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .ollama: return "ollama"
         case .mlxServer: return "mlxServer"
         case .iflytek: return "iflytek"
+        case .sherpa: return "sherpa"
         case .custom: return "custom"
         }
     }
@@ -104,7 +106,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     /// Providers available on the current platform (iOS excludes local-only providers)
     public static var availableCases: [APIProvider] {
         #if os(iOS)
-        return allCases.filter { $0 != .ollama && $0 != .mlxServer }
+        return allCases.filter { $0 != .ollama && $0 != .mlxServer && $0 != .sherpa }
         #else
         return allCases
         #endif

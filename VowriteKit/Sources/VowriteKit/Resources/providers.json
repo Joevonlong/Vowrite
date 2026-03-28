@@ -441,6 +441,30 @@
       }
     },
     {
+      "id": "sherpa",
+      "name": "Sherpa (Offline)",
+      "baseURL": "",
+      "isOpenAICompatible": false,
+      "platformFilter": "macOS",
+      "auth": {
+        "style": "none",
+        "keyPlaceholder": "No key required",
+        "keyURL": "https://github.com/k2-fsa/sherpa-onnx",
+        "requiresKey": false
+      },
+      "capabilities": { "stt": true, "polish": false },
+      "sttAdapter": "sherpa",
+      "sttNote": "Fully offline speech recognition powered by SherpaOnnx. No API key, no internet required. Your voice never leaves your device.",
+      "stt": {
+        "defaultModel": "sensevoice-small",
+        "models": [
+          { "id": "sensevoice-small", "description": "SenseVoice Small — 极速, ~20MB, 中英日韩粤" },
+          { "id": "zipformer-en", "description": "Zipformer EN — 高精度英文, ~236MB" },
+          { "id": "fire-red-asr2", "description": "Fire Red ASR2 — 中英+20方言, ~1GB" }
+        ]
+      }
+    },
+    {
       "id": "iflytek",
       "name": "iFlytek (讯飞)",
       "baseURL": "wss://iat-api.xfyun.cn/v2/iat",
