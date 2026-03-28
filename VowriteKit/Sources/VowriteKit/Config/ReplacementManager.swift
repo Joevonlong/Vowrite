@@ -49,6 +49,11 @@ public final class ReplacementManager: ObservableObject {
 
     public func update(_ rule: ReplacementRule) {
         guard let index = rules.firstIndex(where: { $0.id == rule.id }) else { return }
+        // Reject if another rule (different id) already has this trigger
+        let trimmedTrigger = rule.trigger.trimmingCharacters(in: .whitespacesAndNewlines)
+        if rules.contains(where: { $0.id != rule.id && $0.trigger.lowercased() == trimmedTrigger.lowercased() }) {
+            return
+        }
         rules[index] = rule
     }
 
