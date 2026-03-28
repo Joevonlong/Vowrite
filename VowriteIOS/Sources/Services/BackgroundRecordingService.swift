@@ -654,8 +654,11 @@ final class BackgroundRecordingService: ObservableObject {
 
                 ipc.rawTranscript = rawTranscript
 
+                // Step 1.5: F-051 — Apply text replacement rules after STT
+                let correctedTranscript = ReplacementManager.apply(to: rawTranscript)
+
                 // Step 2: AI Polish (F-033: uses speculative pre-built request)
-                var finalText = rawTranscript
+                var finalText = correctedTranscript
                 let effectivePolishEnabled = aiEnabled && modeConfig.polishEnabled
                 if effectivePolishEnabled {
                     let polishConfig = APIConfig.polish
@@ -663,14 +666,16 @@ final class BackgroundRecordingService: ObservableObject {
                         // Skip polish, use raw
                     } else {
                         do {
-                            finalText = try await speculativePolish.execute(
-                                transcript: rawTranscript,
+                            let polished = try await speculativePolish.execute(
+                                transcript: correctedTranscript,
                                 modeConfig: modeConfig,
                                 promptContext: promptContext
                             )
+                            // F-051: Apply replacement rules again after LLM
+                            finalText = ReplacementManager.apply(to: polished)
                         } catch {
                             #if DEBUG
-                            print("[Vowrite BG] Polish failed, using raw: \(error)")
+                            print("[Vowrite BG] Polish failed, using corrected: \(error)")
                             #endif
                         }
                     }
