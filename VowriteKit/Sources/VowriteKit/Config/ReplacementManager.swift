@@ -112,7 +112,7 @@ public final class ReplacementManager: ObservableObject {
     nonisolated public static var llmVocabularyHint: String? {
         let rules = loadFromDefaults()
         let replacementTerms = Set(rules.map(\.replacement))
-        let vocabWords = Set(VowriteStorage.defaults.stringArray(forKey: "personalVocabulary") ?? [])
+        let vocabWords = Set(VocabularyManager.storedWords)
         let combined = replacementTerms.union(vocabWords)
         guard !combined.isEmpty else { return nil }
         return combined.sorted().joined(separator: ", ")
@@ -153,8 +153,9 @@ public final class ReplacementManager: ObservableObject {
         let joined = wordPatterns.joined(separator: "\\s+")
 
         // Pure ASCII triggers: add word boundaries to prevent substring matches
-        let isPureASCII = trigger.allSatisfy { $0.isASCII }
-        if isPureASCII && !trigger.contains(where: { $0.isWhitespace }) {
+        // e.g. "AI" should not match inside "FAIR", "claude code" should not match "claude coder"
+        let isPureASCII = trigger.unicodeScalars.allSatisfy { $0.isASCII }
+        if isPureASCII {
             return "\\b" + joined + "\\b"
         }
         return joined

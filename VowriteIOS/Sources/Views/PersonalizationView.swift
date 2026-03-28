@@ -14,6 +14,9 @@ struct PersonalizationView: View {
     @State private var editingMode: Mode? = nil
     @State private var isCreatingNew = false
 
+    // Vocabulary state
+    @State private var newVocabWord = ""
+
     // Corrections state
     @State private var newTrigger = ""
     @State private var newReplacement = ""
@@ -157,9 +160,16 @@ struct PersonalizationView: View {
                     }
 
                     HStack {
-                        TextField("Add word...", text: .constant(""))
+                        TextField("Add word...", text: $newVocabWord)
                             .onSubmit {
-                                // Handled below
+                                let trimmed = newVocabWord.trimmingCharacters(in: .whitespacesAndNewlines)
+                                guard !trimmed.isEmpty else { return }
+                                if trimmed.contains(",") {
+                                    vocabManager.addBulk(trimmed)
+                                } else {
+                                    vocabManager.add(trimmed)
+                                }
+                                newVocabWord = ""
                             }
                     }
                 }
