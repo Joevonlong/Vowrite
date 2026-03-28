@@ -11,6 +11,9 @@ let package = Package(
         .target(
             name: "VowriteKit",
             path: "Sources/VowriteKit",
+            resources: [
+                .process("Resources")
+            ],
             linkerSettings: [
                 .linkedFramework("Security"),
                 .linkedFramework("AuthenticationServices"),
