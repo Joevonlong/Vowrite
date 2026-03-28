@@ -1,11 +1,14 @@
 import Foundation
 
-/// Speech-to-text router: delegates to the correct adapter based on provider.
+/// Speech-to-text router: delegates to the correct adapter based on provider's sttAdapter field in the Registry.
 public final class WhisperService {
-    private static let openAIAdapter = OpenAISTTAdapter()
-    private static let deepgramAdapter = DeepgramSTTAdapter()
-    private static let volcengineAdapter = VolcengineSTTAdapter()
-    private static let qwenAdapter = QwenSTTAdapter()
+    // Built-in adapter instances (keyed by sttAdapter id from providers.json)
+    private static let adapterMap: [String: STTAdapter] = [
+        "openai-compatible": OpenAISTTAdapter(),
+        "deepgram": DeepgramSTTAdapter(),
+        "volcengine": VolcengineSTTAdapter(),
+        "qwen": QwenSTTAdapter(),
+    ]
 
     public init() {}
 
@@ -26,16 +29,8 @@ public final class WhisperService {
     }
 
     private static func adapter(for provider: APIProvider) -> STTAdapter {
-        switch provider {
-        case .deepgram:
-            return deepgramAdapter
-        case .volcengine:
-            return volcengineAdapter
-        case .qwen:
-            return qwenAdapter
-        default:
-            return openAIAdapter
-        }
+        let adapterID = ProviderRegistry.shared.sttAdapterID(for: provider.providerID)
+        return adapterMap[adapterID] ?? adapterMap["openai-compatible"]!
     }
 }
 

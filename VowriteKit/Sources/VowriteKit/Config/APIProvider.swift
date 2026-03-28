@@ -21,197 +21,83 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
 
     public var id: String { rawValue }
 
-    /// Whether this provider uses standard OpenAI-compatible API format.
-    /// When a non-OpenAI provider is needed (e.g. 讯飞 WebSocket), this becomes
-    /// the branching point for introducing Protocol abstraction.
-    public var isOpenAICompatible: Bool {
+    // MARK: - Registry Bridge
+
+    /// Maps this enum case to the JSON provider id used in providers.json.
+    public var providerID: String {
         switch self {
-        case .claude, .deepgram: return false
-        default: return true
+        case .openai: return "openai"
+        case .openrouter: return "openrouter"
+        case .groq: return "groq"
+        case .deepgram: return "deepgram"
+        case .together: return "together"
+        case .deepseek: return "deepseek"
+        case .siliconflow: return "siliconflow"
+        case .kimi: return "kimi"
+        case .minimax: return "minimax"
+        case .volcengine: return "volcengine"
+        case .qwen: return "qwen"
+        case .gemini: return "gemini"
+        case .zhipu: return "zhipu"
+        case .claude: return "claude"
+        case .ollama: return "ollama"
+        case .mlxServer: return "mlxServer"
+        case .custom: return "custom"
         }
+    }
+
+    /// The provider definition from the registry. All metadata flows through this.
+    private var definition: ProviderDefinition? {
+        ProviderRegistry.shared.provider(for: providerID)
+    }
+
+    // MARK: - Metadata (delegated to Registry)
+
+    public var isOpenAICompatible: Bool {
+        definition?.isOpenAICompatible ?? true
     }
 
     public var defaultBaseURL: String {
-        switch self {
-        case .openai: return "https://api.openai.com/v1"
-        case .openrouter: return "https://openrouter.ai/api/v1"
-        case .groq: return "https://api.groq.com/openai/v1"
-        case .deepgram: return "https://api.deepgram.com/v1"
-        case .together: return "https://api.together.xyz/v1"
-        case .deepseek: return "https://api.deepseek.com/v1"
-        case .siliconflow: return "https://api.siliconflow.cn/v1"
-        case .kimi: return "https://api.moonshot.cn/v1"
-        case .minimax: return "https://api.minimax.chat/v1"
-        case .volcengine: return "https://ark.cn-beijing.volces.com/api/v3"
-        case .qwen: return "https://dashscope.aliyuncs.com/compatible-mode/v1"
-        case .gemini: return "https://generativelanguage.googleapis.com/v1beta/openai"
-        case .zhipu: return "https://open.bigmodel.cn/api/paas/v4"
-        case .claude: return "https://api.anthropic.com/v1"
-        case .ollama: return "http://localhost:11434/v1"
-        case .mlxServer: return "http://localhost:8010/v1"
-        case .custom: return ""
-        }
+        definition?.baseURL ?? ""
     }
 
     public var defaultSTTModel: String {
-        switch self {
-        case .openai: return "gpt-4o-mini-transcribe"
-        case .openrouter: return "openai/whisper-large-v3"
-        case .groq: return "whisper-large-v3-turbo"
-        case .deepgram: return "nova-3"
-        case .together: return "whisper-large-v3"
-        case .deepseek: return "whisper-1"
-        case .siliconflow: return "FunAudioLLM/SenseVoiceSmall"
-        case .kimi: return ""
-        case .minimax: return ""
-        case .volcengine: return "seed-asr-2.0"
-        case .qwen: return "qwen3-asr-flash"
-        case .gemini: return ""
-        case .zhipu: return ""
-        case .claude: return ""
-        case .ollama: return "whisper-large-v3-turbo"
-        case .mlxServer: return ""
-        case .custom: return "whisper-1"
-        }
+        definition?.defaultSTTModel ?? ""
     }
 
     public var defaultPolishModel: String {
-        switch self {
-        case .openai: return "gpt-4o-mini"
-        case .openrouter: return "openai/gpt-4o-mini"
-        case .groq: return "llama-3.3-70b-versatile"
-        case .deepgram: return ""
-        case .together: return "meta-llama/Llama-3.1-8B-Instruct-Turbo"
-        case .deepseek: return "deepseek-chat"
-        case .siliconflow: return "Qwen/Qwen2.5-72B-Instruct"
-        case .kimi: return "kimi-k2.5"
-        case .minimax: return "MiniMax-Text-02"
-        case .volcengine: return "doubao-1.5-pro-32k-250115"
-        case .qwen: return "qwen-turbo"
-        case .gemini: return "gemini-2.0-flash"
-        case .zhipu: return "glm-4-flash"
-        case .claude: return "claude-sonnet-4-5-20250514"
-        case .ollama: return "qwen3:8b"
-        case .mlxServer: return "mlx-community/Qwen2.5-7B-Instruct-4bit"
-        case .custom: return "gpt-4o-mini"
-        }
+        definition?.defaultPolishModel ?? ""
     }
 
     public var presetSTTModels: [String] {
-        switch self {
-        case .openai: return ["gpt-4o-mini-transcribe", "gpt-4o-transcribe", "whisper-1"]
-        case .openrouter: return []
-        case .groq: return ["whisper-large-v3-turbo", "whisper-large-v3"]
-        case .deepgram: return ["nova-3", "nova-2"]
-        case .together: return ["whisper-large-v3"]
-        case .deepseek: return []
-        case .siliconflow: return ["FunAudioLLM/SenseVoiceSmall", "TeleAI/TeleSpeechASR"]
-        case .kimi: return []
-        case .minimax: return []
-        case .volcengine: return ["seed-asr-2.0"]
-        case .qwen: return ["qwen3-asr-flash", "paraformer-v2", "fun-asr"]
-        case .gemini: return []
-        case .zhipu: return []
-        case .claude: return []
-        case .ollama: return ["whisper-large-v3-turbo", "whisper-large-v3", "whisper-base"]
-        case .mlxServer: return []
-        case .custom: return []
-        }
+        definition?.presetSTTModels ?? []
     }
 
     public var presetPolishModels: [String] {
-        switch self {
-        case .openai: return ["gpt-4o-mini", "gpt-4o"]
-        case .openrouter: return []
-        case .groq: return ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen-qwq-32b"]
-        case .deepgram: return []
-        case .together: return ["meta-llama/Llama-3.1-8B-Instruct-Turbo"]
-        case .deepseek: return ["deepseek-chat", "deepseek-reasoner"]
-        case .siliconflow: return ["Qwen/Qwen2.5-72B-Instruct", "Qwen/Qwen3-8B", "deepseek-ai/DeepSeek-V3", "THUDM/GLM-4-9B-Chat"]
-        case .kimi: return ["kimi-k2.5", "moonshot-v1-128k", "moonshot-v1-32k", "moonshot-v1-8k"]
-        case .minimax: return ["MiniMax-Text-02", "MiniMax-Text-01"]
-        case .volcengine: return ["doubao-1.5-pro-32k-250115", "doubao-seed-2-0-mini-260215", "doubao-seed-2-0-lite-260215"]
-        case .qwen: return ["qwen-turbo", "qwen3.5-flash", "qwen-plus", "qwen-max"]
-        case .gemini: return ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-pro"]
-        case .zhipu: return ["glm-4-flash", "glm-4-plus", "glm-4-air"]
-        case .claude: return ["claude-sonnet-4-5-20250514", "claude-haiku-3-5-20241022"]
-        case .ollama: return ["qwen3:8b", "llama3.1:8b", "gemma3:4b", "mistral:7b"]
-        case .mlxServer: return ["mlx-community/Qwen2.5-7B-Instruct-4bit", "mlx-community/Llama-3.3-70B-Instruct-4bit", "mlx-community/Mistral-Small-24B-Instruct-2501-4bit", "mlx-community/gemma-3-4b-it-4bit"]
-        case .custom: return []
-        }
+        definition?.presetPolishModels ?? []
     }
 
     public var hasSTTSupport: Bool {
-        switch self {
-        case .openai, .groq, .deepgram, .together, .siliconflow, .ollama, .custom:
-            return true
-        case .openrouter, .deepseek, .kimi, .minimax, .gemini, .zhipu, .claude, .mlxServer:
-            return false
-        case .volcengine, .qwen:
-            return true
-        }
+        definition?.hasSTTSupport ?? false
     }
 
     public var sttSupportNote: String? {
-        switch self {
-        case .openrouter:
-            return "OpenRouter does not proxy the Whisper transcription API."
-        case .deepseek:
-            return "DeepSeek does not offer speech-to-text."
-        case .kimi:
-            return "Kimi (Moonshot) does not offer speech-to-text."
-        case .minimax:
-            return "MiniMax does not offer OpenAI-compatible speech-to-text."
-        case .gemini:
-            return "Gemini does not offer OpenAI-compatible speech-to-text."
-        case .zhipu:
-            return "Zhipu does not offer speech-to-text."
-        case .claude:
-            return "Claude does not offer speech-to-text."
-        case .deepgram:
-            return "Deepgram Nova — industry-leading accuracy, 36+ languages. STT only, no text polish."
-        case .mlxServer:
-            return "MLX servers (oMLX, mlx-lm, vllm-mlx) do not expose an audio transcription endpoint. Use for text polish only."
-        case .volcengine:
-            return "Volcengine Seed-ASR 2.0 — async processing, 13+ languages. Audio sent as base64."
-        case .qwen:
-            return "Qwen ASR — 30+ languages. Short audio is processed synchronously, longer audio via async task."
-        case .siliconflow:
-            return "Uses SenseVoice — excellent Chinese speech recognition. Duration ≤ 1 hour, file ≤ 50MB."
-        case .ollama:
-            return "Requires a local Whisper model, for example `ollama pull whisper-large-v3-turbo`."
-        case .custom:
-            return "Your endpoint must support OpenAI-compatible `/audio/transcriptions`."
-        default:
-            return nil
-        }
+        definition?.sttNote
     }
 
     public var keyPlaceholder: String {
-        switch self {
-        case .openai: return "sk-..."
-        case .openrouter: return "sk-or-..."
-        case .groq: return "gsk_..."
-        case .deepgram: return "..."
-        case .together: return "..."
-        case .deepseek: return "sk-..."
-        case .siliconflow: return "sk-..."
-        case .kimi: return "sk-..."
-        case .minimax: return "eyJ..."
-        case .volcengine: return "..."
-        case .qwen: return "sk-..."
-        case .gemini: return "AI..."
-        case .zhipu: return "..."
-        case .claude: return "sk-ant-..."
-        case .ollama: return "No key required"
-        case .mlxServer: return "No key required"
-        case .custom: return "API Key"
-        }
+        definition?.auth.keyPlaceholder ?? "API Key"
     }
 
     public var requiresAPIKey: Bool {
-        self != .ollama && self != .mlxServer
+        definition?.requiresAPIKey ?? true
     }
+
+    public var keyURL: String {
+        definition?.auth.keyURL ?? ""
+    }
+
+    // MARK: - Platform Filtering
 
     /// Providers available on the current platform (iOS excludes local-only providers)
     public static var availableCases: [APIProvider] {
@@ -227,103 +113,23 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         availableCases.filter(\.hasSTTSupport)
     }
 
-    public var keyURL: String {
-        switch self {
-        case .openai: return "https://platform.openai.com/api-keys"
-        case .openrouter: return "https://openrouter.ai/keys"
-        case .groq: return "https://console.groq.com/keys"
-        case .deepgram: return "https://console.deepgram.com/"
-        case .together: return "https://api.together.xyz/settings/api-keys"
-        case .deepseek: return "https://platform.deepseek.com/api_keys"
-        case .siliconflow: return "https://cloud.siliconflow.cn/account/ak"
-        case .kimi: return "https://platform.moonshot.cn/console/api-keys"
-        case .minimax: return "https://platform.minimaxi.com/"
-        case .volcengine: return "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey"
-        case .qwen: return "https://bailian.console.aliyun.com/?apiKey=1"
-        case .gemini: return "https://aistudio.google.com/apikey"
-        case .zhipu: return "https://bigmodel.cn/usercenter/apikeys"
-        case .claude: return "https://console.anthropic.com/settings/keys"
-        case .ollama: return "https://ollama.com/download"
-        case .mlxServer: return "https://github.com/jundot/omlx"
-        case .custom: return ""
-        }
-    }
+    // MARK: - Headers
 
     /// Apply provider-specific HTTP headers to a request.
-    /// Centralizes header logic that was previously scattered in WhisperService/AIPolishService.
     public func applyHeaders(to request: inout URLRequest) {
-        switch self {
-        case .openrouter:
-            request.setValue("https://vowrite.com", forHTTPHeaderField: "HTTP-Referer")
-            request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
-        default:
-            break
+        guard let headers = definition?.headers else { return }
+        for (key, value) in headers {
+            request.setValue(value, forHTTPHeaderField: key)
         }
     }
 
+    // MARK: - Model Descriptions
+
     public static func sttModelDescription(_ modelID: String) -> String? {
-        switch modelID {
-        case "gpt-4o-mini-transcribe": return "Fast and low-cost"
-        case "gpt-4o-transcribe": return "Highest OpenAI quality"
-        case "whisper-1": return "Classic Whisper endpoint"
-        case "whisper-large-v3-turbo": return "Fastest Groq/Ollama option"
-        case "whisper-large-v3": return "Higher accuracy"
-        case "whisper-base": return "Lightweight local model"
-        case "FunAudioLLM/SenseVoiceSmall": return "Alibaba SenseVoice — excellent multilingual STT"
-        case "TeleAI/TeleSpeechASR": return "TeleAI ASR model"
-        case "nova-3": return "Best accuracy, 36+ languages"
-        case "nova-2": return "Previous gen, wider language support"
-        case "seed-asr-2.0": return "Volcengine flagship — 13+ languages"
-        case "qwen3-asr-flash": return "Fast Qwen ASR — 30+ languages"
-        case "paraformer-v2": return "Alibaba Paraformer — very cheap"
-        case "fun-asr": return "Alibaba Fun-ASR — multilingual"
-        default: return nil
-        }
+        ProviderRegistry.shared.sttModelDescription(modelID)
     }
 
     public static func polishModelDescription(_ modelID: String) -> String? {
-        switch modelID {
-        case "gpt-4o-mini": return "Balanced quality and speed"
-        case "gpt-4o": return "Highest quality"
-        case "llama-3.3-70b-versatile": return "Strong value on Groq"
-        case "llama-3.1-8b-instant": return "Very fast"
-        case "qwen-qwq-32b": return "Reasoning-focused"
-        case "deepseek-chat": return "Recommended DeepSeek default"
-        case "deepseek-reasoner": return "Slower, more deliberate"
-        case "Qwen/Qwen2.5-72B-Instruct": return "High quality Chinese + English"
-        case "Qwen/Qwen3-8B": return "Fast, lightweight"
-        case "deepseek-ai/DeepSeek-V3": return "DeepSeek via SiliconFlow"
-        case "THUDM/GLM-4-9B-Chat": return "Zhipu GLM"
-        case "kimi-k2.5": return "Latest Kimi flagship"
-        case "moonshot-v1-128k": return "128K context window"
-        case "moonshot-v1-32k": return "32K context, faster"
-        case "moonshot-v1-8k": return "8K context, fastest"
-        case "MiniMax-Text-02": return "Latest MiniMax flagship"
-        case "MiniMax-Text-01": return "Previous generation"
-        case "doubao-1.5-pro-32k-250115": return "Best quality Doubao model"
-        case "doubao-seed-2-0-mini-260215": return "Cheapest Doubao option"
-        case "doubao-seed-2-0-lite-260215": return "Balanced quality and cost"
-        case "qwen-turbo": return "Cheapest, good quality (1M context)"
-        case "qwen3.5-flash": return "Fast and cheap, latest gen"
-        case "qwen-plus": return "Balanced quality and cost"
-        case "qwen-max": return "Highest Qwen quality (32K context)"
-        case "qwen3:8b": return "Local default"
-        case "llama3.1:8b": return "Local general-purpose"
-        case "gemma3:4b": return "Lightweight local option"
-        case "mistral:7b": return "Good multilingual local option"
-        case "gemini-2.0-flash": return "Fast and efficient"
-        case "gemini-2.5-flash": return "Latest flash model"
-        case "gemini-1.5-pro": return "High quality, large context"
-        case "glm-4-flash": return "Fast and free"
-        case "glm-4-plus": return "Highest Zhipu quality"
-        case "glm-4-air": return "Balanced quality and speed"
-        case "claude-sonnet-4-5-20250514": return "Balanced quality and speed"
-        case "claude-haiku-3-5-20241022": return "Fastest, low cost"
-        case "mlx-community/Qwen2.5-7B-Instruct-4bit": return "Fast, great Chinese + English (4GB)"
-        case "mlx-community/Llama-3.3-70B-Instruct-4bit": return "Top quality, needs 40GB+ RAM"
-        case "mlx-community/Mistral-Small-24B-Instruct-2501-4bit": return "Near GPT-4 quality (13GB)"
-        case "mlx-community/gemma-3-4b-it-4bit": return "Lightweight, fast (2.5GB)"
-        default: return nil
-        }
+        ProviderRegistry.shared.polishModelDescription(modelID)
     }
 }

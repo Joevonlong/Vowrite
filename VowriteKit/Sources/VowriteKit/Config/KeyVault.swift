@@ -3,23 +3,10 @@ import Foundation
 public enum KeyVault {
     private static let accountPrefix = "provider."
 
-    public static let managedProviders: [APIProvider] = [
-        .groq,
-        .deepgram,
-        .deepseek,
-        .openai,
-        .openrouter,
-        .together,
-        .siliconflow,
-        .kimi,
-        .minimax,
-        .volcengine,
-        .qwen,
-        .gemini,
-        .zhipu,
-        .claude,
-        .custom
-    ]
+    /// Providers that need API key management, derived from the Registry.
+    public static var managedProviders: [APIProvider] {
+        APIProvider.availableCases.filter(\.requiresAPIKey)
+    }
 
     public static func key(for provider: APIProvider) -> String? {
         guard provider.requiresAPIKey else { return nil }
