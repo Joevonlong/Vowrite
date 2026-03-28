@@ -17,6 +17,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     case claude = "Claude (Anthropic)"
     case ollama = "Ollama (Local)"
     case mlxServer = "MLX Server (Local)"
+    case iflytek = "iFlytek (讯飞)"
     case custom = "Custom"
 
     public var id: String { rawValue }
@@ -42,6 +43,7 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         case .claude: return "claude"
         case .ollama: return "ollama"
         case .mlxServer: return "mlxServer"
+        case .iflytek: return "iflytek"
         case .custom: return "custom"
         }
     }
