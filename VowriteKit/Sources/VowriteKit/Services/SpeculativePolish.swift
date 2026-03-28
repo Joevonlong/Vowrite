@@ -150,7 +150,7 @@ public final class SpeculativePolish {
             throw VowriteError.apiError("Failed to parse polish response")
         }
 
-        return content.trimmingCharacters(in: .whitespacesAndNewlines)
+        return content.trimmingCharacters(in: .whitespacesAndNewlines).strippingThinkTags()
     }
 
     /// Reset prepared state (call after completion or cancellation).

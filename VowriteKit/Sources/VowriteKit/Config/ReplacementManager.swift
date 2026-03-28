@@ -152,11 +152,13 @@ public final class ReplacementManager: ObservableObject {
 
         let joined = wordPatterns.joined(separator: "\\s+")
 
-        // Pure ASCII triggers: add word boundaries to prevent substring matches
-        // e.g. "AI" should not match inside "FAIR", "claude code" should not match "claude coder"
+        // Pure ASCII triggers: use lookaround to prevent substring matches within ASCII words
+        // e.g. "AI" should not match inside "FAIR", but SHOULD match in "这个AI很好"
+        // We can't use \b because it doesn't work at ASCII↔CJK boundaries.
+        // Instead: negative lookbehind/lookahead for ASCII word characters only.
         let isPureASCII = trigger.unicodeScalars.allSatisfy { $0.isASCII }
         if isPureASCII {
-            return "\\b" + joined + "\\b"
+            return "(?<![a-zA-Z0-9_])" + joined + "(?![a-zA-Z0-9_])"
         }
         return joined
     }
