@@ -58,6 +58,7 @@ final class KeyboardState: ObservableObject {
         modeManager.reload()
         OutputStyleManager.shared.reload()
         VocabularyManager.shared.reload()
+        ReplacementManager.shared.reload()
 
         modes = modeManager.modes
         styles = OutputStyleManager.shared.styles

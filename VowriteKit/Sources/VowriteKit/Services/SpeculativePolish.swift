@@ -72,6 +72,11 @@ public final class SpeculativePolish {
             systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(modeConfig.userPrompt)"
         }
 
+        // F-051: Inject user vocabulary for better correction awareness
+        if let vocabHint = ReplacementManager.llmVocabularyHint {
+            systemPrompt += "\n\n---\nImportant vocabulary (always use these exact spellings when relevant): \(vocabHint)"
+        }
+
         // Build request headers
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

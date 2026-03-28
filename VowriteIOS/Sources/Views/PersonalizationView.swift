@@ -5,6 +5,7 @@ struct PersonalizationView: View {
     @StateObject private var modeManager = ModeManager.shared
     @StateObject private var styleManager = OutputStyleManager.shared
     @StateObject private var vocabManager = VocabularyManager.shared
+    @StateObject private var replacementManager = ReplacementManager.shared
 
     @State private var userPrompt = PromptConfig.userPrompt
     @State private var isUserPromptLocked = PromptConfig.isUserPromptLocked
@@ -12,6 +13,10 @@ struct PersonalizationView: View {
     // Mode editor state
     @State private var editingMode: Mode? = nil
     @State private var isCreatingNew = false
+
+    // Corrections state
+    @State private var newTrigger = ""
+    @State private var newReplacement = ""
 
     var body: some View {
         NavigationStack {
@@ -157,6 +162,54 @@ struct PersonalizationView: View {
                                 // Handled below
                             }
                     }
+                }
+
+                // Text Corrections (F-051)
+                Section {
+                    ForEach(replacementManager.rules) { rule in
+                        HStack {
+                            Text(rule.trigger)
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                            Image(systemName: "arrow.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(rule.replacement)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .onDelete { offsets in
+                        replacementManager.remove(at: offsets)
+                    }
+
+                    HStack(spacing: 8) {
+                        TextField("Trigger", text: $newTrigger)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: .infinity)
+                        Image(systemName: "arrow.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("Replace with", text: $newReplacement)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: .infinity)
+                        Button {
+                            let trigger = newTrigger.trimmingCharacters(in: .whitespaces)
+                            let replacement = newReplacement.trimmingCharacters(in: .whitespaces)
+                            guard !trigger.isEmpty, !replacement.isEmpty else { return }
+                            replacementManager.add(trigger: trigger, replacement: replacement)
+                            newTrigger = ""
+                            newReplacement = ""
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                        }
+                        .disabled(newTrigger.trimmingCharacters(in: .whitespaces).isEmpty ||
+                                  newReplacement.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                } header: {
+                    Text("Text Corrections")
+                } footer: {
+                    Text("Auto-correct misrecognized words. Swipe to delete.")
                 }
             }
             .navigationTitle("Personalization")

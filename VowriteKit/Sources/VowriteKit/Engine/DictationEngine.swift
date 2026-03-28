@@ -247,23 +247,35 @@ public final class DictationEngine: ObservableObject {
                     return
                 }
 
+                // Step 1.5: F-051 — Apply text replacement rules after STT
+                let correctedTranscript = ReplacementManager.apply(to: rawTranscript)
+                #if DEBUG
+                if correctedTranscript != rawTranscript {
+                    print("[Vowrite] Replacement applied: '\(rawTranscript)' → '\(correctedTranscript)'")
+                }
+                #endif
+
                 // Step 2: AI Polish (skip if mode has polishEnabled=false)
                 // F-033: Uses speculative pre-built request for near-instant LLM fire
-                var finalText = rawTranscript
+                var finalText = correctedTranscript
                 let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
                 if effectivePolishEnabled {
                     do {
                         #if DEBUG
                         print("[Vowrite] Starting AI polish (speculative)...")
                         #endif
-                        let polished = try await speculativePolish.execute(transcript: rawTranscript, modeConfig: modeConfig, promptContext: promptContext)
-                        finalText = polished
+                        let polished = try await speculativePolish.execute(transcript: correctedTranscript, modeConfig: modeConfig, promptContext: promptContext)
+                        // F-051: Apply replacement rules again after LLM (catches re-introduced errors)
+                        finalText = ReplacementManager.apply(to: polished)
                         #if DEBUG
                         print("[Vowrite] Polish result: '\(polished)'")
+                        if finalText != polished {
+                            print("[Vowrite] Post-polish replacement: '\(polished)' → '\(finalText)'")
+                        }
                         #endif
                     } catch {
                         #if DEBUG
-                        print("[Vowrite] Polish failed (using raw transcript): \(error)")
+                        print("[Vowrite] Polish failed (using corrected transcript): \(error)")
                         #endif
                     }
                 } else {
