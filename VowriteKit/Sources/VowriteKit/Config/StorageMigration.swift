@@ -30,6 +30,9 @@ public enum StorageMigration {
         // VocabularyManager
         "personalVocabulary",    // [String]
 
+        // ReplacementManager (F-051)
+        "vowriteReplacements",   // Data (JSON)
+
         // LanguageConfig
         "globalLanguage",
 
