@@ -1,65 +1,133 @@
 # Contributing to Vowrite
 
-## Branch Strategy
+Thank you for your interest in contributing to Vowrite! 🎤✨
 
-```
-main              ← Default branch. Development + tagged releases.
-  └─ feature/xxx  ← Feature branches for larger changes.
-```
+## Getting Started
 
-## Workflow
+### Prerequisites
 
-### Small Changes (bug fix, docs, config)
+- **macOS 14+ (Sonoma)** on Apple Silicon
+- **Xcode 16+** with Swift 5.10+
+- **Git** with SSH access to GitHub
 
-```bash
-git checkout main
-git pull origin main
-# make changes...
-git commit -m "fix: short description"
-git push origin main
-```
-
-### Larger Features
+### Build from Source
 
 ```bash
-git checkout main && git pull
-git checkout -b feature/my-feature
-# develop and commit freely...
-git checkout main
-git merge --squash feature/my-feature
-git commit -m "feat: short description of what this adds"
-git push origin main
-git branch -d feature/my-feature
+git clone git@github.com:Joevonlong/Vowrite.git
+cd Vowrite/VowriteMac
+./build.sh
 ```
 
-**Always squash merge** feature branches. One feature = one commit on main.
+The build script compiles via SPM, packages into `Vowrite.app`, code-signs, and launches.
 
-### Release
+### Project Structure
 
-When main is ready for a versioned release:
-
-```bash
-ops/scripts/release.sh v0.1.6.0 "Brief release summary"
-git push origin main --tags
-gh release create v0.1.6.0 releases/Vowrite-v0.1.6.0.dmg --title "Vowrite v0.1.6.0 — Summary"
+```
+Vowrite/
+├── VowriteKit/       # Shared cross-platform code (models, services, utilities)
+├── VowriteMac/       # macOS app (menu bar, settings, overlay)
+├── VowriteIOS/       # iOS keyboard extension + container app
+├── demos/            # Remotion demo videos
+├── docs/             # Landing page (GitHub Pages)
+└── ops/              # Scripts (release, test, clean)
 ```
 
-The release script handles: changelog → version bump → build → commit → tag.
+## How to Contribute
 
-## Commit Message Format
+### Reporting Bugs
 
-- `feat:` — New feature
-- `fix:` — Bug fix
-- `docs:` — Documentation only
-- `chore:` — Build, config, tooling
-- `refactor:` — Code change that neither fixes a bug nor adds a feature
-- `security:` — Security fix
+Open an [issue](https://github.com/Joevonlong/Vowrite/issues) with:
 
-See [ops/VERSIONING.md](ops/VERSIONING.md) for the full convention.
+- macOS version and chip (Intel/Apple Silicon)
+- Steps to reproduce
+- Expected vs actual behavior
+- Console logs if available (`Console.app` → filter "Vowrite")
 
-## Rules
+### Suggesting Features
 
-- **Squash merge** feature branches — keep history clean
-- **Tag every release** with 4-segment version (`v0.1.6.0`)
-- **Delete feature branches** after merge
-- **All commits in English**
+Start a [discussion](https://github.com/Joevonlong/Vowrite/discussions) or open an issue tagged `enhancement`. Describe:
+
+- The problem you're solving
+- Your proposed solution
+- Any alternatives you've considered
+
+### Submitting Code
+
+1. **Fork** the repository
+2. **Create a feature branch:** `git checkout -b feature/your-feature`
+3. **Make your changes** following the conventions below
+4. **Test:** `cd Vowrite && ops/scripts/test.sh`
+5. **Commit** with a clear message (see conventions)
+6. **Push** and open a Pull Request against `main`
+
+## Conventions
+
+### Commit Messages
+
+Format: `<type>: <description>`
+
+| Type | Use for |
+|------|---------|
+| `feat` | New features |
+| `fix` | Bug fixes |
+| `docs` | Documentation only |
+| `refactor` | Code restructuring (no behavior change) |
+| `chore` | Build, tooling, dependencies |
+| `security` | Security fixes |
+| `style` | Formatting, whitespace |
+| `test` | Test additions or fixes |
+
+Examples:
+```
+feat: add Deepgram STT provider support
+fix: resolve Settings window not opening from menu bar
+docs: update README with new provider list
+```
+
+### Code Style
+
+- **Swift 5.10+** idioms — prefer `async/await`, structured concurrency
+- **No external Swift dependencies** — only system frameworks (Carbon, AVFoundation, Security)
+- **Cross-platform code** goes in `VowriteKit/`; platform-specific in `VowriteMac/` or `VowriteIOS/`
+- Use `VW` design tokens (`VW.Spacing`, `VW.Radius`, `VW.Colors`) for UI constants
+
+### Versioning
+
+4-segment: `MAJOR.MINOR.PATCH.BUILD`
+
+- **BUILD** — bug fixes, infra (no tag/changelog)
+- **PATCH** — feature batches (tag + changelog)
+- **MINOR** — product milestones
+- **MAJOR** — breaking changes
+
+### Branch Model
+
+- `main` — stable, tagged releases only
+- `feature/F-{ID}-{slug}` — all feature work (squash merge back)
+
+## Architecture Overview
+
+**Data flow:**
+```
+Hotkey → AudioEngine → STT Provider → AI Polish → TextInjector → Cursor
+```
+
+- **STT Providers:** OpenAI Whisper, Groq, Deepgram, Volcengine, Qwen, Ollama, SherpaOnnx (local)
+- **Polish Providers:** OpenAI, DeepSeek, Claude, Gemini, Kimi, Zhipu GLM, Volcengine, Qwen, SiliconFlow, MiniMax, MLX (local)
+- **Text Injection:** Clipboard + CGEvent `Cmd+V` simulation (works with all apps)
+
+## Permissions
+
+The app requires:
+
+1. **Microphone** — audio recording
+2. **Accessibility** — CGEvent keystroke simulation
+3. **Network** — API calls to configured providers
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+
+---
+
+Questions? Open an issue or reach out. We appreciate every contribution! 🎵
