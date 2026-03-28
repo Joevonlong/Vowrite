@@ -441,6 +441,28 @@
       }
     },
     {
+      "id": "iflytek",
+      "name": "iFlytek (讯飞)",
+      "baseURL": "wss://iat-api.xfyun.cn/v2/iat",
+      "isOpenAICompatible": false,
+      "auth": {
+        "style": "custom",
+        "keyPlaceholder": "AppID:APIKey:APISecret",
+        "keyURL": "https://console.xfyun.cn/services/iat",
+        "requiresKey": true
+      },
+      "capabilities": { "stt": true, "polish": false },
+      "sttAdapter": "iflytek",
+      "sttNote": "讯飞语音听写 — 中文头部 STT，支持 23 种方言免切换。WebSocket 协议。每日 500 次免费。",
+      "stt": {
+        "defaultModel": "iat",
+        "models": [
+          { "id": "iat", "description": "日常用语（中文+简单英文）" },
+          { "id": "xfime-mianqie", "description": "方言免切（23 种方言+普通话混合识别）" }
+        ]
+      }
+    },
+    {
       "id": "custom",
       "name": "Custom",
       "baseURL": "",

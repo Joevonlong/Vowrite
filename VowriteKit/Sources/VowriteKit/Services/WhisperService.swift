@@ -8,6 +8,7 @@ public final class WhisperService {
         "deepgram": DeepgramSTTAdapter(),
         "volcengine": VolcengineSTTAdapter(),
         "qwen": QwenSTTAdapter(),
+        "iflytek": IflytekSTTAdapter(),
     ]
 
     public init() {}
