@@ -39,6 +39,11 @@ public final class AIPolishService {
             systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(modeUserPrompt)"
         }
 
+        // F-051: Inject user vocabulary for better correction awareness
+        if let vocabHint = ReplacementManager.llmVocabularyHint {
+            systemPrompt += "\n\n---\nImportant vocabulary (always use these exact spellings when relevant): \(vocabHint)"
+        }
+
         // Wrap transcript in delimiters so the model treats it as data, not conversation
         let wrappedText = """
         Clean up the following speech transcript. Output ONLY the cleaned text, nothing else.

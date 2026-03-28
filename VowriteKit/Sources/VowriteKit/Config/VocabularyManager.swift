@@ -61,6 +61,11 @@ public final class VocabularyManager: ObservableObject {
         VowriteStorage.defaults.set(words, forKey: Self.storageKey)
     }
 
+    /// Thread-safe read of all vocabulary words from UserDefaults.
+    nonisolated public static var storedWords: [String] {
+        VowriteStorage.defaults.stringArray(forKey: storageKey) ?? []
+    }
+
     /// Build a prompt string from vocabulary for Whisper API guidance.
     /// Thread-safe: reads directly from UserDefaults.
     nonisolated public static var whisperPrompt: String? {
