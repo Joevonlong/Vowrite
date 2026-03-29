@@ -10,24 +10,17 @@
       Each release: sign_update signs the DMG, release.sh inserts the <item>.
     -->
     <item>
-      <title>Vowrite 0.1.9.2</title>
-      <description><![CDATA[
-        <h2>What's New in 0.1.9.2</h2>
-        <ul>
-          <li><b>Fixed</b>: Automatic Updates toggle now works correctly in About page</li>
-          <li><b>Fixed</b>: Sparkle updater now starts on app launch for background checks</li>
-          <li><b>Added</b>: Complete auto-update infrastructure (EdDSA signing, appcast, release automation)</li>
-        </ul>
-      ]]></description>
-      <pubDate>Tue, 25 Mar 2026 01:25:00 +0800</pubDate>
-      <sparkle:version>3</sparkle:version>
-      <sparkle:shortVersionString>0.1.9.2</sparkle:shortVersionString>
+      <title>Vowrite 0.2.0.0</title>
+      <description><![CDATA[<p>Major release: 20 new features, 15+ providers, Provider Registry, Speculative LLM, Recording Indicator Engine</p>]]></description>
+      <pubDate>Sun, 29 Mar 2026 16:23:07 +0200</pubDate>
+      <sparkle:version>4</sparkle:version>
+      <sparkle:shortVersionString>0.2.0.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
-        url="https://github.com/Joevonlong/Vowrite/releases/download/v0.1.9.2/Vowrite-v0.1.9.2.dmg"
+        url="https://github.com/Joevonlong/Vowrite/releases/download/v0.2.0.0/Vowrite-v0.2.0.0.dmg"
         type="application/octet-stream"
-        sparkle:edSignature="NIGpXN1gzRB1AGJzYTCu+Do438jCcNq1pIGf59VRzmFGxOm3SfJRBZ3h6/yLdFwGv4njM6op5iXatCJusYi4Cg=="
-        length="4522586"
+        sparkle:edSignature="4YHZ1hApG/t7BozmhCThrIiB7xKAP/pVKQX+lIADDaUp/aSLefTVuKeFNgTi/P4zXNoix6qh8PxI1UzxlCqpBw=="
+        length="4981254"
       />
     </item>
   </channel>

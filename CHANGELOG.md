@@ -9,6 +9,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [0.2.0.0] — 2026-03-29
 
+## [0.2.0.0] — 2026-03-29
+
 ### Added
 
 **STT Providers (4 new):**

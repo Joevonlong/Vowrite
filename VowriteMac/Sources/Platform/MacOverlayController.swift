@@ -106,6 +106,12 @@ final class MacOverlayController: OverlayProvider {
         switch IndicatorPreset.current {
         case .orbPulse:
             return NSSize(width: 100, height: 100)
+        case .rippleRing:
+            return NSSize(width: 100, height: 100)
+        case .spectrumArc:
+            return NSSize(width: 120, height: 120)
+        case .minimalDot:
+            return NSSize(width: 60, height: 60)
         case .classicBar:
             switch OverlayStyle.current {
             case .compact: return NSSize(width: 200, height: 42)

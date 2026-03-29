@@ -87,6 +87,12 @@ struct RecordingIndicatorView: View {
             RecordingBarView(appState: appState)
         case .orbPulse:
             OrbPulseIndicator(appState: appState)
+        case .rippleRing:
+            RippleRingIndicator(appState: appState)
+        case .spectrumArc:
+            SpectrumArcIndicator(appState: appState)
+        case .minimalDot:
+            MinimalDotIndicator(appState: appState)
         }
     }
 }
