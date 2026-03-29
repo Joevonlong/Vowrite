@@ -10,15 +10,72 @@ Thank you for your interest in contributing to Vowrite! 🎤✨
 - **Xcode 16+** with Swift 5.10+
 - **Git** with SSH access to GitHub
 
-### Build from Source
+### Fork and Clone
+
+1. Click **Fork** on [the Vowrite repository](https://github.com/Joevonlong/Vowrite) to create your own copy.
+2. Clone your fork locally:
 
 ```bash
-git clone git@github.com:Joevonlong/Vowrite.git
-cd Vowrite/VowriteMac
+git clone git@github.com:<your-username>/Vowrite.git
+cd Vowrite
+```
+
+3. Add the upstream remote so you can keep your fork up to date:
+
+```bash
+git remote add upstream git@github.com:Joevonlong/Vowrite.git
+git fetch upstream
+```
+
+### Build from Source
+
+There are two ways to build the project:
+
+**Option A — SPM build only** (fast compile check, no app bundle):
+
+```bash
+cd VowriteMac
+swift build
+```
+
+This compiles the project via Swift Package Manager. Useful for quickly verifying that your changes compile.
+
+**Option B — Full build, sign, and launch** (recommended for testing):
+
+```bash
+cd VowriteMac
 ./build.sh
 ```
 
-The build script compiles via SPM, packages into `Vowrite.app`, code-signs, and launches.
+The build script compiles via SPM, packages into `Vowrite.app`, code-signs with entitlements, and launches the app. Use this when you need to test the running application.
+
+### Submitting a Pull Request
+
+1. **Create a feature branch** from `main`:
+   ```bash
+   git checkout main
+   git pull upstream main
+   git checkout -b feature/your-feature
+   ```
+2. **Make your changes** following the conventions below.
+3. **Verify the build:**
+   ```bash
+   cd VowriteMac && swift build
+   ```
+4. **Run the test suite** (especially if core modules changed):
+   ```bash
+   cd Vowrite && ops/scripts/test.sh
+   ```
+5. **Commit** with a clear message (see [Commit Messages](#commit-messages)):
+   ```bash
+   git add <files>
+   git commit -m "feat: describe your change"
+   ```
+6. **Push** your branch to your fork:
+   ```bash
+   git push origin feature/your-feature
+   ```
+7. **Open a Pull Request** against the `main` branch of the upstream repository. Include a description of what changed and why.
 
 ### Project Structure
 
@@ -53,12 +110,7 @@ Start a [discussion](https://github.com/Joevonlong/Vowrite/discussions) or open 
 
 ### Submitting Code
 
-1. **Fork** the repository
-2. **Create a feature branch:** `git checkout -b feature/your-feature`
-3. **Make your changes** following the conventions below
-4. **Test:** `cd Vowrite && ops/scripts/test.sh`
-5. **Commit** with a clear message (see conventions)
-6. **Push** and open a Pull Request against `main`
+See [Submitting a Pull Request](#submitting-a-pull-request) above for the full workflow.
 
 ## Conventions
 
