@@ -12,7 +12,7 @@ const i18n = {
     // Hero
     'hero.badge': '开源 · 免费 · macOS 14+',
     'hero.title': '说一次，完美呈现。',
-    'hero.sub': 'Mac 上的 AI 语音输入。自然说话，即刻获得干净文字。',
+    'hero.sub': 'Mac 上的 AI 语音输入。自然说话，即刻获得干净文字。15+ 服务商。',
     'hero.dl': '下载 Mac 版',
     'hero.github': '在 GitHub 查看',
 
@@ -29,9 +29,13 @@ const i18n = {
     'feat.works.t': '随处可用',
     'feat.works.d': '文字直接出现在光标处——任何应用、任何文本框。能打字的地方，就能用 Vowrite。',
     'feat.choice.t': '自选 AI 服务',
-    'feat.choice.d': '使用你自己的 API 密钥，从 6 家服务商中选择，或接入自定义端点。无订阅，不锁定。',
+    'feat.choice.d': '使用你自己的 API 密钥，从 15+ 服务商中选择，或接入自定义端点。无订阅，不锁定。',
     'feat.fast.t': '极速响应',
-    'feat.fast.d': '说完话，约 2 秒内就出现润色好的文字。比打字还快。',
+    'feat.fast.d': '预测式 LLM 在录音时预热连接。润色文字约 1.5 秒内出现。',
+    'feat.replace.t': '智能文本替换',
+    'feat.replace.d': '自定义词库自动纠正词汇。从你的修改中自动学习。',
+    'feat.indicator.t': '录音指示器',
+    'feat.indicator.d': '漂亮的呼吸光球动画和声音反馈。始终知道 Vowrite 是否在听。',
 
     // How it works
     'how.title': '三步完成，只需两秒。',
@@ -46,7 +50,7 @@ const i18n = {
 
     // Providers
     'prov.title': '你的 AI，你做主',
-    'prov.sub': '使用你自己的 API 密钥。内置六家服务商，也可自定义。',
+    'prov.sub': '使用你自己的 API 密钥。内置 15+ 服务商，也可自定义。',
     'prov.rec': '推荐',
     'prov.fast': '超快',
     'prov.budget': '经济实惠',
@@ -55,6 +59,17 @@ const i18n = {
     'prov.custom': '自定义',
     'prov.customd': '任何 OpenAI 兼容端点',
     'prov.yours': '你的服务器',
+    'prov.allone': '一站式',
+    'prov.ollamad': '本地模型 · 完全离线',
+    'prov.local': '100% 本地',
+    'prov.offline': '离线',
+    'prov.multilang': '36+ 语言',
+    'prov.iflytek': '讯飞',
+    'prov.iflytekd': 'WebSocket · 支持 23 种中文方言',
+    'prov.dialects': '方言支持',
+    'prov.mlxd': 'Apple Silicon 原生 · 无需 API Key',
+    'prov.more': '+ 另外 8 个服务商',
+    'prov.mored': 'OpenRouter, Together AI, 火山引擎, 通义千问, 硅基流动, Kimi, MiniMax, 智谱 GLM',
 
     // Comparison
     'cmp.title': '为什么选择 Vowrite',
@@ -69,6 +84,8 @@ const i18n = {
     'cmp.r7': '听写历史',
     'cmp.r8': '自定义快捷键',
     'cmp.r9': '隐私（仅本地存储）',
+    'cmp.r10': '文本替换与自动学习',
+    'cmp.r11': '离线/本地推理',
     'cmp.limited': '有限',
     'cmp.apple': '✓（仅 Apple）',
     'cmp.fixed': '固定',
@@ -84,21 +101,16 @@ const i18n = {
     'faq.q4': '可以中英文混合说吗？',
     'faq.a4': '当然可以。Vowrite 自然处理中英混合输入。无需切换语言——像平时一样说话就行。',
     'faq.q5': '支持哪些 AI 服务商？',
-    'faq.a5': 'Vowrite 支持 OpenAI、Groq、DeepSeek、OpenRouter、Together AI 以及任何 OpenAI 兼容的自定义端点。使用你自己的 API 密钥——无订阅，不锁定。',
+    'faq.a5': 'Vowrite 支持 15+ 服务商，包括 OpenAI、Groq、DeepSeek、Deepgram、Gemini、Claude、讯飞、Ollama、MLX Server，以及任何 OpenAI 兼容端点。使用你自己的 API 密钥——无订阅，不锁定。',
     'faq.q6': '我的数据安全吗？',
     'faq.a6': '你的听写历史仅存储在本地 Mac 上。音频只发送给你选择的 AI 服务商进行转录——Vowrite 本身不会存储或传输你的数据到任何服务器。',
-
-    // Providers (new)
-    'prov.allone': '一站式',
-    'prov.ollamad': '本地模型 · 完全离线',
-    'prov.local': '100% 本地',
 
     // Coming soon
     'soon.title': '即将推出',
     'soon.s1t': '语音搜索',
     'soon.s1d': '用语音提问，无需离开当前应用即可获得答案。',
-    'soon.s2t': '自动更新',
-    'soon.s2d': '通过 Sparkle 无缝更新，始终保持最新版本。',
+    'soon.s3t': 'iOS 应用',
+    'soon.s3d': '在 iPhone 和 iPad 上作为系统级键盘的语音输入。',
 
     // Download
     'dl.title': '准备好告别打字了吗？',
@@ -140,7 +152,7 @@ const i18n = {
     // Hero
     'hero.badge': 'Open Source \u00b7 Kostenlos \u00b7 macOS 14+',
     'hero.title': 'Einmal sagen. Perfekt gemeint.',
-    'hero.sub': 'KI-gest\u00fctzte Spracheingabe f\u00fcr Mac. Nat\u00fcrlich sprechen, sofort sauberen Text erhalten.',
+    'hero.sub': 'KI-gest\u00fctzte Spracheingabe f\u00fcr Mac. Nat\u00fcrlich sprechen, sofort sauberen Text erhalten. 15+ Anbieter.',
     'hero.dl': 'F\u00fcr Mac laden',
     'hero.github': 'Auf GitHub ansehen',
 
@@ -157,9 +169,13 @@ const i18n = {
     'feat.works.t': 'Funktioniert \u00fcberall',
     'feat.works.d': 'Text erscheint direkt an deinem Cursor \u2014 jede App, jedes Textfeld. Wo du tippen kannst, funktioniert Vowrite.',
     'feat.choice.t': 'Deine KI, deine Wahl',
-    'feat.choice.d': 'Bring deinen eigenen API-Schl\u00fcssel. W\u00e4hle aus 6 Anbietern oder nutze deinen eigenen. Kein Abo, kein Lock-in.',
+    'feat.choice.d': 'Bring deinen eigenen API-Schl\u00fcssel. W\u00e4hle aus 15+ Anbietern oder nutze deinen eigenen. Kein Abo, kein Lock-in.',
     'feat.fast.t': 'Blitzschnell',
-    'feat.fast.d': 'Sprich, und in ca. 2 Sekunden erscheint polierter Text. Schneller als Tippen.',
+    'feat.fast.d': 'Spekulatives LLM w\u00e4rmt Verbindungen w\u00e4hrend der Aufnahme vor. Polierter Text in ~1,5 Sekunden.',
+    'feat.replace.t': 'Intelligente Textersetzung',
+    'feat.replace.d': 'Auto-Korrektur mit benutzerdefiniertem W\u00f6rterbuch. Lernt automatisch aus deinen Korrekturen.',
+    'feat.indicator.t': 'Aufnahme-Indikator',
+    'feat.indicator.d': 'Sch\u00f6ne Orb-Pulse-Atemanimation und Klang-Feedback. Immer wissen, wann Vowrite zuh\u00f6rt.',
 
     // How it works
     'how.title': 'Drei Schritte. Zwei Sekunden.',
@@ -174,7 +190,7 @@ const i18n = {
 
     // Providers
     'prov.title': 'Deine KI, deine Regeln',
-    'prov.sub': 'Bring deinen eigenen API-Schl\u00fcssel. Sechs Anbieter integriert, oder nutze deinen eigenen.',
+    'prov.sub': 'Bring deinen eigenen API-Schl\u00fcssel. 15+ Anbieter integriert, oder nutze deinen eigenen.',
     'prov.rec': 'Empfohlen',
     'prov.fast': 'Ultraschnell',
     'prov.budget': 'G\u00fcnstig',
@@ -183,6 +199,17 @@ const i18n = {
     'prov.custom': 'Benutzerdefiniert',
     'prov.customd': 'Jeder OpenAI-kompatible Endpunkt',
     'prov.yours': 'Dein Server',
+    'prov.allone': 'All-in-One',
+    'prov.ollamad': 'Lokale Modelle \u00b7 komplett offline',
+    'prov.local': '100% Lokal',
+    'prov.offline': 'Offline',
+    'prov.multilang': '36+ Sprachen',
+    'prov.iflytek': 'iFlytek',
+    'prov.iflytekd': 'WebSocket \u00b7 23 chinesische Dialekte',
+    'prov.dialects': 'Dialektunterst\u00fctzung',
+    'prov.mlxd': 'Apple Silicon nativ \u00b7 kein API-Key',
+    'prov.more': '+ 8 weitere Anbieter',
+    'prov.mored': 'OpenRouter, Together AI, Volcengine, Qwen, SiliconFlow, Kimi, MiniMax, Zhipu GLM',
 
     // Comparison
     'cmp.title': 'Warum Vowrite',
@@ -197,6 +224,8 @@ const i18n = {
     'cmp.r7': 'Diktatverlauf',
     'cmp.r8': 'Eigene Tastenkombination',
     'cmp.r9': 'Datenschutz (nur lokale Speicherung)',
+    'cmp.r10': 'Textersetzung & Auto-Lernen',
+    'cmp.r11': 'Offline / lokale Inferenz',
     'cmp.limited': 'Begrenzt',
     'cmp.apple': '\u2713 (nur Apple)',
     'cmp.fixed': 'Fest',
@@ -212,21 +241,16 @@ const i18n = {
     'faq.q4': 'Kann ich Chinesisch und Englisch in einem Satz mischen?',
     'faq.a4': 'Absolut. Vowrite verarbeitet gemischtes Chinesisch und Englisch nat\u00fcrlich. Kein Sprachwechsel n\u00f6tig \u2014 sprich einfach wie gewohnt.',
     'faq.q5': 'Welche KI-Anbieter werden unterst\u00fctzt?',
-    'faq.a5': 'Vowrite unterst\u00fctzt OpenAI, Groq, DeepSeek, OpenRouter, Together AI und jeden OpenAI-kompatiblen benutzerdefinierten Endpunkt. Bring deinen eigenen API-Schl\u00fcssel \u2014 kein Abo, kein Lock-in.',
+    'faq.a5': 'Vowrite unterst\u00fctzt 15+ Anbieter, darunter OpenAI, Groq, DeepSeek, Deepgram, Gemini, Claude, iFlytek, Ollama, MLX Server und jeden OpenAI-kompatiblen Endpunkt. Bring deinen eigenen API-Schl\u00fcssel \u2014 kein Abo, kein Lock-in.',
     'faq.q6': 'Sind meine Daten privat?',
     'faq.a6': 'Dein Diktatverlauf wird lokal auf deinem Mac gespeichert. Audio wird nur zum Transkribieren an deinen gew\u00e4hlten KI-Anbieter gesendet \u2014 Vowrite selbst speichert oder \u00fcbertr\u00e4gt deine Daten niemals an einen Server.',
-
-    // Providers (new)
-    'prov.allone': 'All-in-One',
-    'prov.ollamad': 'Lokale Modelle \u00b7 komplett offline',
-    'prov.local': '100% Lokal',
 
     // Coming soon
     'soon.title': 'Demn\u00e4chst',
     'soon.s1t': 'Sprachgesteuerte Suche',
     'soon.s1d': 'Stelle Fragen per Sprache und erhalte sofort Antworten, ohne die App zu verlassen.',
-    'soon.s2t': 'Auto-Update',
-    'soon.s2d': 'Immer aktuell mit nahtlosen In-App-Updates \u00fcber Sparkle.',
+    'soon.s3t': 'iOS-App',
+    'soon.s3d': 'Spracheingabe als systemweite Tastatur auf iPhone und iPad.',
 
     // Download
     'dl.title': 'Bereit, das Tippen sein zu lassen?',

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vowrite — AI Voice Input for Mac | Say it once. Mean it perfectly.</title>
-  <meta name="description" content="Smart AI voice input for Mac. Speak naturally, get clean text at your cursor instantly. Free, open source, supports multiple AI providers. Say it once. Mean it perfectly.">
+  <meta name="description" content="Smart AI voice input for Mac. Speak naturally, get clean text at your cursor instantly. Free, open source, 15+ AI providers. Say it once. Mean it perfectly.">
   <meta name="keywords" content="AI voice input, voice to text mac, AI dictation, speech to text, smart voice keyboard, voice typing app, 语音输入法, AI语音输入, mac语音转文字">
   <link rel="canonical" href="https://vowrite.com/">
 
@@ -12,14 +12,14 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://vowrite.com">
   <meta property="og:title" content="Vowrite — AI Voice Input for Mac">
-  <meta property="og:description" content="Speak naturally, get clean text instantly. Smart AI voice input that works in any app.">
+  <meta property="og:description" content="Speak naturally, get clean text instantly. Smart AI voice input that works in any app. 15+ AI providers.">
   <meta property="og:image" content="https://vowrite.com/app-icon-256.png">
   <meta property="og:site_name" content="Vowrite">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Vowrite — AI Voice Input for Mac">
-  <meta name="twitter:description" content="Speak naturally, get clean text instantly. Smart AI voice input that works in any app.">
+  <meta name="twitter:description" content="Speak naturally, get clean text instantly. Smart AI voice input that works in any app. 15+ AI providers.">
   <meta name="twitter:image" content="https://vowrite.com/app-icon-256.png">
 
   <!-- JSON-LD Structured Data -->
@@ -30,10 +30,10 @@
     "name": "Vowrite",
     "operatingSystem": "macOS 14+",
     "applicationCategory": "UtilitiesApplication",
-    "description": "Smart AI voice input for Mac. Speak naturally, get clean text instantly.",
+    "description": "Smart AI voice input for Mac. Speak naturally, get clean text instantly. 15+ AI providers.",
     "url": "https://vowrite.com",
     "downloadUrl": "https://github.com/Joevonlong/Vowrite/releases/latest",
-    "softwareVersion": "0.1.9.0",
+    "softwareVersion": "0.2.0.0",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -84,7 +84,7 @@
       <div class="container">
         <div class="badge" data-i18n="hero.badge">Open Source · Free · macOS 14+</div>
         <h1 data-i18n="hero.title">Say it once. Mean it perfectly.</h1>
-        <p class="hero-sub" data-i18n="hero.sub">AI-powered voice input for Mac. Speak naturally, get clean text instantly.</p>
+        <p class="hero-sub" data-i18n="hero.sub">AI-powered voice input for Mac. Speak naturally, get clean text instantly. 15+ providers.</p>
         <div class="hero-actions">
           <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary">
             <span class="btn-icon">⬇</span> <span data-i18n="hero.dl">Download for Mac</span>
@@ -135,12 +135,22 @@
           <div class="feature-card fade-in">
             <div class="feature-icon">🔑</div>
             <h3 data-i18n="feat.choice.t">Your AI, your choice</h3>
-            <p data-i18n="feat.choice.d">Bring your own API key. Pick from 6 providers or plug in your own. No subscriptions, no lock-in.</p>
+            <p data-i18n="feat.choice.d">Bring your own API key. Pick from 15+ providers or plug in your own. No subscriptions, no lock-in.</p>
           </div>
           <div class="feature-card fade-in">
             <div class="feature-icon">⚡</div>
             <h3 data-i18n="feat.fast.t">Blazing fast</h3>
-            <p data-i18n="feat.fast.d">Speak, and polished text appears in about 2 seconds. Faster than you can type it.</p>
+            <p data-i18n="feat.fast.d">Speculative LLM pre-warms connections during recording. Polished text in ~1.5 seconds.</p>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-icon">📝</div>
+            <h3 data-i18n="feat.replace.t">Smart text replacement</h3>
+            <p data-i18n="feat.replace.d">Auto-correct vocabulary with your custom dictionary. Learns from your corrections automatically.</p>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-icon">🎨</div>
+            <h3 data-i18n="feat.indicator.t">Recording indicator</h3>
+            <p data-i18n="feat.indicator.d">Beautiful Orb Pulse breathing animation and sound feedback. Always know when Vowrite is listening.</p>
           </div>
         </div>
       </div>
@@ -177,7 +187,7 @@
     <section id="providers" class="providers">
       <div class="container">
         <h2 class="section-title fade-in" data-i18n="prov.title">Your AI, your rules</h2>
-        <p class="section-sub fade-in" data-i18n="prov.sub">Bring your own API key. Six providers built in, or use your own.</p>
+        <p class="section-sub fade-in" data-i18n="prov.sub">Bring your own API key. 15+ providers built in, or use your own.</p>
         <div class="provider-grid fade-in">
           <div class="provider-card">
             <div class="provider-name">Groq + DeepSeek</div>
@@ -190,23 +200,38 @@
             <div class="provider-badge" data-i18n="prov.allone">All-in-One</div>
           </div>
           <div class="provider-card">
-            <div class="provider-name">Ollama</div>
-            <div class="provider-detail" data-i18n="prov.ollamad">Local models · fully offline</div>
+            <div class="provider-name">Deepgram</div>
+            <div class="provider-detail">Nova-3 · 36+ languages</div>
+            <div class="provider-badge" data-i18n="prov.multilang">36+ Languages</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-name">Gemini</div>
+            <div class="provider-detail">gemini-2.0-flash</div>
+            <div class="provider-badge">Google</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-name">Claude</div>
+            <div class="provider-detail">claude-sonnet · SSE streaming</div>
+            <div class="provider-badge">Anthropic</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-name" data-i18n="prov.iflytek">iFlytek</div>
+            <div class="provider-detail" data-i18n="prov.iflytekd">WebSocket · 23 Chinese dialects</div>
+            <div class="provider-badge" data-i18n="prov.dialects">Dialect Support</div>
+          </div>
+          <div class="provider-card">
+            <div class="provider-name">MLX Server</div>
+            <div class="provider-detail" data-i18n="prov.mlxd">Apple Silicon native · no API key</div>
             <div class="provider-badge" data-i18n="prov.local">100% Local</div>
           </div>
           <div class="provider-card">
-            <div class="provider-name">OpenRouter</div>
-            <div class="provider-detail">whisper-large-v3 · gpt-4o-mini</div>
-            <div class="provider-badge" data-i18n="prov.multi">Multi-Model</div>
-          </div>
-          <div class="provider-card">
-            <div class="provider-name">Together AI</div>
-            <div class="provider-detail">whisper-large-v3 · Llama-3.1-8B</div>
-            <div class="provider-badge" data-i18n="prov.oss">Open Source Models</div>
+            <div class="provider-name">Ollama</div>
+            <div class="provider-detail" data-i18n="prov.ollamad">Local models · fully offline</div>
+            <div class="provider-badge" data-i18n="prov.offline">Offline</div>
           </div>
           <div class="provider-card provider-card-custom">
-            <div class="provider-name" data-i18n="prov.custom">Custom</div>
-            <div class="provider-detail" data-i18n="prov.customd">Any OpenAI-compatible endpoint</div>
+            <div class="provider-name" data-i18n="prov.more">+ 8 more providers</div>
+            <div class="provider-detail" data-i18n="prov.mored">OpenRouter, Together AI, Volcengine, Qwen, SiliconFlow, Kimi, MiniMax, Zhipu GLM</div>
             <div class="provider-badge" data-i18n="prov.yours">Your Server</div>
           </div>
         </div>
@@ -237,7 +262,7 @@
               </tr>
               <tr>
                 <td class="row-label" data-i18n="cmp.r2">Multiple AI providers</td>
-                <td class="col-vowrite cell-yes">✅ 6+</td>
+                <td class="col-vowrite cell-yes">✅ 15+</td>
                 <td class="col-other cell-no">✗</td>
                 <td class="col-other cell-no">✗</td>
               </tr>
@@ -246,6 +271,18 @@
                 <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-warn" data-i18n="cmp.limited">Limited</td>
                 <td class="col-other cell-yes-dim">✓</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r10">Text replacement & auto-learning</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r11">Offline / local inference</td>
+                <td class="col-vowrite cell-yes">✅ Ollama / MLX</td>
+                <td class="col-other cell-yes-dim">✓ (Apple only)</td>
+                <td class="col-other cell-no">✗</td>
               </tr>
               <tr>
                 <td class="row-label" data-i18n="cmp.r4">Open source</td>
@@ -312,7 +349,7 @@
           </details>
           <details class="faq-item">
             <summary data-i18n="faq.q5">What AI providers are supported?</summary>
-            <p data-i18n="faq.a5">Vowrite supports OpenAI, Groq, DeepSeek, OpenRouter, Together AI, and any OpenAI-compatible custom endpoint. Bring your own API key — no subscriptions, no lock-in.</p>
+            <p data-i18n="faq.a5">Vowrite supports 15+ providers including OpenAI, Groq, DeepSeek, Deepgram, Gemini, Claude, iFlytek, Ollama, MLX Server, and any OpenAI-compatible endpoint. Bring your own API key — no subscriptions, no lock-in.</p>
           </details>
           <details class="faq-item">
             <summary data-i18n="faq.q6">Is my data private?</summary>
@@ -328,7 +365,7 @@
         <div class="coming-soon-card fade-in">
           <h3 data-i18n="soon.title">Coming soon</h3>
           <p><strong data-i18n="soon.s1t">Voice-triggered search</strong> — <span data-i18n="soon.s1d">Ask questions by voice and get instant answers without leaving your app.</span></p>
-          <p><strong data-i18n="soon.s2t">Auto-update</strong> — <span data-i18n="soon.s2d">Stay up to date with seamless in-app updates via Sparkle.</span></p>
+          <p><strong data-i18n="soon.s3t">iOS app</strong> — <span data-i18n="soon.s3d">Voice input as a system-wide keyboard on iPhone and iPad.</span></p>
         </div>
       </div>
     </section>
@@ -337,7 +374,7 @@
     <section id="download" class="download">
       <div class="container">
         <h2 class="section-title fade-in" data-i18n="dl.title">Ready to stop typing?</h2>
-        <p class="version fade-in">v0.1.9.0 · macOS 14 Sonoma · Apple Silicon & Intel</p>
+        <p class="version fade-in">v0.2.0.0 · macOS 14 Sonoma · Apple Silicon & Intel</p>
         <div class="download-actions fade-in">
           <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary btn-large">
             <span class="btn-icon">⬇</span> <span data-i18n="dl.btn">Download for Mac</span>
@@ -349,7 +386,7 @@
           <span class="req" data-i18n="dl.r3">♿ Accessibility (optional)</span>
         </div>
         <p class="download-note fade-in">
-          <span data-i18n="dl.build">Or build from source:</span> <code>cd VowriteApp && ./build.sh</code>
+          <span data-i18n="dl.build">Or build from source:</span> <code>cd Vowrite/VowriteMac && swift build</code>
           <br>
           <a href="https://github.com/Joevonlong/Vowrite" data-i18n="dl.src">View source on GitHub</a>
         </p>
