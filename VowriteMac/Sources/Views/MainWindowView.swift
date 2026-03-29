@@ -10,6 +10,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     case apiKeys = "API Keys"
     case models = "Models"
     case personalization = "Personalization"
+    case vocabulary = "Vocabulary"
     case about = "About"
 
     var id: String { rawValue }
@@ -22,6 +23,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .apiKeys: return "key"
         case .models: return "cpu"
         case .personalization: return "paintbrush"
+        case .vocabulary: return "text.book.closed"
         case .about: return "info.circle"
         }
     }
@@ -109,6 +111,8 @@ struct MainWindowView: View {
                 .environmentObject(appState)
         case .personalization:
             PersonalizationPageView()
+        case .vocabulary:
+            VocabularyPageView()
         case .about:
             AboutPageView()
         }
