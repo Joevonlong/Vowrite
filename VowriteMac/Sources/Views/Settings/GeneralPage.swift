@@ -53,6 +53,10 @@ struct GeneralPageView: View {
                     PermissionsContent()
                 }
 
+                SettingsSection(icon: "waveform.circle", title: "Recording Indicator") {
+                    RecordingIndicatorPicker()
+                }
+
                 SettingsSection(icon: "power", title: "Startup & Recording") {
                     GeneralOptionsContent()
                 }
@@ -133,6 +137,95 @@ struct PermissionsContent: View {
     }
 }
 
+// MARK: - Recording Indicator Picker
+
+struct RecordingIndicatorPicker: View {
+    @State private var selectedPreset = IndicatorPreset.current
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Choose the visual style shown while recording.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            HStack(spacing: VW.Spacing.xl) {
+                ForEach(IndicatorPreset.allCases, id: \.rawValue) { preset in
+                    Button {
+                        withAnimation(VW.Anim.springQuick) {
+                            selectedPreset = preset
+                            IndicatorPreset.current = preset
+                        }
+                    } label: {
+                        VStack(spacing: VW.Spacing.md) {
+                            indicatorPreview(for: preset)
+                                .frame(width: 80, height: 48)
+
+                            Text(preset.displayName)
+                                .font(.caption)
+                                .fontWeight(selectedPreset == preset ? .semibold : .regular)
+                                .foregroundColor(selectedPreset == preset ? .accentColor : .secondary)
+                        }
+                        .padding(VW.Spacing.xl)
+                        .frame(width: 120)
+                        .background(
+                            selectedPreset == preset
+                                ? VW.Colors.Accent.light
+                                : VW.Colors.Background.subtle
+                        )
+                        .cornerRadius(VW.Radius.xxxl)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: VW.Radius.xxxl)
+                                .stroke(
+                                    selectedPreset == preset
+                                        ? Color.accentColor.opacity(0.4)
+                                        : VW.Colors.Stroke.light,
+                                    lineWidth: selectedPreset == preset ? 1.5 : 1
+                                )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func indicatorPreview(for preset: IndicatorPreset) -> some View {
+        switch preset {
+        case .classicBar:
+            HStack(spacing: 2) {
+                ForEach(0..<7, id: \.self) { i in
+                    let center = 3.0
+                    let dist = abs(Double(i) - center) / center
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.white.opacity(1.0 - dist * 0.3))
+                        .frame(width: 2, height: CGFloat(6 + (1.0 - dist) * 10))
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(Capsule().fill(Color.black.opacity(0.85)))
+
+        case .orbPulse:
+            ZStack {
+                Circle()
+                    .fill(Color.orange.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                    .blur(radius: 6)
+                Circle()
+                    .fill(RadialGradient(
+                        colors: [.orange, .orange.opacity(0.3), .clear],
+                        center: .center, startRadius: 8, endRadius: 20
+                    ))
+                    .frame(width: 32, height: 32)
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white)
+            }
+        }
+    }
+}
+
 // MARK: - General Options Content (Startup + Recording)
 
 struct GeneralOptionsContent: View {
@@ -155,15 +248,17 @@ struct GeneralOptionsContent: View {
                 ))
                 .toggleStyle(.switch)
             }
-            SettingsRow(title: "Recording overlay", description: "Size of the floating recording bar") {
-                Picker("", selection: $overlayStyle) {
-                    ForEach(OverlayStyle.allCases, id: \.rawValue) { style in
-                        Text(style.rawValue).tag(style)
+            if IndicatorPreset.current == .classicBar {
+                SettingsRow(title: "Bar size", description: "Size of the classic recording bar") {
+                    Picker("", selection: $overlayStyle) {
+                        ForEach(OverlayStyle.allCases, id: \.rawValue) { style in
+                            Text(style.rawValue).tag(style)
+                        }
                     }
-                }
-                .frame(width: 120)
-                .onChange(of: overlayStyle) { _, v in
-                    OverlayStyle.current = v
+                    .frame(width: 120)
+                    .onChange(of: overlayStyle) { _, v in
+                        OverlayStyle.current = v
+                    }
                 }
             }
         }
