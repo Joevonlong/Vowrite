@@ -27,10 +27,8 @@ struct MinimalDotIndicator: View {
 
     private var recordingDot: some View {
         let level = CGFloat(appState.audioLevel)
-        // Size: 16pt at silence -> 40pt at max volume
         let dotSize: CGFloat = 16 + level * 24
-        // Color: blue/green at low -> orange/red at high (dual signal for accessibility)
-        let hue = 0.55 - Double(level) * 0.45 // 0.55 (cyan) -> 0.1 (orange-red)
+        let hue = 0.55 - Double(level) * 0.45
 
         return Circle()
             .fill(Color(hue: hue, saturation: 0.8, brightness: 0.95))
