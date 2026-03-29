@@ -76,7 +76,22 @@ final class RecordingOverlayController {
     }
 }
 
-// MARK: - Recording Bar SwiftUI View
+// MARK: - Indicator Wrapper (switches between presets)
+
+struct RecordingIndicatorView: View {
+    @ObservedObject var appState: AppState
+
+    var body: some View {
+        switch IndicatorPreset.current {
+        case .classicBar:
+            RecordingBarView(appState: appState)
+        case .orbPulse:
+            OrbPulseIndicator(appState: appState)
+        }
+    }
+}
+
+// MARK: - Recording Bar SwiftUI View (Classic Bar preset)
 
 struct RecordingBarView: View {
     @ObservedObject var appState: AppState

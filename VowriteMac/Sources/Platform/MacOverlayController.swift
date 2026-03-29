@@ -30,7 +30,7 @@ final class MacOverlayController: OverlayProvider {
     static let shared = MacOverlayController()
 
     private var window: NSWindow?
-    private var hostingView: NSHostingView<RecordingBarView>?
+    private var hostingView: NSHostingView<RecordingIndicatorView>?
     var appState: AppState?
 
     func showRecording() {
@@ -61,8 +61,8 @@ final class MacOverlayController: OverlayProvider {
             return
         }
 
-        let barView = RecordingBarView(appState: appState)
-        let hosting = NSHostingView(rootView: barView)
+        let indicatorView = RecordingIndicatorView(appState: appState)
+        let hosting = NSHostingView(rootView: indicatorView)
         let size = overlaySize
         hosting.frame = NSRect(origin: .zero, size: size)
 
@@ -98,14 +98,19 @@ final class MacOverlayController: OverlayProvider {
 
     func update() {
         guard let appState = appState else { return }
-        let barView = RecordingBarView(appState: appState)
-        hostingView?.rootView = barView
+        let indicatorView = RecordingIndicatorView(appState: appState)
+        hostingView?.rootView = indicatorView
     }
 
     private var overlaySize: NSSize {
-        switch OverlayStyle.current {
-        case .compact: return NSSize(width: 200, height: 42)
-        case .normal: return NSSize(width: 260, height: 52)
+        switch IndicatorPreset.current {
+        case .orbPulse:
+            return NSSize(width: 100, height: 100)
+        case .classicBar:
+            switch OverlayStyle.current {
+            case .compact: return NSSize(width: 200, height: 42)
+            case .normal: return NSSize(width: 260, height: 52)
+            }
         }
     }
 }
