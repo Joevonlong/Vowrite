@@ -29,9 +29,19 @@ final class MacTextInjector: TextOutputProvider {
         // Step 1: Activate the previous app
         activatePreviousApp()
 
-        // Step 2: Wait for focus to settle, then paste
+        // Step 2: Wait for focus to settle
         try? await Task.sleep(for: .milliseconds(300))
+
+        // Step 3: Capture focused element before paste (for correction monitoring)
+        let element = CorrectionMonitor.shared.captureElement()
+
+        // Step 4: Paste
         pasteViaClipboard(text: text)
+
+        // Step 5: Start correction monitoring (async, non-blocking)
+        if let element {
+            CorrectionMonitor.shared.start(element: element, injectedText: text)
+        }
     }
 
     // MARK: - App Activation
