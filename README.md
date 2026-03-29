@@ -46,11 +46,21 @@ No more typing. Just speak.
 | 🔑 | **Key Vault** | API keys stored per-provider in macOS Keychain — enter once, reuse everywhere |
 | 📝 | **Text Replacement** | Auto-correct vocabulary with flex pattern matching (post-STT + post-LLM) |
 | 🧠 | **Auto Dictionary** | Learns from your corrections — auto-adds words you fix to the dictionary |
-| 🎨 | **Recording Indicator** | Orb Pulse breathing light animation during recording |
+| 🎨 | **Recording Indicator** | 5 built-in presets: Classic Bar, Orb Pulse, Ripple Ring, Spectrum Arc, Minimal Dot |
 | 🔊 | **Sound Feedback** | Audio cues for start, success, and error states |
 | ⌨️ | **Custom Hotkey** | Default: `⌥ Space` — fully configurable |
 | 📊 | **History & Stats** | Browse past dictations, track time saved and words-per-minute |
 | 📱 | **iOS Keyboard** | Voice input as a system-wide keyboard extension |
+
+## 🎨 Customization
+
+Vowrite is designed to be customizable:
+
+- **[App Icon](docs/APP_ICON_GUIDE.md)** — Replace with your own icon
+- **[Recording Indicator](docs/THEME_GUIDE.md)** — 5 built-in presets, more coming
+- **[AI Providers](docs/PROVIDER_GUIDE.md)** — Add your own providers via `providers.json`
+
+See the full [Customization Guide](docs/CUSTOMIZATION.md) for details.
 
 ## 🚀 Quick Start
 
