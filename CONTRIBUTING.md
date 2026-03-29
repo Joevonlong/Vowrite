@@ -154,8 +154,41 @@ docs: update README with new provider list
 
 ### Branch Model
 
-- `main` — stable, tagged releases only
-- `feature/F-{ID}-{slug}` — all feature work (squash merge back)
+- `main` — development trunk (all feature PRs target main; NOT auto-deployed to users)
+- `feature/F-{ID}-{slug}` — feature work (squash merge back to main)
+- `hotfix/vX.Y.Z` — temporary, only for emergency fixes on released versions (created from stable tag)
+- No `develop` branch. Releases are tag-based, not branch-based.
+
+## Release Model
+
+Vowrite uses a **beta-first, trunk-based release model** (inspired by [OpenClaw](https://github.com/openclaw/openclaw)):
+
+- **`main`** is the development trunk — merging to main does NOT release to users
+- Releases use **tag tracks**, not branches:
+  - **Beta:** `vX.Y.Z.W-beta.N` — test builds, delivered via `appcast-beta.xml`
+  - **Stable:** `vX.Y.Z.W` — validated releases, delivered via `appcast.xml` (Sparkle auto-update)
+- Flow: features merge to main → beta tag → self-test → fix if needed → stable tag → users get update
+
+### Release Commands
+
+```bash
+# Beta release (for testing)
+cd Vowrite && ops/scripts/release.sh --beta v0.2.1.0-beta.1 "Beta description"
+git push origin main --tags
+
+# Stable release (user-facing, after beta validation)
+cd Vowrite && ops/scripts/release.sh v0.2.1.0 "Release description"
+git push origin main --tags
+```
+
+### Hotfix (Emergency)
+
+If a critical bug is found in the stable release but `main` has untested features:
+
+1. Create a hotfix branch from the stable tag: `git checkout -b hotfix/vX.Y.Z <stable-tag>`
+2. Fix the bug, tag, and release
+3. Cherry-pick the fix back to `main`
+4. Delete the hotfix branch
 
 ## Architecture Overview
 
