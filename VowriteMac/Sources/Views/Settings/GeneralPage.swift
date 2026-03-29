@@ -148,7 +148,7 @@ struct RecordingIndicatorPicker: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            HStack(spacing: VW.Spacing.xl) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 110))], spacing: VW.Spacing.xl) {
                 ForEach(IndicatorPreset.allCases, id: \.rawValue) { preset in
                     Button {
                         withAnimation(VW.Anim.springQuick) {
@@ -222,6 +222,39 @@ struct RecordingIndicatorPicker: View {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(.white)
             }
+
+        case .rippleRing:
+            ZStack {
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .stroke(Color.cyan.opacity(0.3 - Double(i) * 0.08), lineWidth: 1.5)
+                        .frame(width: CGFloat(20 + i * 10), height: CGFloat(20 + i * 10))
+                }
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white)
+            }
+
+        case .spectrumArc:
+            ZStack {
+                ForEach(0..<8, id: \.self) { i in
+                    let angle = Angle.degrees(-90 + (180.0 / 7.0) * Double(i))
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color(hue: 0.75 - Double(i) / 7.0 * 0.2, saturation: 0.7, brightness: 0.9))
+                        .frame(width: 2.5, height: CGFloat(4 + (i % 3) * 3))
+                        .offset(y: -16)
+                        .rotationEffect(angle)
+                }
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundColor(.white)
+            }
+
+        case .minimalDot:
+            Circle()
+                .fill(Color(hue: 0.55, saturation: 0.8, brightness: 0.95))
+                .frame(width: 20, height: 20)
+                .shadow(color: Color.cyan.opacity(0.4), radius: 4)
         }
     }
 }
