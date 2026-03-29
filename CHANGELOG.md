@@ -7,23 +7,61 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.2.0.0] — 2026-03-29
+
 ### Added
+
+**STT Providers (4 new):**
+- **STT Adapter Architecture** (F-039): `STTAdapter` protocol with OpenAI, Volcengine, and Qwen adapters — WhisperService refactored from monolithic service to pluggable router.
+- **Deepgram STT** (F-040): Nova-3 and Nova-2 models with native Deepgram protocol (Token auth + raw binary upload), 36+ language support.
+- **Sherpa Offline ASR** (F-048): Scaffold with `SherpaSTTAdapter`, `SherpaModelManager`, and 3 model definitions — pending sherpa-onnx XCFramework integration for fully offline speech recognition.
+- **iFlytek STT** (F-049): WebSocket streaming with HMAC-SHA256 authentication, PCM 16kHz framed upload, 23 Chinese dialect support.
+
+**Polish Providers (4 new):**
+- **Gemini Polish** (F-043): Google Gemini integration with gemini-2.0-flash default and 3 preset models.
+- **Claude Polish** (F-044): Anthropic native Messages API with SSE streaming and x-api-key authentication.
+- **Zhipu GLM Polish** (F-047): glm-4-flash default with 3 preset models, OpenAI-compatible API.
+- **MLX Server** (F-050): Local inference via oMLX/mlx-lm/vllm-mlx on localhost:8010/v1 — no API key required, 4 preset models with RAM usage hints.
+
+**Core Capabilities (5 new):**
+- **Provider Registry** (F-041): `providers.json` + `ProviderDefinition` + `ProviderRegistry` — adding a new provider is now a JSON edit. APIProvider reduced from 329 to 135 lines.
+- **Prompt Context Variables** (F-045): `{selected}` and `{clipboard}` placeholders in prompts with AX API 200ms timeout protection, plus built-in Command mode.
+- **Think Tag Cleanup** (F-046): `strippingThinkTags()` String extension — automatically removes `<think>...</think>` blocks from LLM output.
+- **Text Replacement & Dictionary Correction** (F-051): `ReplacementManager` with trigger→replacement rules, flex pattern matching for Chinese/English, dual-position replacement (post-STT + post-LLM), LLM vocabulary injection, macOS and iOS UI.
+- **Auto Dictionary Learning** (F-053): macOS only — paste-then-AX two-snapshot comparison detects user corrections and auto-adds them to Replacement dictionary with Toast notification.
+
+**Speed:**
+- **Speculative LLM** (F-033): Pre-warms HTTP connections during recording and pre-builds STT requests — saves ~200–500ms per dictation cycle.
+- **ASR Hotword Boosting** (F-034): Tag cloud UI (`WrappingHStack`) for managing hotwords, single/batch add, 8 seed examples on first install.
+
+**UI/UX (5 new):**
+- **Scene Management UI** (F-029 Phase 2): Card grid layout with edit sheet and full CRUD for managing scenes.
+- **Sound Feedback System** (F-035): Pure-code WAV generation for start/success/error sounds, `warmUp()` preload, and General settings toggle.
+- **Design Tokens** (F-036): `VW` enum with `Spacing`, `Radius`, `Anim`, and `Colors` — migrated SettingsComponents and RecordingOverlay.
+- **Recording Indicator Engine** (F-052): Orb Pulse breathing light orb with declarative SwiftUI animation.
+- **Enhanced Overview** (F-038): 2×2 stats grid with time saved and words-per-minute metrics.
+
+**Platform:**
 - **Multi-platform architecture**: Refactored into VowriteKit (shared core) + VowriteMac + VowriteIOS — all three targets build independently.
-- **iOS Keyboard Extension** (F-032): Complete keyboard extension implementation with voice input, mode/style switching, and text insertion via `textDocumentProxy`.
+- **iOS Keyboard Extension** (F-032): Complete keyboard extension with voice input, mode/style switching, and text insertion via `textDocumentProxy`.
 - **iOS Container App**: Dashboard, Settings, Personalization, History, Onboarding, and Keyboard Setup Guide views.
+- **iOS Parity**: F-029, F-033, F-035, F-038, F-045 ported to iOS keyboard extension.
 - **Settings Reorganization** (F-037): Sidebar expanded from 6 to 7 pages (Overview, General, History, API Keys, Models, Personalization, About).
+- **Volcengine & Qwen providers** (F-038): Full STT + Polish support with KeyVault integration.
 
 ### Changed
-- **README**: Updated project structure documentation for multi-platform architecture.
+- **WhisperService** refactored from monolithic service to adapter-based router pattern (F-039).
+- **APIProvider** reduced from 329 to 135 lines via `providers.json` data-driven registry (F-041).
+- **README** updated for multi-platform architecture and 15+ providers.
 
 ### Removed
-- **VowriteApp (legacy) deleted**: All 38 Swift files (6795 lines) were fully superseded by VowriteKit (37 files) + VowriteMac (24 files). VowriteKit also added 12 new files (Protocols, DictationEngine, IPC, etc.) that VowriteApp never had. Freed ~370MB including build cache.
+- **VowriteApp (legacy) deleted**: All 38 Swift files (6795 lines) fully superseded by VowriteKit (37 files) + VowriteMac (24 files). VowriteKit also added 12 new files (Protocols, DictationEngine, IPC, etc.) that VowriteApp never had. Freed ~370MB including build cache.
 - **ops scripts migrated**: `clean.sh`, `beta-build.sh`, `test.sh` now reference VowriteKit/VowriteMac instead of VowriteApp.
 
 ### Fixed
 - Rebuilt iOS xcodeproj (resolved ID conflicts and missing build phases).
 - Restored Sparkle auto-update toggle in macOS Settings after refactor.
-- Fixed iOS voice input (AVAudioRecorder.record() returning false).
+- Fixed iOS voice input (`AVAudioRecorder.record()` returning false).
 - Fixed iOS input UI — empty input handling, duplicate bottom bar, setting button active/inactive states.
 - Fixed keyboard extension compile errors and Xcode build errors.
 
@@ -272,7 +310,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.2...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.0...HEAD
+[0.2.0.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.2...v0.2.0.0
 [0.1.9.2]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.1...v0.1.9.2
 [0.1.9.1]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.0...v0.1.9.1
 [0.1.9.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.8.3...v0.1.9.0
