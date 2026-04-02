@@ -2,7 +2,7 @@ import AppKit
 import ApplicationServices
 import VowriteKit
 
-/// Monitors user corrections after text injection to auto-learn replacement rules.
+/// Monitors user corrections after text injection to auto-learn vocabulary words.
 /// Best-effort: any failure silently exits without affecting the user experience.
 final class CorrectionMonitor {
     static let shared = CorrectionMonitor()
@@ -102,10 +102,10 @@ final class CorrectionMonitor {
         // Validate the correction
         guard isValidCorrection(trigger: trigger, replacement: replacement, injectedText: injectedText) else { return }
 
-        // Learn the rule
+        // Learn the word
         DispatchQueue.main.async {
-            ReplacementManager.shared.add(trigger: trigger, replacement: replacement)
-            self.showToast(trigger: trigger, replacement: replacement)
+            VocabularyManager.shared.add(replacement)
+            self.showToast(word: replacement)
         }
     }
 
@@ -134,7 +134,7 @@ final class CorrectionMonitor {
 
     // MARK: - Toast
 
-    private func showToast(trigger: String, replacement: String) {
+    private func showToast(word: String) {
         guard let screen = NSScreen.main else { return }
 
         let panel = NSPanel(
@@ -150,7 +150,7 @@ final class CorrectionMonitor {
         panel.hasShadow = true
         panel.collectionBehavior = [.canJoinAllSpaces, .transient]
 
-        let label = NSTextField(labelWithString: "✓ 已学习：\(trigger) → \(replacement)")
+        let label = NSTextField(labelWithString: "✓ 已加入词库：\(word)")
         label.font = .systemFont(ofSize: 13, weight: .medium)
         label.textColor = .white
         label.alignment = .center
