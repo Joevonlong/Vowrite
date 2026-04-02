@@ -88,4 +88,18 @@ public final class OutputStyleManager: ObservableObject {
 
         return nil
     }
+
+    /// Thread-safe lookup of a style UUID by name.
+    /// Used by iOS keyboard extension to resolve the IPC style name to an ID.
+    nonisolated public static func styleId(forName name: String) -> UUID? {
+        if let data = VowriteStorage.defaults.data(forKey: stylesKey),
+           let styles = try? JSONDecoder().decode([OutputStyle].self, from: data),
+           let style = styles.first(where: { $0.name == name }) {
+            return style.id
+        }
+        if let style = OutputStyle.builtinStyles.first(where: { $0.name == name }) {
+            return style.id
+        }
+        return nil
+    }
 }

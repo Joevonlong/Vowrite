@@ -154,4 +154,31 @@ public struct ModeConfig {
         self.modeName = mode.name
         self.outputStyleId = mode.outputStyleId
     }
+
+    /// Returns a copy with the output style overridden.
+    /// Used by iOS keyboard extension when user selects a style independent of mode.
+    public func withStyleOverride(_ styleId: UUID?) -> ModeConfig {
+        ModeConfig(
+            polishEnabled: polishEnabled, polishModel: polishModel, sttModel: sttModel,
+            language: language, systemPrompt: systemPrompt, userPrompt: userPrompt,
+            temperature: temperature, autoPaste: autoPaste, modeName: modeName,
+            outputStyleId: styleId
+        )
+    }
+
+    private init(polishEnabled: Bool, polishModel: String?, sttModel: String?,
+                 language: String?, systemPrompt: String, userPrompt: String,
+                 temperature: Double, autoPaste: Bool, modeName: String,
+                 outputStyleId: UUID?) {
+        self.polishEnabled = polishEnabled
+        self.polishModel = polishModel
+        self.sttModel = sttModel
+        self.language = language
+        self.systemPrompt = systemPrompt
+        self.userPrompt = userPrompt
+        self.temperature = temperature
+        self.autoPaste = autoPaste
+        self.modeName = modeName
+        self.outputStyleId = outputStyleId
+    }
 }

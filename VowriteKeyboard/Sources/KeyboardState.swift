@@ -95,12 +95,19 @@ final class KeyboardState: ObservableObject {
         currentMode = mode
         aiEnabled = mode.polishEnabled
         if let styleId = mode.outputStyleId {
-            currentStyleName = styles.first { $0.id == styleId }?.name ?? "Default"
+            currentStyleName = styles.first { $0.id == styleId }?.name ?? "None"
         } else {
-            currentStyleName = "Default"
+            currentStyleName = "None"
         }
         // Write requested mode to IPC so main app picks it up
         ipc.requestedModeId = mode.id.uuidString
+        // Reset style override when switching mode (use mode's default style)
+        ipc.requestedStyleName = nil
+    }
+
+    func selectStyle(_ style: OutputStyle) {
+        currentStyleName = style.name
+        ipc.requestedStyleName = style.name
     }
 
     func toggleAI() {
@@ -120,14 +127,24 @@ final class KeyboardState: ObservableObject {
             return
         }
 
+        // Memory pressure check — auto-downgrade AI if keyboard is running low
+        var effectiveAI = aiEnabled
+        if MemoryMonitor.isUnderPressure {
+            effectiveAI = false
+            #if DEBUG
+            print("[Vowrite KB] Memory pressure (\(String(format: "%.1f", MemoryMonitor.residentSizeMB))MB), disabling AI polish for this recording")
+            #endif
+        }
+
         #if DEBUG
         print("[Vowrite KB] startRecording: service alive, sending .start command")
-        print("[Vowrite KB]   mode=\(currentMode.name), aiEnabled=\(aiEnabled)")
+        print("[Vowrite KB]   mode=\(currentMode.name), aiEnabled=\(effectiveAI), style=\(currentStyleName)")
         #endif
 
         // Write config for main app
-        ipc.requestedAIEnabled = aiEnabled
+        ipc.requestedAIEnabled = effectiveAI
         ipc.requestedModeId = currentMode.id.uuidString
+        ipc.requestedStyleName = currentStyleName
 
         // Send start command
         ipc.sendCommand(.start)

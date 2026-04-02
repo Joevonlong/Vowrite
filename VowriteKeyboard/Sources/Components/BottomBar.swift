@@ -150,7 +150,7 @@ private struct QuickSettingsPopover: View {
 
                 ForEach(state.styles) { style in
                     Button {
-                        state.currentStyleName = style.name
+                        state.selectStyle(style)
                         isPresented = false
                     } label: {
                         HStack(spacing: 8) {
