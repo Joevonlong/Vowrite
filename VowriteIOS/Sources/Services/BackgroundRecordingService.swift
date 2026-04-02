@@ -609,8 +609,13 @@ final class BackgroundRecordingService: ObservableObject {
                 // Read keyboard's requested config
                 let aiEnabled = ipc.requestedAIEnabled
 
-                // Load mode config
-                let modeConfig = ModeManager.currentModeConfig
+                // Load mode config, applying keyboard's style override if set
+                var modeConfig = ModeManager.currentModeConfig
+                if let styleName = self.ipc.requestedStyleName,
+                   let styleId = OutputStyleManager.styleId(forName: styleName),
+                   styleId != modeConfig.outputStyleId {
+                    modeConfig = modeConfig.withStyleOverride(styleId)
+                }
 
                 // Check API setup
                 let sttConfig = APIConfig.stt
