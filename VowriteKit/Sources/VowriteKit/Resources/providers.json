@@ -10,7 +10,9 @@
         "style": "bearer",
         "keyPlaceholder": "sk-...",
         "keyURL": "https://platform.openai.com/api-keys",
-        "requiresKey": true
+        "requiresKey": true,
+        "supportsOAuth": true,
+        "oauthLabel": "ChatGPT Plus/Pro"
       },
       "capabilities": { "stt": true, "polish": true },
       "sttAdapter": "openai-compatible",
@@ -198,7 +200,10 @@
         "style": "bearer",
         "keyPlaceholder": "sk-...",
         "keyURL": "https://platform.moonshot.cn/console/api-keys",
-        "requiresKey": true
+        "requiresKey": true,
+        "supportsOAuth": true,
+        "oauthLabel": "Kimi Code Coding Plan",
+        "tokenPlanNote": "Kimi Code 订阅用户可直接登录，无需 API Key"
       },
       "capabilities": { "stt": false, "polish": true },
       "sttNote": "Kimi (Moonshot) does not offer speech-to-text.",
@@ -210,6 +215,7 @@
         "defaultModel": "kimi-k2.5",
         "models": [
           { "id": "kimi-k2.5", "description": "Latest Kimi flagship" },
+          { "id": "kimi-k2", "description": "Kimi K2 model" },
           { "id": "moonshot-v1-128k", "description": "128K context window" },
           { "id": "moonshot-v1-32k", "description": "32K context, faster" },
           { "id": "moonshot-v1-8k", "description": "8K context, fastest" }
