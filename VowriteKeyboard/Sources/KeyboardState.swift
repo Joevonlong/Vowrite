@@ -30,6 +30,10 @@ final class KeyboardState: ObservableObject {
 
     weak var inputViewController: UIInputViewController?
 
+    /// SwiftUI openURL action, injected from KeyboardView.
+    /// Used as the primary URL-opening strategy (works on iOS 18+).
+    var openURLAction: OpenURLAction?
+
     enum ViewState: Equatable {
         case idle, recording, processing, error(String)
         case noFullAccess, noAPIKey, noMicAccess, bgServiceNotRunning
@@ -276,18 +280,19 @@ final class KeyboardState: ObservableObject {
     // MARK: - Container App Deep Link
 
     /// Open the container app via URL scheme.
-    /// Used for auto-activation when service is not alive.
-    ///
-    /// Three strategies in priority order, all using the safe 1-arg `openURL:`
-    /// selector.  The 3-arg `openURL:options:completionHandler:` MUST NOT be
-    /// used with `perform(_:with:with:)` — the 3rd arg gets indeterminate
-    /// register values and crashes.
+    /// Used as a fallback when the `Link`-based approach isn't available
+    /// (e.g., StatusBanner action buttons, edge cases in startRecording).
     func openContainerApp(path: String = "activate") {
         guard let url = URL(string: "vowrite://\(path)") else { return }
 
-        let selector = NSSelectorFromString("openURL:")
+        // Primary: SwiftUI openURL action (works on iOS 18+)
+        if let openURL = openURLAction {
+            openURL(url)
+            return
+        }
 
-        // Strategy 1: Walk responder chain to find UIApplication
+        // Fallback: responder chain (works on iOS ≤17)
+        let selector = NSSelectorFromString("openURL:")
         var responder: UIResponder? = inputViewController
         while let r = responder {
             if r.responds(to: selector) {
@@ -296,18 +301,5 @@ final class KeyboardState: ObservableObject {
             }
             responder = r.next
         }
-
-        // Strategy 2: UIApplication.shared via runtime (bypasses compiler restriction)
-        if let appClass = NSClassFromString("UIApplication"),
-           let shared = (appClass as AnyObject)
-               .perform(NSSelectorFromString("sharedApplication"))?
-               .takeUnretainedValue(),
-           shared.responds(to: selector) {
-            _ = shared.perform(selector, with: url)
-            return
-        }
-
-        // Strategy 3: extensionContext (may work for keyboards with Full Access)
-        inputViewController?.extensionContext?.open(url, completionHandler: nil)
     }
 }
