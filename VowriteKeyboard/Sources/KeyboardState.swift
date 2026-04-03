@@ -277,21 +277,31 @@ final class KeyboardState: ObservableObject {
 
     /// Open the container app via URL scheme.
     /// Used for auto-activation when service is not alive.
+    ///
+    /// Uses the 1-arg `openURL:` selector because `perform(_:with:with:)` can
+    /// only safely pass 2 arguments.  The 3-arg `openURL:options:completionHandler:`
+    /// leaves the completionHandler register indeterminate, which crashes when
+    /// UIApplication tries to invoke it.
     func openContainerApp(path: String = "activate") {
         guard let url = URL(string: "vowrite://\(path)") else { return }
-        let selectorModern = NSSelectorFromString("open:options:completionHandler:")
-        let selectorLegacy = NSSelectorFromString("openURL:")
+
+        let selector = NSSelectorFromString("openURL:")
+
+        // Walk responder chain to find UIApplication
         var responder: UIResponder? = inputViewController
         while let r = responder {
-            if r.responds(to: selectorModern) {
-                r.perform(selectorModern, with: url, with: NSDictionary())
-                return
-            }
-            if r.responds(to: selectorLegacy) {
-                r.perform(selectorLegacy, with: url)
+            if r.responds(to: selector) {
+                r.perform(selector, with: url)
+                #if DEBUG
+                print("[Vowrite KB] Opened \(url) via responder chain")
+                #endif
                 return
             }
             responder = r.next
         }
+
+        #if DEBUG
+        print("[Vowrite KB] FAILED to open URL: \(url)")
+        #endif
     }
 }
