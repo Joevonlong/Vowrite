@@ -134,7 +134,7 @@ final class BackgroundRecordingService: ObservableObject {
             try session.setCategory(
                 .playAndRecord,
                 mode: .default,
-                options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers]
+                options: [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers]
             )
             try session.setActive(true)
             #if DEBUG
