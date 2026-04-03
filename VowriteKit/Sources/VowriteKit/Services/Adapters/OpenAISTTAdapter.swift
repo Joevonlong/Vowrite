@@ -22,7 +22,7 @@ struct OpenAISTTAdapter: STTAdapter {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         }
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 180
+        request.timeoutInterval = 60
         provider.applyHeaders(to: &request)
 
         let audioData = try Data(contentsOf: audioURL)

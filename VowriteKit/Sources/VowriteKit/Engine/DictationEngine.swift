@@ -270,7 +270,14 @@ public final class DictationEngine: ObservableObject {
                         #if DEBUG
                         print("[Vowrite] Starting AI polish (speculative)...")
                         #endif
-                        let polished = try await speculativePolish.execute(transcript: correctedTranscript, modeConfig: modeConfig, promptContext: promptContext)
+                        let polished = try await speculativePolish.execute(
+                            transcript: correctedTranscript,
+                            modeConfig: modeConfig,
+                            promptContext: promptContext,
+                            onPartial: { [weak self] partial in
+                                self?.lastResult = partial
+                            }
+                        )
                         // F-051: Apply replacement rules again after LLM (catches re-introduced errors)
                         finalText = ReplacementManager.apply(to: polished)
                         #if DEBUG
