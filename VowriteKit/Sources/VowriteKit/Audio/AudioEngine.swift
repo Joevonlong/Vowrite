@@ -73,21 +73,30 @@ public final class AudioEngine {
     private func startWithAudioEngine() throws {
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
 
         let tempDir = FileManager.default.temporaryDirectory
         let url = tempDir.appendingPathComponent("vowrite_\(UUID().uuidString).m4a")
 
+        // Whisper STT works perfectly at 16kHz mono — 3x smaller files, 3x faster upload
+        let speechFormat = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: 16000,
+            channels: 1,
+            interleaved: false
+        )!
+
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: format.sampleRate,
-            AVNumberOfChannelsKey: format.channelCount,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            AVSampleRateKey: 16000.0,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
         ]
 
         let file = try AVAudioFile(forWriting: url, settings: settings)
 
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+        // Passing speechFormat causes AVAudioEngine to automatically downsample.
+        // updateLevel uses floatChannelData[0] only — works with mono buffers.
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: speechFormat) { [weak self] buffer, _ in
             try? file.write(from: buffer)
             self?.updateLevel(buffer: buffer)
         }
@@ -106,9 +115,9 @@ public final class AudioEngine {
 
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: 44100.0,
+            AVSampleRateKey: 16000.0,
             AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
         ]
 
         let recorder = try AVAudioRecorder(url: url, settings: settings)

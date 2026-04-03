@@ -35,7 +35,7 @@ struct DeepgramSTTAdapter: STTAdapter {
         request.httpMethod = "POST"
         request.setValue("audio/mp4", forHTTPHeaderField: "Content-Type")
         request.setValue("Token \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 180
+        request.timeoutInterval = 60
 
         let audioData = try Data(contentsOf: audioURL)
         request.httpBody = audioData

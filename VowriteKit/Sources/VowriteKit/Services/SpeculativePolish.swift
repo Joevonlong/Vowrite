@@ -100,7 +100,14 @@ public final class SpeculativePolish {
 
     /// Fires the pre-built Polish request with the actual transcript.
     /// Falls back to standard AIPolishService if no prepared config exists.
-    public func execute(transcript: String, modeConfig: ModeConfig, promptContext: PromptContext? = nil) async throws -> String {
+    /// - Parameter onPartial: Optional callback invoked with accumulated partial text as tokens stream in.
+    ///   When provided, uses SSE streaming for lower perceived latency.
+    public func execute(
+        transcript: String,
+        modeConfig: ModeConfig,
+        promptContext: PromptContext? = nil,
+        onPartial: ((String) -> Void)? = nil
+    ) async throws -> String {
         guard let config = preparedConfig else {
             // Fallback: no prepared config, use standard path
             return try await AIPolishService().polish(text: transcript, modeConfig: modeConfig, promptContext: promptContext)
@@ -120,6 +127,17 @@ public final class SpeculativePolish {
         --- TRANSCRIPT END ---
         """
 
+        // F-055: Streaming path for OpenAI-compatible providers (when caller wants partial updates)
+        if onPartial != nil {
+            return try await executeStreaming(
+                config: config,
+                expandedSystemPrompt: expandedSystemPrompt,
+                wrappedText: wrappedText,
+                onPartial: onPartial!
+            )
+        }
+
+        // Non-streaming path (unchanged)
         let payload: [String: Any] = [
             "model": config.model,
             "messages": [
@@ -151,6 +169,59 @@ public final class SpeculativePolish {
         }
 
         return content.trimmingCharacters(in: .whitespacesAndNewlines).strippingThinkTags()
+    }
+
+    // MARK: - Streaming SSE (F-055)
+
+    private func executeStreaming(
+        config: PreparedConfig,
+        expandedSystemPrompt: String,
+        wrappedText: String,
+        onPartial: (String) -> Void
+    ) async throws -> String {
+        let streamPayload: [String: Any] = [
+            "model": config.model,
+            "messages": [
+                ["role": "system", "content": expandedSystemPrompt],
+                ["role": "user", "content": wrappedText]
+            ],
+            "temperature": config.temperature,
+            "max_tokens": 4096,
+            "stream": true
+        ]
+
+        var request = config.request
+        request.httpBody = try JSONSerialization.data(withJSONObject: streamPayload)
+
+        let session = warmedSession ?? URLSession.shared
+        let (bytes, response) = try await session.bytes(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            var errorBody = ""
+            for try await line in bytes.lines { errorBody += line }
+            throw VowriteError.apiError("Polish streaming error: \(errorBody)")
+        }
+
+        var result = ""
+        for try await line in bytes.lines {
+            guard line.hasPrefix("data: ") else { continue }
+            let jsonString = String(line.dropFirst(6))
+            guard jsonString != "[DONE]",
+                  let data = jsonString.data(using: .utf8),
+                  let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let choices = event["choices"] as? [[String: Any]],
+                  let delta = choices.first?["delta"] as? [String: Any],
+                  let token = delta["content"] as? String,
+                  !token.isEmpty else { continue }
+
+            result += token
+            onPartial(result)
+        }
+
+        guard !result.isEmpty else {
+            throw VowriteError.apiError("Empty streaming response from polish API")
+        }
+        return result.trimmingCharacters(in: .whitespacesAndNewlines).strippingThinkTags()
     }
 
     /// Reset prepared state (call after completion or cancellation).
