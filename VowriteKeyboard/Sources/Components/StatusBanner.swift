@@ -22,7 +22,7 @@ struct StatusBanner: View {
                 Text(actionLabel)
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color(UIColor.label))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(

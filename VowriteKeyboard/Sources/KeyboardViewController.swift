@@ -5,14 +5,10 @@ import VowriteKit
 class KeyboardViewController: UIInputViewController {
     private var keyboardState: KeyboardState!
 
-    private static let kbBackgroundColor = UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1)
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Force dark appearance so all semantic colors resolve to white/gray
-        overrideUserInterfaceStyle = .dark
-        view.backgroundColor = Self.kbBackgroundColor
+        view.backgroundColor = .secondarySystemBackground
 
         // 1. Configure shared storage
         VowriteStorage.configure(suiteName: VowriteStorage.appGroupID)
@@ -29,7 +25,7 @@ class KeyboardViewController: UIInputViewController {
         let keyboardView = KeyboardView(state: keyboardState)
         let hosting = UIHostingController(rootView: keyboardView)
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
-        hosting.view.backgroundColor = Self.kbBackgroundColor
+        hosting.view.backgroundColor = .secondarySystemBackground
 
         addChild(hosting)
         self.view.addSubview(hosting.view)
