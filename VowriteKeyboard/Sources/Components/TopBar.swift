@@ -8,11 +8,16 @@ struct TopBar: View {
 
     var body: some View {
         HStack {
-            // App title
-            Text("Vowrite")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundStyle(KeyboardTheme.titleColor)
+            // Brand
+            HStack(spacing: 6) {
+                Image(systemName: "dot.radiowaves.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(KeyboardTheme.titleColor)
+                Text("VoiceWrite")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(KeyboardTheme.titleColor)
+            }
 
             Spacer()
 
@@ -42,10 +47,6 @@ struct TopBar: View {
                             stopContinuousDelete()
                         }
                 )
-
-                actionButton(symbol: "chevron.down") {
-                    state.dismissKeyboard()
-                }
             }
         }
         .padding(.horizontal, 16)
