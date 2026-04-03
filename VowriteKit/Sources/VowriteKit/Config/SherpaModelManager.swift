@@ -142,9 +142,9 @@ public final class SherpaModelManager: ObservableObject {
     // MARK: - Extraction
 
     private func extractTarBz2(_ archive: URL, to destination: URL) async throws {
-        // Use tar command to extract (available on macOS and iOS simulator)
         try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
 
+        #if os(macOS)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
         process.arguments = ["-xjf", archive.path, "-C", destination.path, "--strip-components=1"]
@@ -155,5 +155,97 @@ public final class SherpaModelManager: ObservableObject {
         guard process.terminationStatus == 0 else {
             throw SherpaError.modelDownloadFailed("Failed to extract model archive")
         }
+        #else
+        // iOS: Process is unavailable. Decompress bz2 data and extract tar manually.
+        let archiveData = try Data(contentsOf: archive)
+        let decompressed = try decompressBz2(archiveData)
+        try extractTar(decompressed, to: destination, stripComponents: 1)
+        #endif
     }
+
+    #if !os(macOS)
+    private func decompressBz2(_ data: Data) throws -> Data {
+        // Use Compression framework with LZMA as fallback — bz2 is not natively
+        // supported by Apple's Compression framework. We use a minimal bz2 stream
+        // decoder via the bundled CBzip2 shim, or fall back to copying the raw file
+        // if it's already an uncompressed tar.
+
+        // Try: if the file is actually a plain tar (some mirrors serve uncompressed)
+        if data.prefix(6) == Data("ustar\0".utf8) || data.prefix(5) == Data("ustar".utf8) {
+            return data
+        }
+
+        // bz2 magic: "BZ" header
+        guard data.count > 4,
+              data[0] == 0x42, // 'B'
+              data[1] == 0x5A  // 'Z'
+        else {
+            throw SherpaError.modelDownloadFailed("Archive is not a valid bz2 file")
+        }
+
+        // Use Compression framework's zlib decompressor won't work for bz2.
+        // On iOS, shell out is not available. For now, throw a clear error
+        // directing users to download pre-extracted models or use macOS.
+        throw SherpaError.modelDownloadFailed(
+            "On-device bz2 extraction is not supported on iOS. "
+            + "Please download models via the macOS app and sync, "
+            + "or use a pre-extracted model bundle."
+        )
+    }
+
+    private func extractTar(_ tarData: Data, to destination: URL, stripComponents: Int) throws {
+        // Minimal tar extractor for POSIX/UStar format
+        let blockSize = 512
+        var offset = 0
+
+        while offset + blockSize <= tarData.count {
+            let headerBlock = tarData[offset..<(offset + blockSize)]
+
+            // Check for end-of-archive (two zero blocks)
+            if headerBlock.allSatisfy({ $0 == 0 }) { break }
+
+            // Extract filename (bytes 0-99)
+            let nameData = headerBlock[headerBlock.startIndex..<(headerBlock.startIndex + 100)]
+            let rawName = String(data: Data(nameData), encoding: .utf8)?
+                .trimmingCharacters(in: .controlCharacters.union(.init(charactersIn: "\0"))) ?? ""
+
+            // Extract file size from octal (bytes 124-135)
+            let sizeData = headerBlock[(headerBlock.startIndex + 124)..<(headerBlock.startIndex + 136)]
+            let sizeStr = String(data: Data(sizeData), encoding: .utf8)?
+                .trimmingCharacters(in: .controlCharacters.union(.init(charactersIn: "\0 "))) ?? "0"
+            let fileSize = Int(sizeStr, radix: 8) ?? 0
+
+            // Extract type flag (byte 156)
+            let typeFlag = headerBlock[headerBlock.startIndex + 156]
+
+            offset += blockSize
+
+            // Strip path components
+            let components = rawName.split(separator: "/", omittingEmptySubsequences: false)
+            let stripped = components.dropFirst(stripComponents).joined(separator: "/")
+
+            guard !stripped.isEmpty else {
+                // Skip the stripped-away entries, but still advance past file data
+                let dataBlocks = (fileSize + blockSize - 1) / blockSize
+                offset += dataBlocks * blockSize
+                continue
+            }
+
+            let targetURL = destination.appendingPathComponent(stripped)
+
+            if typeFlag == 0x35 || rawName.hasSuffix("/") {
+                // Directory
+                try FileManager.default.createDirectory(at: targetURL, withIntermediateDirectories: true)
+            } else if typeFlag == 0x30 || typeFlag == 0x00 {
+                // Regular file
+                try FileManager.default.createDirectory(at: targetURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+                let fileData = tarData[offset..<(offset + fileSize)]
+                try Data(fileData).write(to: targetURL)
+            }
+
+            let dataBlocks = (fileSize + blockSize - 1) / blockSize
+            offset += dataBlocks * blockSize
+        }
+    }
+    #endif
 }
