@@ -1,6 +1,5 @@
 import Foundation
 import AuthenticationServices
-import CryptoKit
 
 // MARK: - Google OAuth Error
 
@@ -85,23 +84,11 @@ public enum GoogleAuthService {
     // MARK: - PKCE
 
     public static func generateCodeVerifier() -> String {
-        var bytes = [UInt8](repeating: 0, count: 32)
-        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
-        return Data(bytes)
-            .base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+        PKCEHelper.generateCodeVerifier()
     }
 
     public static func generateCodeChallenge(from verifier: String) -> String {
-        let data = Data(verifier.utf8)
-        let hash = SHA256.hash(data: data)
-        return Data(hash)
-            .base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+        PKCEHelper.generateCodeChallenge(from: verifier)
     }
 
     // MARK: - Build Authorization URL

@@ -225,7 +225,10 @@
         "style": "bearer",
         "keyPlaceholder": "eyJ...",
         "keyURL": "https://platform.minimaxi.com/",
-        "requiresKey": true
+        "requiresKey": true,
+        "supportsOAuth": true,
+        "oauthLabel": "MiniMax Coding Plan",
+        "tokenPlanNote": "MiniMax Token Plan subscribers: use the Token Plan-specific API Key (not the standard key)"
       },
       "capabilities": { "stt": false, "polish": true },
       "sttNote": "MiniMax does not offer OpenAI-compatible speech-to-text.",

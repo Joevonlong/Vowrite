@@ -115,6 +115,11 @@ struct SettingsView: View {
                     }
                 }
 
+                // MiniMax OAuth
+                Section("MiniMax") {
+                    MiniMaxOAuthCard()
+                }
+
                 // Feedback
                 Section("Feedback") {
                     Toggle("Sound Feedback", isOn: $soundFeedbackEnabled)

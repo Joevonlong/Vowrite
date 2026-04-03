@@ -101,6 +101,14 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         definition?.auth.keyURL ?? ""
     }
 
+    public var supportsOAuth: Bool {
+        definition?.supportsOAuth ?? false
+    }
+
+    public var oauthLabel: String? {
+        definition?.oauthLabel
+    }
+
     // MARK: - Platform Filtering
 
     /// Providers available on the current platform (iOS excludes local-only providers)
