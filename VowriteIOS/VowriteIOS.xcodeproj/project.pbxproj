@@ -26,6 +26,7 @@
 		A1B00106 /* MiniMaxOAuthCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00106 /* MiniMaxOAuthCard.swift */; };
 		A1B00107 /* OpenAICodexOAuthCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00107 /* OpenAICodexOAuthCard.swift */; };
 		A1B00108 /* KimiCodeOAuthCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00108 /* KimiCodeOAuthCard.swift */; };
+		A1B00109 /* SherpaModelsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00109 /* SherpaModelsSection.swift */; };
 		A1B00199 /* VowriteKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A1P00002 /* VowriteKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1B00201 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00201 /* KeyboardViewController.swift */; };
 		A1B00202 /* KeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00202 /* KeyboardView.swift */; };
@@ -89,6 +90,7 @@
 		A1F00106 /* MiniMaxOAuthCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniMaxOAuthCard.swift; sourceTree = "<group>"; };
 		A1F00107 /* OpenAICodexOAuthCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAICodexOAuthCard.swift; sourceTree = "<group>"; };
 		A1F00108 /* KimiCodeOAuthCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KimiCodeOAuthCard.swift; sourceTree = "<group>"; };
+		A1F00109 /* SherpaModelsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaModelsSection.swift; sourceTree = "<group>"; };
 		A1F00201 /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
 		A1F00202 /* KeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardView.swift; sourceTree = "<group>"; };
 		A1F00203 /* KeyboardState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardState.swift; sourceTree = "<group>"; };
@@ -174,6 +176,7 @@
 				A1F00106 /* MiniMaxOAuthCard.swift */,
 				A1F00107 /* OpenAICodexOAuthCard.swift */,
 				A1F00108 /* KimiCodeOAuthCard.swift */,
+				A1F00109 /* SherpaModelsSection.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -382,6 +385,7 @@
 				A1B00106 /* MiniMaxOAuthCard.swift in Sources */,
 				A1B00107 /* OpenAICodexOAuthCard.swift in Sources */,
 				A1B00108 /* KimiCodeOAuthCard.swift in Sources */,
+				A1B00109 /* SherpaModelsSection.swift in Sources */,
 				A1B00009 /* iOSClipboardOutput.swift in Sources */,
 				A1B0000A /* iOSPermissionManager.swift in Sources */,
 				A1B0000B /* iOSFeedback.swift in Sources */,
