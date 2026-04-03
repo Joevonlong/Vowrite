@@ -62,4 +62,46 @@ public enum KeyVault {
         }
         return trimmed
     }
+
+    // MARK: - OAuth-Aware Credential Resolution
+
+    private static let authMethodPrefix = "auth.method."
+
+    /// The user's preferred auth method for this provider.
+    /// Stored in UserDefaults as "auth.method.{providerID}" = "oauth" | "apiKey".
+    public static func preferredAuthMethod(for provider: APIProvider) -> String {
+        VowriteStorage.defaults.string(forKey: authMethodPrefix + provider.providerID) ?? "apiKey"
+    }
+
+    public static func setPreferredAuthMethod(_ method: String, for provider: APIProvider) {
+        VowriteStorage.defaults.set(method, forKey: authMethodPrefix + provider.providerID)
+    }
+
+    /// Returns the effective API key string for use in HTTP requests.
+    /// - OAuth mode + valid token  → access token
+    /// - OAuth mode + expired token → falls back to stored API key (silent degradation)
+    /// - API key mode              → stored API key
+    public static func effectiveKey(for provider: APIProvider) -> String? {
+        if preferredAuthMethod(for: provider) == "oauth" {
+            if let token = OAuthTokenStore.load(for: provider.providerID), !token.isExpired {
+                return token.accessToken
+            }
+            // Expired or missing — fall back to API key silently
+        }
+        return key(for: provider)
+    }
+
+    /// Returns the OAuth-specific base URL for this provider, if in OAuth mode
+    /// and the stored token carries a baseURL override.
+    /// Returns nil otherwise (caller uses provider's default from providers.json).
+    public static func effectiveBaseURL(for provider: APIProvider) -> String? {
+        guard preferredAuthMethod(for: provider) == "oauth" else { return nil }
+        return OAuthTokenStore.load(for: provider.providerID)?.baseURL
+    }
+
+    /// True if an OAuth token exists and is not expired.
+    public static func hasValidOAuthToken(for provider: APIProvider) -> Bool {
+        guard let token = OAuthTokenStore.load(for: provider.providerID) else { return false }
+        return !token.isExpired
+    }
 }

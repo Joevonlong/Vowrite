@@ -21,6 +21,8 @@ public struct ProviderDefinition: Codable, Identifiable {
         public let keyPlaceholder: String?
         public let keyURL: String?
         public let requiresKey: Bool?
+        public let supportsOAuth: Bool?
+        public let oauthLabel: String?
     }
 
     public struct Capabilities: Codable {
@@ -66,6 +68,14 @@ public struct ProviderDefinition: Codable, Identifiable {
 
     public var hasPolishSupport: Bool {
         capabilities.polish
+    }
+
+    public var supportsOAuth: Bool {
+        auth.supportsOAuth ?? false
+    }
+
+    public var oauthLabel: String? {
+        auth.oauthLabel
     }
 
     public func sttModelDescription(_ modelID: String) -> String? {

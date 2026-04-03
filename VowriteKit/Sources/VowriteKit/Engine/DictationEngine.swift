@@ -83,7 +83,13 @@ public final class DictationEngine: ObservableObject {
     public func toggleRecording() {
         switch state {
         case .idle, .error:
-            startRecording()
+            // Fire credential refresh asynchronously before recording starts.
+            // prepareCredentials has a 3s timeout; startRecording runs after it resolves.
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                await CredentialManager.prepareCredentials(for: APIConfig.current)
+                self.startRecording()
+            }
         case .recording:
             stopRecording()
         case .processing:

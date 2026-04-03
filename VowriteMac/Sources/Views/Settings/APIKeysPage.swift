@@ -92,8 +92,13 @@ struct APIKeysPageView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(KeyVault.managedProviders.enumerated()), id: \.element.id) { index, provider in
-                    providerKeyRow(for: provider)
-                        .padding(.vertical, 8)
+                    if provider == .minimax {
+                        MiniMaxOAuthCard()
+                            .padding(.vertical, 4)
+                    } else {
+                        providerKeyRow(for: provider)
+                            .padding(.vertical, 8)
+                    }
 
                     if index < KeyVault.managedProviders.count - 1 {
                         Divider()
