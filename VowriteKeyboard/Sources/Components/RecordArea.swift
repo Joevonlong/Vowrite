@@ -57,16 +57,40 @@ struct RecordArea: View {
     // MARK: - Idle
 
     private var idleContent: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Text(state.needsActivation ? "点击激活" : "点击说话")
                 .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
 
-            OrbView(mode: .idle, audioLevel: 0)
-                .opacity(state.needsActivation ? 0.6 : 1.0)
-                .onTapGesture {
-                    state.startRecording()
-                }
+            // Pill-shaped mic button
+            Button {
+                state.startRecording()
+            } label: {
+                Capsule()
+                    .fill(.white)
+                    .frame(width: KeyboardTheme.micPillWidth,
+                           height: KeyboardTheme.micPillHeight)
+                    .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                    .overlay {
+                        Image(systemName: "mic.fill")
+                            .font(.system(size: 24, weight: .medium))
+                            .foregroundStyle(.black)
+                    }
+            }
+            .opacity(state.needsActivation ? 0.6 : 1.0)
+
+            // Return / 换行 button
+            Button {
+                state.insertReturn()
+            } label: {
+                Text("换行")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(KeyboardTheme.subtitleColor)
+                    .frame(width: KeyboardTheme.returnPillWidth,
+                           height: KeyboardTheme.returnPillHeight)
+                    .background(KeyboardTheme.buttonFill, in: Capsule())
+            }
         }
     }
 
@@ -74,43 +98,77 @@ struct RecordArea: View {
 
     private var recordingContent: some View {
         ZStack {
-            VStack(spacing: 12) {
-                // Timer
-                Text(formatDuration(state.recordingDuration))
-                    .font(.caption)
-                    .monospacedDigit()
+            VStack(spacing: 24) {
+                // Hint text
+                Text("再次点击以完成")
+                    .font(.subheadline)
                     .foregroundStyle(KeyboardTheme.subtitleColor)
 
-                // Orb with drag gesture
-                OrbView(mode: .recording, audioLevel: state.audioLevel)
-                    .scaleEffect(isDragging && isInDeleteZone ? 0.7 : 1.0)
-                    .offset(y: isDragging ? min(dragOffset, cancelThreshold + 20) : 0)
-                    .onTapGesture {
-                        state.stopRecording()
-                    }
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 10)
-                            .onChanged { value in
-                                let yOffset = value.translation.height
-                                if yOffset > 0 {
-                                    isDragging = true
-                                    dragOffset = yOffset
-                                }
-                            }
-                            .onEnded { _ in
-                                if isInDeleteZone {
-                                    state.cancelRecording()
-                                }
-                                withAnimation(.spring(response: 0.3)) {
-                                    isDragging = false
-                                    dragOffset = 0
-                                }
-                            }
-                    )
-                    .animation(.interactiveSpring(), value: isDragging)
-            }
+                // Circle with glow ring + bar waveform
+                ZStack {
+                    // Outer glow ring
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [
+                                    Color(white: 0.18),
+                                    KeyboardTheme.background
+                                ],
+                                center: .center,
+                                startRadius: KeyboardTheme.recordingCircleDiameter * 0.45,
+                                endRadius: KeyboardTheme.recordingCircleDiameter * 0.65
+                            )
+                        )
+                        .frame(
+                            width: KeyboardTheme.recordingCircleDiameter + 50,
+                            height: KeyboardTheme.recordingCircleDiameter + 50
+                        )
 
-            // Delete zone (appears when dragging)
+                    // White circle
+                    Circle()
+                        .fill(.white)
+                        .frame(
+                            width: KeyboardTheme.recordingCircleDiameter,
+                            height: KeyboardTheme.recordingCircleDiameter
+                        )
+                        .shadow(color: .black.opacity(0.1), radius: 8, y: 2)
+
+                    // Bar waveform
+                    BarWaveformView(level: state.audioLevel)
+                        .frame(
+                            width: KeyboardTheme.recordingCircleDiameter * 0.45,
+                            height: KeyboardTheme.recordingCircleDiameter * 0.35
+                        )
+                }
+                .scaleEffect(isDragging && isInDeleteZone ? 0.7 : 1.0)
+                .offset(y: isDragging ? min(dragOffset, cancelThreshold + 20) : 0)
+                .onTapGesture {
+                    state.stopRecording()
+                }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 10)
+                        .onChanged { value in
+                            let yOffset = value.translation.height
+                            if yOffset > 0 {
+                                isDragging = true
+                                dragOffset = yOffset
+                            }
+                        }
+                        .onEnded { _ in
+                            if isInDeleteZone {
+                                state.cancelRecording()
+                            }
+                            withAnimation(.spring(response: 0.3)) {
+                                isDragging = false
+                                dragOffset = 0
+                            }
+                        }
+                )
+                .animation(.interactiveSpring(), value: isDragging)
+            }
+            .padding(.bottom, 20)
+
+            // Delete zone (appears when dragging down)
             if isDragging {
                 VStack {
                     Spacer()
@@ -145,13 +203,7 @@ struct RecordArea: View {
     // MARK: - Processing
 
     private var processingContent: some View {
-        VStack(spacing: 12) {
-            Text("处理中...")
-                .font(.subheadline)
-                .foregroundStyle(KeyboardTheme.subtitleColor)
-
-            OrbView(mode: .processing, audioLevel: 0)
-        }
+        ThinkingPill()
     }
 
     // MARK: - Error
@@ -175,138 +227,87 @@ struct RecordArea: View {
             }
         }
     }
-
-    // MARK: - Helpers
-
-    private func formatDuration(_ duration: TimeInterval) -> String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        let tenths = Int((duration - Double(Int(duration))) * 10)
-        return String(format: "%d:%02d.%d", minutes, seconds, tenths)
-    }
-
 }
 
-// MARK: - Orb View
+// MARK: - Bar Waveform (Equalizer)
 
-private struct OrbView: View {
-    let mode: OrbMode
-    let audioLevel: Float
-
-    enum OrbMode {
-        case idle, recording, processing
-    }
-
-    @State private var pulseScale: CGFloat = 1.0
-
-    var body: some View {
-        ZStack {
-            // Outer pulse ring (recording only)
-            if mode == .recording {
-                Circle()
-                    .stroke(Color.white.opacity(0.15), lineWidth: 2)
-                    .frame(width: KeyboardTheme.orbDiameter + 16,
-                           height: KeyboardTheme.orbDiameter + 16)
-                    .scaleEffect(pulseScale)
-                    .onAppear {
-                        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
-                            pulseScale = 1.1
-                        }
-                    }
-            }
-
-            // White orb
-            Circle()
-                .fill(KeyboardTheme.orbFill)
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-                .frame(width: KeyboardTheme.orbDiameter,
-                       height: KeyboardTheme.orbDiameter)
-
-            // Content inside orb
-            Group {
-                switch mode {
-                case .idle:
-                    WaveformView(level: 0, color: KeyboardTheme.orbWaveformColor)
-                case .recording:
-                    WaveformView(level: audioLevel, color: KeyboardTheme.waveformActiveColor)
-                case .processing:
-                    ProgressView()
-                        .tint(KeyboardTheme.orbWaveformColor)
-                        .scaleEffect(1.2)
-                }
-            }
-            .frame(width: KeyboardTheme.orbDiameter * 0.65)
-            .clipShape(Circle())
-        }
-    }
-}
-
-// MARK: - Waveform (Sine Wave)
-
-private struct WaveformView: View {
+/// Vertical bar waveform that responds to audio level.
+/// Bars follow a bell-curve height pattern and fluctuate per-bar
+/// for an organic, living feel.
+private struct BarWaveformView: View {
     let level: Float
-    var color: Color = Color(UIColor.systemGray)
 
-    @State private var phase: CGFloat = 0
+    private let barCount = 7
+    private let baseHeights: [CGFloat] = [0.4, 0.6, 0.8, 1.0, 0.8, 0.6, 0.4]
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
-            SineWaveShape(
-                amplitude: amplitude,
-                frequency: 2.5,
-                phase: phase
-            )
-            .stroke(color, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
-            .onChange(of: timeline.date) { _ in
-                if level > 0.05 {
-                    phase += 0.08
+        GeometryReader { geo in
+            TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+                let time = timeline.date.timeIntervalSinceReferenceDate
+
+                HStack(alignment: .center, spacing: 3) {
+                    ForEach(0..<barCount, id: \.self) { i in
+                        let fluctuation = CGFloat(
+                            sin(time * 3.0 + Double(i) * 0.8) * 0.15 + 1.0
+                        )
+                        let normalizedLevel = CGFloat(min(max(level, 0.15), 1.0))
+                        let barH = baseHeights[i] * normalizedLevel * fluctuation * geo.size.height
+
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.black.opacity(0.8))
+                            .frame(width: 4, height: max(4, barH))
+                    }
                 }
+                .frame(width: geo.size.width, height: geo.size.height)
             }
         }
-    }
-
-    private var amplitude: CGFloat {
-        let normalized = CGFloat(min(max(level, 0), 1))
-        let idle: CGFloat = 0.15
-        let active: CGFloat = 0.85
-        return idle + (active - idle) * normalized
     }
 }
 
-private struct SineWaveShape: Shape {
-    var amplitude: CGFloat
-    var frequency: CGFloat
-    var phase: CGFloat
+// MARK: - Thinking Pill (Shimmer)
 
-    var animatableData: AnimatablePair<CGFloat, CGFloat> {
-        get { AnimatablePair(amplitude, phase) }
-        set {
-            amplitude = newValue.first
-            phase = newValue.second
-        }
-    }
+/// Capsule with a sliding shimmer highlight, shown during processing.
+private struct ThinkingPill: View {
+    @State private var shimmerPhase: CGFloat = 0
 
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let midY = rect.midY
-        let maxAmp = rect.height * 0.45 * amplitude
-        let steps = Int(rect.width)
-
-        for x in 0...steps {
-            let normalizedX = CGFloat(x) / CGFloat(steps)
-            // Composite wave: primary + harmonic for organic feel
-            let primary = sin(normalizedX * frequency * 2 * .pi + phase)
-            let harmonic = sin(normalizedX * frequency * 1.5 * 2 * .pi + phase * 1.3) * 0.3
-            // Envelope: fade at edges
-            let envelope = sin(normalizedX * .pi)
-            let y = midY + maxAmp * (primary + harmonic) * envelope
-
-            if x == 0 {
-                path.move(to: CGPoint(x: CGFloat(x), y: y))
-            } else {
-                path.addLine(to: CGPoint(x: CGFloat(x), y: y))
+    var body: some View {
+        Capsule()
+            .fill(Color(white: 0.90))
+            .frame(width: KeyboardTheme.thinkingPillWidth,
+                   height: KeyboardTheme.thinkingPillHeight)
+            .overlay {
+                // Sliding highlight
+                GeometryReader { geo in
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    .clear,
+                                    Color.white.opacity(0.45),
+                                    .clear
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geo.size.width * 0.5)
+                        .offset(x: (shimmerPhase - 0.25) * geo.size.width)
+                }
+                .clipShape(Capsule())
             }
-        }
-        return path
+            .overlay {
+                Text("Thinking")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(Color(UIColor.systemGray))
+            }
+            .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+            .onAppear {
+                withAnimation(
+                    .easeInOut(duration: 1.8)
+                    .repeatForever(autoreverses: true)
+                ) {
+                    shimmerPhase = 1.0
+                }
+            }
     }
 }

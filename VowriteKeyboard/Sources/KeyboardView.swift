@@ -9,15 +9,22 @@ enum KeyboardTheme {
     static let titleColor = Color(UIColor.label)
     static let subtitleColor = Color(UIColor.secondaryLabel)
     static let iconColor = Color(UIColor.label)
-    static let orbFill = Color.white
-    static let orbWaveformColor = Color(UIColor.systemGray)
-    static let waveformActiveColor = Color(UIColor.systemGray2)
 
-    static let orbDiameter: CGFloat = 126
     static let actionButtonSize: CGFloat = 44
-    static let returnButtonWidth: CGFloat = 200
-    static let returnButtonHeight: CGFloat = 36
-    static let returnButtonCornerRadius: CGFloat = 18
+
+    // Idle state
+    static let micPillWidth: CGFloat = 180
+    static let micPillHeight: CGFloat = 64
+
+    static let returnPillWidth: CGFloat = 160
+    static let returnPillHeight: CGFloat = 40
+
+    // Recording state
+    static let recordingCircleDiameter: CGFloat = 150
+
+    // Processing state
+    static let thinkingPillWidth: CGFloat = 180
+    static let thinkingPillHeight: CGFloat = 56
 }
 
 // MARK: - Root View
@@ -25,16 +32,32 @@ enum KeyboardTheme {
 struct KeyboardView: View {
     @ObservedObject var state: KeyboardState
 
+    /// True when the keyboard is actively recording or processing (full-screen mode).
+    private var isFullScreen: Bool {
+        state.viewState == .recording || state.viewState == .processing
+    }
+
     var body: some View {
-        VStack(spacing: 0) {
-            TopBar(state: state)
-                .frame(height: 48)
+        ZStack(alignment: .bottomLeading) {
+            VStack(spacing: 0) {
+                if !isFullScreen {
+                    TopBar(state: state)
+                        .frame(height: 48)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
 
-            RecordArea(state: state)
-                .frame(maxHeight: .infinity)
+                RecordArea(state: state)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .animation(.easeInOut(duration: 0.3), value: isFullScreen)
 
-            BottomBar(state: state)
-                .frame(height: 48)
+            // Globe key — always visible at bottom-left
+            if state.showGlobe {
+                GlobeKeyButton(inputViewController: state.viewController)
+                    .frame(width: 44, height: 44)
+                    .padding(.leading, 12)
+                    .padding(.bottom, 8)
+            }
         }
         .background(KeyboardTheme.background.ignoresSafeArea())
     }
