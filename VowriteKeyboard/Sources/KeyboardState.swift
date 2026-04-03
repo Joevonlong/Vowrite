@@ -278,30 +278,36 @@ final class KeyboardState: ObservableObject {
     /// Open the container app via URL scheme.
     /// Used for auto-activation when service is not alive.
     ///
-    /// Uses the 1-arg `openURL:` selector because `perform(_:with:with:)` can
-    /// only safely pass 2 arguments.  The 3-arg `openURL:options:completionHandler:`
-    /// leaves the completionHandler register indeterminate, which crashes when
-    /// UIApplication tries to invoke it.
+    /// Three strategies in priority order, all using the safe 1-arg `openURL:`
+    /// selector.  The 3-arg `openURL:options:completionHandler:` MUST NOT be
+    /// used with `perform(_:with:with:)` — the 3rd arg gets indeterminate
+    /// register values and crashes.
     func openContainerApp(path: String = "activate") {
         guard let url = URL(string: "vowrite://\(path)") else { return }
 
         let selector = NSSelectorFromString("openURL:")
 
-        // Walk responder chain to find UIApplication
+        // Strategy 1: Walk responder chain to find UIApplication
         var responder: UIResponder? = inputViewController
         while let r = responder {
             if r.responds(to: selector) {
                 r.perform(selector, with: url)
-                #if DEBUG
-                print("[Vowrite KB] Opened \(url) via responder chain")
-                #endif
                 return
             }
             responder = r.next
         }
 
-        #if DEBUG
-        print("[Vowrite KB] FAILED to open URL: \(url)")
-        #endif
+        // Strategy 2: UIApplication.shared via runtime (bypasses compiler restriction)
+        if let appClass = NSClassFromString("UIApplication"),
+           let shared = (appClass as AnyObject)
+               .perform(NSSelectorFromString("sharedApplication"))?
+               .takeUnretainedValue(),
+           shared.responds(to: selector) {
+            _ = shared.perform(selector, with: url)
+            return
+        }
+
+        // Strategy 3: extensionContext (may work for keyboards with Full Access)
+        inputViewController?.extensionContext?.open(url, completionHandler: nil)
     }
 }
