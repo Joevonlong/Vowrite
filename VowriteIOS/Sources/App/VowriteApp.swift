@@ -143,6 +143,15 @@ struct VowriteApp: App {
         return BGServiceDuration(rawValue: raw) ?? .fiveMinutes
     }
 
+    /// Suspend this app to return focus to the previous app (where the keyboard was active).
+    private static func returnToPreviousApp() {
+        UIControl().sendAction(
+            #selector(URLSessionTask.suspend),
+            to: UIApplication.shared,
+            for: nil
+        )
+    }
+
     private func handleDeepLink(_ url: URL) {
         guard url.scheme == "vowrite" else { return }
         #if DEBUG
@@ -162,6 +171,10 @@ struct VowriteApp: App {
                 VowriteStorage.defaults.set(duration.rawValue, forKey: "bgServiceDuration")
             }
             pendingDeepLink = "activate"
+            // Auto-return to previous app (keyboard) after service is activated
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                Self.returnToPreviousApp()
+            }
         default:
             break
         }
