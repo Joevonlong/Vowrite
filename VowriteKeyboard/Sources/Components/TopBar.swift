@@ -13,7 +13,7 @@ struct TopBar: View {
                 Image(systemName: "dot.radiowaves.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(KeyboardTheme.titleColor)
-                Text("VoiceWrite")
+                Text("Vowrite")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(KeyboardTheme.titleColor)
