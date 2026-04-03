@@ -27,6 +27,9 @@ final class KeyboardState: ObservableObject {
     private let ipc = BackgroundRecordingIPC.shared
     private var pollTimer: Timer?
     private var serviceCheckTimer: Timer?
+    /// Timestamp when the last .start command was sent, used to ignore stale .idle
+    /// IPC reads during the cross-process notification delivery window.
+    private var startCommandSentAt: Date?
 
     weak var inputViewController: UIInputViewController?
 
@@ -152,6 +155,7 @@ final class KeyboardState: ObservableObject {
 
         // Send start command
         ipc.sendCommand(.start)
+        startCommandSentAt = Date()
         viewState = .recording
         audioLevel = 0
         recordingDuration = 0
@@ -168,6 +172,7 @@ final class KeyboardState: ObservableObject {
     func cancelRecording() {
         ipc.sendCommand(.cancel)
         stopPolling()
+        startCommandSentAt = nil
         viewState = .idle
     }
 
@@ -216,13 +221,22 @@ final class KeyboardState: ObservableObject {
 
         switch ipcState {
         case .idle:
+            // After sending .start, ignore .idle for up to 1s — the Darwin notification
+            // needs time to reach the main app (especially on first cross-process delivery).
+            if let sentAt = startCommandSentAt,
+               Date().timeIntervalSince(sentAt) < 1.0,
+               viewState == .recording {
+                break
+            }
             // If we were recording/processing and now idle, it was cancelled
             if viewState == .recording || viewState == .processing {
                 viewState = .idle
                 stopPolling()
+                startCommandSentAt = nil
             }
 
         case .recording:
+            startCommandSentAt = nil
             viewState = .recording
             audioLevel = ipc.audioLevel
             recordingDuration = ipc.recordingDuration
