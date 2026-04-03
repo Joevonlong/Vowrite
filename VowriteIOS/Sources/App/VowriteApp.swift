@@ -13,6 +13,7 @@ struct VowriteApp: App {
 
     @State private var selectedTab: Tab = .dashboard
     @State private var pendingDeepLink: String?
+    @State private var showActivationOverlay = false
 
     enum Tab {
         case dashboard, settings, personalization, history
@@ -74,6 +75,13 @@ struct VowriteApp: App {
                             if !appState.backgroundService.isActive {
                                 autoActivateIfNeeded()
                             }
+                        }
+                    }
+                    .overlay {
+                        if showActivationOverlay {
+                            ActivationOverlay()
+                                .transition(.opacity)
+                                .zIndex(100)
                         }
                     }
             } else {
@@ -143,15 +151,6 @@ struct VowriteApp: App {
         return BGServiceDuration(rawValue: raw) ?? .fiveMinutes
     }
 
-    /// Suspend this app to return focus to the previous app (where the keyboard was active).
-    private static func returnToPreviousApp() {
-        UIControl().sendAction(
-            #selector(URLSessionTask.suspend),
-            to: UIApplication.shared,
-            for: nil
-        )
-    }
-
     private func handleDeepLink(_ url: URL) {
         guard url.scheme == "vowrite" else { return }
         #if DEBUG
@@ -163,7 +162,8 @@ struct VowriteApp: App {
         case "setup":
             hasCompletedOnboarding = false
         case "activate":
-            // Keyboard extension requested bg service activation — use user's saved duration preference
+            // Keyboard extension requested bg service activation
+            selectedTab = .dashboard
             if !appState.backgroundService.isActive {
                 let duration = savedBGServiceDuration
                 appState.backgroundService.activate(duration: duration)
@@ -171,12 +171,78 @@ struct VowriteApp: App {
                 VowriteStorage.defaults.set(duration.rawValue, forKey: "bgServiceDuration")
             }
             pendingDeepLink = "activate"
-            // Auto-return to previous app (keyboard) after service is activated
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                Self.returnToPreviousApp()
+            // Show activation overlay — iOS shows "← Back to X" at top-left
+            // for the user to return to the previous app
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showActivationOverlay = true
+            }
+            // Auto-dismiss overlay after 3 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                withAnimation(.easeOut(duration: 0.5)) {
+                    showActivationOverlay = false
+                }
             }
         default:
             break
+        }
+    }
+}
+
+// MARK: - Activation Overlay
+
+/// Full-screen overlay shown briefly after the keyboard extension activates the background service.
+/// Instructs the user to tap iOS's "Back to" button to return to the previous app.
+private struct ActivationOverlay: View {
+    @State private var checkmarkScale: CGFloat = 0.3
+    @State private var checkmarkOpacity: CGFloat = 0
+
+    var body: some View {
+        ZStack {
+            // Semi-transparent background
+            Color.black.opacity(0.85)
+                .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                // Animated checkmark
+                ZStack {
+                    Circle()
+                        .fill(Color.green.opacity(0.15))
+                        .frame(width: 100, height: 100)
+
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 60))
+                        .foregroundStyle(.green)
+                        .scaleEffect(checkmarkScale)
+                        .opacity(checkmarkOpacity)
+                }
+
+                Text("Service Activated")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+
+                // Return instruction
+                VStack(spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.blue)
+                        Text("Tap the back button at the top left")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
+                    Text("to return to your keyboard")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+                .padding(.top, 8)
+            }
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                checkmarkScale = 1.0
+                checkmarkOpacity = 1.0
+            }
         }
     }
 }
