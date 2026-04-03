@@ -31,6 +31,7 @@ enum KeyboardTheme {
 
 struct KeyboardView: View {
     @ObservedObject var state: KeyboardState
+    @Environment(\.openURL) private var openURL
 
     /// True when the keyboard is actively recording or processing (full-screen mode).
     private var isFullScreen: Bool {
@@ -60,5 +61,6 @@ struct KeyboardView: View {
             }
         }
         .background(KeyboardTheme.background.ignoresSafeArea())
+        .onAppear { state.openURLAction = openURL }
     }
 }

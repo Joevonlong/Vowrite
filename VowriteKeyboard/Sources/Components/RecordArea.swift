@@ -62,22 +62,19 @@ struct RecordArea: View {
                 .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
 
-            // Pill-shaped mic button
-            Button {
-                state.startRecording()
-            } label: {
-                Capsule()
-                    .fill(.white)
-                    .frame(width: KeyboardTheme.micPillWidth,
-                           height: KeyboardTheme.micPillHeight)
-                    .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-                    .overlay {
-                        Image(systemName: "mic.fill")
-                            .font(.system(size: 24, weight: .medium))
-                            .foregroundStyle(.black)
-                    }
+            // Mic pill: Link for activation (iOS 18+), Button for recording
+            if state.needsActivation {
+                Link(destination: URL(string: "vowrite://activate")!) {
+                    micPillLabel
+                }
+                .opacity(0.6)
+            } else {
+                Button {
+                    state.startRecording()
+                } label: {
+                    micPillLabel
+                }
             }
-            .opacity(state.needsActivation ? 0.6 : 1.0)
 
             // Return / 换行 button
             Button {
@@ -92,6 +89,20 @@ struct RecordArea: View {
                     .background(KeyboardTheme.buttonFill, in: Capsule())
             }
         }
+    }
+
+    /// Shared mic pill appearance used by both Link and Button.
+    private var micPillLabel: some View {
+        Capsule()
+            .fill(.white)
+            .frame(width: KeyboardTheme.micPillWidth,
+                   height: KeyboardTheme.micPillHeight)
+            .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+            .overlay {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(.black)
+            }
     }
 
     // MARK: - Recording
