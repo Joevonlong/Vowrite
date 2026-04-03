@@ -65,6 +65,32 @@ class KeyboardViewController: UIInputViewController {
         // Reload config each time keyboard appears (user may have changed settings)
         keyboardState.reloadConfiguration()
         VowriteStorage.defaults.set(hasFullAccess, forKey: "keyboard_full_access")
+        // Detect host app for return-to-app flow
+        detectHostBundleID()
+    }
+
+    /// Detect the host app's bundle ID via private API and store it for the
+    /// containing app to use when returning after activation.
+    private func detectHostBundleID() {
+        let sel = NSSelectorFromString("_hostBundleID")
+        // Try self (UIInputViewController)
+        if responds(to: sel),
+           let val = perform(sel)?.takeUnretainedValue() as? String,
+           !val.isEmpty, !val.hasPrefix("com.vowrite") {
+            VowriteStorage.defaults.set(val, forKey: "lastHostBundleID")
+            return
+        }
+        // Walk parent view controllers
+        var vc: UIViewController? = parent
+        while let p = vc {
+            if p.responds(to: sel),
+               let val = p.perform(sel)?.takeUnretainedValue() as? String,
+               !val.isEmpty, !val.hasPrefix("com.vowrite") {
+                VowriteStorage.defaults.set(val, forKey: "lastHostBundleID")
+                return
+            }
+            vc = p.parent
+        }
     }
 
     override func viewWillLayoutSubviews() {

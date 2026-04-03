@@ -151,6 +151,75 @@ struct VowriteApp: App {
         return BGServiceDuration(rawValue: raw) ?? .fiveMinutes
     }
 
+    /// Try to return to the host app by opening its URL scheme.
+    /// The keyboard extension stores the host bundle ID via IPC.
+    /// Falls back to the `fallback` closure if the host app is unknown.
+    private static func returnToHostApp(fallback: @escaping () -> Void) {
+        guard let bundleID = VowriteStorage.defaults.string(forKey: "lastHostBundleID"),
+              let scheme = hostAppURLScheme(for: bundleID),
+              let url = URL(string: scheme) else {
+            DispatchQueue.main.async { fallback() }
+            return
+        }
+        UIApplication.shared.open(url, options: [:]) { success in
+            if !success {
+                DispatchQueue.main.async { fallback() }
+            }
+        }
+    }
+
+    /// Lookup table: bundle ID → URL scheme for common apps.
+    /// This is the same approach used by KeyboardKit Pro and Wispr Flow.
+    private static func hostAppURLScheme(for bundleID: String) -> String? {
+        let table: [String: String] = [
+            // Apple
+            "com.apple.MobileSMS":          "sms://",
+            "com.apple.mobilemail":         "mailto:",
+            "com.apple.mobilenotes":        "mobilenotes://",
+            "com.apple.reminders":          "x-apple-reminderkit://",
+            "com.apple.mobilesafari":       "x-web-search://",
+            // WeChat / QQ
+            "com.tencent.xin":             "weixin://",
+            "com.tencent.mqq":             "mqq://",
+            // Messaging
+            "net.whatsapp.WhatsApp":       "whatsapp://",
+            "org.whatsapp.WhatsApp":       "whatsapp://",
+            "ph.telegra.Telegraph":        "tg://",
+            "org.telegram.Telegram-iOS":   "tg://",
+            "com.facebook.Messenger":      "fb-messenger://",
+            "com.slack.Slack":             "slack://",
+            "com.discord.Discord":         "discord://",
+            "com.microsoft.teams":         "msteams://",
+            "com.skype.skype":             "skype://",
+            "com.viber":                   "viber://",
+            "jp.naver.line":               "line://",
+            "com.kakao.KakaoTalk":         "kakaotalk://",
+            // Email
+            "com.google.Gmail":            "googlegmail://",
+            "com.microsoft.Office.Outlook": "ms-outlook://",
+            // Social
+            "com.atebits.Tweetie2":        "twitter://",
+            "com.burbn.instagram":         "instagram://",
+            "com.zhiliaoapp.musically":    "snssdk1128://",
+            "com.linkedin.LinkedIn":       "linkedin://",
+            "com.reddit.Reddit":           "reddit://",
+            "com.ss.iphone.ugc.Aweme":     "snssdk1128://",
+            "com.sina.weibo":              "sinaweibo://",
+            "com.xiaomi.mico.discover":    "xiaomidiscover://",
+            // Productivity
+            "com.notion.Notion":           "notion://",
+            "md.obsidian":                 "obsidian://",
+            "com.lark.Lark":               "lark://",
+            "com.ss.iphone.lark":          "lark://",
+            "com.DingTalk":                "dingtalk://",
+            // Browsers
+            "com.google.chrome.ios":       "googlechrome://",
+            "org.mozilla.ios.Firefox":     "firefox://",
+            "com.aspect-ratio.iCab-Mobile": "icabmobile://",
+        ]
+        return table[bundleID]
+    }
+
     private func handleDeepLink(_ url: URL) {
         guard url.scheme == "vowrite" else { return }
         #if DEBUG
@@ -171,15 +240,18 @@ struct VowriteApp: App {
                 VowriteStorage.defaults.set(duration.rawValue, forKey: "bgServiceDuration")
             }
             pendingDeepLink = "activate"
-            // Show activation overlay — iOS shows "← Back to X" at top-left
-            // for the user to return to the previous app
-            withAnimation(.easeInOut(duration: 0.3)) {
-                showActivationOverlay = true
-            }
-            // Auto-dismiss overlay after 3 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                withAnimation(.easeOut(duration: 0.5)) {
-                    showActivationOverlay = false
+            // Try to auto-return to the host app after a brief delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                Self.returnToHostApp { [self] in
+                    // Fallback: show overlay with instructions
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showActivationOverlay = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            showActivationOverlay = false
+                        }
+                    }
                 }
             }
         default:
