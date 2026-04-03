@@ -115,9 +115,19 @@ struct SettingsView: View {
                     }
                 }
 
+                // OpenAI OAuth
+                Section("OpenAI") {
+                    OpenAICodexOAuthCard()
+                }
+
                 // MiniMax OAuth
                 Section("MiniMax") {
                     MiniMaxOAuthCard()
+                }
+
+                // Kimi OAuth
+                Section("Kimi（月之暗面）") {
+                    KimiCodeOAuthCard()
                 }
 
                 // Feedback

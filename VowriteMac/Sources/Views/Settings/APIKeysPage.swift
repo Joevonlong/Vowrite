@@ -95,6 +95,12 @@ struct APIKeysPageView: View {
                     if provider == .minimax {
                         MiniMaxOAuthCard()
                             .padding(.vertical, 4)
+                    } else if provider == .openai {
+                        OpenAICodexOAuthCard()
+                            .padding(.vertical, 4)
+                    } else if provider == .kimi {
+                        KimiCodeOAuthCard()
+                            .padding(.vertical, 4)
                     } else {
                         providerKeyRow(for: provider)
                             .padding(.vertical, 8)

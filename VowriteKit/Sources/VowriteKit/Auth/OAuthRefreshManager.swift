@@ -31,6 +31,10 @@ public enum OAuthRefreshManager {
         switch providerID {
         case "minimax":
             await MiniMaxOAuthService.refresh(refreshToken: refreshToken)
+        case "kimi":
+            await KimiCodeOAuthService.refresh(refreshToken: refreshToken)
+        case "openai":
+            await OpenAICodexOAuthService.refresh(refreshToken: refreshToken)
         default:
             break
         }
