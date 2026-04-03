@@ -48,6 +48,10 @@ struct ModelsPageView: View {
                     )
                 }
 
+                SettingsSection(icon: "cpu.fill", title: "Local Models") {
+                    SherpaLocalModelsSection()
+                }
+
                 SettingsSection(icon: "checkmark.circle", title: "Test & Save") {
                     testAndSaveContent
                 }
