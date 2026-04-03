@@ -122,7 +122,7 @@ struct RecordArea: View {
                         .fill(
                             RadialGradient(
                                 colors: [
-                                    Color(white: 0.18),
+                                    Color(UIColor.systemGray4),
                                     KeyboardTheme.background
                                 ],
                                 center: .center,

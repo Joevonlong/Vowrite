@@ -4,8 +4,8 @@ import VowriteKit
 // MARK: - Theme
 
 enum KeyboardTheme {
-    static let background = Color(red: 28/255, green: 28/255, blue: 30/255)
-    static let buttonFill = Color(red: 44/255, green: 44/255, blue: 46/255)
+    static let background = Color(UIColor.secondarySystemBackground)
+    static let buttonFill = Color(UIColor.systemGray5)
     static let titleColor = Color(UIColor.label)
     static let subtitleColor = Color(UIColor.secondaryLabel)
     static let iconColor = Color(UIColor.label)
