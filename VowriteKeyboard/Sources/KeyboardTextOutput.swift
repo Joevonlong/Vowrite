@@ -13,6 +13,8 @@ final class KeyboardTextOutput: TextOutputProvider {
     }
 
     func output(text: String) async {
-        proxy?.insertText(text)
+        await MainActor.run {
+            proxy?.insertText(text)
+        }
     }
 }

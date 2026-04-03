@@ -85,12 +85,16 @@ struct TopBar: View {
     private func startContinuousDelete() {
         deleteSpeed = 0.1
         deleteTimer = Timer.scheduledTimer(withTimeInterval: deleteSpeed, repeats: true) { _ in
-            state.deleteBackward()
+            Task { @MainActor in
+                state.deleteBackward()
+            }
             if deleteSpeed > 0.05 {
                 deleteSpeed -= 0.01
                 deleteTimer?.invalidate()
                 deleteTimer = Timer.scheduledTimer(withTimeInterval: deleteSpeed, repeats: true) { _ in
-                    state.deleteBackward()
+                    Task { @MainActor in
+                        state.deleteBackward()
+                    }
                 }
             }
         }
