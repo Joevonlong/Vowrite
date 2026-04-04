@@ -48,7 +48,7 @@ public enum KeyVault {
     }
 
     public static func missingProviders(for configuration: SplitAPIConfiguration) -> [APIProvider] {
-        requiredProviders(for: configuration).filter { !hasKey(for: $0) }
+        requiredProviders(for: configuration).filter { effectiveKey(for: $0) == nil }
     }
 
     private static func account(for provider: APIProvider) -> String {

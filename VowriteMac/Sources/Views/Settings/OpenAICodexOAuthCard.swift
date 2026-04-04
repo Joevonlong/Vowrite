@@ -3,7 +3,10 @@ import SwiftUI
 import VowriteKit
 import AuthenticationServices
 
-struct OpenAICodexOAuthCard: View {
+/// Compact OAuth section shown below the standard OpenAI API Key row.
+/// Allows ChatGPT Plus/Pro users to sign in with their subscription account
+/// as an alternative to providing an API Key.
+struct OpenAICodexOAuthSection: View {
     @State private var isAuthenticating = false
     @State private var authError: String?
 
@@ -11,87 +14,60 @@ struct OpenAICodexOAuthCard: View {
     private var isOAuthMode: Bool { KeyVault.preferredAuthMethod(for: .openai) == "oauth" }
     private var storedToken: OAuthToken? { OAuthTokenStore.load(for: "openai") }
     private var isExpired: Bool { storedToken?.isExpired ?? false }
-    private var hasAPIKey: Bool { KeyVault.hasKey(for: .openai) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("OpenAI").font(.headline)
-                Spacer()
-                statusBadge
-            }
-
-            if hasOAuth || hasAPIKey {
-                Picker("认证方式", selection: Binding(
-                    get: { isOAuthMode ? "oauth" : "apiKey" },
-                    set: { KeyVault.setPreferredAuthMethod($0, for: .openai) }
-                )) {
-                    Text("API Key").tag("apiKey")
-                    Text("ChatGPT 账号").tag("oauth")
-                }
-                .pickerStyle(.segmented)
-            }
-
-            if isExpired && isOAuthMode {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("\(storedToken?.email ?? "ChatGPT 账号") 的会话已过期")
-                        .font(.callout).foregroundColor(.secondary)
-                    HStack(spacing: 12) {
-                        Button("重新登录") { startOAuthFlow() }
-                            .buttonStyle(.borderedProminent).controlSize(.small)
-                        Button("切换到 API Key") { KeyVault.setPreferredAuthMethod("apiKey", for: .openai) }
-                            .buttonStyle(.bordered).controlSize(.small)
-                    }
-                }
-            } else if isOAuthMode && hasOAuth {
-                VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
+            if isOAuthMode && hasOAuth {
+                // Active OAuth session
+                HStack(spacing: 8) {
+                    Image(systemName: "person.circle.fill").foregroundColor(.green)
                     if let email = storedToken?.email {
-                        Label(email, systemImage: "person.circle")
+                        Text(email).font(.caption)
                     }
-                    Text("ChatGPT Plus/Pro").font(.caption).foregroundColor(.secondary)
-                    Text("Token 消耗计入 ChatGPT 订阅（不计 API 费用）")
-                        .font(.caption2).foregroundColor(.secondary)
-                    Button("退出登录") { OpenAICodexOAuthService.signOut() }
-                        .foregroundColor(.red).buttonStyle(.borderless).font(.caption)
+                    Text("ChatGPT 订阅登录").font(.caption).foregroundColor(.secondary)
+                    Spacer()
+                    Button("切换到 API Key") {
+                        KeyVault.setPreferredAuthMethod("apiKey", for: .openai)
+                    }
+                    .font(.caption).buttonStyle(.borderless)
+                    Button("退出") {
+                        OpenAICodexOAuthService.signOut()
+                    }
+                    .font(.caption).buttonStyle(.borderless).foregroundColor(.red)
+                }
+            } else if isOAuthMode && isExpired {
+                // Expired OAuth session
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
+                    Text("ChatGPT 会话已过期").font(.caption).foregroundColor(.secondary)
+                    Spacer()
+                    Button("重新登录") { startOAuthFlow() }
+                        .font(.caption).buttonStyle(.borderless)
+                    Button("切换到 API Key") {
+                        KeyVault.setPreferredAuthMethod("apiKey", for: .openai)
+                    }
+                    .font(.caption).buttonStyle(.borderless)
                 }
             } else {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("── 或登录 ChatGPT 订阅账号 ──")
-                        .font(.caption).foregroundColor(.secondary)
+                // Default: show sign-in option
+                HStack(spacing: 8) {
+                    Text("没有 API Key？").font(.caption).foregroundColor(.secondary)
                     Button {
                         startOAuthFlow()
                     } label: {
-                        Label("Sign in with ChatGPT Plus/Pro", systemImage: "lock.fill")
+                        Label("使用 ChatGPT Plus/Pro 订阅登录", systemImage: "person.circle")
+                            .font(.caption)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.borderless)
                     .disabled(isAuthenticating)
-                    Text("需要 ChatGPT Plus、Pro 或 Business 订阅")
-                        .font(.caption2).foregroundColor(.secondary)
                 }
             }
 
             if let error = authError {
-                Text(error).font(.caption).foregroundColor(.red)
+                Text(error).font(.caption2).foregroundColor(.red)
             }
         }
-        .padding()
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(8)
-    }
-
-    private var statusBadge: some View {
-        Group {
-            if isExpired && isOAuthMode {
-                Label("会话过期", systemImage: "exclamationmark.triangle.fill")
-                    .foregroundColor(.orange).font(.caption)
-            } else if isOAuthMode && hasOAuth {
-                Label("ChatGPT 登录", systemImage: "checkmark.circle.fill")
-                    .foregroundColor(.green).font(.caption)
-            } else if hasAPIKey {
-                Label("已配置", systemImage: "checkmark.circle.fill")
-                    .foregroundColor(.green).font(.caption)
-            }
-        }
+        .padding(.leading, 152) // align with key input area
     }
 
     private func startOAuthFlow() {

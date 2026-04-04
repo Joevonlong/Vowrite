@@ -83,13 +83,7 @@ public final class DictationEngine: ObservableObject {
     public func toggleRecording() {
         switch state {
         case .idle, .error:
-            // Fire credential refresh asynchronously before recording starts.
-            // prepareCredentials has a 3s timeout; startRecording runs after it resolves.
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                await CredentialManager.prepareCredentials(for: APIConfig.current)
-                self.startRecording()
-            }
+            startRecording()
         case .recording:
             stopRecording()
         case .processing:
@@ -209,6 +203,9 @@ public final class DictationEngine: ObservableObject {
     private func processAudio(url: URL) {
         Task {
             do {
+                // Refresh OAuth tokens before API calls (3s timeout, silent on failure)
+                await CredentialManager.prepareCredentials(for: APIConfig.current)
+
                 // Load current mode config
                 let modeConfig = ModeManager.currentModeConfig
 
@@ -275,7 +272,9 @@ public final class DictationEngine: ObservableObject {
                             modeConfig: modeConfig,
                             promptContext: promptContext,
                             onPartial: { [weak self] partial in
-                                self?.lastResult = partial
+                                Task { @MainActor in
+                                    self?.lastResult = partial
+                                }
                             }
                         )
                         // F-051: Apply replacement rules again after LLM (catches re-introduced errors)

@@ -73,30 +73,22 @@ public final class AudioEngine {
     private func startWithAudioEngine() throws {
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
+        let format = inputNode.outputFormat(forBus: 0)
 
         let tempDir = FileManager.default.temporaryDirectory
         let url = tempDir.appendingPathComponent("vowrite_\(UUID().uuidString).m4a")
 
-        // Whisper STT works perfectly at 16kHz mono — 3x smaller files, 3x faster upload
-        let speechFormat = AVAudioFormat(
-            commonFormat: .pcmFormatFloat32,
-            sampleRate: 16000,
-            channels: 1,
-            interleaved: false
-        )!
-
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: 16000.0,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
+            AVSampleRateKey: format.sampleRate,
+            AVNumberOfChannelsKey: format.channelCount,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
         ]
 
         let file = try AVAudioFile(forWriting: url, settings: settings)
 
-        // Passing speechFormat causes AVAudioEngine to automatically downsample.
-        // updateLevel uses floatChannelData[0] only — works with mono buffers.
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: speechFormat) { [weak self] buffer, _ in
+        // Use native hardware format for the tap — AVAudioFile converts to 16kHz mono on write.
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
             try? file.write(from: buffer)
             self?.updateLevel(buffer: buffer)
         }

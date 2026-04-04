@@ -12,10 +12,7 @@ public struct APIEndpointConfiguration: Codable, Equatable {
     }
 
     public var resolvedBaseURL: String {
-        if let oauthBaseURL = KeyVault.effectiveBaseURL(for: provider) {
-            return oauthBaseURL
-        }
-        return APIEndpointConfiguration.normalizeBaseURL(baseURL, provider: provider)
+        APIEndpointConfiguration.normalizeBaseURL(baseURL, provider: provider)
     }
 
     public var requiresAPIKey: Bool {
@@ -27,7 +24,7 @@ public struct APIEndpointConfiguration: Codable, Equatable {
     }
 
     public var key: String? {
-        KeyVault.effectiveKey(for: provider)
+        KeyVault.key(for: provider)
     }
 
     public static func normalizeBaseURL(_ baseURL: String?, provider: APIProvider) -> String {
