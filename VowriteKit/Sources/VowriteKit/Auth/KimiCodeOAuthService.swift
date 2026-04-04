@@ -72,10 +72,9 @@ public enum KimiCodeOAuthService {
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         applyKimiHeaders(to: &request)
-        let body = ["client_id": clientID]
-        request.httpBody = try? JSONEncoder().encode(body)
+        request.httpBody = formEncode(["client_id": clientID])
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             let body = String(data: data, encoding: .utf8) ?? "unknown"
@@ -96,14 +95,13 @@ public enum KimiCodeOAuthService {
             }
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
             applyKimiHeaders(to: &request)
-            let body: [String: String] = [
+            request.httpBody = formEncode([
                 "grant_type":  grantType,
                 "device_code": deviceCode,
                 "client_id":   clientID,
-            ]
-            request.httpBody = try? JSONEncoder().encode(body)
+            ])
             guard let (data, _) = try? await URLSession.shared.data(for: request) else { continue }
             struct ErrorResponse: Codable { let error: String? }
             if let errResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data),
@@ -142,14 +140,13 @@ public enum KimiCodeOAuthService {
         guard let url = URL(string: tokenEndpoint) else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         applyKimiHeaders(to: &request)
-        let body: [String: String] = [
+        request.httpBody = formEncode([
             "grant_type":    "refresh_token",
             "refresh_token": refreshToken,
             "client_id":     clientID,
-        ]
-        request.httpBody = try? JSONEncoder().encode(body)
+        ])
         guard let (data, _) = try? await URLSession.shared.data(for: request) else { return }
         struct TokenResponse: Codable {
             let access_token: String
@@ -177,6 +174,16 @@ public enum KimiCodeOAuthService {
         cancelSignIn()
         OAuthTokenStore.delete(for: "kimi")
         VowriteStorage.defaults.removeObject(forKey: "auth.method.kimi")
+    }
+
+    private static func formEncode(_ params: [String: String]) -> Data? {
+        var cs = CharacterSet.urlQueryAllowed
+        cs.remove(charactersIn: "+&=")
+        return params.map { key, value in
+            let k = key.addingPercentEncoding(withAllowedCharacters: cs) ?? key
+            let v = value.addingPercentEncoding(withAllowedCharacters: cs) ?? value
+            return "\(k)=\(v)"
+        }.joined(separator: "&").data(using: .utf8)
     }
 
     private static func applyKimiHeaders(to request: inout URLRequest) {

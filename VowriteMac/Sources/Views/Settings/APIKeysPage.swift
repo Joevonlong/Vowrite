@@ -92,15 +92,12 @@ struct APIKeysPageView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(KeyVault.managedProviders.enumerated()), id: \.element.id) { index, provider in
-                    if provider == .minimax {
-                        MiniMaxOAuthCard()
-                            .padding(.vertical, 4)
-                    } else if provider == .openai {
-                        OpenAICodexOAuthCard()
-                            .padding(.vertical, 4)
-                    } else if provider == .kimi {
-                        KimiCodeOAuthCard()
-                            .padding(.vertical, 4)
+                    if provider == .openai {
+                        VStack(alignment: .leading, spacing: 8) {
+                            providerKeyRow(for: provider)
+                            OpenAICodexOAuthSection()
+                        }
+                        .padding(.vertical, 8)
                     } else {
                         providerKeyRow(for: provider)
                             .padding(.vertical, 8)
