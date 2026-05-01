@@ -115,8 +115,8 @@
     </a>
     <div class="nav-links">
       <a href="/">Home</a>
-      <a href="why.html">Why</a>
-      <a href="pricing.html" style="color:var(--text);font-weight:600;">Pricing</a>
+      <a href="/why">Why</a>
+      <a href="/pricing" style="color:var(--text);font-weight:600;">Pricing</a>
       <a href="https://github.com/Joevonlong/Vowrite">GitHub</a>
     </div>
   </div>
@@ -133,27 +133,27 @@
 <section class="section">
   <div class="container">
     <h2 class="section-title">Monthly Cost Estimates</h2>
-    <p class="section-sub">Based on ~30 minutes of voice input per day</p>
+    <p class="section-sub">Based on ~30 minutes of voice input per day (≈15 STT hours + 300K Polish tokens / month)</p>
     <div class="estimate-grid">
       <div class="estimate-card">
         <h3>🆓 Free Combo</h3>
         <div class="price-big free-price">$0/mo</div>
-        <p>SiliconFlow STT + Zhipu glm-4-flash Polish. Zero cost, unlimited usage.</p>
+        <p>SiliconFlow SenseVoice STT + Zhipu glm-4.7-flash Polish. Zero cost, unlimited usage.</p>
       </div>
       <div class="estimate-card">
         <h3>💰 Budget</h3>
-        <div class="price-big">~$0.45/mo</div>
-        <p>Groq Whisper STT + DeepSeek Polish. Excellent quality at pennies.</p>
+        <div class="price-big">~$0.65/mo</div>
+        <p>Groq whisper-large-v3-turbo + DeepSeek V4-flash Polish. Excellent quality at pennies.</p>
       </div>
       <div class="estimate-card">
         <h3>⚖️ Balanced</h3>
-        <div class="price-big">~$2.88/mo</div>
-        <p>OpenAI mini-transcribe + gpt-4o-mini. Reliable mainstream choice.</p>
+        <div class="price-big">~$3.30/mo</div>
+        <p>OpenAI mini-transcribe + gpt-5.4-mini. Reliable mainstream choice.</p>
       </div>
       <div class="estimate-card">
         <h3>🎯 Premium</h3>
-        <div class="price-big">~$11.43/mo</div>
-        <p>Deepgram Nova-3 + Claude Sonnet. Top accuracy and polish quality.</p>
+        <div class="price-big">~$9.00/mo</div>
+        <p>Deepgram Nova-3 + Claude Sonnet 4-6. Top accuracy and polish quality.</p>
       </div>
     </div>
   </div>
@@ -178,12 +178,36 @@
         </thead>
         <tbody>
           <tr>
+            <td class="provider-name">Sherpa (Offline)</td>
+            <td class="model-name">SenseVoice Small / Zipformer / FireRedASR2</td>
+            <td class="price free">Free 🔒</td>
+            <td class="price free">Free</td>
+            <td>EN/CN/JP/KR/方言</td>
+            <td><span class="badge badge-free">100% LOCAL</span></td>
+          </tr>
+          <tr>
             <td class="provider-name">SiliconFlow</td>
-            <td class="model-name">SenseVoiceSmall</td>
+            <td class="model-name">FunAudioLLM/SenseVoiceSmall</td>
             <td class="price free">Free ✨</td>
             <td class="price free">Free</td>
             <td>50+</td>
             <td><span class="badge badge-free">FREE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">SiliconFlow</td>
+            <td class="model-name">TeleAI/TeleSpeechASR</td>
+            <td class="price free">Free ✨</td>
+            <td class="price free">Free</td>
+            <td>CN focused</td>
+            <td><span class="badge badge-free">FREE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">iFlytek (讯飞)</td>
+            <td class="model-name">iat / xfime-mianqie</td>
+            <td class="price free">Free 500/day</td>
+            <td class="price">~$0.002</td>
+            <td>CN + 23 dialects</td>
+            <td><span class="badge badge-free">CN BEST</span></td>
           </tr>
           <tr>
             <td class="provider-name">Groq</td>
@@ -202,6 +226,22 @@
             <td><span class="badge badge-fast">FASTEST</span></td>
           </tr>
           <tr>
+            <td class="provider-name">Qwen</td>
+            <td class="model-name">paraformer-realtime-v2</td>
+            <td class="price">~$0.0014</td>
+            <td class="price">~$0.08</td>
+            <td>30+</td>
+            <td><span class="badge badge-cheap">VALUE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Qwen</td>
+            <td class="model-name">qwen3-asr-flash</td>
+            <td class="price">~$0.0028</td>
+            <td class="price">~$0.17</td>
+            <td>30+ auto-detect</td>
+            <td></td>
+          </tr>
+          <tr>
             <td class="provider-name">Together AI</td>
             <td class="model-name">whisper-large-v3</td>
             <td class="price">$0.0015</td>
@@ -210,20 +250,12 @@
             <td></td>
           </tr>
           <tr>
-            <td class="provider-name">Volcengine</td>
-            <td class="model-name">Seed-ASR 2.0 (file)</td>
-            <td class="price">~$0.0018</td>
-            <td class="price">~$0.11</td>
-            <td>13+</td>
-            <td></td>
-          </tr>
-          <tr>
             <td class="provider-name">OpenAI</td>
             <td class="model-name">gpt-4o-mini-transcribe</td>
             <td class="price">$0.003</td>
             <td class="price">$0.18</td>
             <td>57+</td>
-            <td></td>
+            <td>⭐ Default</td>
           </tr>
           <tr>
             <td class="provider-name">OpenAI</td>
@@ -235,10 +267,42 @@
           </tr>
           <tr>
             <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-4o-transcribe-diarize</td>
+            <td class="price">$0.006</td>
+            <td class="price">$0.36</td>
+            <td>57+</td>
+            <td>Speaker labels</td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
             <td class="model-name">whisper-1</td>
             <td class="price">$0.006</td>
             <td class="price">$0.36</td>
             <td>57+</td>
+            <td>Legacy</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Deepgram</td>
+            <td class="model-name">Nova-3 (batch)</td>
+            <td class="price">$0.0043</td>
+            <td class="price">$0.26</td>
+            <td>36+</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Deepgram</td>
+            <td class="model-name">Nova-3 (streaming)</td>
+            <td class="price">$0.0077</td>
+            <td class="price">$0.46</td>
+            <td>36+</td>
+            <td><span class="badge badge-best">TOP ACCURACY</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Deepgram</td>
+            <td class="model-name">Nova-3 (multi-channel)</td>
+            <td class="price">$0.0052</td>
+            <td class="price">$0.31</td>
+            <td>36+</td>
             <td></td>
           </tr>
           <tr>
@@ -247,39 +311,15 @@
             <td class="price">$0.0058</td>
             <td class="price">$0.35</td>
             <td>36+</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td class="provider-name">Deepgram</td>
-            <td class="model-name">Nova-3 (Mono)</td>
-            <td class="price">$0.0077</td>
-            <td class="price">$0.46</td>
-            <td>36+</td>
-            <td><span class="badge badge-best">TOP ACCURACY</span></td>
-          </tr>
-          <tr>
-            <td class="provider-name">Deepgram</td>
-            <td class="model-name">Nova-3 (Multi)</td>
-            <td class="price">$0.0092</td>
-            <td class="price">$0.55</td>
-            <td>45+</td>
-            <td></td>
+            <td>Legacy</td>
           </tr>
           <tr>
             <td class="provider-name">Volcengine</td>
-            <td class="model-name">Seed-ASR 2.0 (stream)</td>
-            <td class="price">~$0.010</td>
-            <td class="price">~$0.62</td>
+            <td class="model-name">Seed-ASR (Doubao)</td>
+            <td class="price" style="color:var(--text-muted);">Pending</td>
+            <td class="price" style="color:var(--text-muted);">Pending</td>
             <td>13+</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td class="provider-name">Ollama</td>
-            <td class="model-name">whisper (local)</td>
-            <td class="price free">Free 🖥️</td>
-            <td class="price free">Free</td>
-            <td>57+</td>
-            <td>Local GPU</td>
+            <td>F-063 (TOS or WS)</td>
           </tr>
         </tbody>
       </table>
@@ -305,14 +345,65 @@
           </tr>
         </thead>
         <tbody>
+          <!-- Free / Local -->
+          <tr>
+            <td class="provider-name">Ollama (Local)</td>
+            <td class="model-name">qwen3:8b · llama3.1:8b · deepseek-r1:8b · gemma3:4b</td>
+            <td class="price free">Free 🖥️</td>
+            <td class="price free">Free</td>
+            <td>Varies</td>
+            <td><span class="badge badge-free">100% LOCAL</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">MLX Server (Local)</td>
+            <td class="model-name">Qwen3.5-9B · Llama 3.3 70B · Mistral Small 24B</td>
+            <td class="price free">Free 🖥️</td>
+            <td class="price free">Free</td>
+            <td>Varies</td>
+            <td><span class="badge badge-free">APPLE SILICON</span></td>
+          </tr>
           <tr>
             <td class="provider-name">Zhipu</td>
-            <td class="model-name">glm-4-flash</td>
+            <td class="model-name">glm-4.7-flash</td>
             <td class="price free">Free ✨</td>
             <td class="price free">Free</td>
-            <td>128K</td>
+            <td>203K</td>
             <td><span class="badge badge-free">FREE</span></td>
           </tr>
+          <tr>
+            <td class="provider-name">Zhipu</td>
+            <td class="model-name">glm-4.5-air</td>
+            <td class="price">~$0.20</td>
+            <td class="price">~$0.30</td>
+            <td>128K</td>
+            <td>Lightweight</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Zhipu</td>
+            <td class="model-name">glm-4.6</td>
+            <td class="price">$0.60</td>
+            <td class="price">$2.20</td>
+            <td>200K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Zhipu</td>
+            <td class="model-name">glm-5</td>
+            <td class="price">$1.00</td>
+            <td class="price">$3.00</td>
+            <td>200K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Zhipu</td>
+            <td class="model-name">glm-5.1</td>
+            <td class="price">$0.45</td>
+            <td class="price">$0.80</td>
+            <td>200K</td>
+            <td><span class="badge badge-best">FLAGSHIP</span></td>
+          </tr>
+
+          <!-- Groq (fast, cheap) -->
           <tr>
             <td class="provider-name">Groq</td>
             <td class="model-name">llama-3.1-8b-instant</td>
@@ -322,44 +413,28 @@
             <td><span class="badge badge-fast">FASTEST</span></td>
           </tr>
           <tr>
-            <td class="provider-name">Qwen</td>
-            <td class="model-name">qwen3.5-flash</td>
-            <td class="price">~$0.03</td>
-            <td class="price">~$0.14</td>
+            <td class="provider-name">Groq</td>
+            <td class="model-name">openai/gpt-oss-20b</td>
+            <td class="price">$0.10</td>
+            <td class="price">$0.50</td>
             <td>128K</td>
-            <td><span class="badge badge-cheap">CHEAP</span></td>
+            <td></td>
           </tr>
           <tr>
-            <td class="provider-name">OpenAI</td>
-            <td class="model-name">gpt-4o-mini</td>
+            <td class="provider-name">Groq</td>
+            <td class="model-name">openai/gpt-oss-120b</td>
             <td class="price">$0.15</td>
             <td class="price">$0.60</td>
             <td>128K</td>
-            <td>⭐ Recommended</td>
+            <td>⭐ Default</td>
           </tr>
           <tr>
-            <td class="provider-name">Gemini</td>
-            <td class="model-name">gemini-2.0-flash</td>
-            <td class="price">$0.10</td>
-            <td class="price">$0.40</td>
-            <td>1M</td>
-            <td><span class="badge badge-free">FREE TIER</span></td>
-          </tr>
-          <tr>
-            <td class="provider-name">DeepSeek</td>
-            <td class="model-name">deepseek-chat (V3.2)</td>
-            <td class="price">$0.28</td>
-            <td class="price">$0.42</td>
-            <td>164K</td>
-            <td><span class="badge badge-cheap">VALUE</span></td>
-          </tr>
-          <tr>
-            <td class="provider-name">Volcengine</td>
-            <td class="model-name">doubao-seed-2.0-mini</td>
-            <td class="price">~$0.03</td>
-            <td class="price">~$0.28</td>
-            <td>32K</td>
-            <td></td>
+            <td class="provider-name">Groq</td>
+            <td class="model-name">qwen/qwen3-32b</td>
+            <td class="price">$0.29</td>
+            <td class="price">$0.39</td>
+            <td>128K</td>
+            <td>Reasoning preview</td>
           </tr>
           <tr>
             <td class="provider-name">Groq</td>
@@ -369,21 +444,67 @@
             <td>128K</td>
             <td></td>
           </tr>
+
+          <!-- DeepSeek -->
           <tr>
-            <td class="provider-name">Kimi</td>
-            <td class="model-name">kimi-k2.5</td>
-            <td class="price">$0.60</td>
-            <td class="price">$3.00</td>
-            <td>128K</td>
-            <td></td>
+            <td class="provider-name">DeepSeek</td>
+            <td class="model-name">deepseek-v4-flash</td>
+            <td class="price">$0.14</td>
+            <td class="price">$0.28</td>
+            <td>1M</td>
+            <td><span class="badge badge-cheap">VALUE ⭐</span></td>
           </tr>
           <tr>
-            <td class="provider-name">MiniMax</td>
-            <td class="model-name">MiniMax-Text-02</td>
-            <td class="price">$0.26</td>
-            <td class="price">$1.00</td>
-            <td>197K</td>
-            <td></td>
+            <td class="provider-name">DeepSeek</td>
+            <td class="model-name">deepseek-v4-pro</td>
+            <td class="price">$0.435 *</td>
+            <td class="price">$0.87 *</td>
+            <td>1M</td>
+            <td>* 75% off till 2026-05-31</td>
+          </tr>
+
+          <!-- OpenAI -->
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-5.4-nano</td>
+            <td class="price">$0.20</td>
+            <td class="price">$1.25</td>
+            <td>400K</td>
+            <td><span class="badge badge-cheap">CHEAPEST</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-4o-mini</td>
+            <td class="price">$0.15</td>
+            <td class="price">$0.60</td>
+            <td>128K</td>
+            <td>Legacy fallback</td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-5.4-mini</td>
+            <td class="price">$0.75</td>
+            <td class="price">$4.50</td>
+            <td>400K</td>
+            <td>⭐ Default</td>
+          </tr>
+          <tr>
+            <td class="provider-name">OpenAI</td>
+            <td class="model-name">gpt-5.5</td>
+            <td class="price">$3.00</td>
+            <td class="price">$15.00</td>
+            <td>400K</td>
+            <td><span class="badge badge-best">FRONTIER</span></td>
+          </tr>
+
+          <!-- Gemini -->
+          <tr>
+            <td class="provider-name">Gemini</td>
+            <td class="model-name">gemini-2.5-flash-lite</td>
+            <td class="price">$0.10</td>
+            <td class="price">$0.40</td>
+            <td>1M</td>
+            <td><span class="badge badge-free">FREE TIER</span></td>
           </tr>
           <tr>
             <td class="provider-name">Gemini</td>
@@ -391,55 +512,239 @@
             <td class="price">$0.30</td>
             <td class="price">$2.50</td>
             <td>1M</td>
-            <td></td>
+            <td>⭐ Default</td>
           </tr>
           <tr>
-            <td class="provider-name">OpenAI</td>
-            <td class="model-name">gpt-4o</td>
-            <td class="price">$2.50</td>
+            <td class="provider-name">Gemini</td>
+            <td class="model-name">gemini-2.5-pro</td>
+            <td class="price">$1.25</td>
             <td class="price">$10.00</td>
-            <td>128K</td>
-            <td><span class="badge badge-best">PREMIUM</span></td>
+            <td>1M (2× &gt;200K)</td>
+            <td><span class="badge badge-best">FLAGSHIP</span></td>
+          </tr>
+
+          <!-- Claude -->
+          <tr>
+            <td class="provider-name">Claude</td>
+            <td class="model-name">claude-haiku-4-5</td>
+            <td class="price">$1.00</td>
+            <td class="price">$5.00</td>
+            <td>200K</td>
+            <td>Fast tier</td>
           </tr>
           <tr>
             <td class="provider-name">Claude</td>
-            <td class="model-name">claude-sonnet-4-5</td>
+            <td class="model-name">claude-sonnet-4-6</td>
             <td class="price">$3.00</td>
             <td class="price">$15.00</td>
-            <td>200K</td>
-            <td><span class="badge badge-best">PREMIUM</span></td>
+            <td>1M</td>
+            <td><span class="badge badge-best">PREMIUM ⭐</span></td>
           </tr>
           <tr>
             <td class="provider-name">Claude</td>
-            <td class="model-name">claude-haiku-3-5</td>
-            <td class="price">$0.80</td>
-            <td class="price">$4.00</td>
+            <td class="model-name">claude-opus-4-7</td>
+            <td class="price">$5.00</td>
+            <td class="price">$25.00</td>
             <td>200K</td>
+            <td>Most capable</td>
+          </tr>
+
+          <!-- Kimi -->
+          <tr>
+            <td class="provider-name">Kimi (Moonshot)</td>
+            <td class="model-name">kimi-k2.5</td>
+            <td class="price">$0.60</td>
+            <td class="price">$2.50</td>
+            <td>128K</td>
+            <td>Previous flagship</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Kimi (Moonshot)</td>
+            <td class="model-name">kimi-k2.6</td>
+            <td class="price">$0.60</td>
+            <td class="price">$2.50</td>
+            <td>200K</td>
+            <td>⭐ Latest</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Kimi (Moonshot)</td>
+            <td class="model-name">kimi-k2-thinking-turbo</td>
+            <td class="price">$0.60</td>
+            <td class="price">$2.50</td>
+            <td>200K</td>
+            <td>Reasoning</td>
+          </tr>
+
+          <!-- MiniMax -->
+          <tr>
+            <td class="provider-name">MiniMax</td>
+            <td class="model-name">MiniMax-M2.5</td>
+            <td class="price">$0.15</td>
+            <td class="price">$1.15</td>
+            <td>197K</td>
             <td></td>
           </tr>
           <tr>
-            <td class="provider-name">Zhipu</td>
-            <td class="model-name">glm-4-plus</td>
-            <td class="price">~$0.69</td>
-            <td class="price">~$0.69</td>
+            <td class="provider-name">MiniMax</td>
+            <td class="model-name">MiniMax-M2.7-highspeed</td>
+            <td class="price">$0.30</td>
+            <td class="price">$2.40</td>
+            <td>197K</td>
+            <td><span class="badge badge-fast">FAST</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">MiniMax</td>
+            <td class="model-name">MiniMax-M2.7</td>
+            <td class="price">$0.30</td>
+            <td class="price">$1.20</td>
+            <td>197K</td>
+            <td>⭐ Latest</td>
+          </tr>
+
+          <!-- Volcengine Doubao -->
+          <tr>
+            <td class="provider-name">Volcengine</td>
+            <td class="model-name">doubao-seed-1-6</td>
+            <td class="price">~$0.11</td>
+            <td class="price">~$1.13</td>
+            <td>256K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Volcengine</td>
+            <td class="model-name">doubao-seed-1-8</td>
+            <td class="price">~$0.11</td>
+            <td class="price">~$0.28</td>
+            <td>32K (cheap)</td>
+            <td>⭐ Default</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Volcengine</td>
+            <td class="model-name">doubao-seed-2-0-pro</td>
+            <td class="price">$0.47</td>
+            <td class="price">$2.37</td>
+            <td>256K</td>
+            <td><span class="badge badge-best">FLAGSHIP</span></td>
+          </tr>
+
+          <!-- Qwen -->
+          <tr>
+            <td class="provider-name">Qwen</td>
+            <td class="model-name">qwen-turbo-latest</td>
+            <td class="price">~$0.05</td>
+            <td class="price">~$0.20</td>
             <td>128K</td>
+            <td>Cheap stable</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Qwen</td>
+            <td class="model-name">qwen3.6-flash</td>
+            <td class="price">~$0.06</td>
+            <td class="price">~$0.50</td>
+            <td>128K</td>
+            <td><span class="badge badge-cheap">VALUE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Qwen</td>
+            <td class="model-name">qwen3.6-plus</td>
+            <td class="price">$0.33</td>
+            <td class="price">$1.95</td>
+            <td>1M</td>
+            <td>⭐ Default</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Qwen</td>
+            <td class="model-name">qwen3.6-max-preview</td>
+            <td class="price">$1.04</td>
+            <td class="price">$6.24</td>
+            <td>1M</td>
+            <td><span class="badge badge-best">FRONTIER</span></td>
+          </tr>
+
+          <!-- SiliconFlow aggregator -->
+          <tr>
+            <td class="provider-name">SiliconFlow</td>
+            <td class="model-name">Qwen/Qwen3-8B</td>
+            <td class="price free">Free ✨</td>
+            <td class="price free">Free</td>
+            <td>32K</td>
+            <td><span class="badge badge-free">FREE</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">SiliconFlow</td>
+            <td class="model-name">deepseek-ai/DeepSeek-V3</td>
+            <td class="price">~$0.014</td>
+            <td class="price">~$0.028</td>
+            <td>164K</td>
+            <td><span class="badge badge-cheap">CHEAPEST</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">SiliconFlow</td>
+            <td class="model-name">deepseek-ai/DeepSeek-V3.1-Terminus</td>
+            <td class="price">~$0.28</td>
+            <td class="price">~$0.42</td>
+            <td>164K</td>
             <td></td>
           </tr>
           <tr>
             <td class="provider-name">SiliconFlow</td>
-            <td class="model-name">Qwen2.5-72B-Instruct</td>
+            <td class="model-name">zai-org/GLM-4.6</td>
+            <td class="price">~$0.42</td>
+            <td class="price">~$0.84</td>
+            <td>200K</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="provider-name">SiliconFlow</td>
+            <td class="model-name">Qwen/Qwen3-235B-A22B</td>
+            <td class="price">~$0.41</td>
+            <td class="price">~$0.83</td>
+            <td>128K</td>
+            <td>MoE 235B</td>
+          </tr>
+          <tr>
+            <td class="provider-name">SiliconFlow</td>
+            <td class="model-name">Qwen/Qwen2.5-72B-Instruct</td>
             <td class="price">~$0.57</td>
             <td class="price">~$0.57</td>
             <td>128K</td>
             <td></td>
           </tr>
+
+          <!-- Together AI -->
           <tr>
-            <td class="provider-name">Ollama / MLX</td>
-            <td class="model-name">Local models</td>
-            <td class="price free">Free 🖥️</td>
-            <td class="price free">Free</td>
+            <td class="provider-name">Together AI</td>
+            <td class="model-name">Qwen/Qwen3.5-9B</td>
+            <td class="price">$0.20</td>
+            <td class="price">$0.20</td>
+            <td>32K</td>
+            <td>Cheap & fast</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Together AI</td>
+            <td class="model-name">meta-llama/Llama-3.3-70B-Instruct-Turbo</td>
+            <td class="price">$0.88</td>
+            <td class="price">$0.88</td>
+            <td>128K</td>
+            <td>Balanced</td>
+          </tr>
+          <tr>
+            <td class="provider-name">Together AI</td>
+            <td class="model-name">deepseek-ai/DeepSeek-V4-Pro</td>
+            <td class="price">~$1.50</td>
+            <td class="price">~$3.00</td>
+            <td>512K</td>
+            <td>Reasoning flagship</td>
+          </tr>
+
+          <!-- OpenRouter -->
+          <tr>
+            <td class="provider-name">OpenRouter</td>
+            <td class="model-name">300+ models (aggregator)</td>
+            <td class="price">Pass-through</td>
+            <td class="price">Pass-through</td>
             <td>Varies</td>
-            <td>Local hardware</td>
+            <td>One key, many models</td>
           </tr>
         </tbody>
       </table>
@@ -452,7 +757,7 @@
   <div class="container">
     <div class="note">
       <strong>💡 How Vowrite pricing works:</strong> Vowrite itself is free and open source. You bring your own API keys (BYOK) and pay providers directly for what you use. Mix and match — use one provider for STT and another for Polish.<br><br>
-      <strong>📌 Notes:</strong> CNY prices converted at ~¥7.2 = $1 USD (March 2026). Prices sourced from official provider pages and may change. Monthly estimates assume ~15 hours STT + ~300K tokens Polish per month.
+      <strong>📌 Notes:</strong> CNY prices converted at ~¥7.2 = $1 USD (May 2026). Prices sourced from official provider pages and may change — verify on the provider's billing page before high-volume usage. Monthly estimates assume ~15 hours STT + ~300K tokens Polish per month. Models marked ⭐ are the Vowrite default for that provider.
     </div>
   </div>
 </section>
@@ -460,7 +765,7 @@
 <footer class="footer">
   <div class="container">
     <p>Vowrite — Say it once. Mean it perfectly. · <a href="https://github.com/Joevonlong/Vowrite">GitHub</a> · <a href="/">Home</a></p>
-    <p style="margin-top:6px;">Last updated: March 2026</p>
+    <p style="margin-top:6px;">Last updated: May 2026 · v0.2.0.1</p>
   </div>
 </footer>
 
