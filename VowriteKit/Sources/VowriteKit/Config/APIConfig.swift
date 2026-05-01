@@ -11,20 +11,51 @@ public struct APIEndpointConfiguration: Codable, Equatable {
         self.baseURL = APIEndpointConfiguration.normalizeBaseURL(baseURL, provider: provider)
     }
 
+    /// Effective base URL for HTTP requests. When the user has an active OAuth
+    /// session whose token carries a base URL override (e.g. Kimi Code Coding
+    /// Plan re-routes to api.kimi.com/coding/v1), that takes precedence over
+    /// the stored value.
     public var resolvedBaseURL: String {
-        APIEndpointConfiguration.normalizeBaseURL(baseURL, provider: provider)
+        if let oauthURL = KeyVault.effectiveBaseURL(for: provider) {
+            return oauthURL
+        }
+        return APIEndpointConfiguration.normalizeBaseURL(baseURL, provider: provider)
     }
 
     public var requiresAPIKey: Bool {
         provider.requiresAPIKey
     }
 
+    /// True when an API key is stored OR a valid OAuth token is active.
     public var hasKey: Bool {
-        KeyVault.hasKey(for: provider)
+        if KeyVault.preferredAuthMethod(for: provider) == "oauth",
+           KeyVault.hasValidOAuthToken(for: provider) {
+            return true
+        }
+        return KeyVault.hasKey(for: provider)
     }
 
+    /// Credential to use in the Authorization header. Returns the OAuth access
+    /// token when the user prefers OAuth and has a valid token; otherwise the
+    /// stored API key.
     public var key: String? {
-        KeyVault.key(for: provider)
+        KeyVault.effectiveKey(for: provider)
+    }
+
+    /// Model ID to send to the API. Some providers require a different model
+    /// alias when authenticated via OAuth (e.g. Kimi Code Coding Plan accepts
+    /// only `kimi-for-coding`, mapped server-side to the user's plan model).
+    public var resolvedModel: String {
+        if KeyVault.preferredAuthMethod(for: provider) == "oauth",
+           KeyVault.hasValidOAuthToken(for: provider) {
+            switch provider.providerID {
+            case "kimi":
+                return "kimi-for-coding"
+            default:
+                break
+            }
+        }
+        return model
     }
 
     public static func normalizeBaseURL(_ baseURL: String?, provider: APIProvider) -> String {

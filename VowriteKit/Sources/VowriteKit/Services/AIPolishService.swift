@@ -11,8 +11,11 @@ public final class AIPolishService {
         let provider = configuration.provider
         let config = modeConfig ?? ModeManager.currentModeConfig
 
-        // Use mode-specific polish model or fall back to effective config
-        let model = config.polishModel ?? configuration.model
+        // Use mode-specific polish model or fall back to effective config.
+        // OAuth-active providers may rewrite the requested model server-side
+        // (e.g. Kimi Code Coding Plan → `kimi-for-coding`), so when no mode
+        // override is set, prefer the OAuth-resolved model alias.
+        let model = config.polishModel ?? configuration.resolvedModel
 
         // Build system prompt: base + output style + mode-specific override or scene fallback
         var systemPrompt = PromptConfig.effectiveSystemPrompt
@@ -84,6 +87,13 @@ public final class AIPolishService {
 
         // Provider-specific headers (e.g. OpenRouter requires HTTP-Referer)
         provider.applyHeaders(to: &request)
+
+        // Kimi Code Coding Plan endpoint requires coding-agent UA + device headers
+        if provider == .kimi,
+           KeyVault.preferredAuthMethod(for: provider) == "oauth",
+           KeyVault.hasValidOAuthToken(for: provider) {
+            KimiCodeOAuthService.applyCodingPlanHeaders(to: &request)
+        }
 
         let payload: [String: Any] = [
             "model": model,
