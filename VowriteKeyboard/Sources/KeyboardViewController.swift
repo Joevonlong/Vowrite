@@ -1,19 +1,16 @@
 import UIKit
 import SwiftUI
+import Combine
 import VowriteKit
 
 class KeyboardViewController: UIInputViewController {
     private var keyboardState: KeyboardState!
+    private var heightCancellable: AnyCancellable?
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         view.backgroundColor = .secondarySystemBackground
-        // F-067: Allow keyboard subviews (specifically the long-press
-        // bulk-delete popup) to render above the keyboard's nominal top
-        // edge, mirroring how Apple's own keyboard draws key-magnification
-        // previews above its frame.
-        view.clipsToBounds = false
 
         // 1. Configure shared storage
         VowriteStorage.configure(suiteName: VowriteStorage.appGroupID)
@@ -31,7 +28,6 @@ class KeyboardViewController: UIInputViewController {
         let hosting = UIHostingController(rootView: keyboardView)
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
         hosting.view.backgroundColor = .secondarySystemBackground
-        hosting.view.clipsToBounds = false
 
         addChild(hosting)
         self.view.addSubview(hosting.view)
@@ -51,14 +47,38 @@ class KeyboardViewController: UIInputViewController {
 
     private var heightConstraint: NSLayoutConstraint?
 
+    /// Base keyboard height in points. The actual constraint constant is
+    /// `baseKeyboardHeight + keyboardState.extraTopHeight` so the keyboard
+    /// can grow during the F-067 bulk-delete popup gesture.
+    private let baseKeyboardHeight: CGFloat = 280
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         // Set explicit height to claim the full keyboard area
         if heightConstraint == nil {
-            let constraint = view.heightAnchor.constraint(equalToConstant: 280)
+            let constraint = view.heightAnchor.constraint(equalToConstant: baseKeyboardHeight)
             constraint.priority = .defaultHigh
             constraint.isActive = true
             heightConstraint = constraint
+        }
+        // F-067: Observe popup-driven extra top height and grow the keyboard
+        // so the bulk-delete popup can render in the new top space without
+        // being clipped by the system keyboard window.
+        if heightCancellable == nil {
+            heightCancellable = keyboardState.$extraTopHeight
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] extra in
+                    guard let self = self,
+                          let constraint = self.heightConstraint else { return }
+                    constraint.constant = self.baseKeyboardHeight + extra
+                    UIView.animate(
+                        withDuration: 0.22,
+                        delay: 0,
+                        options: [.curveEaseOut, .beginFromCurrentState]
+                    ) {
+                        self.view.superview?.layoutIfNeeded()
+                    }
+                }
         }
     }
 

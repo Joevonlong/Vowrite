@@ -161,8 +161,9 @@ struct TopBar: View {
         fingerOnPopup = false
         popupHoldStartedAt = nil
         if wasPopupVisible {
-            withAnimation(.easeOut(duration: 0.18)) {
+            withAnimation(.easeOut(duration: 0.22)) {
                 popupVisible = false
+                state.extraTopHeight = 0
             }
         }
 
@@ -188,8 +189,11 @@ struct TopBar: View {
     private func scheduleRevealPopup() {
         let work = DispatchWorkItem {
             guard pressActive, !popupVisible else { return }
+            // Grow the keyboard by 56pt at the top so the popup has room to
+            // render above the delete button inside the keyboard's frame.
             withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
                 popupVisible = true
+                state.extraTopHeight = 56
             }
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             startContinuousDelete()
