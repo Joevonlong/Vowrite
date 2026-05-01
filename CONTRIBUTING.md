@@ -108,6 +108,20 @@ Start a [discussion](https://github.com/Joevonlong/Vowrite/discussions) or open 
 - Your proposed solution
 - Any alternatives you've considered
 
+### Adding a New AI Provider
+
+Vowrite already supports 15+ STT and polish providers, and we welcome PRs that add more. Provider definitions live in a single JSON file — for OpenAI-compatible APIs, **no Swift code is required**.
+
+**👉 See [`docs/PROVIDER_GUIDE.md`](docs/PROVIDER_GUIDE.md) for the full reference** (field schema, auth styles, examples, and how to add non-standard protocols).
+
+Quick summary:
+
+1. Edit `VowriteKit/Sources/VowriteKit/Resources/providers.json` — add an entry with `id`, `name`, `baseURL`, `auth`, `capabilities`, and model lists
+2. `cd VowriteMac && ./build.sh` — the new provider appears automatically in Settings
+3. Test with a real API key, then open a PR
+
+Non-OpenAI-compatible STT (e.g. Deepgram-style binary upload, WebSocket protocols) requires a small `STTAdapter` Swift file in addition to the JSON entry — the guide covers this with reference implementations.
+
 ### Submitting Code
 
 See [Submitting a Pull Request](#submitting-a-pull-request) above for the full workflow.
