@@ -34,8 +34,12 @@ struct KeyboardView: View {
     @Environment(\.openURL) private var openURL
 
     /// True when the keyboard is actively recording or processing (full-screen mode).
+    /// Also true while the F-064 long-press 口述/翻译 selection arcs are visible,
+    /// so the TopBar collapses out of the way during the gesture.
     private var isFullScreen: Bool {
-        state.viewState == .recording || state.viewState == .processing
+        state.viewState == .recording
+            || state.viewState == .processing
+            || state.isModeSelectionExpanded
     }
 
     var body: some View {

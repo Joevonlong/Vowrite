@@ -29,6 +29,7 @@ public final class BackgroundRecordingIPC {
         static let requestedModeId = "bg_recording_mode_id"
         static let requestedAIEnabled = "bg_recording_ai_enabled"
         static let requestedStyleName = "bg_recording_style_name"
+        static let sessionModeOverrideId = "bg_recording_session_mode_override_id"
         static let serviceActive = "bg_service_active"
         static let serviceHeartbeat = "bg_service_heartbeat"
     }
@@ -162,6 +163,22 @@ public final class BackgroundRecordingIPC {
         set { defaults.set(newValue, forKey: Key.requestedStyleName) }
     }
 
+    /// F-064: One-shot mode override for the next recording. When set, the
+    /// background service uses this Mode (looked up by UUID) instead of the
+    /// persisted current Mode and clears the value at the end of the session.
+    /// The keyboard sets this just before sending `.start` to trigger
+    /// translation without mutating the user's selected Mode.
+    public var sessionModeOverrideId: String? {
+        get {
+            defaults.synchronize()
+            return defaults.string(forKey: Key.sessionModeOverrideId)
+        }
+        set {
+            defaults.set(newValue, forKey: Key.sessionModeOverrideId)
+            defaults.synchronize()
+        }
+    }
+
     // MARK: - Service liveness
 
     public var serviceActive: Bool {
@@ -205,5 +222,12 @@ public final class BackgroundRecordingIPC {
         rawTranscript = nil
         errorMessage = nil
         state = .idle
+    }
+
+    /// F-064: Clear the one-shot mode override. Called by the BG service at
+    /// the end of every recording lifecycle (success / cancel / error) so the
+    /// next session falls back to the user's persisted Mode.
+    public func clearSessionModeOverride() {
+        sessionModeOverrideId = nil
     }
 }

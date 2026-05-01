@@ -76,6 +76,28 @@ final class BackgroundRecordingService: ObservableObject {
     private var interruptionObserver: NSObjectProtocol?
     private var promptContext: PromptContext?
 
+    /// F-064: One-shot Mode override resolved at recording start. When set,
+    /// `effectiveModeConfig` returns this Mode's config instead of the user's
+    /// persisted current Mode. Cleared at the end of every recording lifecycle.
+    private var sessionMode: Mode?
+
+    /// F-064: Read ModeManager.currentModeConfig unless a session override was
+    /// installed at recording start, in which case use that. Mirrors the
+    /// macOS DictationEngine.effectiveModeConfig pattern from F-063.
+    private var effectiveModeConfig: ModeConfig {
+        if let mode = sessionMode {
+            return ModeConfig(from: mode)
+        }
+        return ModeManager.currentModeConfig
+    }
+
+    /// F-064: Clear the one-shot override at the end of a session and tell the
+    /// keyboard so the next recording falls back to the user's persisted Mode.
+    private func clearSessionMode() {
+        sessionMode = nil
+        ipc.clearSessionModeOverride()
+    }
+
     // MARK: - Auto-deactivation timer
     private var countdownTimer: Timer?
     private var activatedAt: Date?
@@ -264,6 +286,7 @@ final class BackgroundRecordingService: ObservableObject {
         ipc.stopObserving()
         ipc.serviceActive = false
         ipc.clearResult()
+        ipc.clearSessionModeOverride()
 
         #if os(iOS)
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
@@ -435,7 +458,22 @@ final class BackgroundRecordingService: ObservableObject {
             #if DEBUG
             print("[Vowrite BG] startRecording() failed: no inputFormat (engine not started)")
             #endif
+            // Drop any stale override the keyboard may have written before the failure.
+            clearSessionMode()
             return
+        }
+
+        // F-064: Resolve one-shot Mode override (e.g., translate from keyboard arc).
+        // Read once at start so a Mode change mid-session can't leak in.
+        if let overrideId = ipc.sessionModeOverrideId,
+           let uuid = UUID(uuidString: overrideId),
+           let mode = ModeManager.shared.modes.first(where: { $0.id == uuid }) {
+            sessionMode = mode
+            #if DEBUG
+            print("[Vowrite BG] Session mode override: \(mode.name) (isTranslation=\(mode.isTranslation), target=\(mode.targetLanguage ?? "—"))")
+            #endif
+        } else {
+            sessionMode = nil
         }
 
         let tempDir = FileManager.default.temporaryDirectory
@@ -510,6 +548,7 @@ final class BackgroundRecordingService: ObservableObject {
         guard let audioURL = recordingURL else {
             ipc.state = .error
             ipc.errorMessage = "No audio captured"
+            clearSessionMode()
             return
         }
 
@@ -522,6 +561,7 @@ final class BackgroundRecordingService: ObservableObject {
             #if DEBUG
             print("[Vowrite BG] Recording too short (\(String(format: "%.1f", duration))s), skipping")
             #endif
+            clearSessionMode()
             return
         }
 
@@ -534,13 +574,14 @@ final class BackgroundRecordingService: ObservableObject {
             #if DEBUG
             print("[Vowrite BG] Silent recording (peakRMS=\(peakRMS)), skipping Whisper")
             #endif
+            clearSessionMode()
             return
         }
 
         ipc.state = .processing
 
         // F-033: Pre-build Polish request during STT (runs in parallel)
-        let modeConfig = ModeManager.currentModeConfig
+        let modeConfig = effectiveModeConfig
         let effectivePolishEnabled = ipc.requestedAIEnabled && modeConfig.polishEnabled
         if effectivePolishEnabled {
             speculativePolish.prepare(modeConfig: modeConfig, promptContext: promptContext)
@@ -569,6 +610,7 @@ final class BackgroundRecordingService: ObservableObject {
         promptContext = nil
         speculativePolish.reset()
         ipc.clearResult()
+        clearSessionMode()
 
         #if DEBUG
         print("[Vowrite BG] Recording cancelled")
@@ -609,9 +651,13 @@ final class BackgroundRecordingService: ObservableObject {
                 // Read keyboard's requested config
                 let aiEnabled = ipc.requestedAIEnabled
 
-                // Load mode config, applying keyboard's style override if set
-                var modeConfig = ModeManager.currentModeConfig
-                if let styleName = self.ipc.requestedStyleName,
+                // Load mode config (honors F-064 one-shot override),
+                // applying keyboard's style override if set.
+                // Translation modes ignore the style override — they have a
+                // dedicated prompt path that doesn't consume OutputStyle.
+                var modeConfig = effectiveModeConfig
+                if !modeConfig.isTranslation,
+                   let styleName = self.ipc.requestedStyleName,
                    let styleId = OutputStyleManager.styleId(forName: styleName),
                    styleId != modeConfig.outputStyleId {
                     modeConfig = modeConfig.withStyleOverride(styleId)
@@ -622,11 +668,13 @@ final class BackgroundRecordingService: ObservableObject {
                 if !sttConfig.provider.hasSTTSupport {
                     ipc.state = .error
                     ipc.errorMessage = "\(sttConfig.provider.rawValue) doesn't support STT"
+                    clearSessionMode()
                     return
                 }
                 if sttConfig.requiresAPIKey && sttConfig.key == nil {
                     ipc.state = .error
                     ipc.errorMessage = "Missing \(sttConfig.provider.rawValue) API Key"
+                    clearSessionMode()
                     return
                 }
 
@@ -644,6 +692,7 @@ final class BackgroundRecordingService: ObservableObject {
                 guard !rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     ipc.state = .error
                     ipc.errorMessage = "No speech detected"
+                    clearSessionMode()
                     return
                 }
 
@@ -654,6 +703,7 @@ final class BackgroundRecordingService: ObservableObject {
                     #endif
                     ipc.state = .error
                     ipc.errorMessage = "No speech detected"
+                    clearSessionMode()
                     return
                 }
 
@@ -709,6 +759,7 @@ final class BackgroundRecordingService: ObservableObject {
                 // Clean up
                 speculativePolish.reset()
                 promptContext = nil
+                clearSessionMode()
                 try? FileManager.default.removeItem(at: url)
 
                 #if DEBUG
@@ -722,6 +773,7 @@ final class BackgroundRecordingService: ObservableObject {
                 ipc.state = .error
                 let desc = error.localizedDescription
                 ipc.errorMessage = desc.count > 80 ? String(desc.prefix(80)) + "..." : desc
+                clearSessionMode()
             }
 
             if pendingAutoDeactivation {
