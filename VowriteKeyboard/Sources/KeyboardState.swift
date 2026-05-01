@@ -14,6 +14,19 @@ final class KeyboardState: ObservableObject {
     /// The orb is still shown but with a different label ("点击激活").
     @Published var needsActivation: Bool = false
 
+    /// F-064: Set to true while a translate-mode recording is active. Drives
+    /// the "Translating to {language}" banner in the recording view. Cleared
+    /// when the recording lifecycle ends (done / error / cancel).
+    @Published var isInTranslateSession: Bool = false
+    /// F-064: Localised display name of the active translation target
+    /// (e.g. "English", "Chinese (Simplified)"). Set at the moment the user
+    /// commits to the translate arc; reset when the session ends.
+    @Published var translationTargetName: String = ""
+    /// F-064: True while the long-press 口述/翻译 selection arcs are visible.
+    /// Owned by RecordArea, mirrored here so KeyboardView can hide the TopBar
+    /// during the selection gesture (matching the design mockup).
+    @Published var isModeSelectionExpanded: Bool = false
+
     // Configuration state
     @Published var currentMode: Mode = Mode.builtinModes[1] // Clean
     @Published var modes: [Mode] = Mode.builtinModes
@@ -174,6 +187,64 @@ final class KeyboardState: ObservableObject {
         stopPolling()
         startCommandSentAt = nil
         viewState = .idle
+        clearTranslateSession()
+    }
+
+    // MARK: - F-064 Translate Recording
+
+    /// Start a one-shot translate-mode recording without changing the user's
+    /// persisted Mode. Mirrors `startRecording()` but writes
+    /// `ipc.sessionModeOverrideId` so the BG service swaps in the builtin
+    /// Translate mode for this session only.
+    func startTranslateRecording() {
+        if !ipc.isServiceAlive {
+            #if DEBUG
+            print("[Vowrite KB] startTranslateRecording: bg service not alive, jumping to activate")
+            #endif
+            openContainerApp(path: "activate")
+            return
+        }
+
+        guard let translateMode = modes.first(where: { $0.isTranslation }) else {
+            #if DEBUG
+            print("[Vowrite KB] startTranslateRecording: no translation Mode found")
+            #endif
+            viewState = .error("Translate mode not configured")
+            return
+        }
+
+        let targetCode = translateMode.targetLanguage ?? "en"
+        let targetName = SupportedLanguage(rawValue: targetCode)?.displayName ?? targetCode
+
+        // Translation always needs LLM polish — force-enable for this session
+        // even if the keyboard's currentMode has AI off, since memory pressure
+        // affects the keyboard process only and polish runs in the main app.
+        ipc.requestedAIEnabled = true
+        ipc.requestedModeId = translateMode.id.uuidString
+        ipc.requestedStyleName = nil
+        ipc.sessionModeOverrideId = translateMode.id.uuidString
+
+        translationTargetName = targetName
+        isInTranslateSession = true
+
+        ipc.sendCommand(.start)
+        startCommandSentAt = Date()
+        viewState = .recording
+        audioLevel = 0
+        recordingDuration = 0
+
+        startPolling()
+
+        #if DEBUG
+        print("[Vowrite KB] startTranslateRecording: target=\(targetName), mode=\(translateMode.name)")
+        #endif
+    }
+
+    private func clearTranslateSession() {
+        if isInTranslateSession {
+            isInTranslateSession = false
+            translationTargetName = ""
+        }
     }
 
     // MARK: - Service Alive Check
@@ -233,6 +304,7 @@ final class KeyboardState: ObservableObject {
                 viewState = .idle
                 stopPolling()
                 startCommandSentAt = nil
+                clearTranslateSession()
             }
 
         case .recording:
@@ -251,12 +323,14 @@ final class KeyboardState: ObservableObject {
             ipc.clearResult()
             stopPolling()
             viewState = .idle
+            clearTranslateSession()
 
         case .error:
             let message = ipc.errorMessage ?? "Unknown error"
             viewState = .error(message)
             ipc.clearResult()
             stopPolling()
+            clearTranslateSession()
         }
     }
 
