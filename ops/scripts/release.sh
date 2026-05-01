@@ -408,3 +408,10 @@ echo "  2. Test:    open $DMG_PATH"
 echo "  3. Push:    git push origin main --tags"
 echo "  4. Verify:  curl -s https://vowrite.com/appcast.xml | head -5"
 echo ""
+if [[ "$RELEASE_TYPE" == "STABLE" ]]; then
+    echo "  🌐 Website Track B (release sync) reminder:"
+    echo "     • Bump version refs in docs/index.html + docs/pricing.html footer to $VERSION"
+    echo "     • See ops/CHECKLIST_WEBSITE.md → Track B"
+    echo "     • Validate: ops/scripts/website-check.sh"
+    echo ""
+fi
