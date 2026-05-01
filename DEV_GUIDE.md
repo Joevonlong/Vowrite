@@ -1,5 +1,13 @@
 # Vowrite Development Guide
 
+## Adding AI Providers
+
+Adding a new STT or polish provider is mostly a JSON-only edit — no Swift code is required for OpenAI-compatible APIs. See **[`docs/PROVIDER_GUIDE.md`](docs/PROVIDER_GUIDE.md)** for the full reference (field schema, auth configuration, OpenAI-compatible vs custom-adapter flows, and reference implementations).
+
+The provider registry data lives at `VowriteKit/Sources/VowriteKit/Resources/providers.json`.
+
+---
+
 ## Build & Deploy
 
 ### Compile

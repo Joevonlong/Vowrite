@@ -52,6 +52,16 @@ Nicht mehr tippen. Einfach sprechen.
 | 📊 | **Verlauf & Statistik** | Vergangene Diktate durchsuchen, gesparte Zeit und Wörter-pro-Minute verfolgen |
 | 📱 | **iOS-Tastatur** | Spracheingabe als systemweite Tastaturerweiterung |
 
+## 🎨 Anpassung
+
+Vowrite ist auf Anpassbarkeit ausgelegt:
+
+- **[App-Icon](docs/APP_ICON_GUIDE.md)** — Durch eigenes Icon ersetzen
+- **[Aufnahme-Indikator](docs/THEME_GUIDE.md)** — 5 eingebaute Voreinstellungen, weitere folgen
+- **[KI-Anbieter](docs/PROVIDER_GUIDE.md)** — Eigene Anbieter über `providers.json` hinzufügen
+
+Vollständige Details im [Anpassungs-Leitfaden](docs/CUSTOMIZATION.md).
+
 ## 🚀 Schnellstart
 
 ### Download
@@ -202,9 +212,11 @@ Kein Unit-Test-Target — Tests sind skriptbasiert (Build-Verifizierung, Sicherh
 
 ### Neuen Anbieter hinzufügen
 
-1. `VowriteKit/Sources/VowriteKit/Config/providers.json` bearbeiten — neuen Eintrag mit `id`, `name`, `baseURL`, `capabilities` (stt/polish) und `models` hinzufügen
+1. `VowriteKit/Sources/VowriteKit/Resources/providers.json` bearbeiten — neuen Eintrag mit `id`, `name`, `baseURL`, `capabilities` (stt/polish) und `models` hinzufügen
 2. Wenn der Anbieter eine Standard-OpenAI-kompatible API nutzt, ist das alles — die `ProviderRegistry` erledigt den Rest
 3. Wenn der Anbieter ein nicht-standardmäßiges Protokoll nutzt (wie Deepgrams Binär-Upload oder iFlytek WebSocket), erstelle einen neuen `STTAdapter` in `VowriteKit/Services/`
+
+**Vollständige Referenz in [`docs/PROVIDER_GUIDE.md`](docs/PROVIDER_GUIDE.md)** — Feld-Schema, Auth-Stile, vollständige Beispiele und Adapter-Referenzimplementierungen.
 
 ### Neuen STT-Adapter hinzufügen
 

@@ -212,9 +212,11 @@ No unit test target — testing is script-based (build verification, security sc
 
 ### Adding a New Provider
 
-1. Edit `VowriteKit/Sources/VowriteKit/Config/providers.json` — add a new entry with `id`, `name`, `baseURL`, `capabilities` (stt/polish), and `models`
+1. Edit `VowriteKit/Sources/VowriteKit/Resources/providers.json` — add a new entry with `id`, `name`, `baseURL`, `capabilities` (stt/polish), and `models`
 2. If the provider uses a standard OpenAI-compatible API, that's all — the `ProviderRegistry` handles the rest
 3. If the provider uses a non-standard protocol (like Deepgram's binary upload or iFlytek's WebSocket), create a new `STTAdapter` conforming to the `STTAdapter` protocol in `VowriteKit/Services/`
+
+**See [`docs/PROVIDER_GUIDE.md`](docs/PROVIDER_GUIDE.md) for the full reference** — field schema, auth styles, complete examples, and reference adapter implementations.
 
 ### Adding a New STT Adapter
 
