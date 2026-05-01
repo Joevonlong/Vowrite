@@ -7,7 +7,39 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
-## [0.2.0.0] — 2026-03-29
+### Added — Local & Customization
+
+- **F-048 Sherpa local ASR (scaffold + Settings UI)**: `SherpaSTTAdapter`, `SherpaModelManager`, `SherpaEngine` C wrapper, 3 model definitions, macOS + iOS Local Models settings panel, tar.bz2 download/extract. Full runtime still pending sherpa-onnx XCFramework.
+- **F-051 Text Replacement & Correction**: `ReplacementManager` with trigger→replacement rules, Chinese/English flex pattern matching, dual-position replacement (post-STT + post-LLM), LLM vocabulary injection, macOS and iOS UI.
+- **F-052 Recording Indicator (3 new presets)**: Ripple Ring / Spectrum Arc / Minimal Dot — 5 themes total including Classic Bar and Orb Pulse.
+- **F-053 Auto-learn Vocabulary**: DictationEngine extracts hotwords after recording and writes them to VocabularyManager.
+- **F-054 Correction Monitor**: Detects Cmd+Z undo and records the correction into DictationRecord.
+- **F-055 Long-text optimization**: 16kHz mono audio upload, SpeculativePolish SSE streaming with `onPartial` callback, STT 60s timeout for long sessions.
+- **F-056 User docs**: `docs/CUSTOMIZATION.md`, `docs/PROVIDER_GUIDE.md`, `docs/THEME_GUIDE.md`; README adds Customization section.
+- **F-057 iOS keyboard UI redesign**: 3-state UI (idle / recording / processing), SwiftUI Link for iOS 18 keyboard activation, URL Scheme auto-return to host app, ActivationOverlay fallback.
+
+### Added — OAuth (macOS only)
+
+- **F-058 Provider OAuth infrastructure**: Shared `PKCEHelper` / `OAuthTokenStore` / `OAuthRefreshManager` / `CredentialManager` + MiniMax Coding Plan login + 4-state Settings UI on macOS.
+- **F-059 OpenAI Codex OAuth**: `OpenAICodexOAuthService` (PKCE S256) + ChatGPT Plus/Pro subscription login.
+- **F-060 Kimi Code OAuth**: `KimiCodeOAuthService` (RFC 8628 Device Flow) + Device Flow Sheet UI + transparent base URL switching.
+
+### Changed
+
+- **F-062 Provider catalog refresh**: 19 providers reviewed, 14 updated. `providers.json` schema bumped v1 → v2. Fixes: MiniMax baseURL `api.minimax.chat` → `api.minimax.io` (old domain dead); Volcengine model ID format (`.` → `-`) and removal of fictional `2-0-mini`/`lite` IDs; Groq `qwen-qwq-32b` retired; Kimi standardized on `kimi-k2.6` (dot-form ID). Additions: DeepSeek V4-flash/V4-pro, GPT-5.4-mini/5.5/5.4-nano, Claude 4-6/4-7/haiku-4-5, Gemini 2.5-pro/flash-lite, Doubao Seed 1.6/1.8/2.0-pro, Kimi K2.6, MiniMax M2.7, Qwen 3.6 series, GLM-4.6/5/5.1. Volcengine STT temporarily disabled (`capabilities.stt = false`) pending F-063.
+
+### Fixed
+
+- **macOS 26 SIGSEGV crash on AVAudioFile create**: F-055's 16kHz forced installTap format triggered a system-frame SIGSEGV on macOS 26. Reverted to native input format; also fixed `onPartial` `@Published` data race (commit `2201409`).
+- **BUG-010: OAuth credentials wired into request paths**: F-058/F-059/F-060 OAuth tokens were stored but never used by polish/STT call sites. `APIEndpointConfiguration.key` / `resolvedBaseURL` / `hasKey` switched to OAuth-aware fields; new `resolvedModel` rewrites Kimi → `kimi-for-coding` on coding-plan paths; Kimi coding-plan User-Agent + `X-Msh-*` headers now injected (commit `627eaa5`).
+- **BUG-012: macOS post-paste path hardening**: `CorrectionMonitor.captureElement` now guards AX `CFTypeRef` with `CFGetTypeID` instead of force-cast (avoids trap on Electron/Catalyst hosts); `showToast` `NSPanel` styleMask gains `.borderless` for macOS 26 stricter validation (commit `c316482`).
+- **deepseek-v4 model ID correction**: F-062 introduced a non-existent bare `deepseek-v4` ID (404 on call). Removed; `deepseek-v4-flash` and `deepseek-v4-pro` retained (commit `75a9ff7`).
+- **iOS keyboard fixes**: System light/dark appearance now followed; broken suspend trick replaced with activation overlay; IPC first-tap race condition gets a grace period; mic tap with empty config no longer crashes.
+- **iOS build warnings**: Deprecated API and actor isolation warnings cleared.
+
+### Removed
+
+- **iOS OAuth UI**: F-058/F-059/F-060 OAuth ships macOS-only; iOS-side OAuth Card views were not shipped (commit `5619912`).
 
 ## [0.2.0.0] — 2026-03-29
 
