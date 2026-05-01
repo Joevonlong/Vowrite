@@ -24,7 +24,28 @@ public struct Mode: Identifiable, Codable, Equatable {
     // Keyboard shortcut index (Cmd+1, Cmd+2, etc.)
     public var shortcutIndex: Int?
 
-    public init(id: UUID, name: String, icon: String, isBuiltin: Bool, sttModel: String?, language: String?, polishEnabled: Bool, polishModel: String?, systemPrompt: String, userPrompt: String, temperature: Double, autoPaste: Bool, outputStyleId: UUID?, shortcutIndex: Int?) {
+    // F-063: Translation mode flags
+    public var isTranslation: Bool
+    public var targetLanguage: String?   // SupportedLanguage rawValue (e.g. "en", "zh-Hans")
+
+    public init(
+        id: UUID,
+        name: String,
+        icon: String,
+        isBuiltin: Bool,
+        sttModel: String?,
+        language: String?,
+        polishEnabled: Bool,
+        polishModel: String?,
+        systemPrompt: String,
+        userPrompt: String,
+        temperature: Double,
+        autoPaste: Bool,
+        outputStyleId: UUID?,
+        shortcutIndex: Int?,
+        isTranslation: Bool = false,
+        targetLanguage: String? = nil
+    ) {
         self.id = id
         self.name = name
         self.icon = icon
@@ -39,6 +60,42 @@ public struct Mode: Identifiable, Codable, Equatable {
         self.autoPaste = autoPaste
         self.outputStyleId = outputStyleId
         self.shortcutIndex = shortcutIndex
+        self.isTranslation = isTranslation
+        self.targetLanguage = targetLanguage
+    }
+
+    // MARK: - Codable (backward-compatible decoding)
+    //
+    // Custom init(from:) so old JSON without `isTranslation` / `targetLanguage`
+    // keys still decodes successfully. encode(to:) is auto-synthesized.
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, icon, isBuiltin
+        case sttModel, language
+        case polishEnabled, polishModel, systemPrompt, userPrompt, temperature, autoPaste
+        case outputStyleId
+        case shortcutIndex
+        case isTranslation, targetLanguage
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try c.decode(UUID.self, forKey: .id)
+        self.name = try c.decode(String.self, forKey: .name)
+        self.icon = try c.decode(String.self, forKey: .icon)
+        self.isBuiltin = try c.decode(Bool.self, forKey: .isBuiltin)
+        self.sttModel = try c.decodeIfPresent(String.self, forKey: .sttModel)
+        self.language = try c.decodeIfPresent(String.self, forKey: .language)
+        self.polishEnabled = try c.decode(Bool.self, forKey: .polishEnabled)
+        self.polishModel = try c.decodeIfPresent(String.self, forKey: .polishModel)
+        self.systemPrompt = try c.decode(String.self, forKey: .systemPrompt)
+        self.userPrompt = try c.decode(String.self, forKey: .userPrompt)
+        self.temperature = try c.decode(Double.self, forKey: .temperature)
+        self.autoPaste = try c.decode(Bool.self, forKey: .autoPaste)
+        self.outputStyleId = try c.decodeIfPresent(UUID.self, forKey: .outputStyleId)
+        self.shortcutIndex = try c.decodeIfPresent(Int.self, forKey: .shortcutIndex)
+        self.isTranslation = try c.decodeIfPresent(Bool.self, forKey: .isTranslation) ?? false
+        self.targetLanguage = try c.decodeIfPresent(String.self, forKey: .targetLanguage)
     }
 
     public static let builtinModes: [Mode] = [
@@ -153,6 +210,25 @@ public struct Mode: Identifiable, Codable, Equatable {
             autoPaste: true,
             outputStyleId: nil,
             shortcutIndex: 7
+        ),
+        // F-063: Translate mode (eighth built-in)
+        Mode(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000008")!,
+            name: "Translate",
+            icon: "globe",
+            isBuiltin: true,
+            sttModel: nil,
+            language: nil,                  // STT auto-detect (so users can speak any source language)
+            polishEnabled: true,            // Translation goes through the LLM (polish) channel
+            polishModel: nil,
+            systemPrompt: "",               // Translation mode reuses systemPrompt as optional "additional instructions"
+            userPrompt: "",
+            temperature: 0.2,               // Lower temperature for stable translation
+            autoPaste: true,
+            outputStyleId: nil,             // Translation mode does not use output style
+            shortcutIndex: nil,             // Triggered by dedicated translate hotkey, not ⌘1-⌘9
+            isTranslation: true,
+            targetLanguage: "en"            // Default target English; user-configurable
         ),
     ]
 }

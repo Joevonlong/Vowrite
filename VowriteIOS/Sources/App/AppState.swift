@@ -66,13 +66,14 @@ final class AppState: ObservableObject {
         backgroundService.$remainingTime.assign(to: &$bgServiceRemainingTime)
 
         // Wire history save callback
-        engine.onRecordComplete = { [weak self] rawTranscript, finalText, duration in
+        engine.onRecordComplete = { [weak self] rawTranscript, finalText, duration, wasTranslation in
             guard let self = self else { return }
             let record = DictationRecord(
                 rawTranscript: rawTranscript,
                 polishedText: finalText,
                 duration: duration,
-                detectedLanguage: nil
+                detectedLanguage: nil,
+                wasTranslation: wasTranslation ? true : nil
             )
             let context = self.modelContainer.mainContext
             context.insert(record)

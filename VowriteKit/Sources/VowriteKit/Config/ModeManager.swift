@@ -141,6 +141,9 @@ public struct ModeConfig {
     public let autoPaste: Bool
     public let modeName: String
     public let outputStyleId: UUID?
+    // F-063: Translation mode flags
+    public let isTranslation: Bool
+    public let targetLanguage: String?
 
     public init(from mode: Mode) {
         self.polishEnabled = mode.polishEnabled
@@ -153,6 +156,8 @@ public struct ModeConfig {
         self.autoPaste = mode.autoPaste
         self.modeName = mode.name
         self.outputStyleId = mode.outputStyleId
+        self.isTranslation = mode.isTranslation
+        self.targetLanguage = mode.targetLanguage
     }
 
     /// Returns a copy with the output style overridden.
@@ -162,14 +167,16 @@ public struct ModeConfig {
             polishEnabled: polishEnabled, polishModel: polishModel, sttModel: sttModel,
             language: language, systemPrompt: systemPrompt, userPrompt: userPrompt,
             temperature: temperature, autoPaste: autoPaste, modeName: modeName,
-            outputStyleId: styleId
+            outputStyleId: styleId,
+            isTranslation: isTranslation, targetLanguage: targetLanguage
         )
     }
 
     private init(polishEnabled: Bool, polishModel: String?, sttModel: String?,
                  language: String?, systemPrompt: String, userPrompt: String,
                  temperature: Double, autoPaste: Bool, modeName: String,
-                 outputStyleId: UUID?) {
+                 outputStyleId: UUID?,
+                 isTranslation: Bool, targetLanguage: String?) {
         self.polishEnabled = polishEnabled
         self.polishModel = polishModel
         self.sttModel = sttModel
@@ -180,5 +187,7 @@ public struct ModeConfig {
         self.autoPaste = autoPaste
         self.modeName = modeName
         self.outputStyleId = outputStyleId
+        self.isTranslation = isTranslation
+        self.targetLanguage = targetLanguage
     }
 }

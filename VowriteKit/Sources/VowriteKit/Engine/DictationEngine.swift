@@ -30,6 +30,26 @@ public final class DictationEngine: ObservableObject {
     private var levelTimer: Timer?
     private var promptContext: PromptContext?
 
+    /// F-063: Oneshot mode override for the current recording session.
+    /// Set by `startTranslateRecording()` and cleared on completion / cancel.
+    /// When set, `effectiveModeConfig` returns this Mode instead of the
+    /// user's currently-selected ModeManager mode — so a translate hotkey
+    /// press never mutates the user's selected Mode.
+    private var sessionModeOverride: Mode?
+
+    /// F-063: True while the current recording was started by the translate hotkey.
+    /// Read by the overlay to render the target-language badge.
+    public var isInTranslateSession: Bool {
+        sessionModeOverride?.isTranslation == true
+    }
+
+    /// F-063: Target language for the active translate session, or nil if not in one.
+    /// Returns the SupportedLanguage rawValue (e.g. "en", "zh-Hans").
+    public var sessionTranslationTarget: String? {
+        guard let mode = sessionModeOverride, mode.isTranslation else { return nil }
+        return mode.targetLanguage
+    }
+
     public var isRecording: Bool { state == .recording }
 
     public var menuBarIcon: String {
@@ -91,6 +111,32 @@ public final class DictationEngine: ObservableObject {
         }
     }
 
+    /// F-063: Start a recording that will translate to the configured target
+    /// language instead of polishing in the current mode. Called by the
+    /// dedicated translate hotkey. No-op if already recording.
+    public func startTranslateRecording() {
+        guard state != .recording, state != .processing else { return }
+
+        let translateMode = ModeManager.shared.modes.first { $0.isTranslation }
+        guard let mode = translateMode else {
+            state = .error("未找到翻译模式")
+            return
+        }
+        sessionModeOverride = mode
+        startRecording()
+    }
+
+    /// F-063: Returns the override mode config if a translate session is active,
+    /// otherwise the user's currently-selected mode config. All pipeline reads
+    /// of ModeManager.currentModeConfig inside this engine go through here so
+    /// that mid-recording mode switches don't change the active session.
+    private var effectiveModeConfig: ModeConfig {
+        if let override = sessionModeOverride {
+            return ModeConfig(from: override)
+        }
+        return ModeManager.currentModeConfig
+    }
+
     public func startRecording() {
         guard permissions.hasMicrophoneAccess() else {
             Task {
@@ -142,6 +188,9 @@ public final class DictationEngine: ObservableObject {
             let desc = error.localizedDescription
             let truncated = desc.count > 80 ? String(desc.prefix(80)) + "..." : desc
             state = .error("录音失败: \(truncated)")
+            // F-063: clear oneshot translate override so the next normal hotkey
+            // press doesn't accidentally inherit translate mode.
+            sessionModeOverride = nil
         }
     }
 
@@ -151,6 +200,7 @@ public final class DictationEngine: ObservableObject {
 
         let wasSilent = audioEngine.wasSilent
         guard let audioURL = audioEngine.stopRecording() else {
+            sessionModeOverride = nil   // F-063
             state = .error("未录到音频，请重试")
             overlay.hide()
             return
@@ -159,6 +209,7 @@ public final class DictationEngine: ObservableObject {
         // Layer 2: Minimum duration check — block accidental taps
         guard recordingDuration >= 0.5 else {
             try? FileManager.default.removeItem(at: audioURL)
+            sessionModeOverride = nil   // F-063
             state = .error("录音太短，请重试")
             overlay.hide()
             return
@@ -167,6 +218,7 @@ public final class DictationEngine: ObservableObject {
         // Layer 1: Pre-API silence detection — skip Whisper if no speech detected
         guard !wasSilent else {
             try? FileManager.default.removeItem(at: audioURL)
+            sessionModeOverride = nil   // F-063
             state = .error("未检测到语音，请重试")
             overlay.hide()
             return
@@ -177,7 +229,9 @@ public final class DictationEngine: ObservableObject {
         overlay.showProcessing()
 
         // F-033: Pre-build Polish request during STT (runs in parallel)
-        let modeConfig = ModeManager.currentModeConfig
+        // F-063: Use effectiveModeConfig so a translate session uses the override
+        // mode for prompt building instead of whatever ModeManager has selected.
+        let modeConfig = effectiveModeConfig
         let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
         if effectivePolishEnabled {
             speculativePolish.prepare(modeConfig: modeConfig, promptContext: promptContext)
@@ -192,13 +246,16 @@ public final class DictationEngine: ObservableObject {
         _ = audioEngine.stopRecording()
         speculativePolish.reset()
         promptContext = nil
+        sessionModeOverride = nil   // F-063: clear oneshot translate override on cancel
         state = .idle
         overlay.hide()
         feedback.playErrorSound()
     }
 
-    /// Callback for saving to history — set by platform AppState
-    public var onRecordComplete: ((String, String, TimeInterval) -> Void)?
+    /// Callback for saving to history — set by platform AppState.
+    /// F-063: 4th argument indicates whether the record came from translate mode,
+    /// so the platform layer can persist `wasTranslation` for History filtering.
+    public var onRecordComplete: ((String, String, TimeInterval, Bool) -> Void)?
 
     private func processAudio(url: URL) {
         Task {
@@ -206,10 +263,13 @@ public final class DictationEngine: ObservableObject {
                 // Refresh OAuth tokens before API calls (3s timeout, silent on failure)
                 await CredentialManager.prepareCredentials(for: APIConfig.current)
 
-                // Load current mode config
-                let modeConfig = ModeManager.currentModeConfig
+                // Load current mode config — F-063: read through effectiveModeConfig
+                // so a translate session uses the override mode regardless of what
+                // ModeManager.currentModeId may have been switched to mid-recording.
+                let modeConfig = effectiveModeConfig
 
                 if let setupError = setupErrorMessage(for: modeConfig) {
+                    sessionModeOverride = nil   // F-063
                     state = .error(setupError)
                     overlay.hide()
                     return
@@ -235,6 +295,7 @@ public final class DictationEngine: ObservableObject {
                 #endif
 
                 guard !rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    sessionModeOverride = nil   // F-063
                     state = .error("未检测到语音，请重试")
                     overlay.hide()
                     return
@@ -245,6 +306,7 @@ public final class DictationEngine: ObservableObject {
                     #if DEBUG
                     print("[Vowrite] Hallucination filtered: '\(rawTranscript)'")
                     #endif
+                    sessionModeOverride = nil   // F-063
                     state = .error("未检测到语音，请重试")
                     overlay.hide()
                     return
@@ -261,6 +323,7 @@ public final class DictationEngine: ObservableObject {
                 // Step 2: AI Polish (skip if mode has polishEnabled=false)
                 // F-033: Uses speculative pre-built request for near-instant LLM fire
                 var finalText = correctedTranscript
+                var translationFailed = false   // F-063
                 let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
                 if effectivePolishEnabled {
                     do {
@@ -289,6 +352,14 @@ public final class DictationEngine: ObservableObject {
                         #if DEBUG
                         print("[Vowrite] Polish failed (using corrected transcript): \(error)")
                         #endif
+                        // F-063: For translation mode, falling back to the raw
+                        // transcript means the user gets the source language back
+                        // instead of the expected translation — surface this
+                        // explicitly so the user can retry instead of being
+                        // confused by silently-wrong output.
+                        if modeConfig.isTranslation {
+                            translationFailed = true
+                        }
                     }
                 } else {
                     #if DEBUG
@@ -306,16 +377,22 @@ public final class DictationEngine: ObservableObject {
                 }
 
                 // Step 5: Save to history via callback
-                onRecordComplete?(rawTranscript, finalText, recordingDuration)
+                onRecordComplete?(rawTranscript, finalText, recordingDuration, modeConfig.isTranslation)
 
                 // Step 6: Update stats
                 updateStats(duration: recordingDuration, text: finalText)
 
-                // Step 7: Success feedback
+                // Step 7: Success feedback (or translate-failed warning)
                 speculativePolish.reset()
                 promptContext = nil
-                feedback.playSuccessSound()
-                state = .idle
+                sessionModeOverride = nil   // F-063: clear oneshot translate override
+                if translationFailed {
+                    feedback.playErrorSound()
+                    state = .error("翻译失败，已输出原文")
+                } else {
+                    feedback.playSuccessSound()
+                    state = .idle
+                }
 
             } catch {
                 let message: String
@@ -343,6 +420,7 @@ public final class DictationEngine: ObservableObject {
                     message = truncated
                 }
                 speculativePolish.reset()
+                sessionModeOverride = nil   // F-063: clear oneshot translate override on hard failure
                 state = .error(message)
                 overlay.hide()
                 feedback.playErrorSound()
@@ -351,7 +429,10 @@ public final class DictationEngine: ObservableObject {
     }
 
     private var isReadyForCurrentMode: Bool {
-        setupErrorMessage(for: ModeManager.currentModeConfig) == nil
+        // F-063: prefer effectiveModeConfig so a queued translate session also
+        // validates against the override (in case Translate mode requires polish
+        // and the user's selected mode does not).
+        setupErrorMessage(for: effectiveModeConfig) == nil
     }
 
     private func setupErrorMessage(for modeConfig: ModeConfig) -> String? {
