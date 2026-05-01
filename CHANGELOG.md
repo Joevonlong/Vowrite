@@ -7,6 +7,19 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.2.1.0] — 2026-05-02
+
+### Added — Translation Suite
+
+- **F-063 Translate Mode (macOS)**: Dedicated global hotkey (default `⇧⌥ Space`) starts a translation recording without disturbing the user's current Mode. New `Mode.isTranslation` / `Mode.targetLanguage` fields with custom `Codable` decoding for backward compatibility. `DictationEngine.sessionModeOverride` injects an isolated Translate Mode for the single recording. Translation prompt replaces the polish prompt (`PromptConfig.translationSystemPrompt`); fallback emits the source transcript with a warning if translation fails. Settings shows a second hotkey row with conflict validation, the Mode editor lays out dynamically based on Translate vs Dictation, and the recording overlay shows a target-language badge.
+- **F-064 iOS Translation Parity**: `VowriteKeyboard` long-press on the mic pill reveals a dual-arc menu (Dictate / Translate); slide-up to choose, release to commit. Translation recordings show a "Translating to {target}" banner across the keyboard top. `BackgroundRecordingIPC.sessionModeOverrideId` mirrors macOS; `BackgroundRecordingService.effectiveModeConfig` is wired through 14 lifecycle points so the override survives across IPC boundaries. iOS `ModeEditorSheet` mirrors macOS layout (Mode Type toggle, Source/Target Language pickers, collapsible Advanced systemPrompt).
+- **F-066 Translation Language Quick Settings**: New "Translation" section in macOS `GeneralPage` and iOS `SettingsView` exposes Source / Target Language pickers bound directly to the built-in Translate mode (`Mode.language` / `Mode.targetLanguage`). No new UserDefaults key — single source of truth shared with the Mode editor and the translation pipeline.
+- **F-067 iOS Keyboard Bulk Delete**: TopBar delete key long-press (0.4s) opens a dark popup beneath the button. Dragging onto the popup escalates tier (word → line → paragraph → all) using accumulated dwell time; `TimelineView` updates the label live. Release commits the batch by re-scanning `documentContextBeforeInput` for the appropriate boundary and calling `deleteBackward` per grapheme. Tier transitions emit a selection haptic; commit emits a success haptic. Reuses the F-064 `DragGesture(0)` + `DispatchWorkItem` + named coordinate-space skeleton.
+
+### Added — Website
+
+- **Dedicated Translation feature page** (`docs/translate.html`): Full-page explainer covering the multilingual recognition + translation flow — hero with rotating live translation demo, end-to-end pipeline diagram, dual-trigger explanation (Mac hotkey + iOS arc menu), Source/Target quick-settings showcase, language matrix, real-world use cases, and a comparison vs Apple Translate / Google Translate / DeepL Voice. Top nav gains a "Translate" entry across all pages. Index page Features grid adds a 🌐 Translation card linking to the new page. Full EN / ZH / DE i18n coverage.
+
 ## [0.2.0.1] — 2026-05-01
 
 ### Added — Local & Customization
@@ -346,7 +359,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.1...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.0...HEAD
+[0.2.1.0]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.1...v0.2.1.0
 [0.2.0.1]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.0...v0.2.0.1
 [0.2.0.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.2...v0.2.0.0
 [0.1.9.2]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.1...v0.1.9.2
