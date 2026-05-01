@@ -59,9 +59,9 @@
           <a href="/translate" class="nav-translate" data-i18n="nav.translate">Translate</a>
           <a href="/apps" data-i18n="nav.apps">Apps</a>
           <a href="/pricing" data-i18n="nav.pricing">Pricing</a>
-          <a href="#features" data-i18n="nav.features">Features</a>
-          <a href="#how-it-works" data-i18n="nav.how">How It Works</a>
-          <a href="#download" class="btn btn-small" data-i18n="nav.download">Download</a>
+          <a href="/#features" data-i18n="nav.features">Features</a>
+          <a href="/#how-it-works" data-i18n="nav.how">How It Works</a>
+          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-small" data-i18n="nav.download">Download</a>
           <div class="lang-dropdown">
             <button class="lang-toggle" aria-haspopup="listbox" aria-expanded="false">
               <span class="lang-icon">🌐</span>
@@ -317,76 +317,95 @@
               <tr>
                 <th></th>
                 <th class="col-vowrite">Vowrite</th>
-                <th class="col-other" data-i18n="cmp.mac">macOS Dictation</th>
+                <th class="col-other">Typeless</th>
                 <th class="col-other">Superwhisper</th>
+                <th class="col-other" data-i18n="cmp.mac">macOS Dictation</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r1">AI text cleanup</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-yes-dim">✓</td>
+              <tr class="row-emph">
+                <td class="row-label" data-i18n="cmp.rprice">Price</td>
+                <td class="col-vowrite cell-yes" data-i18n="cmp.price.vw">Free · pay-per-use API</td>
+                <td class="col-other cell-no">$12–30/mo</td>
+                <td class="col-other cell-no">$8.49/mo</td>
+                <td class="col-other cell-yes-dim" data-i18n="cmp.price.mac">Free (Apple only)</td>
               </tr>
               <tr>
                 <td class="row-label" data-i18n="cmp.r2">Multiple AI providers</td>
                 <td class="col-vowrite cell-yes">✅ 15+</td>
                 <td class="col-other cell-no">✗</td>
                 <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r3">Chinese + English mixed</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-warn" data-i18n="cmp.limited">Limited</td>
-                <td class="col-other cell-yes-dim">✓</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r10">Text replacement & auto-learning</td>
-                <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r11">Offline / local inference</td>
-                <td class="col-vowrite cell-yes">✅ Ollama / MLX</td>
-                <td class="col-other cell-yes-dim">✓ (Apple only)</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r4">Open source</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r5">Free with your own API key</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-yes-dim" data-i18n="cmp.apple">✓ (Apple only)</td>
-                <td class="col-other cell-no">$9.99/mo</td>
               </tr>
               <tr>
                 <td class="row-label" data-i18n="cmp.r6">Bring your own API key</td>
                 <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-no">✗</td>
                 <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r7">Dictation history</td>
-                <td class="col-vowrite cell-yes">✅</td>
                 <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-yes-dim">✓</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r8">Custom hotkey</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-warn" data-i18n="cmp.fixed">Fixed</td>
-                <td class="col-other cell-yes-dim">✓</td>
               </tr>
               <tr>
                 <td class="row-label" data-i18n="cmp.r9">Privacy (local storage only)</td>
                 <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-warn">iCloud</td>
+                <td class="col-other cell-warn" data-i18n="cmp.cloud">Cloud</td>
                 <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-warn">iCloud</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r11">Offline / local inference</td>
+                <td class="col-vowrite cell-yes">✅ Ollama / MLX</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-yes-dim">✓ (Apple only)</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.rcross">Mac + iOS</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-warn" data-i18n="cmp.maconly">Mac only</td>
+                <td class="col-other cell-yes-dim">✓</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r4">Open source</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r1">AI text cleanup</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r3">Chinese + English mixed</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-warn" data-i18n="cmp.limited">Limited</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r10">Text replacement & auto-learning</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r7">Dictation history</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="cmp.r8">Custom hotkey</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-warn" data-i18n="cmp.fixed">Fixed</td>
               </tr>
             </tbody>
           </table>

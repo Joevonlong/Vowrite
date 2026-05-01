@@ -191,6 +191,19 @@ const i18n = {
     'cmp.limited': '有限',
     'cmp.apple': '✓（仅 Apple）',
     'cmp.fixed': '固定',
+    'cmp.rprice': '价格',
+    'cmp.price.vw': '免费 · 按用量计费',
+    'cmp.price.mac': '免费（仅 Apple）',
+    'cmp.cloud': '云端',
+    'cmp.rcross': 'Mac + iOS',
+    'cmp.maconly': '仅 Mac',
+
+    // Pricing page
+    'pr.h1': '服务商价格',
+    'pr.sub': 'Vowrite 本身免费且开源。你自带 API 密钥（BYOK），只需直接付费给所选服务商。下面是各家价格。',
+    'pr.foot': 'Vowrite — 说一次，完美呈现。',
+    'pr.home': '首页',
+    'pr.updated': '最近更新：2026 年 5 月 · v0.2.1.0',
 
     // FAQ
     'faq.title': '常见问题',
@@ -533,6 +546,19 @@ const i18n = {
     'cmp.limited': 'Begrenzt',
     'cmp.apple': '\u2713 (nur Apple)',
     'cmp.fixed': 'Fest',
+    'cmp.rprice': 'Preis',
+    'cmp.price.vw': 'Kostenlos \u00b7 nach API-Nutzung',
+    'cmp.price.mac': 'Kostenlos (nur Apple)',
+    'cmp.cloud': 'Cloud',
+    'cmp.rcross': 'Mac + iOS',
+    'cmp.maconly': 'Nur Mac',
+
+    // Pricing page
+    'pr.h1': 'Anbieter-Preise',
+    'pr.sub': 'Vowrite selbst ist kostenlos und Open Source. Du bringst deine eigenen API-Schlüssel (BYOK) mit und bezahlst die gewählten Anbieter direkt. So viel kostet es.',
+    'pr.foot': 'Vowrite — Einmal sagen. Perfekt meinen.',
+    'pr.home': 'Start',
+    'pr.updated': 'Zuletzt aktualisiert: Mai 2026 · v0.2.1.0',
 
     // FAQ
     'faq.title': 'H\u00e4ufig gestellte Fragen',
