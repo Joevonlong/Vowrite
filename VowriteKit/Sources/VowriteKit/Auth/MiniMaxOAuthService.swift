@@ -5,6 +5,7 @@ import AuthenticationServices
 
 public enum MiniMaxOAuthError: LocalizedError {
     case paramsNotConfigured
+    case unsupportedProvider
     case authSessionFailed(String)
     case noAuthorizationCode
     case tokenExchangeFailed(String)
@@ -13,6 +14,8 @@ public enum MiniMaxOAuthError: LocalizedError {
         switch self {
         case .paramsNotConfigured:
             return "MiniMax OAuth parameters not yet configured. Use API Key for now."
+        case .unsupportedProvider:
+            return "MiniMaxOAuthService only supports .minimaxIntl and .minimaxCN providers."
         case .authSessionFailed(let msg):
             return "MiniMax authentication failed: \(msg)"
         case .noAuthorizationCode:
@@ -31,31 +34,50 @@ public enum MiniMaxOAuthService {
     // TODO(F-058): Obtain from OpenClaw minimax-portal plugin source or MiniMax developer support.
     // Blocker: These are not in public MiniMax documentation.
     private static let clientID: String? = nil   // e.g. "your-client-id"
-    private static let authEndpointGlobal = "https://minimax.io/oauth/authorize"   // placeholder
-    private static let authEndpointChina  = "https://minimaxi.com/oauth/authorize" // placeholder
-    private static let tokenEndpointGlobal = "https://minimax.io/oauth/token"      // placeholder
-    private static let tokenEndpointChina  = "https://minimaxi.com/oauth/token"    // placeholder
-    private static let scopes = "openid profile offline_access"                     // placeholder
-    private static let baseURLGlobal = "https://api.minimax.io/v1"
-    private static let baseURLChina  = "https://api.minimaxi.com/v1"
+    private static let scopes = "openid profile offline_access"
     static let redirectURI = "com.vowrite.app:/oauth2redirect"
+
+    // MARK: - Region-Specific Endpoints
+
+    private struct RegionEndpoints {
+        let authorize: String
+        let token: String
+        let baseURL: String
+    }
+
+    private static func endpoints(for provider: APIProvider) throws -> RegionEndpoints {
+        switch provider {
+        case .minimaxIntl:
+            return RegionEndpoints(
+                authorize: "https://minimax.io/oauth/authorize",
+                token: "https://minimax.io/oauth/token",
+                baseURL: "https://api.minimax.io/v1"
+            )
+        case .minimaxCN:
+            return RegionEndpoints(
+                authorize: "https://minimaxi.com/oauth/authorize",
+                token: "https://minimaxi.com/oauth/token",
+                baseURL: "https://api.minimaxi.com/v1"
+            )
+        default:
+            throw MiniMaxOAuthError.unsupportedProvider
+        }
+    }
 
     // MARK: - Sign In
 
     @MainActor
-    public static func signIn(region: String,
+    public static func signIn(provider: APIProvider,
                               presentationAnchor: ASPresentationAnchor) async throws -> OAuthToken {
         guard let clientID, !clientID.isEmpty else {
             throw MiniMaxOAuthError.paramsNotConfigured
         }
+        let endpoints = try endpoints(for: provider)
 
         let verifier = PKCEHelper.generateCodeVerifier()
         let challenge = PKCEHelper.generateCodeChallenge(from: verifier)
-        let authEndpoint = region == "china" ? authEndpointChina : authEndpointGlobal
-        let tokenEndpoint = region == "china" ? tokenEndpointChina : tokenEndpointGlobal
-        let oauthBaseURL  = region == "china" ? baseURLChina : baseURLGlobal
 
-        var components = URLComponents(string: authEndpoint)!
+        var components = URLComponents(string: endpoints.authorize)!
         components.queryItems = [
             URLQueryItem(name: "client_id",             value: clientID),
             URLQueryItem(name: "redirect_uri",          value: redirectURI),
@@ -100,14 +122,15 @@ public enum MiniMaxOAuthService {
         }
 
         return try await exchangeCode(code: code, verifier: verifier,
-                                      tokenEndpoint: tokenEndpoint, oauthBaseURL: oauthBaseURL)
+                                      provider: provider, endpoints: endpoints)
     }
 
     // MARK: - Token Exchange
 
     private static func exchangeCode(code: String, verifier: String,
-                                     tokenEndpoint: String, oauthBaseURL: String) async throws -> OAuthToken {
-        guard let clientID, let url = URL(string: tokenEndpoint) else {
+                                     provider: APIProvider,
+                                     endpoints: RegionEndpoints) async throws -> OAuthToken {
+        guard let clientID, let url = URL(string: endpoints.token) else {
             throw MiniMaxOAuthError.paramsNotConfigured
         }
 
@@ -142,21 +165,20 @@ public enum MiniMaxOAuthService {
             refreshToken: tokenResponse.refresh_token,
             expiresAt: expiresAt,
             email: tokenResponse.email,
-            baseURL: oauthBaseURL
+            baseURL: endpoints.baseURL
         )
-        OAuthTokenStore.save(token, for: "minimax")
+        OAuthTokenStore.save(token, for: provider.providerID)
         return token
     }
 
     // MARK: - Refresh
 
-    public static func refresh(refreshToken: String) async {
-        let stored = OAuthTokenStore.load(for: "minimax")
-        let isChina = stored?.baseURL?.contains("minimaxi.com") ?? false
-        let tokenEndpoint = isChina ? tokenEndpointChina : tokenEndpointGlobal
-        let oauthBaseURL  = isChina ? baseURLChina : baseURLGlobal
+    public static func refresh(refreshToken: String, providerID: String) async {
+        guard let provider = APIProvider.availableCases.first(where: { $0.providerID == providerID }),
+              let endpoints = try? endpoints(for: provider) else { return }
+        let stored = OAuthTokenStore.load(for: providerID)
 
-        guard let clientID, let url = URL(string: tokenEndpoint) else { return }
+        guard let clientID, let url = URL(string: endpoints.token) else { return }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -176,7 +198,7 @@ public enum MiniMaxOAuthService {
             let expires_in: Int?
         }
         guard let tokenResponse = try? JSONDecoder().decode(TokenResponse.self, from: data) else {
-            OAuthTokenStore.delete(for: "minimax")
+            OAuthTokenStore.delete(for: providerID)
             return
         }
         let expiresAt = tokenResponse.expires_in.map { Date().addingTimeInterval(Double($0)) }
@@ -185,16 +207,16 @@ public enum MiniMaxOAuthService {
             refreshToken: tokenResponse.refresh_token ?? refreshToken,
             expiresAt: expiresAt,
             email: stored?.email,
-            baseURL: oauthBaseURL
+            baseURL: endpoints.baseURL
         )
-        OAuthTokenStore.save(newToken, for: "minimax")
+        OAuthTokenStore.save(newToken, for: providerID)
     }
 
     // MARK: - Sign Out
 
-    public static func signOut() {
-        OAuthTokenStore.delete(for: "minimax")
-        VowriteStorage.defaults.removeObject(forKey: "auth.method.minimax")
+    public static func signOut(provider: APIProvider) {
+        OAuthTokenStore.delete(for: provider.providerID)
+        VowriteStorage.defaults.removeObject(forKey: "auth.method.\(provider.providerID)")
     }
 }
 

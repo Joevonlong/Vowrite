@@ -31,7 +31,12 @@ struct VowriteApp: App {
         KeychainHelper.migrateToAccessGroup()
         #endif
 
-        // 4. Run v0.1.x legacy migration (if needed)
+        // 4. MiniMax provider split (must run before APIConfigMigration —
+        //    rewrites legacy "MiniMax" rawValue to "MiniMax (CN)" so it can be
+        //    decoded by APIProvider after the split)
+        MiniMaxMigration.runIfNeeded()
+
+        // 5. Run v0.1.x legacy migration (if needed)
         APIConfigMigration.runIfNeeded()
         APIConfig.migratePresetIDs()
 

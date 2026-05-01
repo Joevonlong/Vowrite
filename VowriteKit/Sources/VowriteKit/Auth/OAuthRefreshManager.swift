@@ -29,8 +29,8 @@ public enum OAuthRefreshManager {
 
     private static func performRefresh(providerID: String, refreshToken: String) async {
         switch providerID {
-        case "minimax":
-            await MiniMaxOAuthService.refresh(refreshToken: refreshToken)
+        case "minimax_intl", "minimax_cn":
+            await MiniMaxOAuthService.refresh(refreshToken: refreshToken, providerID: providerID)
         case "kimi":
             await KimiCodeOAuthService.refresh(refreshToken: refreshToken)
         case "openai":

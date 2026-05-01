@@ -29,6 +29,7 @@ final class AppState: ObservableObject {
     var totalDictations: Int { engine.totalDictations }
 
     init() {
+        MiniMaxMigration.runIfNeeded()
         APIConfigMigration.runIfNeeded()
         APIConfig.migratePresetIDs()
 

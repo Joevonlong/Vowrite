@@ -235,8 +235,37 @@
       }
     },
     {
-      "id": "minimax",
-      "name": "MiniMax",
+      "id": "minimax_intl",
+      "name": "MiniMax (International)",
+      "baseURL": "https://api.minimax.io/v1",
+      "isOpenAICompatible": true,
+      "auth": {
+        "style": "bearer",
+        "keyPlaceholder": "eyJ...",
+        "keyURL": "https://platform.minimax.io/",
+        "requiresKey": true,
+        "supportsOAuth": true,
+        "oauthLabel": "MiniMax Coding Plan (International)",
+        "tokenPlanNote": "MiniMax Token Plan subscribers: use the Token Plan-specific API Key (not the standard key)"
+      },
+      "capabilities": { "stt": false, "polish": true },
+      "sttNote": "MiniMax does not offer OpenAI-compatible speech-to-text.",
+      "stt": {
+        "defaultModel": "",
+        "models": []
+      },
+      "polish": {
+        "defaultModel": "MiniMax-M2.7",
+        "models": [
+          { "id": "MiniMax-M2.7", "description": "Latest flagship" },
+          { "id": "MiniMax-M2.7-highspeed", "description": "Faster M2.7 variant" },
+          { "id": "MiniMax-M2.5", "description": "Previous generation" }
+        ]
+      }
+    },
+    {
+      "id": "minimax_cn",
+      "name": "MiniMax (CN)",
       "baseURL": "https://api.minimaxi.com/v1",
       "isOpenAICompatible": true,
       "auth": {
@@ -245,7 +274,7 @@
         "keyURL": "https://platform.minimaxi.com/",
         "requiresKey": true,
         "supportsOAuth": true,
-        "oauthLabel": "MiniMax Coding Plan",
+        "oauthLabel": "MiniMax Coding Plan (中国版)",
         "tokenPlanNote": "MiniMax Token Plan subscribers: use the Token Plan-specific API Key (not the standard key)"
       },
       "capabilities": { "stt": false, "polish": true },
