@@ -57,6 +57,10 @@ struct GeneralPageView: View {
                     }
                 }
 
+                SettingsSection(icon: "globe.badge.chevron.backward", title: "Translation") {
+                    TranslationLanguagesContent()
+                }
+
                 SettingsSection(icon: "paintpalette", title: "Appearance") {
                     SettingsRow(title: "Theme", description: "Choose between light, dark, or system appearance.") {
                         AppearancePicker(selection: $appearanceMode)
@@ -126,6 +130,77 @@ struct LanguageContent: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Translation Languages Content (F-066)
+
+struct TranslationLanguagesContent: View {
+    @ObservedObject private var modeManager = ModeManager.shared
+
+    private var translateIndex: Int? {
+        modeManager.modes.firstIndex { $0.isBuiltin && $0.isTranslation }
+    }
+
+    private var source: SupportedLanguage {
+        guard let i = translateIndex,
+              let raw = modeManager.modes[i].language,
+              let lang = SupportedLanguage(rawValue: raw) else { return .auto }
+        return lang
+    }
+
+    private var target: SupportedLanguage {
+        guard let i = translateIndex,
+              let raw = modeManager.modes[i].targetLanguage,
+              let lang = SupportedLanguage(rawValue: raw),
+              lang != .auto else { return .en }
+        return lang
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            SettingsRow(title: "Source Language", description: "Speech-recognition hint for the Translate mode. Auto-detect handles mixed-language input.") {
+                Picker("", selection: Binding(get: { source }, set: setSource)) {
+                    ForEach(SupportedLanguage.allCases) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+                .frame(width: 180)
+            }
+
+            SettingsRow(title: "Target Language", description: "Translate output is rendered in this language.") {
+                Picker("", selection: Binding(get: { target }, set: setTarget)) {
+                    ForEach(SupportedLanguage.allCases.filter { $0 != .auto }) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+                .frame(width: 180)
+            }
+
+            HStack(spacing: 6) {
+                Image(systemName: "info.circle")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                Text("Applies to the built-in Translate mode (⇧⌥Space). Custom translation modes keep their own settings.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+        }
+    }
+
+    private func setSource(_ lang: SupportedLanguage) {
+        guard let i = translateIndex else { return }
+        var mode = modeManager.modes[i]
+        mode.language = (lang == .auto) ? nil : lang.rawValue
+        modeManager.updateMode(mode)
+    }
+
+    private func setTarget(_ lang: SupportedLanguage) {
+        guard let i = translateIndex, lang != .auto else { return }
+        var mode = modeManager.modes[i]
+        mode.targetLanguage = lang.rawValue
+        modeManager.updateMode(mode)
     }
 }
 
