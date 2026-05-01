@@ -357,6 +357,96 @@ final class KeyboardState: ObservableObject {
         inputViewController?.textDocumentProxy.deleteBackward()
     }
 
+    // MARK: - F-067 Bulk Delete
+
+    /// Tier of the long-press delete popup. Selected based on how long the
+    /// finger has rested on the popup before the user lifts.
+    enum BulkDeleteTier: Equatable {
+        case word, line, paragraph, all
+
+        static func from(elapsed: TimeInterval) -> BulkDeleteTier {
+            switch elapsed {
+            case ..<0.5:  return .word
+            case ..<1.3:  return .line
+            case ..<2.5:  return .paragraph
+            default:      return .all
+            }
+        }
+
+        var label: String {
+            switch self {
+            case .word:      return "删除单词"
+            case .line:      return "删除整行"
+            case .paragraph: return "删除整段"
+            case .all:       return "全部清空"
+            }
+        }
+    }
+
+    /// Delete the chunk of text that corresponds to `tier`, computed by
+    /// rewinding through `documentContextBeforeInput`. Each step calls
+    /// `deleteBackward()`, which removes one user-perceived character
+    /// (grapheme cluster) per call.
+    func bulkDelete(tier: BulkDeleteTier) {
+        guard let proxy = inputViewController?.textDocumentProxy,
+              let context = proxy.documentContextBeforeInput,
+              !context.isEmpty
+        else { return }
+
+        let count: Int
+        switch tier {
+        case .word:      count = Self.charsToDeleteForWord(in: context)
+        case .line:      count = Self.charsToDeleteForLine(in: context)
+        case .paragraph: count = Self.charsToDeleteForParagraph(in: context)
+        case .all:       count = context.count
+        }
+
+        guard count > 0 else { return }
+        for _ in 0..<count {
+            proxy.deleteBackward()
+        }
+    }
+
+    /// Word: skip trailing whitespace from the cursor, then walk back until
+    /// the next whitespace or punctuation. CJK text (no spaces) collapses to
+    /// "delete back to the previous punctuation" — typically a sentence,
+    /// which is still a sensible smallest tier.
+    static func charsToDeleteForWord(in text: String) -> Int {
+        var idx = text.endIndex
+        // Skip trailing whitespace.
+        while idx > text.startIndex {
+            let prev = text.index(before: idx)
+            if text[prev].isWhitespace { idx = prev } else { break }
+        }
+        // Walk back the word body.
+        while idx > text.startIndex {
+            let prev = text.index(before: idx)
+            let c = text[prev]
+            if c.isWhitespace || c.isPunctuation { break }
+            idx = prev
+        }
+        let count = text.distance(from: idx, to: text.endIndex)
+        return max(count, 1)
+    }
+
+    /// Line: rewind to the position just after the previous `\n`, or the
+    /// start of context if none.
+    static func charsToDeleteForLine(in text: String) -> Int {
+        if let nl = text.lastIndex(of: "\n") {
+            return text.distance(from: text.index(after: nl), to: text.endIndex)
+        }
+        return text.count
+    }
+
+    /// Paragraph: rewind to just after the previous `\n\n`, or the start of
+    /// context if none.
+    static func charsToDeleteForParagraph(in text: String) -> Int {
+        if let range = text.range(of: "\n\n", options: .backwards) {
+            return text.distance(from: range.upperBound, to: text.endIndex)
+        }
+        return text.count
+    }
+
     func insertText(_ text: String) {
         inputViewController?.textDocumentProxy.insertText(text)
     }
