@@ -45,6 +45,17 @@ struct KeyboardView: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             VStack(spacing: 0) {
+                // F-067: Top spacer that grows during the long-press
+                // bulk-delete gesture, providing space for the popup to
+                // render above the delete button. Driven by
+                // KeyboardState.extraTopHeight; KeyboardViewController
+                // resizes the keyboard's heightAnchor in lockstep.
+                if !isFullScreen && state.extraTopHeight > 0 {
+                    Color.clear
+                        .frame(height: state.extraTopHeight)
+                        .allowsHitTesting(false)
+                }
+
                 if !isFullScreen {
                     TopBar(state: state)
                         .frame(height: 48)
@@ -55,6 +66,7 @@ struct KeyboardView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .animation(.easeInOut(duration: 0.3), value: isFullScreen)
+            .animation(.easeOut(duration: 0.22), value: state.extraTopHeight)
 
             // Globe key — always visible at bottom-left
             if state.showGlobe {

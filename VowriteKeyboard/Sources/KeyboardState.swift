@@ -27,6 +27,14 @@ final class KeyboardState: ObservableObject {
     /// during the selection gesture (matching the design mockup).
     @Published var isModeSelectionExpanded: Bool = false
 
+    /// F-067: Extra height (pt) reserved at the top of the keyboard for the
+    /// long-press bulk-delete popup. KeyboardViewController watches this and
+    /// updates the keyboard's heightAnchor to `280 + extraTopHeight` so the
+    /// popup can render above the delete button inside the keyboard's own
+    /// frame (avoiding the system keyboard window clipping subviews that
+    /// extend above the original 280pt height).
+    @Published var extraTopHeight: CGFloat = 0
+
     // Configuration state
     @Published var currentMode: Mode = Mode.builtinModes[1] // Clean
     @Published var modes: [Mode] = Mode.builtinModes
