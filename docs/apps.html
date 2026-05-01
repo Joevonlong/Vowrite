@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vowrite Apps — macOS menu bar + iOS keyboard | Same voice, two platforms.</title>
+  <meta name="description" content="Vowrite ships a Mac menu bar app and an iOS keyboard. Same engine, same providers, same flow. Download for macOS, build the iOS app from source.">
+  <meta name="keywords" content="Vowrite mac app, Vowrite iOS keyboard, voice keyboard ios, mac dictation app, AI keyboard, voice input keyboard, ios open source keyboard">
+  <link rel="canonical" href="https://vowrite.com/apps">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://vowrite.com/apps">
+  <meta property="og:title" content="Vowrite Apps — macOS + iOS">
+  <meta property="og:description" content="Same voice. Two platforms. Mac menu bar app + iOS keyboard extension.">
+  <meta property="og:image" content="https://vowrite.com/app-icon-256.png">
+  <meta property="og:site_name" content="Vowrite">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Vowrite Apps — macOS + iOS">
+  <meta name="twitter:description" content="Same voice. Two platforms. Mac menu bar app + iOS keyboard extension.">
+  <meta name="twitter:image" content="https://vowrite.com/app-icon-256.png">
+
+  <link rel="icon" type="image/png" href="app-icon-128.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Nav -->
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="container nav-inner">
+        <a href="/" class="logo"><img src="app-icon-64.png" alt="Vowrite app icon" class="logo-icon"> Vowrite</a>
+        <div class="nav-links">
+          <a href="/why" class="nav-why" data-i18n="nav.why">Why Vowrite</a>
+          <a href="/translate" class="nav-translate" data-i18n="nav.translate">Translate</a>
+          <a href="/apps" class="active" data-i18n="nav.apps">Apps</a>
+          <a href="/pricing" data-i18n="nav.pricing">Pricing</a>
+          <a href="/#features" data-i18n="nav.features">Features</a>
+          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-small" data-i18n="nav.download">Download</a>
+          <div class="lang-dropdown">
+            <button class="lang-toggle" aria-haspopup="listbox" aria-expanded="false">
+              <span class="lang-icon">🌐</span>
+              <span class="lang-current">EN</span>
+              <span class="lang-arrow">▾</span>
+            </button>
+            <ul class="lang-menu" role="listbox">
+              <li role="option" data-lang="en" class="active">English</li>
+              <li role="option" data-lang="zh">中文</li>
+              <li role="option" data-lang="de">Deutsch</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="ap-hero">
+      <div class="container">
+        <div class="badge" data-i18n="ap.badge">macOS 14+ · iOS 17+ · Apple Silicon</div>
+        <h1>
+          <span data-i18n="ap.h1a">Same voice.</span><br>
+          <span class="tr-accent" data-i18n="ap.h1b">Two platforms.</span>
+        </h1>
+        <p class="ap-hero-sub" data-i18n="ap.sub">A polished Mac menu-bar app and an iOS keyboard extension — driven by the same engine, the same providers, the same Modes. Speak once, get clean text wherever you type.</p>
+        <div class="ap-platform-pick">
+          <a href="#mac" class="ap-pick ap-pick-mac">
+            <span class="ap-pick-icon">🖥️</span>
+            <span class="ap-pick-label">macOS</span>
+            <span class="ap-pick-sub" data-i18n="ap.pick.mac.sub">Menu bar · ⌥ Space</span>
+          </a>
+          <a href="#ios" class="ap-pick ap-pick-ios">
+            <span class="ap-pick-icon">📱</span>
+            <span class="ap-pick-label">iOS</span>
+            <span class="ap-pick-sub" data-i18n="ap.pick.ios.sub">Keyboard · long-press mic</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- macOS Section -->
+    <section id="mac" class="ap-platform">
+      <div class="container">
+        <div class="ap-platform-head">
+          <div class="ap-platform-icon ap-platform-icon-mac">🖥️</div>
+          <div>
+            <h2 class="ap-platform-title">Vowrite for macOS</h2>
+            <p class="ap-platform-tag" data-i18n="ap.mac.tag">A menu-bar companion that types for you. Press a hotkey, speak, and clean text appears at your cursor — in any app.</p>
+          </div>
+          <div class="ap-platform-meta">
+            <span class="ap-meta-pill">macOS 14+</span>
+            <span class="ap-meta-pill">Apple Silicon</span>
+            <span class="ap-meta-pill ap-meta-free" data-i18n="ap.free">Free · Open Source</span>
+          </div>
+        </div>
+
+        <!-- Install steps -->
+        <h3 class="ap-step-h" data-i18n="ap.mac.install.t">Install in 3 steps</h3>
+        <div class="ap-step-grid">
+          <div class="ap-step">
+            <div class="ap-step-num">1</div>
+            <h4 data-i18n="ap.mac.s1.t">Download the DMG</h4>
+            <p data-i18n="ap.mac.s1.d">Grab the latest signed build from GitHub Releases. ~5 MB, EdDSA signed, auto-updates via Sparkle.</p>
+            <a class="ap-step-link" href="https://github.com/Joevonlong/Vowrite/releases/latest"><span data-i18n="ap.mac.s1.cta">Download Vowrite.dmg</span> →</a>
+          </div>
+          <div class="ap-step">
+            <div class="ap-step-num">2</div>
+            <h4 data-i18n="ap.mac.s2.t">Drag to Applications</h4>
+            <p data-i18n="ap.mac.s2.d">Mount the DMG, drop the app into <code>/Applications</code>. First launch will prompt for Microphone + Accessibility permission — grant both (the second enables Cmd+V keystroke output).</p>
+          </div>
+          <div class="ap-step">
+            <div class="ap-step-num">3</div>
+            <h4 data-i18n="ap.mac.s3.t">Add an API key</h4>
+            <p data-i18n="ap.mac.s3.d">Open Settings → Providers → paste your Groq + DeepSeek (or OpenAI) keys. Stored in macOS Keychain. No account, no telemetry.</p>
+          </div>
+        </div>
+
+        <!-- Usage -->
+        <h3 class="ap-step-h" data-i18n="ap.mac.use.t">Daily usage</h3>
+        <div class="ap-flow">
+          <div class="ap-flow-step">
+            <span class="ap-flow-icon"><kbd>⌥</kbd>+<kbd>Space</kbd></span>
+            <span class="ap-flow-label" data-i18n="ap.mac.flow1">Hold the hotkey</span>
+          </div>
+          <span class="ap-flow-arrow">→</span>
+          <div class="ap-flow-step">
+            <span class="ap-flow-icon">🎙️</span>
+            <span class="ap-flow-label" data-i18n="ap.mac.flow2">Speak naturally</span>
+          </div>
+          <span class="ap-flow-arrow">→</span>
+          <div class="ap-flow-step">
+            <span class="ap-flow-icon">✨</span>
+            <span class="ap-flow-label" data-i18n="ap.mac.flow3">Release</span>
+          </div>
+          <span class="ap-flow-arrow">→</span>
+          <div class="ap-flow-step ap-flow-final">
+            <span class="ap-flow-icon">📋</span>
+            <span class="ap-flow-label" data-i18n="ap.mac.flow4">Text at cursor</span>
+          </div>
+        </div>
+        <p class="ap-flow-note" data-i18n="ap.mac.flow.note">Press <kbd>⇧⌥ Space</kbd> instead and Vowrite translates as you go. <a href="/translate">Learn more →</a></p>
+
+        <!-- Features -->
+        <h3 class="ap-step-h" data-i18n="ap.mac.features.t">What's in the Mac app</h3>
+        <div class="ap-feat-grid">
+          <div class="ap-feat">
+            <span class="ap-feat-icon">⚡</span>
+            <strong data-i18n="ap.mac.f1.t">Global hotkey</strong>
+            <span data-i18n="ap.mac.f1.d">Carbon API · works in any app, even fullscreen</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">📋</span>
+            <strong data-i18n="ap.mac.f2.t">Cmd+V injection</strong>
+            <span data-i18n="ap.mac.f2.d">Types straight at your cursor — Electron, browsers, IDEs, all of them</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">🎨</span>
+            <strong data-i18n="ap.mac.f3.t">Floating overlay</strong>
+            <span data-i18n="ap.mac.f3.d">Orb Pulse animation tells you it's listening</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">🌐</span>
+            <strong data-i18n="ap.mac.f4.t">Translate hotkey</strong>
+            <span data-i18n="ap.mac.f4.d">⇧⌥ Space · drop a sentence in any language, get the target language</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">🧩</span>
+            <strong data-i18n="ap.mac.f5.t">Custom Modes</strong>
+            <span data-i18n="ap.mac.f5.d">Email · Code · Slack — each with its own polish prompt</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">🔄</span>
+            <strong data-i18n="ap.mac.f6.t">Auto-update</strong>
+            <span data-i18n="ap.mac.f6.d">EdDSA-signed Sparkle appcast, opt-in beta channel</span>
+          </div>
+        </div>
+
+        <div class="ap-cta-row">
+          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary">
+            <span class="btn-icon">⬇</span> <span data-i18n="ap.mac.cta">Download for Mac</span>
+          </a>
+          <a href="https://github.com/Joevonlong/Vowrite" class="btn btn-secondary" data-i18n="ap.source">View source</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- iOS Section -->
+    <section id="ios" class="ap-platform ap-platform-alt">
+      <div class="container">
+        <div class="ap-platform-head">
+          <div class="ap-platform-icon ap-platform-icon-ios">📱</div>
+          <div>
+            <h2 class="ap-platform-title">Vowrite for iOS</h2>
+            <p class="ap-platform-tag" data-i18n="ap.ios.tag">A system-wide keyboard extension that records, polishes, and types — the same engine you use on Mac, in your pocket.</p>
+          </div>
+          <div class="ap-platform-meta">
+            <span class="ap-meta-pill">iOS 17+</span>
+            <span class="ap-meta-pill">A14+</span>
+            <span class="ap-meta-pill ap-meta-free" data-i18n="ap.free">Free · Open Source</span>
+          </div>
+        </div>
+
+        <!-- iOS architecture explainer -->
+        <div class="ap-ios-arch">
+          <div class="ap-ios-arch-card">
+            <div class="ap-ios-arch-icon">📲</div>
+            <h4 data-i18n="ap.ios.arch.app.t">VowriteIOS app</h4>
+            <p data-i18n="ap.ios.arch.app.d">Hosts the engine, settings, history, Modes, and language pickers. Runs the recording service in the background so the keyboard can stay tiny.</p>
+          </div>
+          <div class="ap-ios-arch-arrow">⇄</div>
+          <div class="ap-ios-arch-card">
+            <div class="ap-ios-arch-icon">⌨️</div>
+            <h4 data-i18n="ap.ios.arch.kb.t">VowriteKeyboard extension</h4>
+            <p data-i18n="ap.ios.arch.kb.d">A real iOS keyboard. Tap the mic to dictate, long-press to pick Translate. Talks to the host app over App Group + Darwin notifications.</p>
+          </div>
+        </div>
+
+        <!-- Install steps (build from source) -->
+        <h3 class="ap-step-h" data-i18n="ap.ios.install.t">Install (build from source)</h3>
+        <p class="ap-note" data-i18n="ap.ios.install.note">⚠️ The iOS app is open source but not yet on the App Store. For now you'll build it yourself in Xcode — or wait for TestFlight (coming).</p>
+        <div class="ap-step-grid">
+          <div class="ap-step">
+            <div class="ap-step-num">1</div>
+            <h4 data-i18n="ap.ios.s1.t">Clone the repo</h4>
+            <p data-i18n="ap.ios.s1.d">Requires Xcode 15+ and a free Apple developer account.</p>
+            <pre class="ap-code">git clone https://github.com/Joevonlong/Vowrite.git
+cd Vowrite/VowriteIOS
+open VowriteIOS.xcodeproj</pre>
+          </div>
+          <div class="ap-step">
+            <div class="ap-step-num">2</div>
+            <h4 data-i18n="ap.ios.s2.t">Sign and run</h4>
+            <p data-i18n="ap.ios.s2.d">In Xcode → Signing & Capabilities → set your Team. Plug in your iPhone, hit ▶. Build &amp; deploy both <code>VowriteIOS</code> and <code>VowriteKeyboard</code> targets.</p>
+          </div>
+          <div class="ap-step">
+            <div class="ap-step-num">3</div>
+            <h4 data-i18n="ap.ios.s3.t">Enable the keyboard</h4>
+            <p data-i18n="ap.ios.s3.d">iOS Settings → General → Keyboard → Keyboards → Add New Keyboard → Vowrite. Tap "Vowrite" again and toggle <strong>Allow Full Access</strong> (required for clipboard + network).</p>
+          </div>
+        </div>
+
+        <!-- Daily usage -->
+        <h3 class="ap-step-h" data-i18n="ap.ios.use.t">Daily usage</h3>
+        <div class="ap-flow">
+          <div class="ap-flow-step">
+            <span class="ap-flow-icon">🌐</span>
+            <span class="ap-flow-label" data-i18n="ap.ios.flow1">Switch to Vowrite keyboard</span>
+          </div>
+          <span class="ap-flow-arrow">→</span>
+          <div class="ap-flow-step">
+            <span class="ap-flow-icon">🎙️</span>
+            <span class="ap-flow-label" data-i18n="ap.ios.flow2">Tap or long-press mic</span>
+          </div>
+          <span class="ap-flow-arrow">→</span>
+          <div class="ap-flow-step">
+            <span class="ap-flow-icon">✨</span>
+            <span class="ap-flow-label" data-i18n="ap.ios.flow3">Speak, tap to stop</span>
+          </div>
+          <span class="ap-flow-arrow">→</span>
+          <div class="ap-flow-step ap-flow-final">
+            <span class="ap-flow-icon">📝</span>
+            <span class="ap-flow-label" data-i18n="ap.ios.flow4">Polished text inserted</span>
+          </div>
+        </div>
+        <p class="ap-flow-note" data-i18n="ap.ios.flow.note">Long-press the mic and you'll see the Dictate / Translate arc — slide up to choose, release. <a href="/translate#trig">See the gesture →</a></p>
+
+        <!-- Features -->
+        <h3 class="ap-step-h" data-i18n="ap.ios.features.t">What's in the iOS app</h3>
+        <div class="ap-feat-grid">
+          <div class="ap-feat">
+            <span class="ap-feat-icon">⌨️</span>
+            <strong data-i18n="ap.ios.f1.t">Real keyboard</strong>
+            <span data-i18n="ap.ios.f1.d">Works in Messages, Mail, Notes, Slack, browsers — anywhere a keyboard appears</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">🎙️</span>
+            <strong data-i18n="ap.ios.f2.t">Long-press arc</strong>
+            <span data-i18n="ap.ios.f2.d">Hold the mic, slide up to pick Dictate or Translate. Release to fire.</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">🌐</span>
+            <strong data-i18n="ap.ios.f3.t">Translate banner</strong>
+            <span data-i18n="ap.ios.f3.d">"Translating to English" sticker stays on screen so you never wonder what's about to come out</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">🗂️</span>
+            <strong data-i18n="ap.ios.f4.t">Mode editor parity</strong>
+            <span data-i18n="ap.ios.f4.d">Edit Modes, switch source/target language — same UI as Mac</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">📜</span>
+            <strong data-i18n="ap.ios.f5.t">History &amp; bulk delete</strong>
+            <span data-i18n="ap.ios.f5.d">Swipe to delete, or long-press the trash to clear by tier (week / month / all)</span>
+          </div>
+          <div class="ap-feat">
+            <span class="ap-feat-icon">🔐</span>
+            <strong data-i18n="ap.ios.f6.t">Keychain + App Group</strong>
+            <span data-i18n="ap.ios.f6.d">Keys never leave your device. Keyboard ↔ App talk via App Group + Darwin notifications.</span>
+          </div>
+        </div>
+
+        <div class="ap-cta-row">
+          <a href="https://github.com/Joevonlong/Vowrite/tree/main/VowriteIOS" class="btn btn-primary">
+            <span class="btn-icon">⌥</span> <span data-i18n="ap.ios.cta">Build from source</span>
+          </a>
+          <a href="https://github.com/Joevonlong/Vowrite/issues" class="btn btn-secondary" data-i18n="ap.ios.beta">Request TestFlight invite</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cross-platform sync explainer -->
+    <section class="ap-sync">
+      <div class="container">
+        <h2 class="section-title fade-in" data-i18n="ap.sync.t">One engine, two platforms</h2>
+        <p class="section-sub fade-in" data-i18n="ap.sync.sub">Both apps share <strong>VowriteKit</strong> — the same audio pipeline, provider abstraction, Modes, and translation logic. Settings sync via App Group on iOS; on Mac, everything lives in your home folder.</p>
+        <div class="ap-sync-row fade-in">
+          <div class="ap-sync-card">
+            <div class="ap-sync-icon">🧠</div>
+            <strong>VowriteKit</strong>
+            <span data-i18n="ap.sync.kit">Shared Swift library — audio, Whisper, polish, Modes, translation</span>
+          </div>
+          <div class="ap-sync-arrow">↗</div>
+          <div class="ap-sync-card">
+            <div class="ap-sync-icon">🖥️</div>
+            <strong>VowriteMac</strong>
+            <span data-i18n="ap.sync.mac">Menu bar UI, Carbon hotkey, CGEvent injection, Sparkle</span>
+          </div>
+          <div class="ap-sync-arrow">↘</div>
+          <div class="ap-sync-card">
+            <div class="ap-sync-icon">📱</div>
+            <strong>VowriteIOS + VowriteKeyboard</strong>
+            <span data-i18n="ap.sync.ios">Host app + keyboard extension, App Group IPC, haptics</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="ap-final">
+      <div class="container ap-final-inner fade-in">
+        <h2 data-i18n="ap.final.t">Pick your platform</h2>
+        <p data-i18n="ap.final.sub">Or grab both — your settings travel together.</p>
+        <div class="ap-final-actions">
+          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary">
+            <span class="btn-icon">⬇</span> <span data-i18n="ap.final.mac">Download for Mac</span>
+          </a>
+          <a href="https://github.com/Joevonlong/Vowrite/tree/main/VowriteIOS" class="btn btn-secondary" data-i18n="ap.final.ios">Get iOS source</a>
+          <a href="/" class="btn btn-secondary" data-i18n="ap.final.home">Back to home</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <img src="app-icon-64.png" alt="Vowrite app icon" class="footer-icon">
+        <span>© 2026 Vowrite. Open source under <a href="https://github.com/Joevonlong/Vowrite/blob/main/LICENSE" style="color: inherit; text-decoration: underline;">MIT license</a>.</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Joevonlong/Vowrite">GitHub</a>
+        <a href="https://github.com/Joevonlong/Vowrite/releases">Releases</a>
+        <a href="https://github.com/Joevonlong/Vowrite/issues">Feedback</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="i18n.js"></script>
+
+</body>
+</html>
