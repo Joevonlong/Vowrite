@@ -5,7 +5,9 @@ import VowriteKit
 final class MacHotkeyManager: HotkeyProvider {
     var onToggle: (() -> Void)?
     var onModeSwitch: ((Int) -> Void)?  // F-018: mode index callback
+    var onTranslateToggle: (() -> Void)?  // F-063: dedicated translate hotkey
     private var hotkeyRef: EventHotKeyRef?
+    private var translateHotkeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
     private var modeHotkeyRefs: [EventHotKeyRef] = []
 
@@ -14,10 +16,16 @@ final class MacHotkeyManager: HotkeyProvider {
     private static let defaultKeyCode: UInt32 = UInt32(kVK_Space)
     private static let defaultModifiers: UInt32 = UInt32(optionKey)
 
+    // F-063 default: Shift+Option+Space (variant of the main hotkey).
+    private static let defaultTranslateKeyCode: UInt32 = UInt32(kVK_Space)
+    private static let defaultTranslateModifiers: UInt32 = UInt32(optionKey | shiftKey)
+
     // UserDefaults keys
     private static let keyCodeKey = "hotkeyKeyCode"
     private static let modifiersKey = "hotkeyModifiers"
     private static let pushToTalkKey = "pushToTalkEnabled"
+    private static let translateKeyCodeKey = "translateHotkeyKeyCode"        // F-063
+    private static let translateModifiersKey = "translateHotkeyModifiers"    // F-063
 
     /// Push to Talk: hold to record, release to stop
     var pushToTalkEnabled: Bool {
@@ -39,6 +47,37 @@ final class MacHotkeyManager: HotkeyProvider {
             return stored == 0 ? Self.defaultModifiers : UInt32(stored)
         }
         set { UserDefaults.standard.set(Int(newValue), forKey: Self.modifiersKey) }
+    }
+
+    // MARK: - F-063 Translate hotkey
+
+    var translateKeyCode: UInt32 {
+        get {
+            let stored = UserDefaults.standard.integer(forKey: Self.translateKeyCodeKey)
+            return stored == 0 ? Self.defaultTranslateKeyCode : UInt32(stored)
+        }
+        set { UserDefaults.standard.set(Int(newValue), forKey: Self.translateKeyCodeKey) }
+    }
+
+    var translateModifiers: UInt32 {
+        get {
+            let stored = UserDefaults.standard.integer(forKey: Self.translateModifiersKey)
+            return stored == 0 ? Self.defaultTranslateModifiers : UInt32(stored)
+        }
+        set { UserDefaults.standard.set(Int(newValue), forKey: Self.translateModifiersKey) }
+    }
+
+    /// Returns true if the given (keyCode, modifiers) combo collides with the
+    /// main dictate hotkey. Settings UI calls this to refuse conflicting
+    /// translate hotkey assignments.
+    func translateConflictsWithDictate(keyCode: UInt32, modifiers: UInt32) -> Bool {
+        return self.keyCode == keyCode && self.modifiers == modifiers
+    }
+
+    /// Inverse check used when the user changes the main hotkey: refuse if it
+    /// would collide with the translate hotkey already on file.
+    func dictateConflictsWithTranslate(keyCode: UInt32, modifiers: UInt32) -> Bool {
+        return self.translateKeyCode == keyCode && self.translateModifiers == modifiers
     }
 
     func register() {
@@ -70,6 +109,11 @@ final class MacHotkeyManager: HotkeyProvider {
                                 MacHotkeyManager.shared?.onPushToTalkRelease?()
                             }
                         }
+                    } else if hotkeyID.id == 2 {
+                        // F-063: Translate hotkey (toggle-only; release ignored in v1)
+                        if kind == kEventHotKeyPressed {
+                            MacHotkeyManager.shared?.onTranslateToggle?()
+                        }
                     } else if hotkeyID.id >= 100 && hotkeyID.id < 110, kind == kEventHotKeyPressed {
                         // Mode switch hotkeys (⌃1 through ⌃9)
                         let modeIndex = Int(hotkeyID.id - 100)
@@ -83,6 +127,7 @@ final class MacHotkeyManager: HotkeyProvider {
         }
 
         registerHotKey()
+        registerTranslateHotKey()
         registerModeHotkeys()
     }
 
@@ -96,6 +141,14 @@ final class MacHotkeyManager: HotkeyProvider {
         registerHotKey()
     }
 
+    /// F-063: Update the translate hotkey at runtime.
+    func updateTranslate(keyCode: UInt32, modifiers: UInt32) {
+        self.translateKeyCode = keyCode
+        self.translateModifiers = modifiers
+        unregisterTranslateHotKey()
+        registerTranslateHotKey()
+    }
+
     private func registerHotKey() {
         let hotkeyID = EventHotKeyID(signature: OSType(0x564F5841), id: 1)
         RegisterEventHotKey(keyCode, modifiers, hotkeyID, GetApplicationEventTarget(), 0, &hotkeyRef)
@@ -105,6 +158,20 @@ final class MacHotkeyManager: HotkeyProvider {
         if let ref = hotkeyRef {
             UnregisterEventHotKey(ref)
             hotkeyRef = nil
+        }
+    }
+
+    // MARK: - F-063 Translate hotkey registration
+
+    private func registerTranslateHotKey() {
+        let hotkeyID = EventHotKeyID(signature: OSType(0x564F5841), id: 2)
+        RegisterEventHotKey(translateKeyCode, translateModifiers, hotkeyID, GetApplicationEventTarget(), 0, &translateHotkeyRef)
+    }
+
+    private func unregisterTranslateHotKey() {
+        if let ref = translateHotkeyRef {
+            UnregisterEventHotKey(ref)
+            translateHotkeyRef = nil
         }
     }
 
@@ -136,6 +203,7 @@ final class MacHotkeyManager: HotkeyProvider {
 
     func unregister() {
         unregisterHotKey()
+        unregisterTranslateHotKey()
         unregisterModeHotkeys()
         if let ref = handlerRef {
             RemoveEventHandler(ref)

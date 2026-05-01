@@ -59,23 +59,8 @@ public final class SpeculativePolish {
             return
         }
 
-        // Build the full system prompt (same logic as AIPolishService)
-        var systemPrompt = PromptConfig.effectiveSystemPrompt
-
-        if let stylePrompt = OutputStyleManager.templatePrompt(for: modeConfig.outputStyleId) {
-            systemPrompt += "\n\n---\nOutput style:\n\(stylePrompt)"
-        }
-        if !modeConfig.systemPrompt.isEmpty {
-            systemPrompt += "\n\n---\nOutput formatting for current mode (\(modeConfig.modeName)):\n\(modeConfig.systemPrompt)"
-        }
-        if !modeConfig.userPrompt.isEmpty {
-            systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(modeConfig.userPrompt)"
-        }
-
-        // F-051: Inject user vocabulary for better correction awareness
-        if let vocabHint = ReplacementManager.llmVocabularyHint {
-            systemPrompt += "\n\n---\nImportant vocabulary (always use these exact spellings when relevant): \(vocabHint)"
-        }
+        // Build the full system prompt (translation branch or polish branch)
+        let systemPrompt = Self.buildSystemPrompt(for: modeConfig)
 
         // Build request headers
         var request = URLRequest(url: url)
@@ -120,19 +105,32 @@ public final class SpeculativePolish {
             return try await AIPolishService().polish(text: transcript, modeConfig: modeConfig, promptContext: promptContext)
         }
 
-        // F-045: Expand context variables in the pre-built system prompt
+        // F-045: Expand context variables in the pre-built system prompt.
+        // F-063: Translation mode prompt has no placeholders; expansion is a no-op
+        // but stays cheap enough to leave on the polish-shared path.
         var expandedSystemPrompt = config.systemPrompt
-        if let ctx = config.promptContext ?? promptContext {
+        if !modeConfig.isTranslation, let ctx = config.promptContext ?? promptContext {
             expandedSystemPrompt = ctx.expandAll(expandedSystemPrompt, text: transcript)
         }
 
-        let wrappedText = """
-        Clean up the following speech transcript. Output ONLY the cleaned text, nothing else.
+        let wrappedText: String
+        if modeConfig.isTranslation {
+            wrappedText = """
+            Translate the following transcript. Output ONLY the translation, nothing else.
 
-        --- TRANSCRIPT START ---
-        \(transcript)
-        --- TRANSCRIPT END ---
-        """
+            --- TRANSCRIPT START ---
+            \(transcript)
+            --- TRANSCRIPT END ---
+            """
+        } else {
+            wrappedText = """
+            Clean up the following speech transcript. Output ONLY the cleaned text, nothing else.
+
+            --- TRANSCRIPT START ---
+            \(transcript)
+            --- TRANSCRIPT END ---
+            """
+        }
 
         // F-055: Streaming path for OpenAI-compatible providers (when caller wants partial updates)
         if onPartial != nil {
@@ -244,5 +242,48 @@ public final class SpeculativePolish {
         let model: String
         let temperature: Double
         let promptContext: PromptContext?
+    }
+
+    /// Build the system prompt for either polish or translation mode.
+    /// Shared between SpeculativePolish.prepare() and AIPolishService so the two
+    /// paths stay consistent.
+    static func buildSystemPrompt(for modeConfig: ModeConfig) -> String {
+        // F-063: Translation mode uses a dedicated prompt and skips
+        // outputStyle / userPrompt to avoid contaminating translation output.
+        if modeConfig.isTranslation, let target = modeConfig.targetLanguage {
+            let langName = SupportedLanguage(rawValue: target)?.displayName ?? target
+            var prompt = PromptConfig.translationSystemPromptTemplate
+                .replacingOccurrences(of: "{targetLanguageName}", with: langName)
+
+            // Optional advanced override: user-specified extra instructions
+            // (e.g. "Translate into British English"). Empty by default.
+            let extra = modeConfig.systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !extra.isEmpty {
+                prompt += "\n\n---\nAdditional instructions:\n\(extra)"
+            }
+
+            // Vocabulary hint still helps preserve proper-noun spellings
+            if let vocabHint = ReplacementManager.llmVocabularyHint {
+                prompt += "\n\n---\nImportant vocabulary (preserve exact spelling): \(vocabHint)"
+            }
+            return prompt
+        }
+
+        // Standard polish path
+        var systemPrompt = PromptConfig.effectiveSystemPrompt
+
+        if let stylePrompt = OutputStyleManager.templatePrompt(for: modeConfig.outputStyleId) {
+            systemPrompt += "\n\n---\nOutput style:\n\(stylePrompt)"
+        }
+        if !modeConfig.systemPrompt.isEmpty {
+            systemPrompt += "\n\n---\nOutput formatting for current mode (\(modeConfig.modeName)):\n\(modeConfig.systemPrompt)"
+        }
+        if !modeConfig.userPrompt.isEmpty {
+            systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(modeConfig.userPrompt)"
+        }
+        if let vocabHint = ReplacementManager.llmVocabularyHint {
+            systemPrompt += "\n\n---\nImportant vocabulary (always use these exact spellings when relevant): \(vocabHint)"
+        }
+        return systemPrompt
     }
 }

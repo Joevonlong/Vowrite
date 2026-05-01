@@ -1,6 +1,7 @@
 import VowriteKit
 import SwiftUI
 import ServiceManagement
+import AppKit
 
 // MARK: - General Page
 
@@ -21,7 +22,24 @@ struct GeneralPageView: View {
                                 currentKeyCode: appState.hotkeyManager.keyCode,
                                 currentModifiers: appState.hotkeyManager.modifiers
                             ) { code, mods in
+                                if appState.hotkeyManager.dictateConflictsWithTranslate(keyCode: code, modifiers: mods) {
+                                    showHotkeyConflictAlert(against: "Translate")
+                                    return
+                                }
                                 appState.hotkeyManager.update(keyCode: code, modifiers: mods)
+                            }
+                        }
+                        // F-063: Dedicated translate hotkey row
+                        SettingsRow(title: "Translate", description: "Press to record and translate into your selected target language. Configure target in Modes → Translate.") {
+                            HotkeyRecorderButton(
+                                currentKeyCode: appState.hotkeyManager.translateKeyCode,
+                                currentModifiers: appState.hotkeyManager.translateModifiers
+                            ) { code, mods in
+                                if appState.hotkeyManager.translateConflictsWithDictate(keyCode: code, modifiers: mods) {
+                                    showHotkeyConflictAlert(against: "Dictate")
+                                    return
+                                }
+                                appState.hotkeyManager.updateTranslate(keyCode: code, modifiers: mods)
                             }
                         }
                         SettingsRow(title: "Push to Talk", description: "Hold hotkey to record, release to stop.") {
@@ -64,6 +82,17 @@ struct GeneralPageView: View {
             .padding(32)
         }
     }
+}
+
+// F-063: Reject hotkey assignments that collide with another existing shortcut.
+@MainActor
+fileprivate func showHotkeyConflictAlert(against otherName: String) {
+    let alert = NSAlert()
+    alert.messageText = "Shortcut already in use"
+    alert.informativeText = "This combination is already assigned to “\(otherName)”. Please choose a different shortcut."
+    alert.alertStyle = .warning
+    alert.addButton(withTitle: "OK")
+    alert.runModal()
 }
 
 // MARK: - Language Content

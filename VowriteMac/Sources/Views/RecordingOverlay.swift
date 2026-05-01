@@ -127,64 +127,88 @@ struct RecordingBarView: View {
 
     private var recordingBar: some View {
         let isCompact = OverlayStyle.current == .compact
-        return HStack(spacing: 0) {
-            // Cancel button
-            Button { appState.cancelRecording() } label: {
-                ZStack {
-                    Circle()
-                        .fill(VW.Colors.Overlay.buttonFill)
-                        .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
-                    Image(systemName: "xmark")
-                        .font(.system(size: isCompact ? 13 : 15, weight: .bold))
-                        .foregroundColor(.white)
+        let isTranslate = appState.engine.isInTranslateSession
+        let translateLabel: String? = {
+            guard isTranslate, let raw = appState.engine.sessionTranslationTarget else { return nil }
+            return SupportedLanguage(rawValue: raw)?.shortLabel ?? raw.uppercased()
+        }()
+
+        return ZStack(alignment: .topTrailing) {
+            HStack(spacing: 0) {
+                // Cancel button
+                Button { appState.cancelRecording() } label: {
+                    ZStack {
+                        Circle()
+                            .fill(VW.Colors.Overlay.buttonFill)
+                            .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
+                        Image(systemName: "xmark")
+                            .font(.system(size: isCompact ? 13 : 15, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, 5)
+                .buttonStyle(.plain)
+                .padding(.leading, 5)
 
-            // Duration
-            Text(durationText)
-                .font(.system(size: isCompact ? 11 : 13, weight: .medium, design: .monospaced))
-                .foregroundColor(.white.opacity(0.7))
-                .frame(width: isCompact ? 32 : 40)
+                // Duration
+                Text(durationText)
+                    .font(.system(size: isCompact ? 11 : 13, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.7))
+                    .frame(width: isCompact ? 32 : 40)
 
-            // Waveform
-            WaveformView(level: appState.audioLevel)
-                .frame(width: isCompact ? 56 : 80, height: isCompact ? 22 : 28)
+                // Waveform
+                WaveformView(level: appState.audioLevel)
+                    .frame(width: isCompact ? 56 : 80, height: isCompact ? 22 : 28)
 
-            // Recording dot
-            Circle()
-                .fill(Color.red)
-                .frame(width: 6, height: 6)
-                .opacity(appState.audioLevel > 0.1 ? 1 : 0.5)
-                .padding(.trailing, 4)
+                // Recording dot
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 6, height: 6)
+                    .opacity(appState.audioLevel > 0.1 ? 1 : 0.5)
+                    .padding(.trailing, 4)
 
-            // Confirm button
-            Button { appState.stopRecording() } label: {
-                ZStack {
-                    Circle()
-                        .fill(VW.Colors.Overlay.buttonFill)
-                        .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
-                    Image(systemName: "checkmark")
-                        .font(.system(size: isCompact ? 13 : 15, weight: .bold))
-                        .foregroundColor(.white)
+                // Confirm button
+                Button { appState.stopRecording() } label: {
+                    ZStack {
+                        Circle()
+                            .fill(VW.Colors.Overlay.buttonFill)
+                            .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: isCompact ? 13 : 15, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
+                .buttonStyle(.plain)
+                .padding(.trailing, 5)
             }
-            .buttonStyle(.plain)
-            .padding(.trailing, 5)
+            .frame(
+                width: isCompact ? 200 : 260,
+                height: isCompact ? 42 : 52
+            )
+            .background(
+                Capsule()
+                    .fill(VW.Colors.Overlay.recording)
+            )
+            .overlay(
+                Capsule()
+                    .stroke(VW.Colors.Overlay.buttonStroke, lineWidth: 1)
+            )
+
+            // F-063: Translation target badge — small floating chip on top-right
+            if let label = translateLabel {
+                HStack(spacing: 3) {
+                    Image(systemName: "globe")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text("→ \(label)")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.accentColor.opacity(0.95)))
+                .overlay(Capsule().stroke(Color.white.opacity(0.6), lineWidth: 0.5))
+                .offset(x: -6, y: -8)
+            }
         }
-        .frame(
-            width: isCompact ? 200 : 260,
-            height: isCompact ? 42 : 52
-        )
-        .background(
-            Capsule()
-                .fill(VW.Colors.Overlay.recording)
-        )
-        .overlay(
-            Capsule()
-                .stroke(VW.Colors.Overlay.buttonStroke, lineWidth: 1)
-        )
     }
 
     // MARK: Processing state

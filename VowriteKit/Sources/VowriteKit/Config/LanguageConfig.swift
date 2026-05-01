@@ -57,6 +57,32 @@ public enum SupportedLanguage: String, CaseIterable, Identifiable, Codable {
         default: return rawValue
         }
     }
+
+    /// Compact 1-2 character label used in UI badges (e.g. recording overlay translation indicator).
+    public var shortLabel: String {
+        switch self {
+        case .auto: return "—"
+        case .en: return "EN"
+        case .zhHans: return "中"
+        case .zhHant: return "繁"
+        case .ja: return "日"
+        case .ko: return "한"
+        case .de: return "DE"
+        case .fr: return "FR"
+        case .es: return "ES"
+        case .it: return "IT"
+        case .pt: return "PT"
+        case .ru: return "RU"
+        case .ar: return "AR"
+        case .hi: return "HI"
+        case .th: return "TH"
+        case .vi: return "VI"
+        case .nl: return "NL"
+        case .pl: return "PL"
+        case .sv: return "SV"
+        case .tr: return "TR"
+        }
+    }
 }
 
 public enum LanguageConfig {

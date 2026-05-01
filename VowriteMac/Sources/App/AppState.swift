@@ -59,13 +59,14 @@ final class AppState: ObservableObject {
         overlay.appState = self
 
         // Wire history save callback
-        engine.onRecordComplete = { [weak self] rawTranscript, finalText, duration in
+        engine.onRecordComplete = { [weak self] rawTranscript, finalText, duration, wasTranslation in
             guard let self = self else { return }
             let record = DictationRecord(
                 rawTranscript: rawTranscript,
                 polishedText: finalText,
                 duration: duration,
-                detectedLanguage: nil
+                detectedLanguage: nil,
+                wasTranslation: wasTranslation ? true : nil
             )
             let context = self.modelContainer.mainContext
             context.insert(record)
@@ -104,6 +105,16 @@ final class AppState: ObservableObject {
         hotkeyManager.onModeSwitch = { [weak self] index in
             Task { @MainActor in
                 self?.engine.switchToMode(at: index)
+            }
+        }
+        // F-063: Translate hotkey — start recording in Translate mode (oneshot
+        // session override). Ignored if a recording is already in progress so
+        // it can't accidentally clobber an active normal-dictation session.
+        hotkeyManager.onTranslateToggle = { [weak self] in
+            Task { @MainActor in
+                guard let self = self else { return }
+                if self.engine.isRecording { return }
+                self.engine.startTranslateRecording()
             }
         }
         hotkeyManager.register()

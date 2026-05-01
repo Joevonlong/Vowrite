@@ -17,44 +17,35 @@ public final class AIPolishService {
         // override is set, prefer the OAuth-resolved model alias.
         let model = config.polishModel ?? configuration.resolvedModel
 
-        // Build system prompt: base + output style + mode-specific override or scene fallback
-        var systemPrompt = PromptConfig.effectiveSystemPrompt
+        // F-063: branch translation vs polish via shared helper for consistency.
+        var systemPrompt = SpeculativePolish.buildSystemPrompt(for: config)
 
-        // Output style template (applied before mode prompt so mode can override/supplement)
-        if let stylePrompt = OutputStyleManager.templatePrompt(for: config.outputStyleId) {
-            systemPrompt += "\n\n---\nOutput style:\n\(stylePrompt)"
-        }
-
-        // F-045: Expand context variables in mode prompts
-        var modeSystemPrompt = config.systemPrompt
-        var modeUserPrompt = config.userPrompt
-        if let ctx = promptContext {
-            modeSystemPrompt = ctx.expandAll(modeSystemPrompt, text: text)
-            modeUserPrompt = ctx.expandAll(modeUserPrompt, text: text)
-        }
-
-        if !modeSystemPrompt.isEmpty {
-            systemPrompt += "\n\n---\nOutput formatting for current mode (\(config.modeName)):\n\(modeSystemPrompt)"
-        }
-
-        // Mode-specific user prompt
-        if !modeUserPrompt.isEmpty {
-            systemPrompt += "\n\n---\nAdditional user preferences for this mode:\n\(modeUserPrompt)"
-        }
-
-        // F-051: Inject user vocabulary for better correction awareness
-        if let vocabHint = ReplacementManager.llmVocabularyHint {
-            systemPrompt += "\n\n---\nImportant vocabulary (always use these exact spellings when relevant): \(vocabHint)"
+        // F-045: Expand context variables. Translation mode skips expansion —
+        // its prompt has no placeholders and PromptContext (clipboard/selected)
+        // must NOT leak into translation content.
+        if !config.isTranslation, let ctx = promptContext {
+            systemPrompt = ctx.expandAll(systemPrompt, text: text)
         }
 
         // Wrap transcript in delimiters so the model treats it as data, not conversation
-        let wrappedText = """
-        Clean up the following speech transcript. Output ONLY the cleaned text, nothing else.
+        let wrappedText: String
+        if config.isTranslation {
+            wrappedText = """
+            Translate the following transcript. Output ONLY the translation, nothing else.
 
-        --- TRANSCRIPT START ---
-        \(text)
-        --- TRANSCRIPT END ---
-        """
+            --- TRANSCRIPT START ---
+            \(text)
+            --- TRANSCRIPT END ---
+            """
+        } else {
+            wrappedText = """
+            Clean up the following speech transcript. Output ONLY the cleaned text, nothing else.
+
+            --- TRANSCRIPT START ---
+            \(text)
+            --- TRANSCRIPT END ---
+            """
+        }
 
         // Claude uses its own Messages API
         if provider == .claude {
