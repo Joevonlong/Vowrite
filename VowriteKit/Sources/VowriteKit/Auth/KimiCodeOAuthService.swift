@@ -195,6 +195,14 @@ public enum KimiCodeOAuthService {
         request.setValue(osVersion(),        forHTTPHeaderField: "X-Msh-Os-Version")
     }
 
+    /// Headers required by the Kimi Code Coding Plan endpoint
+    /// (`api.kimi.com/coding/v1`). Without a coding-agent User-Agent and the
+    /// X-Msh-* device metadata, the server returns 403.
+    public static func applyCodingPlanHeaders(to request: inout URLRequest) {
+        request.setValue("kimi-cli/0.0.1",   forHTTPHeaderField: "User-Agent")
+        applyKimiHeaders(to: &request)
+    }
+
     private static func deviceID() -> String {
         let key = "kimi.device_id"
         if let existing = VowriteStorage.defaults.string(forKey: key) { return existing }

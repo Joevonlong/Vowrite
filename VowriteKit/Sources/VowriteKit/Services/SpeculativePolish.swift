@@ -51,7 +51,7 @@ public final class SpeculativePolish {
         let configuration = APIConfig.polish
         let baseURL = configuration.resolvedBaseURL
         let provider = configuration.provider
-        let model = modeConfig.polishModel ?? configuration.model
+        let model = modeConfig.polishModel ?? configuration.resolvedModel
         let endpoint = "\(baseURL)/chat/completions"
 
         guard let url = URL(string: endpoint) else {
@@ -86,6 +86,13 @@ public final class SpeculativePolish {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 120
         provider.applyHeaders(to: &request)
+
+        // Kimi Code Coding Plan endpoint requires coding-agent UA + device headers
+        if provider == .kimi,
+           KeyVault.preferredAuthMethod(for: provider) == "oauth",
+           KeyVault.hasValidOAuthToken(for: provider) {
+            KimiCodeOAuthService.applyCodingPlanHeaders(to: &request)
+        }
 
         preparedConfig = PreparedConfig(
             request: request,
