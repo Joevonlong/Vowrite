@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vowrite Translate — Speak any language. Output any language.</title>
+  <meta name="description" content="Vowrite Translate: real-time voice translation for Mac and iOS. Speak Chinese, output English. Speak English, output Japanese. One hotkey, any direction, in any app.">
+  <meta name="keywords" content="voice translation, real-time translation, AI translator mac, AI translator iOS, multilingual dictation, speech to text translation, 语音翻译, 实时翻译, AI 翻译键盘">
+  <link rel="canonical" href="https://vowrite.com/translate">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://vowrite.com/translate">
+  <meta property="og:title" content="Vowrite Translate — Speak any language. Output any language.">
+  <meta property="og:description" content="Real-time voice translation for Mac and iOS. One hotkey, any direction, in any app.">
+  <meta property="og:image" content="https://vowrite.com/app-icon-256.png">
+  <meta property="og:site_name" content="Vowrite">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Vowrite Translate">
+  <meta name="twitter:description" content="Real-time voice translation for Mac and iOS. One hotkey, any direction, in any app.">
+  <meta name="twitter:image" content="https://vowrite.com/app-icon-256.png">
+
+  <link rel="icon" type="image/png" href="app-icon-128.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Nav -->
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="container nav-inner">
+        <a href="/" class="logo"><img src="app-icon-64.png" alt="Vowrite app icon" class="logo-icon"> Vowrite</a>
+        <div class="nav-links">
+          <a href="/why" class="nav-why" data-i18n="nav.why">Why Vowrite</a>
+          <a href="/translate" class="active nav-translate" data-i18n="nav.translate">Translate</a>
+          <a href="/pricing" data-i18n="nav.pricing">Pricing</a>
+          <a href="/#features" data-i18n="nav.features">Features</a>
+          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-small" data-i18n="nav.download">Download</a>
+          <div class="lang-dropdown">
+            <button class="lang-toggle" aria-haspopup="listbox" aria-expanded="false">
+              <span class="lang-icon">🌐</span>
+              <span class="lang-current">EN</span>
+              <span class="lang-arrow">▾</span>
+            </button>
+            <ul class="lang-menu" role="listbox">
+              <li role="option" data-lang="en" class="active">English</li>
+              <li role="option" data-lang="zh">中文</li>
+              <li role="option" data-lang="de">Deutsch</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="tr-hero">
+      <div class="container">
+        <div class="badge" data-i18n="tr.badge">🌐 New in v0.2.1.0 · macOS + iOS</div>
+        <h1>
+          <span data-i18n="tr.h1a">Speak any language.</span><br>
+          <span class="tr-accent" data-i18n="tr.h1b">Output any language.</span>
+        </h1>
+        <p class="tr-hero-sub" data-i18n="tr.sub">Hold one hotkey on Mac, or long-press the mic on iOS. Vowrite hears the language you speak, and writes the language you need — straight at your cursor, in any app.</p>
+        <div class="tr-hero-actions">
+          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary">
+            <span class="btn-icon">⬇</span> <span data-i18n="tr.dl">Download for Mac</span>
+          </a>
+          <a href="#how" class="btn btn-secondary" data-i18n="tr.see">See how it works</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Demo -->
+    <section class="tr-demo">
+      <div class="container">
+        <div class="tr-demo-card fade-in">
+          <div class="tr-demo-row" id="trDemoRow">
+            <div class="tr-demo-pane tr-demo-in">
+              <div class="tr-demo-tag">
+                <span class="tr-demo-flag" id="trDemoFlagIn">🇨🇳</span>
+                <span data-i18n="tr.demo.youSay">You say</span>
+                <span id="trDemoLangIn">Chinese</span>
+              </div>
+              <p class="tr-demo-text" id="trDemoIn">嗯…那个，明天下午三点开个会，把翻译模式的设计方案过一下。</p>
+            </div>
+            <div class="tr-demo-arrow">→</div>
+            <div class="tr-demo-pane tr-demo-out">
+              <div class="tr-demo-tag">
+                <span class="tr-demo-flag" id="trDemoFlagOut">🇺🇸</span>
+                <span data-i18n="tr.demo.youGet">Vowrite types</span>
+                <span id="trDemoLangOut">English</span>
+              </div>
+              <p class="tr-demo-text" id="trDemoOut">Let's meet at 3 pm tomorrow to walk through the Translate mode design.</p>
+            </div>
+          </div>
+          <div class="tr-demo-controls">
+            <span class="tr-demo-dot active" data-i="0"></span>
+            <span class="tr-demo-dot" data-i="1"></span>
+            <span class="tr-demo-dot" data-i="2"></span>
+            <span class="tr-demo-dot" data-i="3"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pipeline -->
+    <section id="how" class="tr-pipeline">
+      <div class="container">
+        <h2 class="section-title fade-in" data-i18n="tr.pipe.title">From voice to translation in one breath</h2>
+        <p class="section-sub fade-in" data-i18n="tr.pipe.sub">A purpose-built pipeline that detects, recognises, translates, and types — without ever leaving your text field.</p>
+        <div class="tr-pipe-row fade-in">
+          <div class="tr-pipe-step">
+            <div class="tr-pipe-icon">🎤</div>
+            <h3 data-i18n="tr.pipe.s1.t">Speak naturally</h3>
+            <p data-i18n="tr.pipe.s1.d">Hit the Translate hotkey or long-press the iOS mic. Speak in your strongest language — fillers welcome.</p>
+          </div>
+          <div class="tr-pipe-step">
+            <div class="tr-pipe-icon">👂</div>
+            <h3 data-i18n="tr.pipe.s2.t">Auto-detect &amp; transcribe</h3>
+            <p data-i18n="tr.pipe.s2.d">Whisper-class STT auto-detects the spoken language. Source language is configurable when you want a strict hint.</p>
+          </div>
+          <div class="tr-pipe-step is-accent">
+            <div class="tr-pipe-icon">🌐</div>
+            <h3 data-i18n="tr.pipe.s3.t">LLM translates</h3>
+            <p data-i18n="tr.pipe.s3.d">A dedicated translation prompt rewrites the transcript into your target language — formal stays formal, casual stays casual.</p>
+            <span class="tr-pipe-tag" data-i18n="tr.pipe.s3.tag">Translation prompt</span>
+          </div>
+          <div class="tr-pipe-step">
+            <div class="tr-pipe-icon">⌨️</div>
+            <h3 data-i18n="tr.pipe.s4.t">Type at the cursor</h3>
+            <p data-i18n="tr.pipe.s4.d">The translation lands exactly where you were typing — Slack, Mail, VS Code, WeChat, anywhere.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Triggers (Mac + iOS) -->
+    <section class="tr-triggers">
+      <div class="container">
+        <h2 class="section-title fade-in" data-i18n="tr.trig.title">Two ways to trigger. Zero context switch.</h2>
+        <p class="section-sub fade-in" data-i18n="tr.trig.sub">Translate mode is a separate gesture, so it never overwrites the Mode you were already using.</p>
+        <div class="tr-trig-grid">
+          <div class="tr-trig-card fade-in">
+            <div class="tr-trig-platform" data-i18n="tr.trig.mac.tag">macOS · Global hotkey</div>
+            <h3 data-i18n="tr.trig.mac.t">A second hotkey, just for translation</h3>
+            <p data-i18n="tr.trig.mac.d">Hold the Translate hotkey from anywhere on macOS. Vowrite injects an isolated translation session — your current Mode (Email, Code, Note…) stays exactly as you left it.</p>
+            <div class="tr-trig-stage">
+              <div class="tr-keystack">
+                <span class="tr-key">⇧</span>
+                <span class="tr-key-plus">+</span>
+                <span class="tr-key">⌥</span>
+                <span class="tr-key-plus">+</span>
+                <span class="tr-key tr-key-wide" data-i18n="tr.trig.mac.space">Space</span>
+              </div>
+            </div>
+            <ul class="tr-trig-list">
+              <li data-i18n="tr.trig.mac.b1">Configurable in Settings → Keyboard Shortcuts.</li>
+              <li data-i18n="tr.trig.mac.b2">Conflict detection if it collides with the Dictate hotkey.</li>
+              <li data-i18n="tr.trig.mac.b3">Recording overlay shows a target-language badge while you speak.</li>
+            </ul>
+          </div>
+
+          <div class="tr-trig-card fade-in">
+            <div class="tr-trig-platform" data-i18n="tr.trig.ios.tag">iOS · Keyboard arc</div>
+            <h3 data-i18n="tr.trig.ios.t">Long-press the mic, slide to translate</h3>
+            <p data-i18n="tr.trig.ios.d">Inside the Vowrite keyboard, long-press the mic pill. Two arcs fan out — Dictate or Translate. Slide to one, release, speak. The keyboard shows a "Translating to {target}" banner in real time.</p>
+            <div class="tr-trig-stage">
+              <div class="tr-arc">
+                <div class="tr-arc-opt tr-arc-left">
+                  <span class="tr-arc-icon">🎙️</span>
+                  <span data-i18n="tr.trig.ios.arc1">Dictate</span>
+                </div>
+                <div class="tr-arc-opt tr-arc-right">
+                  <span class="tr-arc-icon">🌐</span>
+                  <span data-i18n="tr.trig.ios.arc2">Translate</span>
+                </div>
+                <div class="tr-arc-mic">🎤</div>
+              </div>
+            </div>
+            <ul class="tr-trig-list">
+              <li data-i18n="tr.trig.ios.b1">Works inside any iOS app that accepts a keyboard.</li>
+              <li data-i18n="tr.trig.ios.b2">Selection haptic on tier change, success haptic on commit.</li>
+              <li data-i18n="tr.trig.ios.b3">Same Source/Target settings as macOS — set once, use everywhere.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings (F-066) -->
+    <section class="tr-settings">
+      <div class="container">
+        <div class="tr-settings-row">
+          <div class="tr-settings-text fade-in">
+            <h2 data-i18n="tr.set.t">Set it once. Translate forever.</h2>
+            <p data-i18n="tr.set.p1">A dedicated <strong>Translation</strong> section sits at the top of Settings on both Mac and iOS. Pick a Source language hint (or leave it on Auto-detect) and a Target language. Vowrite remembers — you never need to dive into the Mode editor again.</p>
+            <p data-i18n="tr.set.p2">Need multiple language pairs? Create custom Translate modes — each with its own prompt, hotkey, and language pair. The quick settings only steer the built-in Translate mode, so custom presets stay untouched.</p>
+          </div>
+          <div class="tr-mock fade-in" aria-hidden="true">
+            <div class="tr-mock-title">🌐 <span data-i18n="tr.set.section">Translation</span></div>
+            <div class="tr-mock-row">
+              <div>
+                <div class="tr-mock-label" data-i18n="tr.set.src">Source Language</div>
+                <div class="tr-mock-hint" data-i18n="tr.set.srch">Speech recognition hint for Translate.</div>
+              </div>
+              <span class="tr-mock-pick" data-i18n="tr.set.srcv">Auto-detect</span>
+            </div>
+            <div class="tr-mock-row">
+              <div>
+                <div class="tr-mock-label" data-i18n="tr.set.tgt">Target Language</div>
+                <div class="tr-mock-hint" data-i18n="tr.set.tgth">Translate output goes to this language.</div>
+              </div>
+              <span class="tr-mock-pick" data-i18n="tr.set.tgtv">English</span>
+            </div>
+            <p class="tr-mock-foot" data-i18n="tr.set.foot">ⓘ Applies to the built-in Translate mode (⇧⌥ Space). Custom translation modes keep their own settings.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Language Matrix -->
+    <section class="tr-langs">
+      <div class="container">
+        <h2 class="section-title fade-in" data-i18n="tr.lang.title">Truly bidirectional. Pick any pair.</h2>
+        <p class="section-sub fade-in" data-i18n="tr.lang.sub">Speak in one, write in another. Every direction is fair game.</p>
+        <div class="tr-lang-grid fade-in">
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇺🇸</span><div class="tr-lang-name">English</div><div class="tr-lang-sub">en</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇨🇳</span><div class="tr-lang-name" data-i18n="tr.lang.zh">Chinese</div><div class="tr-lang-sub">zh-Hans</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇯🇵</span><div class="tr-lang-name" data-i18n="tr.lang.ja">Japanese</div><div class="tr-lang-sub">ja</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇰🇷</span><div class="tr-lang-name" data-i18n="tr.lang.ko">Korean</div><div class="tr-lang-sub">ko</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇪🇸</span><div class="tr-lang-name" data-i18n="tr.lang.es">Spanish</div><div class="tr-lang-sub">es</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇫🇷</span><div class="tr-lang-name" data-i18n="tr.lang.fr">French</div><div class="tr-lang-sub">fr</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇩🇪</span><div class="tr-lang-name" data-i18n="tr.lang.de">German</div><div class="tr-lang-sub">de</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇮🇹</span><div class="tr-lang-name" data-i18n="tr.lang.it">Italian</div><div class="tr-lang-sub">it</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇵🇹</span><div class="tr-lang-name" data-i18n="tr.lang.pt">Portuguese</div><div class="tr-lang-sub">pt</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇷🇺</span><div class="tr-lang-name" data-i18n="tr.lang.ru">Russian</div><div class="tr-lang-sub">ru</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇸🇦</span><div class="tr-lang-name" data-i18n="tr.lang.ar">Arabic</div><div class="tr-lang-sub">ar</div></div>
+          <div class="tr-lang-cell"><span class="tr-lang-flag">🇮🇳</span><div class="tr-lang-name" data-i18n="tr.lang.hi">Hindi</div><div class="tr-lang-sub">hi</div></div>
+        </div>
+        <p class="tr-langs-note fade-in" data-i18n="tr.lang.note">Plus any other language your STT and LLM provider support — Whisper covers 90+, GPT and Claude translate even further.</p>
+      </div>
+    </section>
+
+    <!-- Use cases -->
+    <section class="tr-cases">
+      <div class="container">
+        <h2 class="section-title fade-in" data-i18n="tr.case.title">Made for the moments your hands can't keep up</h2>
+        <p class="section-sub fade-in" data-i18n="tr.case.sub">Real situations where pulling up Google Translate kills the flow.</p>
+        <div class="tr-case-grid">
+          <div class="tr-case fade-in">
+            <div class="tr-case-icon">✉️</div>
+            <h3 data-i18n="tr.case.1.t">Cross-language email</h3>
+            <p data-i18n="tr.case.1.d">Your mother tongue is Chinese, your client only reads English. Speak the email in Chinese, and a polished English version appears in Mail.</p>
+            <div class="tr-case-quote" data-i18n="tr.case.1.q">"Hi James — wrapping up the v2 timeline now. Could you confirm the API contract by Friday? Happy to jump on a call this afternoon."</div>
+          </div>
+          <div class="tr-case fade-in">
+            <div class="tr-case-icon">💬</div>
+            <h3 data-i18n="tr.case.2.t">Multilingual team chat</h3>
+            <p data-i18n="tr.case.2.d">Slack, WeChat, Telegram — speak naturally and reply in the channel's lingua franca. Your message lands clean, on time, on tone.</p>
+            <div class="tr-case-quote" data-i18n="tr.case.2.q">"Pushed the hotfix — translation prompt now ships fillers separately so STT noise doesn't leak into the output."</div>
+          </div>
+          <div class="tr-case fade-in">
+            <div class="tr-case-icon">🛫</div>
+            <h3 data-i18n="tr.case.3.t">Travel &amp; field trips</h3>
+            <p data-i18n="tr.case.3.d">From a hotel in Tokyo, dictate in English — Vowrite types fluent Japanese into Notes, ready to flash to a stranger.</p>
+            <div class="tr-case-quote" data-i18n="tr.case.3.q">"すみません、新宿駅まではどう行けばいいですか？"</div>
+          </div>
+          <div class="tr-case fade-in">
+            <div class="tr-case-icon">📚</div>
+            <h3 data-i18n="tr.case.4.t">Reading &amp; learning</h3>
+            <p data-i18n="tr.case.4.d">Speak a sentence in your weaker language and check the English version. Or speak English to draft notes for a Spanish exam.</p>
+            <div class="tr-case-quote" data-i18n="tr.case.4.q">"Quiero practicar español con frases reales — Vowrite, traduce esto."</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compare -->
+    <section class="tr-compare">
+      <div class="container">
+        <h2 class="section-title fade-in" data-i18n="tr.cmp.title">Why Vowrite Translate</h2>
+        <p class="section-sub fade-in" data-i18n="tr.cmp.sub">Most translators want you to copy-paste. Vowrite types straight at your cursor.</p>
+        <div class="compare-table-wrap fade-in">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th class="col-vowrite">Vowrite</th>
+                <th class="col-other" data-i18n="tr.cmp.apple">Apple Translate</th>
+                <th class="col-other" data-i18n="tr.cmp.google">Google Translate</th>
+                <th class="col-other" data-i18n="tr.cmp.deepl">DeepL Voice</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="row-label" data-i18n="tr.cmp.r1">Speak in any language, type at cursor</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="tr.cmp.r2">Works in any Mac / iOS app</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-warn" data-i18n="tr.cmp.appOnly">In-app only</td>
+                <td class="col-other cell-warn" data-i18n="tr.cmp.appOnly2">Web / app only</td>
+                <td class="col-other cell-warn" data-i18n="tr.cmp.appOnly3">App only</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="tr.cmp.r3">Choose your own AI model</td>
+                <td class="col-vowrite cell-yes">✅ 15+</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="tr.cmp.r4">Bring your own API key (no subscription)</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-yes-dim" data-i18n="tr.cmp.applefree">Apple-only · free</td>
+                <td class="col-other cell-warn" data-i18n="tr.cmp.googleads">Free with ads</td>
+                <td class="col-other cell-no" data-i18n="tr.cmp.deeplsub">DeepL Pro</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="tr.cmp.r5">Custom translation modes &amp; prompts</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="tr.cmp.r6">Local / offline option</td>
+                <td class="col-vowrite cell-yes">✅ Ollama / MLX</td>
+                <td class="col-other cell-yes-dim">✓</td>
+                <td class="col-other cell-warn" data-i18n="tr.cmp.limited">Limited</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="tr.cmp.r7">Open source</td>
+                <td class="col-vowrite cell-yes">✅</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+                <td class="col-other cell-no">✗</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="tr-cta">
+      <div class="container">
+        <h2 class="fade-in" data-i18n="tr.cta.t">Stop typing translations. Speak them.</h2>
+        <p class="fade-in" data-i18n="tr.cta.p">Vowrite v0.2.1.0 ships with Translate mode on macOS and iOS. Free, open source, your AI key.</p>
+        <div class="hero-actions fade-in">
+          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary btn-large">
+            <span class="btn-icon">⬇</span> <span data-i18n="tr.cta.dl">Download for Mac</span>
+          </a>
+          <a href="/" class="btn btn-secondary" data-i18n="tr.cta.home">Back to home</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <img src="app-icon-64.png" alt="Vowrite app icon" class="footer-icon">
+        <span>© 2026 Vowrite. Open source under <a href="https://github.com/Joevonlong/Vowrite/blob/main/LICENSE" style="color: inherit; text-decoration: underline;">MIT license</a>.</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Joevonlong/Vowrite">GitHub</a>
+        <a href="https://github.com/Joevonlong/Vowrite/releases">Releases</a>
+        <a href="https://github.com/Joevonlong/Vowrite/issues">Feedback</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="i18n.js"></script>
+  <script>
+    // Live demo rotator — swaps through 4 sentence pairs
+    (function () {
+      const samples = [
+        {
+          flagIn: '🇨🇳', langInKey: 'tr.lang.zh', langInDefault: 'Chinese',
+          textIn: '嗯…那个，明天下午三点开个会，把翻译模式的设计方案过一下。',
+          flagOut: '🇺🇸', langOutDefault: 'English', langOutKey: null,
+          textOut: "Let's meet at 3 pm tomorrow to walk through the Translate mode design."
+        },
+        {
+          flagIn: '🇺🇸', langInKey: null, langInDefault: 'English',
+          textIn: "Hey, can you push the latest config to staging and let QA know once it's live? Thanks!",
+          flagOut: '🇨🇳', langOutKey: 'tr.lang.zh', langOutDefault: 'Chinese',
+          textOut: '能把最新配置推到 staging，然后告诉 QA 已经上线了吗？谢谢！'
+        },
+        {
+          flagIn: '🇯🇵', langInKey: 'tr.lang.ja', langInDefault: 'Japanese',
+          textIn: 'えっと、来週の月曜にデモやりたいんですけど、空いてますか？',
+          flagOut: '🇺🇸', langOutKey: null, langOutDefault: 'English',
+          textOut: "I'd like to do a demo next Monday — are you free?"
+        },
+        {
+          flagIn: '🇩🇪', langInKey: 'tr.lang.de', langInDefault: 'German',
+          textIn: 'Können wir den Release-Termin auf nächste Woche verschieben? Ich brauche noch ein bisschen Zeit für die Tests.',
+          flagOut: '🇨🇳', langOutKey: 'tr.lang.zh', langOutDefault: 'Chinese',
+          textOut: '能把发布时间挪到下周吗？我还需要一点时间做测试。'
+        }
+      ];
+
+      const flagIn = document.getElementById('trDemoFlagIn');
+      const langIn = document.getElementById('trDemoLangIn');
+      const textIn = document.getElementById('trDemoIn');
+      const flagOut = document.getElementById('trDemoFlagOut');
+      const langOut = document.getElementById('trDemoLangOut');
+      const textOut = document.getElementById('trDemoOut');
+      const row = document.getElementById('trDemoRow');
+      const dots = document.querySelectorAll('.tr-demo-dot');
+
+      function langText(key, fallback) {
+        if (!key) return fallback;
+        const lang = localStorage.getItem('vowrite-lang') || 'en';
+        if (lang === 'en') return fallback;
+        if (typeof i18n !== 'undefined' && i18n[lang] && i18n[lang][key]) return i18n[lang][key];
+        return fallback;
+      }
+
+      let idx = 0;
+      function render(i) {
+        const s = samples[i];
+        flagIn.textContent = s.flagIn;
+        langIn.textContent = langText(s.langInKey, s.langInDefault);
+        textIn.textContent = s.textIn;
+        flagOut.textContent = s.flagOut;
+        langOut.textContent = langText(s.langOutKey, s.langOutDefault);
+        textOut.textContent = s.textOut;
+        row.classList.remove('tr-demo-fade');
+        void row.offsetWidth;
+        row.classList.add('tr-demo-fade');
+        dots.forEach((d, j) => d.classList.toggle('active', j === i));
+      }
+
+      setInterval(() => {
+        idx = (idx + 1) % samples.length;
+        render(idx);
+      }, 4200);
+
+      dots.forEach((d) => {
+        d.addEventListener('click', () => {
+          idx = parseInt(d.getAttribute('data-i'), 10);
+          render(idx);
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>
