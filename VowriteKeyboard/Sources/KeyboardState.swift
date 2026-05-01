@@ -378,7 +378,7 @@ final class KeyboardState: ObservableObject {
             case .word:      return "删除单词"
             case .line:      return "删除整行"
             case .paragraph: return "删除整段"
-            case .all:       return "全部清空"
+            case .all:       return "删除全部"
             }
         }
     }

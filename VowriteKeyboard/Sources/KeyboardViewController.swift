@@ -9,6 +9,11 @@ class KeyboardViewController: UIInputViewController {
         super.viewDidLoad()
 
         view.backgroundColor = .secondarySystemBackground
+        // F-067: Allow keyboard subviews (specifically the long-press
+        // bulk-delete popup) to render above the keyboard's nominal top
+        // edge, mirroring how Apple's own keyboard draws key-magnification
+        // previews above its frame.
+        view.clipsToBounds = false
 
         // 1. Configure shared storage
         VowriteStorage.configure(suiteName: VowriteStorage.appGroupID)
@@ -26,6 +31,7 @@ class KeyboardViewController: UIInputViewController {
         let hosting = UIHostingController(rootView: keyboardView)
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
         hosting.view.backgroundColor = .secondarySystemBackground
+        hosting.view.clipsToBounds = false
 
         addChild(hosting)
         self.view.addSubview(hosting.view)

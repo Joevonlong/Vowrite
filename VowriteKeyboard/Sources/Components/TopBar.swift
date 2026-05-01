@@ -89,6 +89,11 @@ struct TopBar: View {
         .scaleEffect(pressActive && !popupVisible ? 0.94 : 1.0)
         .animation(.easeOut(duration: 0.12), value: pressActive)
         .contentShape(Circle())
+        // Popup renders ABOVE the delete button (negative Y offset) so the
+        // user's finger doesn't cover it. Drawing above the keyboard frame
+        // works because we disable clipping on the hosting view chain in
+        // KeyboardViewController, mirroring how Apple's own keyboard renders
+        // key-magnification previews above its top edge.
         .overlay(alignment: .top) {
             if popupVisible {
                 BulkDeletePopupView(
@@ -97,10 +102,10 @@ struct TopBar: View {
                     coordSpaceName: coordSpace,
                     frameUpdate: { popupFrame = $0 }
                 )
-                .offset(y: 56)
+                .offset(y: -56)
                 .allowsHitTesting(false)
                 .transition(
-                    .scale(scale: 0.7, anchor: .top)
+                    .scale(scale: 0.7, anchor: .bottom)
                         .combined(with: .opacity)
                 )
             }
@@ -276,7 +281,7 @@ private struct BulkDeletePopupView: View {
 
     @ViewBuilder
     private func content(tier: KeyboardState.BulkDeleteTier?) -> some View {
-        let label = tier?.label ?? "上滑清空"
+        let label = tier?.label ?? "删除全部"
         HStack(spacing: 6) {
             Image(systemName: "trash")
                 .font(.system(size: 14, weight: .semibold))
