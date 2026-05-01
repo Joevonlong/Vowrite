@@ -57,6 +57,7 @@
         <div class="nav-links">
           <a href="/why" class="nav-why" data-i18n="nav.why">Why Vowrite</a>
           <a href="/translate" class="nav-translate" data-i18n="nav.translate">Translate</a>
+          <a href="/apps" data-i18n="nav.apps">Apps</a>
           <a href="/pricing" data-i18n="nav.pricing">Pricing</a>
           <a href="#features" data-i18n="nav.features">Features</a>
           <a href="#how-it-works" data-i18n="nav.how">How It Works</a>
@@ -193,51 +194,112 @@
     <section id="providers" class="providers">
       <div class="container">
         <h2 class="section-title fade-in" data-i18n="prov.title">Your AI, your rules</h2>
-        <p class="section-sub fade-in" data-i18n="prov.sub">Bring your own API key. 15+ providers built in, or use your own.</p>
-        <div class="provider-grid fade-in">
-          <div class="provider-card">
-            <div class="provider-name">Groq + DeepSeek</div>
-            <div class="provider-detail">whisper-large-v3-turbo · deepseek-chat</div>
-            <div class="provider-badge recommended" data-i18n="prov.rec">Recommended</div>
+        <p class="section-sub fade-in" data-i18n="prov.sub">Pair any speech-to-text engine with any polish model. Bring your own keys.</p>
+
+        <!-- Pipeline diagram: STT → Polish → Output -->
+        <div class="combo-pipeline fade-in" aria-hidden="true">
+          <div class="cp-node cp-node-stt">
+            <div class="cp-node-icon">🎙️</div>
+            <div class="cp-node-label" data-i18n="prov.cp.stt">Speech → Text</div>
           </div>
-          <div class="provider-card">
+          <div class="cp-arrow"><svg viewBox="0 0 56 14" xmlns="http://www.w3.org/2000/svg"><path d="M0 7 H46 M40 1 L48 7 L40 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="cp-node cp-node-llm">
+            <div class="cp-node-icon">✨</div>
+            <div class="cp-node-label" data-i18n="prov.cp.llm">Polish & Format</div>
+          </div>
+          <div class="cp-arrow"><svg viewBox="0 0 56 14" xmlns="http://www.w3.org/2000/svg"><path d="M0 7 H46 M40 1 L48 7 L40 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="cp-node cp-node-out">
+            <div class="cp-node-icon">📋</div>
+            <div class="cp-node-label" data-i18n="prov.cp.out">Cursor</div>
+          </div>
+        </div>
+
+        <!-- Hero combo: Recommended pairing -->
+        <div class="combo-hero fade-in">
+          <div class="combo-hero-badge" data-i18n="prov.combo.badge">★ Recommended combo</div>
+          <div class="combo-hero-row">
+            <div class="combo-side">
+              <div class="combo-role" data-i18n="prov.cp.stt">Speech → Text</div>
+              <div class="combo-logo combo-logo-groq" aria-hidden="true">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M13.42 2.92 6.534 12.91l5.339.484-1.229 6.965 6.886-9.99-5.339-.484z"/></svg>
+              </div>
+              <div class="combo-name">Groq</div>
+              <div class="combo-model">whisper-large-v3-turbo</div>
+              <div class="combo-spec" data-i18n="prov.combo.groq.spec">~200 ms · free tier</div>
+            </div>
+            <div class="combo-hero-arrow" aria-hidden="true">
+              <svg viewBox="0 0 64 24" xmlns="http://www.w3.org/2000/svg"><path d="M2 12 H54 M46 4 L56 12 L46 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="combo-side">
+              <div class="combo-role" data-i18n="prov.cp.llm">Polish & Format</div>
+              <div class="combo-logo combo-logo-deepseek" aria-hidden="true">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45"/></svg>
+              </div>
+              <div class="combo-name">DeepSeek</div>
+              <div class="combo-model">deepseek-chat</div>
+              <div class="combo-spec" data-i18n="prov.combo.ds.spec">~$0.14 / M · streaming</div>
+            </div>
+          </div>
+          <p class="combo-hero-foot" data-i18n="prov.combo.foot">Why this combo? Groq's free Whisper tier transcribes in ~200 ms, then DeepSeek polishes it for cents — fast, accurate, the cheapest serious setup we've found.</p>
+        </div>
+
+        <!-- Provider grid -->
+        <h3 class="provider-grid-title fade-in" data-i18n="prov.grid.title">Or pick from 15+ providers</h3>
+        <div class="provider-grid fade-in">
+          <div class="provider-card" data-role="both">
+            <div class="provider-logo provider-logo-openai" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></div>
             <div class="provider-name">OpenAI</div>
             <div class="provider-detail">whisper-1 · gpt-4o-mini</div>
+            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
             <div class="provider-badge" data-i18n="prov.allone">All-in-One</div>
           </div>
-          <div class="provider-card">
+          <div class="provider-card" data-role="stt">
+            <div class="provider-logo provider-logo-deepgram" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg></div>
             <div class="provider-name">Deepgram</div>
-            <div class="provider-detail">Nova-3 · 36+ languages</div>
+            <div class="provider-detail">Nova-3 · WebSocket</div>
+            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span></div>
             <div class="provider-badge" data-i18n="prov.multilang">36+ Languages</div>
           </div>
-          <div class="provider-card">
+          <div class="provider-card" data-role="llm">
+            <div class="provider-logo provider-logo-gemini" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg></div>
             <div class="provider-name">Gemini</div>
             <div class="provider-detail">gemini-2.0-flash</div>
+            <div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
             <div class="provider-badge">Google</div>
           </div>
-          <div class="provider-card">
+          <div class="provider-card" data-role="llm">
+            <div class="provider-logo provider-logo-claude" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"/></svg></div>
             <div class="provider-name">Claude</div>
-            <div class="provider-detail">claude-sonnet · SSE streaming</div>
+            <div class="provider-detail">claude-sonnet · SSE</div>
+            <div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
             <div class="provider-badge">Anthropic</div>
           </div>
-          <div class="provider-card">
+          <div class="provider-card" data-role="stt">
+            <div class="provider-logo provider-logo-iflytek" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M2 11.2h2v1.6H2zm3.6-2.8h2v7.2h-2zm3.6-2h2v11.2h-2zm3.6 1.6h2v8h-2zm3.6 2.4h2v3.2h-2zm3.6 1h2v1.2h-2z"/></svg></div>
             <div class="provider-name" data-i18n="prov.iflytek">iFlytek</div>
-            <div class="provider-detail" data-i18n="prov.iflytekd">WebSocket · 23 Chinese dialects</div>
+            <div class="provider-detail" data-i18n="prov.iflytekd">23 Chinese dialects</div>
+            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span></div>
             <div class="provider-badge" data-i18n="prov.dialects">Dialect Support</div>
           </div>
-          <div class="provider-card">
+          <div class="provider-card" data-role="stt">
+            <div class="provider-logo provider-logo-mlx" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg></div>
             <div class="provider-name">MLX Server</div>
-            <div class="provider-detail" data-i18n="prov.mlxd">Apple Silicon native · no API key</div>
+            <div class="provider-detail" data-i18n="prov.mlxd">Apple Silicon · no API key</div>
+            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span></div>
             <div class="provider-badge" data-i18n="prov.local">100% Local</div>
           </div>
-          <div class="provider-card">
+          <div class="provider-card" data-role="llm">
+            <div class="provider-logo provider-logo-ollama" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M16.361 10.26a.894.894 0 0 0-.558.47l-.072.148.001.207c0 .193.004.217.059.353.076.193.152.312.291.448.24.238.51.3.872.205a.86.86 0 0 0 .517-.436.752.752 0 0 0 .08-.498c-.064-.453-.33-.782-.724-.897a1.06 1.06 0 0 0-.466 0zm-9.203.005c-.305.096-.533.32-.65.639a1.187 1.187 0 0 0-.06.52c.057.309.31.59.598.667.362.095.632.033.872-.205.14-.136.215-.255.291-.448.055-.136.059-.16.059-.353l.001-.207-.072-.148a.894.894 0 0 0-.565-.472 1.02 1.02 0 0 0-.474.007Zm-1.926-9.058a1.653 1.653 0 0 0-.683.298C5.617.74 5.173 1.666 4.985 2.819c-.07.436-.119 1.04-.119 1.503 0 .544.064 1.24.155 1.721l.023.208a8.12 8.12 0 0 1-.187.152 5.324 5.324 0 0 0-.949 1.02 5.49 5.49 0 0 0-.94 2.339 6.625 6.625 0 0 0-.023 1.357c.091.78.325 1.438.727 2.04l.13.195-.037.064c-.269.452-.498 1.105-.605 1.732-.084.496-.095.629-.095 1.294 0 .67.009.803.088 1.266.095.555.288 1.143.503 1.534.071.128.243.393.264.407l-.046.141a7.405 7.405 0 0 0-.548 1.873c-.062.417-.071.552-.071.991 0 .56.031.832.148 1.279L3.42 24h17.16l.02-.074c.029-.217.029-1.016 0-1.258-.11-.875-.295-1.57-.597-2.226l-.046-.141c.376-.569.607-1.284.724-2.228.031-.26.031-1.378 0-1.628-.083-.645-.182-1.082-.348-1.525a6.083 6.083 0 0 0-.329-.7l-.038-.064.131-.194c.402-.604.636-1.262.727-2.04a6.625 6.625 0 0 0-.024-1.358 5.512 5.512 0 0 0-.939-2.339 5.325 5.325 0 0 0-.95-1.02 8.097 8.097 0 0 1-.186-.152.692.692 0 0 1 .023-.208c.208-1.087.201-2.443-.017-3.503-.19-.924-.535-1.658-.98-2.082-.354-.338-.716-.482-1.15-.455-.996.059-1.8 1.205-2.116 3.01a6.805 6.805 0 0 0-.097.726l-.015.066a.96.96 0 0 1-.149-.078A4.857 4.857 0 0 0 12 3.03c-.832 0-1.687.243-2.456.698a.958.958 0 0 1-.148.078l-.015-.066a6.71 6.71 0 0 0-.097-.725C8.997 1.392 8.337.319 7.46.048a2.096 2.096 0 0 0-.585-.041Z"/></svg></div>
             <div class="provider-name">Ollama</div>
-            <div class="provider-detail" data-i18n="prov.ollamad">Local models · fully offline</div>
+            <div class="provider-detail" data-i18n="prov.ollamad">Local models · offline</div>
+            <div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
             <div class="provider-badge" data-i18n="prov.offline">Offline</div>
           </div>
-          <div class="provider-card provider-card-custom">
+          <div class="provider-card provider-card-custom" data-role="both">
+            <div class="provider-logo provider-logo-custom" aria-hidden="true">+</div>
             <div class="provider-name" data-i18n="prov.more">+ 8 more providers</div>
-            <div class="provider-detail" data-i18n="prov.mored">OpenRouter, Together AI, Volcengine, Qwen, SiliconFlow, Kimi, MiniMax, Zhipu GLM</div>
+            <div class="provider-detail" data-i18n="prov.mored">OpenRouter · Together · Volcengine · Qwen · SiliconFlow · Kimi · MiniMax · GLM</div>
+            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
             <div class="provider-badge" data-i18n="prov.yours">Your Server</div>
           </div>
         </div>
