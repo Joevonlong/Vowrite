@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "providers": [
     {
       "id": "openai",
@@ -21,14 +21,17 @@
         "models": [
           { "id": "gpt-4o-mini-transcribe", "description": "Fast and low-cost" },
           { "id": "gpt-4o-transcribe", "description": "Highest OpenAI quality" },
+          { "id": "gpt-4o-transcribe-diarize", "description": "Transcription with speaker diarization" },
           { "id": "whisper-1", "description": "Classic Whisper endpoint" }
         ]
       },
       "polish": {
-        "defaultModel": "gpt-4o-mini",
+        "defaultModel": "gpt-5.4-mini",
         "models": [
-          { "id": "gpt-4o-mini", "description": "Balanced quality and speed" },
-          { "id": "gpt-4o", "description": "Highest quality" }
+          { "id": "gpt-5.4-mini", "description": "Balanced default — fast and capable" },
+          { "id": "gpt-5.5", "description": "Frontier — best reasoning and coding" },
+          { "id": "gpt-5.4-nano", "description": "Cheapest, high-volume" },
+          { "id": "gpt-4o-mini", "description": "Legacy fallback" }
         ]
       }
     },
@@ -54,7 +57,7 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "openai/gpt-4o-mini",
+        "defaultModel": "openai/gpt-5.4-mini",
         "models": []
       }
     },
@@ -79,11 +82,13 @@
         ]
       },
       "polish": {
-        "defaultModel": "llama-3.3-70b-versatile",
+        "defaultModel": "openai/gpt-oss-120b",
         "models": [
-          { "id": "llama-3.3-70b-versatile", "description": "Strong value on Groq" },
-          { "id": "llama-3.1-8b-instant", "description": "Very fast" },
-          { "id": "qwen-qwq-32b", "description": "Reasoning-focused" }
+          { "id": "openai/gpt-oss-120b", "description": "Strong general — replaces retired Maverick" },
+          { "id": "openai/gpt-oss-20b", "description": "Very fast, lighter" },
+          { "id": "llama-3.3-70b-versatile", "description": "Llama 3.3 — balanced" },
+          { "id": "llama-3.1-8b-instant", "description": "Fastest Llama" },
+          { "id": "qwen/qwen3-32b", "description": "Reasoning-focused (preview)" }
         ]
       }
     },
@@ -105,6 +110,7 @@
         "defaultModel": "nova-3",
         "models": [
           { "id": "nova-3", "description": "Best accuracy, 36+ languages" },
+          { "id": "nova-3-medical", "description": "Nova-3 medical domain" },
           { "id": "nova-2", "description": "Previous gen, wider language support" }
         ]
       }
@@ -125,13 +131,16 @@
       "stt": {
         "defaultModel": "whisper-large-v3",
         "models": [
-          { "id": "whisper-large-v3", "description": "Higher accuracy" }
+          { "id": "whisper-large-v3", "description": "Higher accuracy" },
+          { "id": "nvidia/parakeet-tdt-0.6b-v3", "description": "NVIDIA Parakeet — alternative architecture" }
         ]
       },
       "polish": {
-        "defaultModel": "meta-llama/Llama-3.1-8B-Instruct-Turbo",
+        "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
         "models": [
-          { "id": "meta-llama/Llama-3.1-8B-Instruct-Turbo", "description": "Fast general-purpose" }
+          { "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo", "description": "Balanced flagship" },
+          { "id": "Qwen/Qwen3.5-9B", "description": "Cheap and fast" },
+          { "id": "deepseek-ai/DeepSeek-V4-Pro", "description": "Reasoning flagship — 512K context" }
         ]
       }
     },
@@ -149,14 +158,17 @@
       "capabilities": { "stt": false, "polish": true },
       "sttNote": "DeepSeek does not offer speech-to-text.",
       "stt": {
-        "defaultModel": "whisper-1",
+        "defaultModel": "",
         "models": []
       },
       "polish": {
-        "defaultModel": "deepseek-chat",
+        "defaultModel": "deepseek-v4-flash",
         "models": [
-          { "id": "deepseek-chat", "description": "Recommended DeepSeek default" },
-          { "id": "deepseek-reasoner", "description": "Slower, more deliberate" }
+          { "id": "deepseek-v4-flash", "description": "New default — fast and cheap" },
+          { "id": "deepseek-v4", "description": "Standard V4" },
+          { "id": "deepseek-v4-pro", "description": "Flagship V4 Pro — reasoning" },
+          { "id": "deepseek-chat", "description": "Legacy V3 (deprecates 2026-07-24)" },
+          { "id": "deepseek-reasoner", "description": "Legacy R1 reasoner (deprecates 2026-07-24)" }
         ]
       }
     },
@@ -182,12 +194,15 @@
         ]
       },
       "polish": {
-        "defaultModel": "Qwen/Qwen2.5-72B-Instruct",
+        "defaultModel": "deepseek-ai/DeepSeek-V3",
         "models": [
-          { "id": "Qwen/Qwen2.5-72B-Instruct", "description": "High quality Chinese + English" },
-          { "id": "Qwen/Qwen3-8B", "description": "Fast, lightweight" },
-          { "id": "deepseek-ai/DeepSeek-V3", "description": "DeepSeek via SiliconFlow" },
-          { "id": "THUDM/GLM-4-9B-Chat", "description": "Zhipu GLM" }
+          { "id": "deepseek-ai/DeepSeek-V3", "description": "DeepSeek flagship via SiliconFlow" },
+          { "id": "deepseek-ai/DeepSeek-V3.1-Terminus", "description": "DeepSeek V3.1 Terminus" },
+          { "id": "zai-org/GLM-4.6", "description": "Zhipu GLM-4.6" },
+          { "id": "Qwen/Qwen3-235B-A22B", "description": "Qwen3 large MoE (235B)" },
+          { "id": "Qwen/QwQ-32B", "description": "Qwen reasoning" },
+          { "id": "Qwen/Qwen2.5-72B-Instruct", "description": "Qwen2.5 72B — high quality CN+EN" },
+          { "id": "Qwen/Qwen3-8B", "description": "Fast, lightweight (free)" }
         ]
       }
     },
@@ -212,20 +227,18 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "kimi-k2.5",
+        "defaultModel": "kimi-k2.6",
         "models": [
-          { "id": "kimi-k2.5", "description": "Latest Kimi flagship" },
-          { "id": "kimi-k2", "description": "Kimi K2 model" },
-          { "id": "moonshot-v1-128k", "description": "128K context window" },
-          { "id": "moonshot-v1-32k", "description": "32K context, faster" },
-          { "id": "moonshot-v1-8k", "description": "8K context, fastest" }
+          { "id": "kimi-k2.6", "description": "Latest Kimi flagship (2026-04)" },
+          { "id": "kimi-k2.5", "description": "Previous flagship" },
+          { "id": "kimi-k2-thinking-turbo", "description": "Reasoning-focused" }
         ]
       }
     },
     {
       "id": "minimax",
       "name": "MiniMax",
-      "baseURL": "https://api.minimax.chat/v1",
+      "baseURL": "https://api.minimaxi.com/v1",
       "isOpenAICompatible": true,
       "auth": {
         "style": "bearer",
@@ -243,10 +256,11 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "MiniMax-Text-02",
+        "defaultModel": "MiniMax-M2.7",
         "models": [
-          { "id": "MiniMax-Text-02", "description": "Latest MiniMax flagship" },
-          { "id": "MiniMax-Text-01", "description": "Previous generation" }
+          { "id": "MiniMax-M2.7", "description": "Latest flagship" },
+          { "id": "MiniMax-M2.7-highspeed", "description": "Faster M2.7 variant" },
+          { "id": "MiniMax-M2.5", "description": "Previous generation" }
         ]
       }
     },
@@ -261,21 +275,19 @@
         "keyURL": "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
         "requiresKey": true
       },
-      "capabilities": { "stt": true, "polish": true },
+      "capabilities": { "stt": false, "polish": true },
       "sttAdapter": "volcengine",
-      "sttNote": "Volcengine Seed-ASR 2.0 — async processing, 13+ languages. Audio sent as base64.",
+      "sttNote": "Volcengine Seed-ASR uses AK/SK + TOS bucket auth (not OpenAI-compatible). STT support pending — see F-063.",
       "stt": {
-        "defaultModel": "seed-asr-2.0",
-        "models": [
-          { "id": "seed-asr-2.0", "description": "Volcengine flagship — 13+ languages" }
-        ]
+        "defaultModel": "",
+        "models": []
       },
       "polish": {
-        "defaultModel": "doubao-1.5-pro-32k-250115",
+        "defaultModel": "doubao-seed-1-8-251228",
         "models": [
-          { "id": "doubao-1.5-pro-32k-250115", "description": "Best quality Doubao model" },
-          { "id": "doubao-seed-2-0-mini-260215", "description": "Cheapest Doubao option" },
-          { "id": "doubao-seed-2-0-lite-260215", "description": "Balanced quality and cost" }
+          { "id": "doubao-seed-1-8-251228", "description": "Doubao Seed 1.8 — current default" },
+          { "id": "doubao-seed-1-6-251015", "description": "Doubao Seed 1.6 — 256K context" },
+          { "id": "doubao-seed-2-0-pro-260215", "description": "Doubao Seed 2.0 Pro — newest flagship" }
         ]
       }
     },
@@ -297,17 +309,20 @@
         "defaultModel": "qwen3-asr-flash",
         "models": [
           { "id": "qwen3-asr-flash", "description": "Fast Qwen ASR — 30+ languages" },
-          { "id": "paraformer-v2", "description": "Alibaba Paraformer — very cheap" },
+          { "id": "qwen3-asr-flash-realtime", "description": "Streaming variant with auto language detection" },
+          { "id": "paraformer-realtime-v2", "description": "Alibaba Paraformer streaming — very cheap" },
           { "id": "fun-asr", "description": "Alibaba Fun-ASR — multilingual" }
         ]
       },
       "polish": {
-        "defaultModel": "qwen-turbo",
+        "defaultModel": "qwen3.6-plus",
         "models": [
-          { "id": "qwen-turbo", "description": "Cheapest, good quality (1M context)" },
-          { "id": "qwen3.5-flash", "description": "Fast and cheap, latest gen" },
-          { "id": "qwen-plus", "description": "Balanced quality and cost" },
-          { "id": "qwen-max", "description": "Highest Qwen quality (32K context)" }
+          { "id": "qwen3.6-plus", "description": "New balanced flagship — 1M context" },
+          { "id": "qwen3.6-max-preview", "description": "Frontier — top coding benchmarks" },
+          { "id": "qwen3.6-flash", "description": "Cheapest, fastest" },
+          { "id": "qwen-turbo-latest", "description": "Stable cheap tier" },
+          { "id": "qwen-plus-latest", "description": "Stable balanced" },
+          { "id": "qwen-max-latest", "description": "Stable flagship (32K context)" }
         ]
       }
     },
@@ -329,11 +344,11 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "gemini-2.0-flash",
+        "defaultModel": "gemini-2.5-flash",
         "models": [
-          { "id": "gemini-2.0-flash", "description": "Fast and efficient" },
-          { "id": "gemini-2.5-flash", "description": "Latest flash model" },
-          { "id": "gemini-1.5-pro", "description": "High quality, large context" }
+          { "id": "gemini-2.5-flash", "description": "Balanced default — fast and capable" },
+          { "id": "gemini-2.5-pro", "description": "Stable flagship — large context" },
+          { "id": "gemini-2.5-flash-lite", "description": "Cheapest, fastest" }
         ]
       }
     },
@@ -349,17 +364,19 @@
         "requiresKey": true
       },
       "capabilities": { "stt": false, "polish": true },
-      "sttNote": "Zhipu does not offer speech-to-text.",
+      "sttNote": "Zhipu GLM-ASR is now available but uses a separate audio endpoint — pending integration.",
       "stt": {
         "defaultModel": "",
         "models": []
       },
       "polish": {
-        "defaultModel": "glm-4-flash",
+        "defaultModel": "glm-4.7-flash",
         "models": [
-          { "id": "glm-4-flash", "description": "Fast and free" },
-          { "id": "glm-4-plus", "description": "Highest Zhipu quality" },
-          { "id": "glm-4-air", "description": "Balanced quality and speed" }
+          { "id": "glm-4.7-flash", "description": "Free, fastest" },
+          { "id": "glm-4.6", "description": "Strong general purpose" },
+          { "id": "glm-5", "description": "GLM-5 flagship" },
+          { "id": "glm-5.1", "description": "Latest GLM-5.1" },
+          { "id": "glm-4.5-air", "description": "Balanced air variant" }
         ]
       }
     },
@@ -381,10 +398,11 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "claude-sonnet-4-5-20250514",
+        "defaultModel": "claude-sonnet-4-6",
         "models": [
-          { "id": "claude-sonnet-4-5-20250514", "description": "Balanced quality and speed" },
-          { "id": "claude-haiku-3-5-20241022", "description": "Fastest, low cost" }
+          { "id": "claude-sonnet-4-6", "description": "Balanced quality and speed" },
+          { "id": "claude-opus-4-7", "description": "Most capable — complex reasoning" },
+          { "id": "claude-haiku-4-5", "description": "Fastest, low cost" }
         ]
       }
     },
@@ -400,24 +418,22 @@
         "keyURL": "https://ollama.com/download",
         "requiresKey": false
       },
-      "capabilities": { "stt": true, "polish": true },
-      "sttAdapter": "openai-compatible",
-      "sttNote": "Requires a local Whisper model, for example `ollama pull whisper-large-v3-turbo`.",
+      "capabilities": { "stt": false, "polish": true },
+      "sttNote": "Ollama upstream does not provide a native Whisper model. For local STT, use Sherpa or run a separate whisper.cpp / faster-whisper server.",
       "stt": {
-        "defaultModel": "whisper-large-v3-turbo",
-        "models": [
-          { "id": "whisper-large-v3-turbo", "description": "Fastest Groq/Ollama option" },
-          { "id": "whisper-large-v3", "description": "Higher accuracy" },
-          { "id": "whisper-base", "description": "Lightweight local model" }
-        ]
+        "defaultModel": "",
+        "models": []
       },
       "polish": {
         "defaultModel": "qwen3:8b",
         "models": [
           { "id": "qwen3:8b", "description": "Local default" },
+          { "id": "qwen3.5:9b", "description": "Latest Qwen3.5" },
           { "id": "llama3.1:8b", "description": "Local general-purpose" },
+          { "id": "llama4:16x17b", "description": "Llama 4 MoE" },
+          { "id": "deepseek-r1:8b", "description": "DeepSeek-R1 distilled" },
           { "id": "gemma3:4b", "description": "Lightweight local option" },
-          { "id": "mistral:7b", "description": "Good multilingual local option" }
+          { "id": "mistral:7b", "description": "Multilingual local option" }
         ]
       }
     },
@@ -440,12 +456,13 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+        "defaultModel": "mlx-community/Qwen3.5-9B-MLX-4bit",
         "models": [
-          { "id": "mlx-community/Qwen2.5-7B-Instruct-4bit", "description": "Fast, great Chinese + English (4GB)" },
+          { "id": "mlx-community/Qwen3.5-9B-MLX-4bit", "description": "New default — Qwen3.5 9B (~5GB)" },
+          { "id": "mlx-community/Qwen3-4B-Instruct-2507-4bit", "description": "Lightweight (~2GB)" },
           { "id": "mlx-community/Llama-3.3-70B-Instruct-4bit", "description": "Top quality, needs 40GB+ RAM" },
-          { "id": "mlx-community/Mistral-Small-24B-Instruct-2501-4bit", "description": "Near GPT-4 quality (13GB)" },
-          { "id": "mlx-community/gemma-3-4b-it-4bit", "description": "Lightweight, fast (2.5GB)" }
+          { "id": "mlx-community/Mistral-Small-24B-Instruct-2501-4bit", "description": "Near GPT-4 quality (~13GB)" },
+          { "id": "mlx-community/gemma-3-4b-it-4bit", "description": "Lightweight, fast (~2.5GB)" }
         ]
       }
     },
