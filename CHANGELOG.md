@@ -7,6 +7,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.2.0.1] — 2026-05-01
+
 ### Added — Local & Customization
 
 - **F-048 Sherpa local ASR (scaffold + Settings UI)**: `SherpaSTTAdapter`, `SherpaModelManager`, `SherpaEngine` C wrapper, 3 model definitions, macOS + iOS Local Models settings panel, tar.bz2 download/extract. Full runtime still pending sherpa-onnx XCFramework.
@@ -344,7 +346,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.0...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.1...HEAD
+[0.2.0.1]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.0...v0.2.0.1
 [0.2.0.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.2...v0.2.0.0
 [0.1.9.2]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.1...v0.1.9.2
 [0.1.9.1]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.0...v0.1.9.1
