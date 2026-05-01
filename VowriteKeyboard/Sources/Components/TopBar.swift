@@ -21,6 +21,13 @@ struct TopBar: View {
 
     private let coordSpace = "topbar.delete"
     private let longPressThreshold: TimeInterval = 0.4
+    /// Vertical distance from the delete button's top edge to the popup's
+    /// top edge. = popup height (~52pt with new sizing) + small gap.
+    private let popupOffsetAboveButton: CGFloat = 60
+    /// Extra height the keyboard grows by while the popup is visible, so
+    /// the popup renders inside the keyboard's own frame (avoids the
+    /// system keyboard window clipping subviews above 280pt).
+    private let popupKeyboardExtraHeight: CGFloat = 64
 
     var body: some View {
         HStack {
@@ -89,12 +96,14 @@ struct TopBar: View {
         .scaleEffect(pressActive && !popupVisible ? 0.94 : 1.0)
         .animation(.easeOut(duration: 0.12), value: pressActive)
         .contentShape(Circle())
-        // Popup renders ABOVE the delete button (negative Y offset) so the
-        // user's finger doesn't cover it. Drawing above the keyboard frame
-        // works because we disable clipping on the hosting view chain in
-        // KeyboardViewController, mirroring how Apple's own keyboard renders
-        // key-magnification previews above its top edge.
-        .overlay(alignment: .top) {
+        // Popup renders ABOVE the delete button, with its TRAILING edge
+        // aligned to the button's right edge so it extends LEFTWARD into
+        // the topbar. This keeps the "删除全部" text on-screen (the prior
+        // centered alignment clipped the right half off the screen edge)
+        // and gives the popup a clear "上方偏左" position relative to the
+        // delete key. The keyboard grows by `popupOverlayHeight` during
+        // the gesture so the popup lands inside the keyboard's own frame.
+        .overlay(alignment: .topTrailing) {
             if popupVisible {
                 BulkDeletePopupView(
                     fingerOnPopup: fingerOnPopup,
@@ -102,10 +111,10 @@ struct TopBar: View {
                     coordSpaceName: coordSpace,
                     frameUpdate: { popupFrame = $0 }
                 )
-                .offset(y: -56)
+                .offset(y: -popupOffsetAboveButton)
                 .allowsHitTesting(false)
                 .transition(
-                    .scale(scale: 0.7, anchor: .bottom)
+                    .scale(scale: 0.75, anchor: .bottomTrailing)
                         .combined(with: .opacity)
                 )
             }
@@ -189,11 +198,11 @@ struct TopBar: View {
     private func scheduleRevealPopup() {
         let work = DispatchWorkItem {
             guard pressActive, !popupVisible else { return }
-            // Grow the keyboard by 56pt at the top so the popup has room to
-            // render above the delete button inside the keyboard's frame.
+            // Grow the keyboard so the popup has room to render above the
+            // delete button inside the keyboard's frame.
             withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
                 popupVisible = true
-                state.extraTopHeight = 56
+                state.extraTopHeight = popupKeyboardExtraHeight
             }
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             startContinuousDelete()
@@ -286,21 +295,23 @@ private struct BulkDeletePopupView: View {
     @ViewBuilder
     private func content(tier: KeyboardState.BulkDeleteTier?) -> some View {
         let label = tier?.label ?? "删除全部"
-        HStack(spacing: 6) {
-            Image(systemName: "trash")
-                .font(.system(size: 14, weight: .semibold))
+        HStack(spacing: 8) {
+            Image(systemName: "trash.fill")
+                .font(.system(size: 17, weight: .semibold))
             Text(label)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .foregroundStyle(.white)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
         .background(
-            Capsule().fill(Color.black.opacity(0.85))
+            Capsule().fill(Color.black.opacity(0.88))
         )
-        .scaleEffect(fingerOnPopup ? 1.06 : 1.0)
-        .shadow(color: .black.opacity(fingerOnPopup ? 0.25 : 0.12),
-                radius: 8, y: 3)
+        .scaleEffect(fingerOnPopup ? 1.05 : 1.0)
+        .shadow(color: .black.opacity(fingerOnPopup ? 0.30 : 0.18),
+                radius: 10, y: 4)
         .animation(.spring(response: 0.22, dampingFraction: 0.85),
                    value: fingerOnPopup)
         .background(
