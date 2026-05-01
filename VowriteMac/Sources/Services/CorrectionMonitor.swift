@@ -27,6 +27,11 @@ final class CorrectionMonitor {
         ) == .success, let focusedRef else {
             return nil
         }
+        // CFGetTypeID guard: AX may return a non-AXUIElement on some hosts
+        // (Electron/Catalyst/web views). Force-cast would trap; bail instead.
+        guard CFGetTypeID(focusedRef) == AXUIElementGetTypeID() else {
+            return nil
+        }
         return (focusedRef as! AXUIElement)
     }
 
@@ -139,7 +144,7 @@ final class CorrectionMonitor {
 
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 300, height: 40),
-            styleMask: [.nonactivatingPanel, .fullSizeContentView],
+            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: true
         )
