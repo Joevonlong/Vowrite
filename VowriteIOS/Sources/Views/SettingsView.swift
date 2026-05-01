@@ -12,6 +12,8 @@ struct SettingsView: View {
     @State private var polishAPIKey: String = ""
     @State private var soundFeedbackEnabled: Bool = SoundFeedback.isEnabled
 
+    @ObservedObject private var modeManager = ModeManager.shared
+
     var body: some View {
         NavigationStack {
             Form {
@@ -123,6 +125,30 @@ struct SettingsView: View {
                         }
                 }
 
+                // F-066: Translation language quick settings
+                Section {
+                    Picker("Source", selection: Binding(
+                        get: { translationSource },
+                        set: setTranslationSource
+                    )) {
+                        ForEach(SupportedLanguage.allCases) { lang in
+                            Text(lang.displayName).tag(lang)
+                        }
+                    }
+                    Picker("Target", selection: Binding(
+                        get: { translationTarget },
+                        set: setTranslationTarget
+                    )) {
+                        ForEach(SupportedLanguage.allCases.filter { $0 != .auto }) { lang in
+                            Text(lang.displayName).tag(lang)
+                        }
+                    }
+                } header: {
+                    Text("Translation")
+                } footer: {
+                    Text("Applies to the built-in Translate mode. Custom translation modes keep their own settings.")
+                }
+
                 // Local Models (Sherpa offline ASR)
                 Section("Local Models") {
                     SherpaLocalModelsList()
@@ -163,5 +189,40 @@ struct SettingsView: View {
     private func saveKey(_ key: String, for provider: APIProvider) {
         guard !key.isEmpty else { return }
         _ = KeyVault.saveKey(key, for: provider)
+    }
+
+    // MARK: - F-066 Translation language bindings
+
+    private var translateModeIndex: Int? {
+        modeManager.modes.firstIndex { $0.isBuiltin && $0.isTranslation }
+    }
+
+    private var translationSource: SupportedLanguage {
+        guard let i = translateModeIndex,
+              let raw = modeManager.modes[i].language,
+              let lang = SupportedLanguage(rawValue: raw) else { return .auto }
+        return lang
+    }
+
+    private var translationTarget: SupportedLanguage {
+        guard let i = translateModeIndex,
+              let raw = modeManager.modes[i].targetLanguage,
+              let lang = SupportedLanguage(rawValue: raw),
+              lang != .auto else { return .en }
+        return lang
+    }
+
+    private func setTranslationSource(_ lang: SupportedLanguage) {
+        guard let i = translateModeIndex else { return }
+        var mode = modeManager.modes[i]
+        mode.language = (lang == .auto) ? nil : lang.rawValue
+        modeManager.updateMode(mode)
+    }
+
+    private func setTranslationTarget(_ lang: SupportedLanguage) {
+        guard let i = translateModeIndex, lang != .auto else { return }
+        var mode = modeManager.modes[i]
+        mode.targetLanguage = lang.rawValue
+        modeManager.updateMode(mode)
     }
 }
