@@ -164,11 +164,10 @@
       "polish": {
         "defaultModel": "deepseek-v4-flash",
         "models": [
-          { "id": "deepseek-v4-flash", "description": "New default — fast and cheap" },
-          { "id": "deepseek-v4", "description": "Standard V4" },
+          { "id": "deepseek-v4-flash", "description": "New default — fast and cheap (non-thinking mode)" },
           { "id": "deepseek-v4-pro", "description": "Flagship V4 Pro — reasoning" },
-          { "id": "deepseek-chat", "description": "Legacy V3 (deprecates 2026-07-24)" },
-          { "id": "deepseek-reasoner", "description": "Legacy R1 reasoner (deprecates 2026-07-24)" }
+          { "id": "deepseek-chat", "description": "Legacy alias for deepseek-v4-flash non-thinking (deprecates 2026-07-24)" },
+          { "id": "deepseek-reasoner", "description": "Legacy alias for deepseek-v4-flash thinking (deprecates 2026-07-24)" }
         ]
       }
     },
