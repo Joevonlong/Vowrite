@@ -19,6 +19,11 @@ let package = Package(
                 .linkedFramework("AuthenticationServices"),
                 .linkedFramework("AVFoundation")
             ]
+        ),
+        .testTarget(
+            name: "VowriteKitTests",
+            dependencies: ["VowriteKit"],
+            path: "Tests/VowriteKitTests"
         )
     ]
 )

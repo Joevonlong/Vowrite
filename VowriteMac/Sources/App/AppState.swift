@@ -10,6 +10,7 @@ final class AppState: ObservableObject {
     @Published var recordingDuration: TimeInterval = 0
     @Published var lastResult: String?
     @Published var lastRawTranscript: String?
+    @Published var historyUnavailable: Bool = false
 
     let modelContainer: ModelContainer
     let engine: DictationEngine
@@ -30,15 +31,19 @@ final class AppState: ObservableObject {
 
     init() {
         MiniMaxMigration.runIfNeeded()
+        MiniMaxOAuthPurge.runIfNeeded()
         APIConfigMigration.runIfNeeded()
         APIConfig.migratePresetIDs()
 
-        do {
-            let schema = Schema([DictationRecord.self])
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            modelContainer = try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+        let schema = Schema([DictationRecord.self])
+        let primary = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        if let container = try? ModelContainer(for: schema, configurations: [primary]) {
+            modelContainer = container
+        } else {
+            // Fallback to in-memory store so the app still boots; HistoryView shows a banner.
+            let inMemory = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            modelContainer = try! ModelContainer(for: schema, configurations: [inMemory])
+            historyUnavailable = true
         }
 
         let overlay = MacOverlayController.shared

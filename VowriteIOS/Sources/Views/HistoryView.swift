@@ -3,6 +3,7 @@ import SwiftData
 import VowriteKit
 
 struct HistoryView: View {
+    @EnvironmentObject var appState: AppState
     @Query(sort: \DictationRecord.createdAt, order: .reverse)
     private var records: [DictationRecord]
 
@@ -10,7 +11,10 @@ struct HistoryView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            VStack(spacing: 0) {
+                if appState.historyUnavailable {
+                    historyUnavailableBanner
+                }
                 if records.isEmpty {
                     emptyState
                 } else {
@@ -19,6 +23,23 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
         }
+    }
+
+    private var historyUnavailableBanner: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label("History temporarily unavailable", systemImage: "exclamationmark.triangle.fill")
+                .font(.headline)
+                .foregroundColor(.orange)
+            Text("This session and keyboard extension records won't be saved. Check App Group permissions or reinstall the app.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.12))
+        .cornerRadius(8)
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
 
     private var emptyState: some View {

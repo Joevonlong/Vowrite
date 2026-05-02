@@ -16,6 +16,7 @@ final class AppState: ObservableObject {
     @Published var bgServiceRecording = false
     @Published var bgServiceError: String?
     @Published var bgServiceRemainingTime: TimeInterval? = nil
+    @Published var historyUnavailable: Bool = false
 
     let modelContainer: ModelContainer
     let engine: DictationEngine
@@ -32,17 +33,23 @@ final class AppState: ObservableObject {
     var totalDictations: Int { engine.totalDictations }
 
     init() {
-        do {
-            let schema = Schema([DictationRecord.self])
-            let config: ModelConfiguration
-            if let storeURL = VowriteStorage.swiftDataURL {
-                config = ModelConfiguration(storeURL.lastPathComponent, schema: schema, isStoredInMemoryOnly: false, groupContainer: .identifier(VowriteStorage.appGroupID))
-            } else {
-                config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            }
-            modelContainer = try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+        let schema = Schema([DictationRecord.self])
+        let primary: ModelConfiguration
+        if let storeURL = VowriteStorage.swiftDataURL {
+            primary = ModelConfiguration(storeURL.lastPathComponent, schema: schema, isStoredInMemoryOnly: false, groupContainer: .identifier(VowriteStorage.appGroupID))
+        } else {
+            primary = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        }
+        if let container = try? ModelContainer(for: schema, configurations: [primary]) {
+            modelContainer = container
+        } else {
+            // Fallback to in-memory store so the app still boots; HistoryView shows a banner.
+            // Note: keyboard extension reads the App Group store directly, so its records will
+            // also be unavailable until the underlying issue (App Group entitlement, disk
+            // corruption, schema mismatch) is resolved.
+            let inMemory = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            modelContainer = try! ModelContainer(for: schema, configurations: [inMemory])
+            historyUnavailable = true
         }
 
         engine = DictationEngine(

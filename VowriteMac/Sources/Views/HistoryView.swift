@@ -46,6 +46,9 @@ struct HistoryView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if appState.historyUnavailable {
+                    historyUnavailableBanner
+                }
                 // Header
                 HStack {
                     Text("History")
@@ -182,6 +185,23 @@ struct HistoryView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+    }
+
+    private var historyUnavailableBanner: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label("History temporarily unavailable", systemImage: "exclamationmark.triangle.fill")
+                .font(.headline)
+                .foregroundColor(.orange)
+            Text("This session won't be saved to history. Restart the app or check disk space.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.12))
+        .cornerRadius(8)
+        .padding(.horizontal, 28)
+        .padding(.top, 24)
     }
 
     private func toggleSelection(_ record: DictationRecord) {

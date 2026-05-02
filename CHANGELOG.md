@@ -7,6 +7,22 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Added
+
+- **VowriteKitTests target**: First automated test target. Six XCTest files covering `Mode` Codable roundtrip + F-063 backward-compat decode, `ModeConfig` field mapping and `withStyleOverride` behaviour, `OutputStyle` Codable roundtrip, `ReplacementRule` Codable roundtrip + ID uniqueness, builtin data integrity (Clean mode UUID stability, builtin shortcut index uniqueness, `OutputStyle.noneId` resolution), and the empty-rules early-return path of `ReplacementManager.apply`. `ops/scripts/test.sh` now invokes `swift test` between the Kit build and the Mac build.
+
+### Changed
+
+- **WindowHelper**: dropped redundant `openSettings()` / `openHistory()` wrappers that only delegated to `openMainWindow()`. Five call sites (`VowriteApp` Settings command, `MenuBarView` History/Settings buttons, `VowriteMenuView` Settings/History entries) now call `openMainWindow()` directly.
+
+### Fixed
+
+- **ModelContainer init failure no longer crashes the app**: `AppState.init` on Mac and iOS now falls back to an in-memory store and surfaces a "history temporarily unavailable" banner in `HistoryView` instead of `fatalError`. iOS banner additionally calls out that keyboard extension records are also affected because the keyboard extension reads the App Group SwiftData store directly.
+
+### Removed
+
+- **MiniMax OAuth flow**: removed `MiniMaxOAuthService`, `MiniMaxOAuthCard`, and the `minimax_intl`/`minimax_cn` cases in `OAuthRefreshManager.performRefresh`. `clientID` was never obtained from MiniMax developer support, so the flow was never functional. `MiniMaxOAuthCard` was also a 100% orphan (zero instantiation sites). `PresentationContextBridge` was extracted to its own file because `OpenAICodexOAuthService` still uses it. New `MiniMaxOAuthPurge.runIfNeeded()` one-shot clears stale OAuth tokens and `auth.method.minimax_*` keys on next launch.
+
 ## [0.2.1.0] — 2026-05-02
 
 ### Added — Translation Suite

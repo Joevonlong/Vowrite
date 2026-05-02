@@ -54,7 +54,7 @@ struct VowriteMenuView: View {
 
         // Settings
         Button("Settings...") {
-            WindowHelper.openSettings()
+            WindowHelper.openMainWindow()
         }
         .keyboardShortcut(",", modifiers: .command)
 
@@ -64,7 +64,7 @@ struct VowriteMenuView: View {
         }
 
         Button("History") {
-            WindowHelper.openHistory()
+            WindowHelper.openMainWindow()
         }
 
         Divider()
