@@ -14,6 +14,11 @@ enum KeyboardTheme {
     static let subtitleColor = Color(UIColor.secondaryLabel)
     static let iconColor = Color(UIColor.label)
 
+    // F-070 chip active palette (matches mockup pale-blue active state)
+    static let chipActiveTop = Color(red: 0.867, green: 0.910, blue: 1.000)   // #DDE8FF
+    static let chipActiveBottom = Color(red: 0.761, green: 0.831, blue: 1.000) // #C2D4FF
+    static let chipActiveText = Color(red: 0.114, green: 0.302, blue: 0.847)   // #1D4ED8
+
     static let actionButtonSize: CGFloat = 44
 
     // Idle state
@@ -38,16 +43,16 @@ struct KeyboardView: View {
     @Environment(\.openURL) private var openURL
 
     /// Controls which header sits above the RecordArea.
-    /// - `.full`: idle TopBar with logo + action buttons (@, ─, delete).
-    /// - `.compact`: minimal logo-only header (recording/processing). Mirrors the
-    ///   reference design (e.g. Typeless) where the brand stays anchored top-left
-    ///   throughout the dictation lifecycle so the user always knows which
-    ///   keyboard is active.
-    /// - `.hidden`: no header at all (mode-selection arcs need the room).
-    private enum HeaderKind { case full, compact, hidden }
+    /// - `.full`: idle TopBar with logo + action buttons (@, ─, delete). Used
+    ///   for everything except active recording/processing — including
+    ///   `isModeSelectionExpanded`. F-070 keeps the brand anchored even when
+    ///   the long-press 口述/翻译 chips are showing, mirroring joe's mockup
+    ///   where the topbar never disappears.
+    /// - `.compact`: minimal logo-only header (recording/processing). Action
+    ///   buttons would conflict with the gesture surface or be irrelevant.
+    private enum HeaderKind { case full, compact }
 
     private var headerKind: HeaderKind {
-        if state.isModeSelectionExpanded { return .hidden }
         switch state.viewState {
         case .recording, .processing: return .compact
         default: return .full
@@ -77,8 +82,6 @@ struct KeyboardView: View {
                     RecordingHeader()
                         .frame(height: 48)
                         .transition(.opacity)
-                case .hidden:
-                    EmptyView()
                 }
 
                 RecordArea(state: state)

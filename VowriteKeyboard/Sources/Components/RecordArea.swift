@@ -9,19 +9,46 @@ struct RecordArea: View {
     @State private var dragOffset: CGFloat = 0
     @State private var isDragging = false
 
-    // F-064: Long-press 口述/翻译 selection state.
-    // Lives here (not in KeyboardState) because it's a transient gesture-local
-    // state — only `isModeSelectionExpanded` is mirrored to KeyboardState so
-    // KeyboardView can collapse the TopBar.
+    // F-070: Long-press chip-selection state. Gesture-local (only
+    // `isModeSelectionExpanded` is mirrored to KeyboardState).
     @State private var isPressing = false
-    @State private var hoveredArc: ArcChoice = .none
+    @State private var hoveredPosition: KeyboardChipDescriptor.Position? = nil
     @State private var expandWorkItem: DispatchWorkItem?
+
+    /// matchedGeometryEffect namespace for the mic-pill ↔ mic-circle morph
+    /// (170×60 capsule at idle → 56pt circle when expanded). F-070.
+    @Namespace private var micNamespace
 
     private let cancelThreshold: CGFloat = 80
     private let longPressThreshold: TimeInterval = 0.35
     private let modeSelectionCoordSpace = "modeSelection"
 
-    enum ArcChoice { case none, dictate, translate }
+    /// F-070: Chip metadata. `Position` reserves all four corners so future
+    /// modes can be added by appending to `enabledChips` with no layout or
+    /// gesture changes. `Action` is the dispatch payload on release.
+    struct KeyboardChipDescriptor: Identifiable {
+        enum Position: Hashable { case topLeft, topRight, bottomLeft, bottomRight }
+        enum Action { case dictate, translate }
+
+        let id = UUID()
+        let position: Position
+        let label: String
+        let action: Action
+    }
+
+    /// Currently rendered chips. Top-left = 口述, top-right = 翻译.
+    /// Bottom-left / bottom-right are reserved (not rendered, not hit-tested) —
+    /// per F-070 spec § 2.6 and joe's "暂时不显示任何东西" requirement.
+    private var enabledChips: [KeyboardChipDescriptor] {
+        [
+            .init(position: .topLeft,  label: "口述", action: .dictate),
+            .init(position: .topRight, label: "翻译", action: .translate),
+        ]
+    }
+
+    private func chip(at position: KeyboardChipDescriptor.Position) -> KeyboardChipDescriptor? {
+        enabledChips.first { $0.position == position }
+    }
 
     var body: some View {
         Group {
@@ -97,58 +124,158 @@ struct RecordArea: View {
         }
     }
 
-    /// F-064: Idle layout that supports both quick-tap (start dictation) and
-    /// long-press → 口述/翻译 arc selection. The two arcs render above the
-    /// mic pill location once the press exceeds `longPressThreshold`; finger
-    /// position picks the action on release. Releasing in the middle (or
-    /// before expansion) without long-pressing falls back to direct dictation.
+    /// F-070: Idle layout that supports both quick-tap (start dictation) and
+    /// long-press → chip selection. After expansion, the mic pill morphs into
+    /// a small circle at the bottom (matchedGeometry), and large chips appear
+    /// in the top corners. Hit testing is by quadrant — finger anywhere in the
+    /// top-left/top-right quadrant triggers the corresponding chip; everything
+    /// else is cancel. Quick tap (no long-press) falls back to direct dictation.
     private var interactiveIdleContent: some View {
         GeometryReader { geo in
-            ZStack {
-                // Layer 1 — main column. Mic pill stays mounted as the gesture
-                // anchor; it just fades out when arcs take over.
-                VStack(spacing: 16) {
-                    Text(state.isModeSelectionExpanded ? "向上滑动以选择" : "点击说话")
-                        .font(.subheadline)
-                        .foregroundStyle(KeyboardTheme.subtitleColor)
-                        .animation(.easeInOut(duration: 0.18), value: state.isModeSelectionExpanded)
+            ZStack(alignment: .top) {
+                // Hint texts (one slot, content swaps with state).
+                hintLayer
 
-                    micPillLabel
-                        .opacity(state.isModeSelectionExpanded ? 0.0 : 1.0)
-                        .scaleEffect(isPressing && !state.isModeSelectionExpanded ? 0.96 : 1.0)
-                        .animation(.easeOut(duration: 0.18), value: state.isModeSelectionExpanded)
-                        .animation(.easeOut(duration: 0.12), value: isPressing)
-                        .contentShape(Capsule())
-                        .gesture(modeSelectionGesture(in: geo.size))
-
-                    if !state.isModeSelectionExpanded {
-                        Button {
-                            state.insertReturn()
-                        } label: {
-                            returnPillLabel
-                        }
-                        .transition(.opacity)
-                    } else {
-                        // Reserve the same vertical space the 换行 button used,
-                        // so the mic pill doesn't jump when arcs animate in.
-                        Color.clear.frame(height: KeyboardTheme.returnPillHeight)
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                // Layer 2 — arc selection overlay (口述 / 翻译 + cancel hint).
+                // Chips in the top corners — only when expanded.
                 if state.isModeSelectionExpanded {
-                    arcsOverlay
+                    chipsLayer
                         .transition(
-                            .opacity.combined(with: .scale(scale: 0.92, anchor: .bottom))
+                            .opacity.combined(with: .scale(scale: 0.92, anchor: .top))
                         )
                 }
+
+                // Mic + ripple. The mic uses matchedGeometryEffect to morph
+                // smoothly between the idle pill (170×60 centered) and the
+                // expanded circle (56pt at bottom-center).
+                micAndRippleLayer(in: geo.size)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .coordinateSpace(name: modeSelectionCoordSpace)
         }
     }
 
-    /// Shared mic pill appearance used by Link, gesture target, etc.
+    @ViewBuilder
+    private var hintLayer: some View {
+        VStack(spacing: 0) {
+            Text(state.isModeSelectionExpanded ? "向上滑动以选择" : "点击说话")
+                .font(.subheadline)
+                .foregroundStyle(KeyboardTheme.subtitleColor)
+                .padding(.top, state.isModeSelectionExpanded ? 14 : 28)
+                .animation(.easeInOut(duration: 0.18), value: state.isModeSelectionExpanded)
+
+            if state.isModeSelectionExpanded {
+                Spacer().frame(height: 88)
+                Text("松开以取消")
+                    .font(.subheadline)
+                    .foregroundStyle(
+                        hoveredPosition == nil
+                            ? KeyboardTheme.subtitleColor
+                            : Color(UIColor.quaternaryLabel)
+                    )
+                    .animation(.easeInOut(duration: 0.15), value: hoveredPosition)
+                    .transition(.opacity)
+            }
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private var chipsLayer: some View {
+        VStack {
+            HStack(spacing: 0) {
+                if let leftChip = chip(at: .topLeft) {
+                    chipPill(leftChip)
+                } else {
+                    chipPlaceholder
+                }
+                Spacer(minLength: 32)
+                if let rightChip = chip(at: .topRight) {
+                    chipPill(rightChip)
+                } else {
+                    chipPlaceholder
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 38)
+
+            Spacer()
+        }
+    }
+
+    /// Empty slot for a not-yet-enabled corner chip. Keeps the HStack layout
+    /// stable when only one of the top chips is enabled.
+    private var chipPlaceholder: some View {
+        Color.clear.frame(width: 140, height: 52)
+    }
+
+    @ViewBuilder
+    private func micAndRippleLayer(in size: CGSize) -> some View {
+        ZStack {
+            // Idle: pill centered in upper half.
+            // Expanded: circle near bottom with ripple behind it.
+            if state.isModeSelectionExpanded {
+                VStack {
+                    Spacer()
+                    ZStack {
+                        Ripple()
+                        micShape(width: 56, height: 56, shadowOpacity: 0.18)
+                            .matchedGeometryEffect(
+                                id: "micShape",
+                                in: micNamespace,
+                                properties: .frame
+                            )
+                            .contentShape(Capsule())
+                            .gesture(modeSelectionGesture(in: size))
+                    }
+                    .padding(.bottom, 28)
+                }
+            } else {
+                VStack(spacing: 16) {
+                    // Push down to the same vertical band as the mockup —
+                    // sits below the "点击说话" hint with comfortable gap.
+                    Spacer().frame(height: 56)
+                    micShape(width: 170, height: 60, shadowOpacity: 0.10)
+                        .matchedGeometryEffect(
+                            id: "micShape",
+                            in: micNamespace,
+                            properties: .frame
+                        )
+                        .scaleEffect(isPressing ? 0.96 : 1.0)
+                        .animation(.easeOut(duration: 0.12), value: isPressing)
+                        .contentShape(Capsule())
+                        .gesture(modeSelectionGesture(in: size))
+
+                    Button {
+                        state.insertReturn()
+                    } label: {
+                        returnPillLabel
+                    }
+                    .transition(.opacity)
+
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    /// Single source of truth for the mic visual. Capsule is intentional —
+    /// at width == height it renders as a circle, so the same shape morphs
+    /// from pill (170×60) → circle (56×56) under matchedGeometryEffect.
+    private func micShape(width: CGFloat, height: CGFloat, shadowOpacity: Double) -> some View {
+        Capsule()
+            .fill(.white)
+            .frame(width: width, height: height)
+            .shadow(color: .black.opacity(shadowOpacity), radius: 6, y: 4)
+            .overlay {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(.black)
+            }
+    }
+
+    /// Shared mic pill appearance used by activation Link.
     private var micPillLabel: some View {
         Capsule()
             .fill(.white)
@@ -172,41 +299,17 @@ struct RecordArea: View {
             .background(KeyboardTheme.buttonFill, in: Capsule())
     }
 
-    // MARK: - F-064 Mode Selection Arcs
+    // MARK: - F-070 Chip + Gesture
 
-    private var arcsOverlay: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                HStack(spacing: 18) {
-                    arcCapsule(label: "口述", choice: .dictate)
-                    arcCapsule(label: "翻译", choice: .translate)
-                }
-                .padding(.top, 18)
-                Spacer()
-                Text("松开以取消")
-                    .font(.subheadline)
-                    .foregroundStyle(KeyboardTheme.subtitleColor)
-                    .opacity(hoveredArc == .none ? 1.0 : 0.35)
-                    .animation(.easeInOut(duration: 0.15), value: hoveredArc)
-                    .padding(.bottom, 56)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-    }
-
-    private func arcCapsule(label: String, choice: ArcChoice) -> some View {
-        let isHovered = hoveredArc == choice
-        return Capsule()
-            .fill(isHovered ? Color.white : Color.white.opacity(0.78))
-            .frame(width: 138, height: 64)
-            .shadow(color: .black.opacity(isHovered ? 0.20 : 0.10), radius: 8, y: 3)
-            .overlay {
-                Text(label)
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundColor(.black)
-            }
-            .scaleEffect(isHovered ? 1.06 : 1.0)
-            .animation(.spring(response: 0.22, dampingFraction: 0.85), value: isHovered)
+    private func chipPill(_ descriptor: KeyboardChipDescriptor) -> some View {
+        let isActive = (hoveredPosition == descriptor.position)
+        return Text(descriptor.label)
+            .font(.system(size: 17, weight: .medium))
+            .foregroundStyle(isActive ? KeyboardTheme.chipActiveText : Color(UIColor.label))
+            .frame(width: 140, height: 52)
+            .modifier(KeyboardChipBackground(isActive: isActive))
+            .offset(y: isActive ? -2 : 0)
+            .animation(.spring(response: 0.22, dampingFraction: 0.85), value: isActive)
     }
 
     private func modeSelectionGesture(in size: CGSize) -> some Gesture {
@@ -221,10 +324,14 @@ struct RecordArea: View {
             scheduleExpansion()
         }
         if state.isModeSelectionExpanded {
-            let newHovered = computeHoveredArc(at: value.location, in: size)
-            if newHovered != hoveredArc {
-                hoveredArc = newHovered
-                if newHovered != .none {
+            let newPosition = computeHoveredPosition(at: value.location, in: size)
+            // Only emit hover for positions that map to an enabled chip.
+            let resolved = (newPosition != nil && chip(at: newPosition!) != nil)
+                ? newPosition
+                : nil
+            if resolved != hoveredPosition {
+                hoveredPosition = resolved
+                if resolved != nil {
                     UISelectionFeedbackGenerator().selectionChanged()
                 }
             }
@@ -236,25 +343,26 @@ struct RecordArea: View {
         expandWorkItem = nil
 
         let wasExpanded = state.isModeSelectionExpanded
-        let pickedArc = hoveredArc
+        let pickedAction = hoveredPosition.flatMap { chip(at: $0)?.action }
 
         // Reset gesture-local state regardless of outcome.
         isPressing = false
-        hoveredArc = .none
+        hoveredPosition = nil
         if wasExpanded {
-            withAnimation(.easeOut(duration: 0.18)) {
+            withAnimation(.easeOut(duration: 0.22)) {
                 state.isModeSelectionExpanded = false
             }
         }
 
         if wasExpanded {
-            switch pickedArc {
+            switch pickedAction {
             case .dictate:
                 state.startRecording()
             case .translate:
                 state.startTranslateRecording()
             case .none:
-                // Released in the middle / outside both arcs → cancel cleanly.
+                // Released in cancel zone (bottom half / disabled corner) →
+                // dismiss without action.
                 break
             }
         } else {
@@ -277,16 +385,17 @@ struct RecordArea: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + longPressThreshold, execute: work)
     }
 
-    /// Translate the gesture's current location into one of three zones:
-    /// left arc (口述), right arc (翻译), or cancel zone. The arc band sits
-    /// in the upper portion of the keyboard area; below it is the cancel zone.
-    private func computeHoveredArc(at location: CGPoint, in size: CGSize) -> ArcChoice {
-        let arcZoneBottom = size.height * 0.55
-        if location.y > arcZoneBottom { return .none }
+    /// F-070: Quadrant-based hit testing. The content area is split into
+    /// 4 corner quadrants by the midline cross; the bottom half (regardless
+    /// of left/right) is the cancel zone. Returns the quadrant the finger is
+    /// in; whether it triggers a chip is decided by the caller (only enabled
+    /// chips count). No central dead zone — joe explicitly requested simple
+    /// quadrant judgment ("不要做过细的点按判定").
+    private func computeHoveredPosition(at location: CGPoint, in size: CGSize) -> KeyboardChipDescriptor.Position? {
+        let midY = size.height / 2
+        guard location.y < midY else { return nil }
         let midX = size.width / 2
-        let deadZone: CGFloat = 28
-        if abs(location.x - midX) < deadZone { return .none }
-        return location.x < midX ? .dictate : .translate
+        return location.x < midX ? .topLeft : .topRight
     }
 
     // MARK: - Recording
@@ -562,5 +671,108 @@ private struct ThinkingPill: View {
                     shimmerPhase = 1.0
                 }
             }
+    }
+}
+
+// MARK: - F-070 Ripple
+
+/// 4 concentric stroke rings centered on the expanded mic. Static — no
+/// animation, no audio reactivity. The expanded state is *pre-recording*
+/// (audio level is 0), so animated rings would be visual noise without
+/// information. Acts as a visual "ground" anchoring the small mic circle.
+private struct Ripple: View {
+    private let rings: [(diameter: CGFloat, alpha: Double)] = [
+        (88,  0.060),
+        (124, 0.045),
+        (164, 0.030),
+        (204, 0.018),
+    ]
+
+    var body: some View {
+        ZStack {
+            ForEach(rings.indices, id: \.self) { i in
+                Circle()
+                    .stroke(Color(white: 0.3, opacity: rings[i].alpha), lineWidth: 1)
+                    .frame(width: rings[i].diameter, height: rings[i].diameter)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - F-070 Chip background (Liquid Glass + iOS 17 fallback)
+
+/// Background fill + shadow for a chip pill. Splits along iOS 26 vs ≤25 —
+/// the former gets native `.glassEffect`, the latter falls back to
+/// `.ultraThinMaterial` plus a manual gradient + stroke. Active state
+/// applies a pale-blue tint per the mockup either way.
+private struct KeyboardChipBackground: ViewModifier {
+    let isActive: Bool
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            modernGlass(content: content)
+        } else {
+            legacyFallback(content: content)
+        }
+    }
+
+    @available(iOS 26.0, *)
+    private func modernGlass(content: Content) -> some View {
+        content
+            .background {
+                if isActive {
+                    Capsule().fill(activeGradient)
+                }
+            }
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .shadow(
+                color: isActive
+                    ? KeyboardTheme.chipActiveText.opacity(0.32)
+                    : .black.opacity(0.10),
+                radius: isActive ? 8 : 6,
+                y: isActive ? 8 : 6
+            )
+    }
+
+    private func legacyFallback(content: Content) -> some View {
+        content
+            .background {
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        if isActive {
+                            Capsule().fill(activeGradient)
+                        } else {
+                            Capsule().fill(idleGradient)
+                        }
+                    }
+                    .overlay {
+                        Capsule().strokeBorder(.white.opacity(0.55), lineWidth: 0.5)
+                    }
+            }
+            .shadow(
+                color: isActive
+                    ? KeyboardTheme.chipActiveText.opacity(0.32)
+                    : .black.opacity(0.10),
+                radius: isActive ? 8 : 6,
+                y: isActive ? 8 : 6
+            )
+    }
+
+    private var activeGradient: LinearGradient {
+        LinearGradient(
+            colors: [KeyboardTheme.chipActiveTop, KeyboardTheme.chipActiveBottom],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    private var idleGradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.white.opacity(0.95), Color.white.opacity(0.72)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
 }
