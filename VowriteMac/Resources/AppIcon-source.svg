@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Transparent background — OS / browser surface shows through -->
+
+  <!-- Left leaf (dark navy) -->
+  <path d="M 258 198
+           C 178 286, 158 458, 210 630
+           C 264 800, 392 898, 510 952
+           L 514 952
+           C 504 792, 462 602, 412 462
+           C 360 320, 306 234, 258 198 Z"
+        fill="#1F2E3B"/>
+
+  <!-- Right leaf (orange) -->
+  <path d="M 766 198
+           C 846 286, 866 458, 814 630
+           C 760 800, 632 898, 514 952
+           L 510 952
+           C 520 792, 562 602, 612 462
+           C 664 320, 718 234, 766 198 Z"
+        fill="#D9651E"/>
+
+  <!-- Cyan audio waveform bars on left leaf -->
+  <g fill="#5DCFCF">
+    <rect x="295" y="478" width="24" height="104" rx="12"/>
+    <rect x="334" y="408" width="24" height="208" rx="12"/>
+    <rect x="373" y="440" width="24" height="186" rx="12"/>
+    <rect x="412" y="478" width="24" height="186" rx="12"/>
+    <rect x="451" y="522" width="24" height="118" rx="12"/>
+  </g>
+
+  <!-- White curved lines on right leaf -->
+  <g stroke="#FFFFFF" stroke-width="3.5" fill="none" stroke-linecap="round">
+    <path d="M 738 286 C 712 462, 672 660, 588 858"/>
+    <path d="M 760 292 C 740 472, 702 672, 618 870"/>
+  </g>
+
+  <!-- White dots along the curves -->
+  <g fill="#FFFFFF">
+    <circle cx="722" cy="410" r="9.5"/>
+    <circle cx="694" cy="602" r="9.5"/>
+    <circle cx="632" cy="778" r="9.5"/>
+  </g>
+</svg>
