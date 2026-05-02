@@ -4,7 +4,11 @@ import VowriteKit
 // MARK: - Theme
 
 enum KeyboardTheme {
-    static let background = Color(UIColor.secondarySystemBackground)
+    /// Transparent — let UIInputViewController's default keyboard backdrop
+    /// (system blur material) show through. This avoids a visible color block
+    /// vs. the system area above the keyboard, matching how Typeless / system
+    /// keyboards render edge-to-edge.
+    static let background = Color.clear
     static let buttonFill = Color(UIColor.systemGray5)
     static let titleColor = Color(UIColor.label)
     static let subtitleColor = Color(UIColor.secondaryLabel)
