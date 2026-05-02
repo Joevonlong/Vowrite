@@ -37,13 +37,21 @@ struct KeyboardView: View {
     @ObservedObject var state: KeyboardState
     @Environment(\.openURL) private var openURL
 
-    /// True when the keyboard is actively recording or processing (full-screen mode).
-    /// Also true while the F-064 long-press 口述/翻译 selection arcs are visible,
-    /// so the TopBar collapses out of the way during the gesture.
-    private var isFullScreen: Bool {
-        state.viewState == .recording
-            || state.viewState == .processing
-            || state.isModeSelectionExpanded
+    /// Controls which header sits above the RecordArea.
+    /// - `.full`: idle TopBar with logo + action buttons (@, ─, delete).
+    /// - `.compact`: minimal logo-only header (recording/processing). Mirrors the
+    ///   reference design (e.g. Typeless) where the brand stays anchored top-left
+    ///   throughout the dictation lifecycle so the user always knows which
+    ///   keyboard is active.
+    /// - `.hidden`: no header at all (mode-selection arcs need the room).
+    private enum HeaderKind { case full, compact, hidden }
+
+    private var headerKind: HeaderKind {
+        if state.isModeSelectionExpanded { return .hidden }
+        switch state.viewState {
+        case .recording, .processing: return .compact
+        default: return .full
+        }
     }
 
     var body: some View {
@@ -54,22 +62,29 @@ struct KeyboardView: View {
                 // render above the delete button. Driven by
                 // KeyboardState.extraTopHeight; KeyboardViewController
                 // resizes the keyboard's heightAnchor in lockstep.
-                if !isFullScreen && state.extraTopHeight > 0 {
+                if headerKind == .full && state.extraTopHeight > 0 {
                     Color.clear
                         .frame(height: state.extraTopHeight)
                         .allowsHitTesting(false)
                 }
 
-                if !isFullScreen {
+                switch headerKind {
+                case .full:
                     TopBar(state: state)
                         .frame(height: 48)
                         .transition(.opacity.combined(with: .move(edge: .top)))
+                case .compact:
+                    RecordingHeader()
+                        .frame(height: 48)
+                        .transition(.opacity)
+                case .hidden:
+                    EmptyView()
                 }
 
                 RecordArea(state: state)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .animation(.easeInOut(duration: 0.3), value: isFullScreen)
+            .animation(.easeInOut(duration: 0.3), value: headerKind)
             .animation(.easeOut(duration: 0.22), value: state.extraTopHeight)
 
             // Globe key — always visible at bottom-left
@@ -82,5 +97,30 @@ struct KeyboardView: View {
         }
         .background(KeyboardTheme.background.ignoresSafeArea())
         .onAppear { state.openURLAction = openURL }
+    }
+}
+
+// MARK: - Recording Header
+
+/// Logo-only header rendered while a dictation is active. Action buttons (@, ─,
+/// delete) are intentionally omitted — during recording/processing they would
+/// either conflict with the gesture surface (delete) or be irrelevant (text
+/// insertion). Keeping just the brand mark mirrors the reference design where
+/// the logo stays pinned top-left throughout the session.
+private struct RecordingHeader: View {
+    var body: some View {
+        HStack {
+            HStack(spacing: 6) {
+                Image(systemName: "dot.radiowaves.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(KeyboardTheme.titleColor)
+                Text("Vowrite")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(KeyboardTheme.titleColor)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
     }
 }
