@@ -42,7 +42,7 @@ struct VowriteApp: App {
             // ⌘, opens our custom settings window
             CommandGroup(replacing: .appSettings) {
                 Button("Settings...") {
-                    WindowHelper.openSettings()
+                    WindowHelper.openMainWindow()
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }

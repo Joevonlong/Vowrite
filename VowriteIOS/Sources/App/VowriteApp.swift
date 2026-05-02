@@ -36,7 +36,10 @@ struct VowriteApp: App {
         //    decoded by APIProvider after the split)
         MiniMaxMigration.runIfNeeded()
 
-        // 5. Run v0.1.x legacy migration (if needed)
+        // 5. Purge residual MiniMax OAuth state (the OAuth flow was never functional).
+        MiniMaxOAuthPurge.runIfNeeded()
+
+        // 6. Run v0.1.x legacy migration (if needed)
         APIConfigMigration.runIfNeeded()
         APIConfig.migratePresetIDs()
 

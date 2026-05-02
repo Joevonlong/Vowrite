@@ -7,9 +7,6 @@ enum WindowHelper {
     /// When true, `updateActivationPolicy` should not switch back to .accessory.
     static var isOpeningWindow = false
 
-    static func openSettings() { openMainWindow() }
-    static func openHistory() { openMainWindow() }
-
     static func openMainWindow() {
         // If window already exists and is visible, just bring it to front
         if let window = mainWindow, window.isVisible {

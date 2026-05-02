@@ -32,6 +32,14 @@ else
 fi
 
 echo ""
+echo "▶ Tests — VowriteKit"
+if (cd "$KIT_DIR" && swift test 2>&1 | tail -10 | grep -qE "Test Suite 'All tests' passed"); then
+    pass "VowriteKit unit tests pass"
+else
+    fail "VowriteKit unit tests failed"
+fi
+
+echo ""
 echo "▶ Build — VowriteMac"
 
 cd "$MAC_DIR"

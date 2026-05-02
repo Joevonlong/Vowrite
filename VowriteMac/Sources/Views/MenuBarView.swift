@@ -127,7 +127,7 @@ struct MenuBarView: View {
             // Bottom actions
             HStack {
                 Button("History") {
-                    WindowHelper.openHistory()
+                    WindowHelper.openMainWindow()
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.accentColor)
@@ -135,7 +135,7 @@ struct MenuBarView: View {
                 Spacer()
 
                 Button("Settings...") {
-                    WindowHelper.openSettings()
+                    WindowHelper.openMainWindow()
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.accentColor)
