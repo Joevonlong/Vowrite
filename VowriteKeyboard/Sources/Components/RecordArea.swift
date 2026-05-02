@@ -455,34 +455,63 @@ struct RecordArea: View {
 
 // MARK: - Bar Waveform (Equalizer)
 
-/// Vertical bar waveform that responds to audio level.
-/// Bars follow a bell-curve height pattern and fluctuate per-bar
-/// for an organic, living feel.
+/// Vertical bar waveform that responds to voice activity rather than raw
+/// amplitude. Once `level` crosses `voiceThreshold` the bars snap to full
+/// envelope (with per-bar wobble for an organic feel); silence relaxes them
+/// back to a low idle envelope. This binary VAD design — instead of mapping
+/// `level` linearly to height — gives the user a clear "system is hearing me"
+/// signal even with quiet speech, where raw RMS bars barely move.
+///
+/// `level` arrives via IPC at ~10Hz (post-amp RMS, range 0…1). The TimelineView
+/// runs at 60fps to keep wobble smooth independent of the data cadence.
 private struct BarWaveformView: View {
     let level: Float
 
     private let barCount = 7
     private let baseHeights: [CGFloat] = [0.4, 0.6, 0.8, 1.0, 0.8, 0.6, 0.4]
 
+    /// Post-amp RMS threshold separating voiced frames from silence/room noise.
+    /// `BackgroundRecordingService.calculateRMS` multiplies raw RMS by 5 and
+    /// clamps to 1.0; speech sits ~0.05–0.5, room noise ~0.005–0.02. 0.05 is
+    /// the same floor the silence detector uses, so anything that reaches STT
+    /// also lights up the bars.
+    private static let voiceThreshold: Float = 0.05
+
+    private static let activeAmplitude: CGFloat = 1.0
+    private static let idleAmplitude: CGFloat = 0.30
+
+    @State private var amplitude: CGFloat = idleAmplitude
+
     var body: some View {
         GeometryReader { geo in
-            TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+            TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { timeline in
                 let time = timeline.date.timeIntervalSinceReferenceDate
 
                 HStack(alignment: .center, spacing: 3) {
                     ForEach(0..<barCount, id: \.self) { i in
-                        let fluctuation = CGFloat(
-                            sin(time * 3.0 + Double(i) * 0.8) * 0.15 + 1.0
+                        let wobble = CGFloat(
+                            sin(time * 4.5 + Double(i) * 0.85) * 0.22 + 1.0
                         )
-                        let normalizedLevel = CGFloat(min(max(level, 0.15), 1.0))
-                        let barH = baseHeights[i] * normalizedLevel * fluctuation * geo.size.height
+                        let barH = baseHeights[i] * amplitude * wobble * geo.size.height
 
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.black.opacity(0.8))
+                            .fill(Color.black.opacity(0.85))
                             .frame(width: 4, height: max(4, barH))
                     }
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
+            }
+        }
+        .onChange(of: level) { _, newLevel in
+            let target: CGFloat = newLevel > Self.voiceThreshold
+                ? Self.activeAmplitude
+                : Self.idleAmplitude
+            guard target != amplitude else { return }
+            // Faster attack (snap to "I hear you") than release (relax back so
+            // brief gaps between words don't strobe the bars).
+            let duration: Double = target == Self.activeAmplitude ? 0.12 : 0.32
+            withAnimation(.easeOut(duration: duration)) {
+                amplitude = target
             }
         }
     }
