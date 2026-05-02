@@ -7,6 +7,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.2.1.1] — 2026-05-02
+
 ### Added
 
 - **VowriteKitTests target**: First automated test target. Six XCTest files covering `Mode` Codable roundtrip + F-063 backward-compat decode, `ModeConfig` field mapping and `withStyleOverride` behaviour, `OutputStyle` Codable roundtrip, `ReplacementRule` Codable roundtrip + ID uniqueness, builtin data integrity (Clean mode UUID stability, builtin shortcut index uniqueness, `OutputStyle.noneId` resolution), and the empty-rules early-return path of `ReplacementManager.apply`. `ops/scripts/test.sh` now invokes `swift test` between the Kit build and the Mac build.
@@ -376,7 +378,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.0...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.1...HEAD
+[0.2.1.1]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.0...v0.2.1.1
 [0.2.1.0]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.1...v0.2.1.0
 [0.2.0.1]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.0...v0.2.0.1
 [0.2.0.0]: https://github.com/Joevonlong/Vowrite/compare/v0.1.9.2...v0.2.0.0
