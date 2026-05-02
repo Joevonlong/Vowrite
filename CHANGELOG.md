@@ -18,6 +18,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 ### Fixed
 
 - **ModelContainer init failure no longer crashes the app**: `AppState.init` on Mac and iOS now falls back to an in-memory store and surfaces a "history temporarily unavailable" banner in `HistoryView` instead of `fatalError`. iOS banner additionally calls out that keyboard extension records are also affected because the keyboard extension reads the App Group SwiftData store directly.
+- **About page shows the real app icon** instead of the SF Symbol `mic.circle.fill` placeholder. Pulled directly from `NSApp.applicationIconImage` so it always matches the bundled `AppIcon.icns`. `build.sh` icon regeneration logic also tightened: `.icns` is now rebuilt whenever `Resources/AppIcon-source.png` is newer than the existing `.icns` (previously only ran on first generation), so brand refreshes propagate without a manual clean.
 
 ### Removed
 

@@ -16,9 +16,10 @@ struct AboutPageView: View {
             VStack(alignment: .leading, spacing: 28) {
                 // App identity (centered)
                 VStack(spacing: 12) {
-                    Image(systemName: "mic.circle.fill")
-                        .font(.system(size: 64))
-                        .foregroundColor(.accentColor)
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 96, height: 96)
                     Text("Vowrite")
                         .font(.system(size: 32, weight: .bold))
                     Text("AI Voice Keyboard")
