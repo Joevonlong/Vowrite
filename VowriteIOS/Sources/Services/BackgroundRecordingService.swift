@@ -546,18 +546,20 @@ final class BackgroundRecordingService: ObservableObject {
         fileLock.unlock()
 
         guard let audioURL = recordingURL else {
-            ipc.state = .error
-            ipc.errorMessage = "No audio captured"
+            // No audio file ever materialized. Treat as a silent tap and
+            // silently bounce the keyboard back to standby instead of
+            // showing the red-triangle error UI.
+            ipc.clearResult()
             clearSessionMode()
             return
         }
 
-        // Layer 2: Minimum duration check — block accidental taps
+        // Layer 2: Minimum duration check — block accidental taps.
+        // Silent reset: user likely tapped twice by mistake.
         guard duration >= 0.5 else {
             try? FileManager.default.removeItem(at: audioURL)
             recordingURL = nil
-            ipc.state = .error
-            ipc.errorMessage = "Recording too short"
+            ipc.clearResult()
             #if DEBUG
             print("[Vowrite BG] Recording too short (\(String(format: "%.1f", duration))s), skipping")
             #endif
@@ -565,12 +567,12 @@ final class BackgroundRecordingService: ObservableObject {
             return
         }
 
-        // Layer 1: Pre-API silence detection — skip Whisper if no speech detected
+        // Layer 1: Pre-API silence detection — skip Whisper if no speech detected.
+        // Silent reset: user said nothing, just return to standby.
         guard !wasSilent else {
             try? FileManager.default.removeItem(at: audioURL)
             recordingURL = nil
-            ipc.state = .error
-            ipc.errorMessage = "No speech detected"
+            ipc.clearResult()
             #if DEBUG
             print("[Vowrite BG] Silent recording (peakRMS=\(peakRMS)), skipping Whisper")
             #endif
@@ -690,8 +692,9 @@ final class BackgroundRecordingService: ObservableObject {
                 let rawTranscript = try await whisperService.transcribe(audioURL: url, language: whisperLanguage, prompt: vocabPrompt)
 
                 guard !rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    ipc.state = .error
-                    ipc.errorMessage = "No speech detected"
+                    // STT returned empty → user said nothing meaningful.
+                    // Silent reset back to standby.
+                    ipc.clearResult()
                     clearSessionMode()
                     return
                 }
@@ -701,8 +704,9 @@ final class BackgroundRecordingService: ObservableObject {
                     #if DEBUG
                     print("[Vowrite BG] Hallucination filtered: '\(rawTranscript)'")
                     #endif
-                    ipc.state = .error
-                    ipc.errorMessage = "No speech detected"
+                    // Hallucination = noise/silence misinterpreted by STT.
+                    // Silent reset, same UX as raw silence.
+                    ipc.clearResult()
                     clearSessionMode()
                     return
                 }
