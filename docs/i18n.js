@@ -203,7 +203,7 @@ const i18n = {
     'pr.sub': 'Vowrite 本身免费且开源。你自带 API 密钥（BYOK），只需直接付费给所选服务商。下面是各家价格。',
     'pr.foot': 'Vowrite — 说一次，完美呈现。',
     'pr.home': '首页',
-    'pr.updated': '最近更新：2026 年 5 月 · v0.2.1.0',
+    'pr.updated': '最近更新：2026 年 5 月 · v0.2.1.1',
 
     // FAQ
     'faq.title': '常见问题',
@@ -558,7 +558,7 @@ const i18n = {
     'pr.sub': 'Vowrite selbst ist kostenlos und Open Source. Du bringst deine eigenen API-Schlüssel (BYOK) mit und bezahlst die gewählten Anbieter direkt. So viel kostet es.',
     'pr.foot': 'Vowrite — Einmal sagen. Perfekt meinen.',
     'pr.home': 'Start',
-    'pr.updated': 'Zuletzt aktualisiert: Mai 2026 · v0.2.1.0',
+    'pr.updated': 'Zuletzt aktualisiert: Mai 2026 · v0.2.1.1',
 
     // FAQ
     'faq.title': 'H\u00e4ufig gestellte Fragen',
