@@ -10,7 +10,10 @@ class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .secondarySystemBackground
+        // Clear root background so the system keyboard backdrop shows through.
+        // (Custom backgrounds caused a visible color block vs. the system area
+        // above the keyboard — see KeyboardTheme.background.)
+        view.backgroundColor = .clear
 
         // 1. Configure shared storage
         VowriteStorage.configure(suiteName: VowriteStorage.appGroupID)
@@ -27,7 +30,7 @@ class KeyboardViewController: UIInputViewController {
         let keyboardView = KeyboardView(state: keyboardState)
         let hosting = UIHostingController(rootView: keyboardView)
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
-        hosting.view.backgroundColor = .secondarySystemBackground
+        hosting.view.backgroundColor = .clear
 
         addChild(hosting)
         self.view.addSubview(hosting.view)
