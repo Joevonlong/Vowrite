@@ -2,10 +2,13 @@
 set -e
 cd "$(dirname "$0")"
 
-# If source icon exists but .icns hasn't been generated yet, auto-convert
-if [ -f "Resources/AppIcon-source.png" ] && [ ! -f "Vowrite.app/Contents/Resources/AppIcon.icns" ]; then
-  echo "🎨 New icon detected, auto-generating .icns..."
-  ./scripts/generate-icon.sh
+# Regenerate .icns when source PNG is missing the .icns or newer than it
+if [ -f "Resources/AppIcon-source.png" ]; then
+  ICNS="Vowrite.app/Contents/Resources/AppIcon.icns"
+  if [ ! -f "$ICNS" ] || [ "Resources/AppIcon-source.png" -nt "$ICNS" ]; then
+    echo "🎨 Icon source updated, regenerating .icns..."
+    ./scripts/generate-icon.sh
+  fi
 fi
 
 echo "Building Vowrite..."
