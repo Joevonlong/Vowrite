@@ -13,8 +13,13 @@ struct ModeEditorSheet: View {
     @StateObject private var styleManager = OutputStyleManager.shared
 
     @State private var draft: Mode
+    /// Snapshot of the mode at sheet open. `draft != baseline` means the user
+    /// has unsaved edits; we use this to gate dismissal and to confirm
+    /// before discarding via Cancel.
+    @State private var baseline: Mode
     @State private var showIconPicker = false
     @State private var showDeleteConfirm = false
+    @State private var showCancelConfirm = false
 
     init(existingMode: Mode?, onSave: @escaping (Mode) -> Void, onDelete: ((Mode) -> Void)? = nil) {
         self.existingMode = existingMode
@@ -38,7 +43,10 @@ struct ModeEditorSheet: View {
             shortcutIndex: nil
         )
         _draft = State(initialValue: initial)
+        _baseline = State(initialValue: initial)
     }
+
+    private var isDirty: Bool { draft != baseline }
 
     private var isNew: Bool { existingMode == nil }
     private var canSave: Bool {
@@ -137,7 +145,7 @@ struct ModeEditorSheet: View {
             .frame(minWidth: 500, idealWidth: 540, minHeight: 560, idealHeight: 660)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { requestCancel() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
@@ -145,6 +153,9 @@ struct ModeEditorSheet: View {
                         .disabled(!canSave)
                 }
             }
+            // Block out-of-band sheet dismissal while there are unsaved edits.
+            // Cancel is the only path out, and Cancel will prompt if dirty.
+            .interactiveDismissDisabled(isDirty)
             .confirmationDialog(
                 "Delete \"\(draft.name)\"?",
                 isPresented: $showDeleteConfirm,
@@ -158,6 +169,24 @@ struct ModeEditorSheet: View {
             } message: {
                 Text("This scene and all its settings will be permanently removed.")
             }
+            .confirmationDialog(
+                "Discard your changes?",
+                isPresented: $showCancelConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Discard Changes", role: .destructive) { dismiss() }
+                Button("Keep Editing", role: .cancel) {}
+            } message: {
+                Text("Unsaved edits to this scene will be lost.")
+            }
+        }
+    }
+
+    private func requestCancel() {
+        if isDirty {
+            showCancelConfirm = true
+        } else {
+            dismiss()
         }
     }
 
