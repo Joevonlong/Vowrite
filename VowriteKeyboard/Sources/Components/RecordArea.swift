@@ -396,99 +396,30 @@ struct RecordArea: View {
 
     // MARK: - Recording
 
+    /// Dictation and translation share the same recording primitives (mic
+    /// circle + waveform + drag-to-cancel) but need different vertical
+    /// compositions: dictation runs the original "hint above circle" VStack;
+    /// translation needs banner-top / circle-center / hint-bottom with all
+    /// three sitting in their own band.
+    ///
+    /// The 232pt content area is too tight to compose both with the same
+    /// VStack — a 150pt circle + 50pt glow already eats 200pt, leaving only
+    /// 32pt for the banner *and* hint, so SwiftUI's centering pushes the
+    /// glow ring up under the banner. Splitting the layouts lets the
+    /// translate variant shrink the circle (110+26 glow → 136pt) and pin
+    /// the banner / hint to the top / bottom edges where they can't overlap
+    /// the glow.
+    @ViewBuilder
     private var recordingContent: some View {
         ZStack {
-            // F-064: Translation banner at top — shown only when this
-            // recording was started via the 翻译 arc.
             if state.isInTranslateSession {
-                VStack {
-                    translationBanner
-                        .padding(.top, 12)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .zIndex(1)
+                translateRecordingLayout
+            } else {
+                dictateRecordingLayout
             }
 
-            VStack(spacing: 24) {
-                // Hint text — placed above the circle in dictation mode and
-                // below it in translate mode so it never collides with the
-                // top translation banner (which sits in the same vertical
-                // band).
-                if !state.isInTranslateSession {
-                    dismissHint
-                }
-
-                // Circle with glow ring + bar waveform
-                ZStack {
-                    // Outer glow ring
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    Color(UIColor.systemGray4),
-                                    KeyboardTheme.background
-                                ],
-                                center: .center,
-                                startRadius: KeyboardTheme.recordingCircleDiameter * 0.45,
-                                endRadius: KeyboardTheme.recordingCircleDiameter * 0.65
-                            )
-                        )
-                        .frame(
-                            width: KeyboardTheme.recordingCircleDiameter + 50,
-                            height: KeyboardTheme.recordingCircleDiameter + 50
-                        )
-
-                    // White circle
-                    Circle()
-                        .fill(.white)
-                        .frame(
-                            width: KeyboardTheme.recordingCircleDiameter,
-                            height: KeyboardTheme.recordingCircleDiameter
-                        )
-                        .shadow(color: .black.opacity(0.1), radius: 8, y: 2)
-
-                    // Bar waveform
-                    BarWaveformView(level: state.audioLevel)
-                        .frame(
-                            width: KeyboardTheme.recordingCircleDiameter * 0.45,
-                            height: KeyboardTheme.recordingCircleDiameter * 0.35
-                        )
-                }
-                .scaleEffect(isDragging && isInDeleteZone ? 0.7 : 1.0)
-                .offset(y: isDragging ? min(dragOffset, cancelThreshold + 20) : 0)
-                .onTapGesture {
-                    state.stopRecording()
-                }
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 10)
-                        .onChanged { value in
-                            let yOffset = value.translation.height
-                            if yOffset > 0 {
-                                isDragging = true
-                                dragOffset = yOffset
-                            }
-                        }
-                        .onEnded { _ in
-                            if isInDeleteZone {
-                                state.cancelRecording()
-                            }
-                            withAnimation(.spring(response: 0.3)) {
-                                isDragging = false
-                                dragOffset = 0
-                            }
-                        }
-                )
-                .animation(.interactiveSpring(), value: isDragging)
-
-                if state.isInTranslateSession {
-                    dismissHint
-                }
-            }
-            .padding(.bottom, 20)
-
-            // Delete zone (appears when dragging down)
+            // Delete zone (appears when dragging down) — shared by both
+            // modes.
             if isDragging {
                 VStack {
                     Spacer()
@@ -497,6 +428,115 @@ struct RecordArea: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+    }
+
+    /// Original dictation layout — hint above circle, full-size 150pt
+    /// circle with 50pt glow ring, centered with bottom padding.
+    private var dictateRecordingLayout: some View {
+        VStack(spacing: 24) {
+            dismissHint
+            interactiveCircle(
+                diameter: KeyboardTheme.recordingCircleDiameter,
+                glowExtra: 50
+            )
+        }
+        .padding(.bottom, 20)
+    }
+
+    /// Translation layout — banner top, circle center (smaller so banner
+    /// and hint stay clear of the glow ring), hint bottom. Each band lives
+    /// in its own VStack inside the ZStack so the layout is robust to
+    /// keyboard height changes (`extraTopHeight`, drag offset, etc.) and
+    /// the three elements never share a vertical band.
+    private var translateRecordingLayout: some View {
+        ZStack {
+            // 1) Banner pinned to top. `.allowsHitTesting(false)` keeps
+            // taps falling through to the circle even when the user
+            // releases over the banner area.
+            VStack(spacing: 0) {
+                translationBanner
+                    .padding(.top, 12)
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(false)
+            .transition(.move(edge: .top).combined(with: .opacity))
+            .zIndex(1)
+
+            // 2) Circle centered. 110pt diameter + 26pt glow = 136pt
+            // visual; with the 232pt content area that leaves ~48pt above
+            // (banner + gap) and ~48pt below (hint + gap) — both clear of
+            // the glow ring.
+            interactiveCircle(diameter: 110, glowExtra: 26)
+
+            // 3) Hint pinned to bottom. Same hit-test passthrough as the
+            // banner so the circle owns the entire recording-area surface.
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                dismissHint
+                    .padding(.bottom, 18)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// Mic circle + glow + waveform with the standard interaction stack
+    /// (tap-to-stop, drag-down-to-cancel, delete-zone scale + offset).
+    /// Diameter and glow are parameterised so dictation and translation
+    /// can share the gesture wiring while picking their own visual size.
+    private func interactiveCircle(diameter: CGFloat, glowExtra: CGFloat) -> some View {
+        ZStack {
+            // Outer glow ring
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(UIColor.systemGray4),
+                            KeyboardTheme.background
+                        ],
+                        center: .center,
+                        startRadius: diameter * 0.45,
+                        endRadius: diameter * 0.65
+                    )
+                )
+                .frame(width: diameter + glowExtra, height: diameter + glowExtra)
+
+            // White circle
+            Circle()
+                .fill(.white)
+                .frame(width: diameter, height: diameter)
+                .shadow(color: .black.opacity(0.1), radius: 8, y: 2)
+
+            // Bar waveform
+            BarWaveformView(level: state.audioLevel)
+                .frame(width: diameter * 0.45, height: diameter * 0.35)
+        }
+        .scaleEffect(isDragging && isInDeleteZone ? 0.7 : 1.0)
+        .offset(y: isDragging ? min(dragOffset, cancelThreshold + 20) : 0)
+        .onTapGesture {
+            state.stopRecording()
+        }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 10)
+                .onChanged { value in
+                    let yOffset = value.translation.height
+                    if yOffset > 0 {
+                        isDragging = true
+                        dragOffset = yOffset
+                    }
+                }
+                .onEnded { _ in
+                    if isInDeleteZone {
+                        state.cancelRecording()
+                    }
+                    withAnimation(.spring(response: 0.3)) {
+                        isDragging = false
+                        dragOffset = 0
+                    }
+                }
+        )
+        .animation(.interactiveSpring(), value: isDragging)
     }
 
     private var isInDeleteZone: Bool {
