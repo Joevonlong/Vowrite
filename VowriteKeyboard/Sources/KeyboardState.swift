@@ -18,10 +18,13 @@ final class KeyboardState: ObservableObject {
     /// the "Translating to {language}" banner in the recording view. Cleared
     /// when the recording lifecycle ends (done / error / cancel).
     @Published var isInTranslateSession: Bool = false
-    /// F-064: Localised display name of the active translation target
-    /// (e.g. "English", "Chinese (Simplified)"). Set at the moment the user
-    /// commits to the translate arc; reset when the session ends.
-    @Published var translationTargetName: String = ""
+    /// F-064: Language code of the active translation target
+    /// (SupportedLanguage rawValue, e.g. "en", "zh"). Set at the moment the
+    /// user commits to the translate arc; reset when the session ends. The
+    /// banner localises this on render through `Locale.current` — the speaker
+    /// must read the prompt in their own language, not in the target language
+    /// they can't read.
+    @Published var translationTargetCode: String = ""
     /// F-064: True while the long-press 口述/翻译 selection arcs are visible.
     /// Owned by RecordArea, mirrored here so KeyboardView can hide the TopBar
     /// during the selection gesture (matching the design mockup).
@@ -222,7 +225,6 @@ final class KeyboardState: ObservableObject {
         }
 
         let targetCode = translateMode.targetLanguage ?? "en"
-        let targetName = SupportedLanguage(rawValue: targetCode)?.displayName ?? targetCode
 
         // Translation always needs LLM polish — force-enable for this session
         // even if the keyboard's currentMode has AI off, since memory pressure
@@ -232,7 +234,7 @@ final class KeyboardState: ObservableObject {
         ipc.requestedStyleName = nil
         ipc.sessionModeOverrideId = translateMode.id.uuidString
 
-        translationTargetName = targetName
+        translationTargetCode = targetCode
         isInTranslateSession = true
 
         ipc.sendCommand(.start)
@@ -244,14 +246,14 @@ final class KeyboardState: ObservableObject {
         startPolling()
 
         #if DEBUG
-        print("[Vowrite KB] startTranslateRecording: target=\(targetName), mode=\(translateMode.name)")
+        print("[Vowrite KB] startTranslateRecording: target=\(targetCode), mode=\(translateMode.name)")
         #endif
     }
 
     private func clearTranslateSession() {
         if isInTranslateSession {
             isInTranslateSession = false
-            translationTargetName = ""
+            translationTargetCode = ""
         }
     }
 

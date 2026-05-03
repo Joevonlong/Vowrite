@@ -412,10 +412,13 @@ struct RecordArea: View {
             }
 
             VStack(spacing: 24) {
-                // Hint text
-                Text("再次点击以完成")
-                    .font(.subheadline)
-                    .foregroundStyle(KeyboardTheme.subtitleColor)
+                // Hint text — placed above the circle in dictation mode and
+                // below it in translate mode so it never collides with the
+                // top translation banner (which sits in the same vertical
+                // band).
+                if !state.isInTranslateSession {
+                    dismissHint
+                }
 
                 // Circle with glow ring + bar waveform
                 ZStack {
@@ -478,6 +481,10 @@ struct RecordArea: View {
                         }
                 )
                 .animation(.interactiveSpring(), value: isDragging)
+
+                if state.isInTranslateSession {
+                    dismissHint
+                }
             }
             .padding(.bottom, 20)
 
@@ -525,7 +532,7 @@ struct RecordArea: View {
         HStack(spacing: 6) {
             Image(systemName: "globe")
                 .font(.footnote)
-            Text("Translating to \(state.translationTargetName)")
+            Text(localizedTranslateBannerText)
                 .font(.footnote)
                 .fontWeight(.medium)
         }
@@ -533,6 +540,32 @@ struct RecordArea: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 7)
         .background(Capsule().fill(Color.black.opacity(0.85)))
+    }
+
+    /// The banner is read by the *speaker*, not by the recipient of the
+    /// translated text — so the prompt template and the language name both
+    /// resolve in the speaker's locale (`Locale.current`). A Chinese user
+    /// translating to English sees "正在翻译为 英文"; an English user
+    /// translating to Chinese sees "Translating to Chinese (Simplified)".
+    /// Falls back to the raw code when the OS locale db has no localised
+    /// name for it (very rare).
+    private var localizedTranslateBannerText: String {
+        let code = state.translationTargetCode
+        let langName = Locale.current.localizedString(forIdentifier: code)
+            ?? Locale.current.localizedString(forLanguageCode: code)
+            ?? code
+        let primary = Locale.current.language.languageCode?.identifier ?? "en"
+        if primary.hasPrefix("zh") {
+            return "正在翻译为 \(langName)"
+        } else {
+            return "Translating to \(langName)"
+        }
+    }
+
+    private var dismissHint: some View {
+        Text("再次点击以完成")
+            .font(.subheadline)
+            .foregroundStyle(KeyboardTheme.subtitleColor)
     }
 
     // MARK: - Error
