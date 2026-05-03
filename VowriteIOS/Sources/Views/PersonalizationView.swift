@@ -7,8 +7,15 @@ struct PersonalizationView: View {
     @StateObject private var vocabManager = VocabularyManager.shared
     @StateObject private var replacementManager = ReplacementManager.shared
 
+    // Global Preferences state — same Edit/Save/Cancel discipline as the
+    // macOS Personalization page. Nothing is written to PromptConfig until
+    // the user taps Save; the editor is hard-disabled outside of edit mode
+    // so taps and gestures cannot mutate the committed prompt.
     @State private var userPrompt = PromptConfig.userPrompt
-    @State private var isUserPromptLocked = PromptConfig.isUserPromptLocked
+    @State private var isEditingPrompt = false
+    @State private var stashedPrompt = ""
+    @State private var showDiscardConfirm = false
+    @State private var showClearConfirm = false
 
     // Mode editor state
     @State private var editingMode: Mode? = nil
@@ -94,8 +101,9 @@ struct PersonalizationView: View {
                     }
                 }
 
-                // Quick Presets
-                Section("Quick Presets") {
+                // Quick Presets — applying a preset fills the editor draft and
+                // enters edit mode; the user must still tap Save to commit.
+                Section {
                     ForEach(PreferencePreset.presets) { preset in
                         Button {
                             applyPreset(preset)
@@ -114,28 +122,64 @@ struct PersonalizationView: View {
                             }
                         }
                     }
+                } header: {
+                    Text("Quick Presets")
+                } footer: {
+                    Text("Tap a preset to load it into the User Prompt editor below. You'll still need to Save to apply it.")
                 }
 
-                // User Prompt
-                Section("User Prompt") {
+                // User Prompt — explicit Edit/Save/Cancel, never auto-saved.
+                Section {
                     TextEditor(text: $userPrompt)
                         .frame(minHeight: 80)
-                        .disabled(isUserPromptLocked)
-                        .onChange(of: userPrompt) { _, newValue in
-                            PromptConfig.userPrompt = newValue
-                        }
+                        .disabled(!isEditingPrompt)
+                        .opacity(isEditingPrompt ? 1.0 : 0.7)
 
-                    Toggle("Lock Prompt", isOn: $isUserPromptLocked)
-                        .onChange(of: isUserPromptLocked) { _, newValue in
-                            PromptConfig.isUserPromptLocked = newValue
+                    if isEditingPrompt {
+                        HStack {
+                            Button("Cancel", role: .cancel) { requestCancelPrompt() }
+                            Spacer()
+                            Button("Save") { commitSavePrompt() }
+                                .fontWeight(.semibold)
+                                .disabled(userPrompt == stashedPrompt)
                         }
-
-                    if !userPrompt.isEmpty {
-                        Button("Clear Prompt", role: .destructive) {
-                            userPrompt = ""
-                            PromptConfig.userPrompt = ""
+                    } else if userPrompt.isEmpty {
+                        Button("Add Preferences") { beginEditPrompt() }
+                    } else {
+                        HStack {
+                            Label("Saved", systemImage: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                            Spacer()
+                            Button("Edit") { beginEditPrompt() }
+                            Button("Clear", role: .destructive) { showClearConfirm = true }
                         }
                     }
+                } header: {
+                    Text("User Prompt")
+                } footer: {
+                    Text(isEditingPrompt
+                         ? "Tap Save to apply, or Cancel to discard your changes."
+                         : "Applied to all scenes as a supplement to each scene's own prompt.")
+                }
+                .confirmationDialog(
+                    "Discard your changes?",
+                    isPresented: $showDiscardConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Discard Changes", role: .destructive) { discardEditPrompt() }
+                    Button("Keep Editing", role: .cancel) {}
+                } message: {
+                    Text("Unsaved edits to your User Prompt will be lost.")
+                }
+                .confirmationDialog(
+                    "Clear your User Prompt?",
+                    isPresented: $showClearConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Clear", role: .destructive) { clearPrompt() }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This removes your saved User Prompt. Built-in scenes are unaffected.")
                 }
 
                 // Language
@@ -251,10 +295,50 @@ struct PersonalizationView: View {
         }
     }
 
+    // MARK: - User Prompt edit lifecycle
+
+    private func beginEditPrompt() {
+        stashedPrompt = userPrompt
+        isEditingPrompt = true
+    }
+
+    private func requestCancelPrompt() {
+        if userPrompt != stashedPrompt {
+            showDiscardConfirm = true
+        } else {
+            discardEditPrompt()
+        }
+    }
+
+    private func discardEditPrompt() {
+        userPrompt = stashedPrompt
+        isEditingPrompt = false
+    }
+
+    private func commitSavePrompt() {
+        let trimmed = userPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        userPrompt = trimmed
+        PromptConfig.userPrompt = trimmed
+        PromptConfig.isUserPromptLocked = !trimmed.isEmpty
+        stashedPrompt = trimmed
+        isEditingPrompt = false
+    }
+
+    private func clearPrompt() {
+        userPrompt = ""
+        stashedPrompt = ""
+        PromptConfig.userPrompt = ""
+        PromptConfig.isUserPromptLocked = false
+        isEditingPrompt = false
+    }
+
     private func applyPreset(_ preset: PreferencePreset) {
+        // Tap a preset → load into draft and enter edit mode. The user must
+        // explicitly Save to commit, matching the rest of the lock model.
+        if !isEditingPrompt {
+            stashedPrompt = userPrompt
+            isEditingPrompt = true
+        }
         userPrompt = preset.promptText
-        PromptConfig.userPrompt = preset.promptText
-        isUserPromptLocked = true
-        PromptConfig.isUserPromptLocked = true
     }
 }

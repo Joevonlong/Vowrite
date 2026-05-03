@@ -13,3 +13,14 @@ For the full reference — field schema, auth styles, capabilities, OpenAI-compa
 **📖 [`docs/PROVIDER_GUIDE.md`](../../../../docs/PROVIDER_GUIDE.md)** (at the repo root)
 
 JSON does not support comments, which is why this guidance lives in an external Markdown file rather than inline in `providers.json` itself.
+
+## `Prompts/`
+
+Base polish and translation system prompts as `.md` files. These are the canonical source of truth for the LLM "base layer" — the user-facing customization layers (`PromptConfig.userPrompt`, per-`Mode` prompts, `OutputStyle` templates) are appended on top at request build time.
+
+- `Prompts/polish.system.md` — base polish prompt (dictation processor identity, language preservation, cleanup rules, smart formatting).
+- `Prompts/translate.system.md` — translation template; `{targetLanguageName}` is substituted at request time.
+
+**Not user-editable at runtime by design.** Modifying base behavior requires editing the `.md` file and rebuilding (`Vowrite/VowriteMac/build.sh`). Loaded via `Bundle.module` in `PromptConfig.swift` → `PromptResources`.
+
+The full layering cascade is documented in `SpeculativePolish.buildSystemPrompt(for:)`.

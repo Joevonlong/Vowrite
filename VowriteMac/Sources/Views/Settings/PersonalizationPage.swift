@@ -7,10 +7,16 @@ struct PersonalizationPageView: View {
     @ObservedObject private var modeManager = ModeManager.shared
 
     // Global Preferences state
+    //
+    // `userPrompt` is the value bound to the editor. When `isEditing == false`
+    // it mirrors the committed (saved) value and the editor is hard-disabled.
+    // While editing, it is the in-progress draft; `stashedPrompt` is the value
+    // we revert to on Cancel. Nothing is written to PromptConfig until Save.
     @State private var userPrompt = PromptConfig.userPrompt
-    @State private var isLocked = PromptConfig.isUserPromptLocked
     @State private var isEditing = false
     @State private var stashedPrompt = ""
+    @State private var showDiscardConfirm = false
+    @State private var showClearConfirm = false
 
     // Sheet state
     @State private var editingMode: Mode? = nil
@@ -176,58 +182,57 @@ struct PersonalizationPageView: View {
                                 lineWidth: 1
                             )
                     )
-                    .disabled(isLocked)
-                    .opacity(isLocked ? 0.7 : 1.0)
-                    .onChange(of: userPrompt) { _, _ in
-                        if !isLocked && !userPrompt.isEmpty && !isEditing {
-                            isEditing = true
-                        }
-                    }
+                    // Hard gate: nothing the user types reaches the editor unless
+                    // they explicitly entered edit mode. Stray clicks / focus
+                    // changes cannot mutate the committed prompt.
+                    .disabled(!isEditing)
+                    .opacity(isEditing ? 1.0 : 0.7)
 
-                // Action buttons
+                // Action buttons — explicit Edit/Save/Cancel only.
                 HStack(spacing: 8) {
-                    if isLocked {
+                    if isEditing {
+                        Spacer()
+                        Button("Cancel") { requestCancel() }
+                            .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                            .keyboardShortcut(.cancelAction)
+                        Button("Save") { commitSave() }
+                            .font(.caption).buttonStyle(.borderedProminent).controlSize(.small)
+                            .keyboardShortcut(.defaultAction)
+                            .disabled(userPrompt == stashedPrompt)
+                    } else if userPrompt.isEmpty {
+                        Spacer()
+                        Button("Add Preferences") { beginEdit() }
+                            .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                    } else {
                         Label("Saved", systemImage: "checkmark.circle.fill")
                             .font(.caption)
                             .foregroundColor(.green.opacity(0.8))
                         Spacer()
-                        Button("Edit") {
-                            stashedPrompt = userPrompt
-                            isLocked = false
-                            PromptConfig.isUserPromptLocked = false
-                            isEditing = true
-                        }
-                        .font(.caption).buttonStyle(.bordered).controlSize(.small)
-                        Button("Clear") {
-                            userPrompt = ""
-                            PromptConfig.userPrompt = ""
-                            isLocked = false
-                            PromptConfig.isUserPromptLocked = false
-                            isEditing = false
-                        }
-                        .font(.caption).buttonStyle(.bordered).controlSize(.small)
-                    } else if isEditing {
-                        Spacer()
-                        Button("Cancel") {
-                            userPrompt = stashedPrompt
-                            PromptConfig.userPrompt = stashedPrompt
-                            if !stashedPrompt.isEmpty {
-                                isLocked = true
-                                PromptConfig.isUserPromptLocked = true
-                            }
-                            isEditing = false
-                        }
-                        .font(.caption).buttonStyle(.bordered).controlSize(.small)
-                        Button("Save") {
-                            PromptConfig.userPrompt = userPrompt
-                            isLocked = true
-                            PromptConfig.isUserPromptLocked = true
-                            isEditing = false
-                        }
-                        .font(.caption).buttonStyle(.borderedProminent).controlSize(.small)
-                    } else {
-                        Spacer()
+                        Button("Edit") { beginEdit() }
+                            .font(.caption).buttonStyle(.bordered).controlSize(.small)
+                        Button("Clear") { showClearConfirm = true }
+                            .font(.caption).buttonStyle(.bordered).controlSize(.small)
                     }
+                }
+                .confirmationDialog(
+                    "Discard your changes?",
+                    isPresented: $showDiscardConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Discard Changes", role: .destructive) { discardEdit() }
+                    Button("Keep Editing", role: .cancel) {}
+                } message: {
+                    Text("Unsaved edits to your global preferences will be lost.")
+                }
+                .confirmationDialog(
+                    "Clear your global preferences?",
+                    isPresented: $showClearConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Clear", role: .destructive) { clearPrompt() }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This removes your saved global preferences. Built-in scenes are unaffected.")
                 }
             }
         }
@@ -263,14 +268,49 @@ struct PersonalizationPageView: View {
     }
 
     private func loadGlobalPreferences() {
-        let saved = PromptConfig.userPrompt
-        if !saved.isEmpty {
-            userPrompt = saved
-            isLocked = true
-            if !PromptConfig.isUserPromptLocked {
-                PromptConfig.isUserPromptLocked = true
-            }
+        userPrompt = PromptConfig.userPrompt
+        isEditing = false
+        // Keep the persisted lock flag in sync with whether anything is saved.
+        // The flag is a legacy signal used by some surfaces (e.g. preset apply)
+        // to indicate "user has committed a value".
+        PromptConfig.isUserPromptLocked = !userPrompt.isEmpty
+    }
+
+    // MARK: - Edit lifecycle
+
+    private func beginEdit() {
+        stashedPrompt = userPrompt
+        isEditing = true
+    }
+
+    private func requestCancel() {
+        if userPrompt != stashedPrompt {
+            showDiscardConfirm = true
+        } else {
+            discardEdit()
         }
+    }
+
+    private func discardEdit() {
+        userPrompt = stashedPrompt
+        isEditing = false
+    }
+
+    private func commitSave() {
+        let trimmed = userPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        userPrompt = trimmed
+        PromptConfig.userPrompt = trimmed
+        PromptConfig.isUserPromptLocked = !trimmed.isEmpty
+        stashedPrompt = trimmed
+        isEditing = false
+    }
+
+    private func clearPrompt() {
+        userPrompt = ""
+        stashedPrompt = ""
+        PromptConfig.userPrompt = ""
+        PromptConfig.isUserPromptLocked = false
+        isEditing = false
     }
 
     private func duplicateMode(_ mode: Mode) {
