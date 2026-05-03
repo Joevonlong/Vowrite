@@ -15,10 +15,6 @@ struct RecordArea: View {
     @State private var hoveredPosition: KeyboardChipDescriptor.Position? = nil
     @State private var expandWorkItem: DispatchWorkItem?
 
-    /// matchedGeometryEffect namespace for the mic-pill ↔ mic-circle morph
-    /// (170×60 capsule at idle → 56pt circle when expanded). F-070.
-    @Namespace private var micNamespace
-
     private let cancelThreshold: CGFloat = 80
     private let longPressThreshold: TimeInterval = 0.35
     private let modeSelectionCoordSpace = "modeSelection"
@@ -126,59 +122,108 @@ struct RecordArea: View {
 
     /// F-070: Idle layout that supports both quick-tap (start dictation) and
     /// long-press → chip selection. After expansion, the mic pill morphs into
-    /// a small circle at the bottom (matchedGeometry), and large chips appear
-    /// in the top corners. Hit testing is by quadrant — finger anywhere in the
-    /// top-left/top-right quadrant triggers the corresponding chip; everything
-    /// else is cancel. Quick tap (no long-press) falls back to direct dictation.
+    /// a small circle at the bottom, and large chips appear in the top corners.
+    /// Hit testing is by quadrant — finger anywhere in the top-left/top-right
+    /// quadrant triggers the corresponding chip; everything else is cancel.
+    /// Quick tap (no long-press) falls back to direct dictation.
+    ///
+    /// The mic is a single, persistent View whose frame and position animate
+    /// when `isModeSelectionExpanded` toggles — instead of swapping between
+    /// two separate views inside an `if/else`. The previous structure caused
+    /// SwiftUI to tear down the idle mic mid-press, canceling the active
+    /// DragGesture and silently breaking hover detection / chip selection.
+    /// Visual layers are non-interactive so touches always reach the mic's
+    /// gesture recognizer; the chips' `.glassEffect(.interactive())` would
+    /// otherwise intercept the drag once it crossed into a chip on iOS 26+.
     private var interactiveIdleContent: some View {
         GeometryReader { geo in
-            ZStack(alignment: .top) {
-                // Hint texts (one slot, content swaps with state).
-                hintLayer
+            let size = geo.size
+            ZStack(alignment: .topLeading) {
+                hintsLayer(in: size)
+                    .allowsHitTesting(false)
 
-                // Chips in the top corners — only when expanded.
                 if state.isModeSelectionExpanded {
                     chipsLayer
+                        .allowsHitTesting(false)
                         .transition(
                             .opacity.combined(with: .scale(scale: 0.92, anchor: .top))
                         )
+
+                    Ripple()
+                        .position(x: size.width / 2, y: micCenterY(in: size))
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
                 }
 
-                // Mic + ripple. The mic uses matchedGeometryEffect to morph
-                // smoothly between the idle pill (170×60 centered) and the
-                // expanded circle (56pt at bottom-center).
-                micAndRippleLayer(in: geo.size)
+                micShape(
+                    width: state.isModeSelectionExpanded ? 56 : 170,
+                    height: state.isModeSelectionExpanded ? 56 : 60,
+                    shadowOpacity: state.isModeSelectionExpanded ? 0.18 : 0.10
+                )
+                .scaleEffect(isPressing && !state.isModeSelectionExpanded ? 0.96 : 1.0)
+                .animation(.easeOut(duration: 0.12), value: isPressing)
+                .position(x: size.width / 2, y: micCenterY(in: size))
+                .contentShape(Capsule())
+                .gesture(modeSelectionGesture(in: size))
+
+                if !state.isModeSelectionExpanded {
+                    Button {
+                        state.insertReturn()
+                    } label: {
+                        returnPillLabel
+                    }
+                    .position(
+                        x: size.width / 2,
+                        y: micCenterY(in: size) + 30 + 16 + KeyboardTheme.returnPillHeight / 2
+                    )
+                    .transition(.opacity)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .coordinateSpace(name: modeSelectionCoordSpace)
         }
     }
 
+    /// Idle mic sits in the upper third (so the Return pill below remains
+    /// visible); expanded mic sits 28pt above the bottom edge with the ripple
+    /// ringing it.
+    private func micCenterY(in size: CGSize) -> CGFloat {
+        state.isModeSelectionExpanded
+            ? size.height - 28 - 28
+            : 56 + 30
+    }
+
+    /// Top hint sits at a fixed Y; the "松开以取消" mid-hint, when expanded,
+    /// is anchored above the ripple via an explicit Y rather than a fixed
+    /// `Spacer(height:)`. The 232pt content area (280pt keyboard − 48pt
+    /// TopBar) is too short for the spec's relative spacing, so absolute
+    /// positioning is the only reliable way to keep the hint clear of the
+    /// ripple/mic at the bottom.
     @ViewBuilder
-    private var hintLayer: some View {
+    private func hintsLayer(in size: CGSize) -> some View {
         VStack(spacing: 0) {
             Text(state.isModeSelectionExpanded ? "向上滑动以选择" : "点击说话")
                 .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
                 .padding(.top, state.isModeSelectionExpanded ? 14 : 28)
                 .animation(.easeInOut(duration: 0.18), value: state.isModeSelectionExpanded)
-
-            if state.isModeSelectionExpanded {
-                Spacer().frame(height: 88)
-                Text("松开以取消")
-                    .font(.subheadline)
-                    .foregroundStyle(
-                        hoveredPosition == nil
-                            ? KeyboardTheme.subtitleColor
-                            : Color(UIColor.quaternaryLabel)
-                    )
-                    .animation(.easeInOut(duration: 0.15), value: hoveredPosition)
-                    .transition(.opacity)
-            }
-
             Spacer()
         }
         .frame(maxWidth: .infinity)
+
+        if state.isModeSelectionExpanded {
+            Text("松开以取消")
+                .font(.subheadline)
+                .foregroundStyle(
+                    hoveredPosition == nil
+                        ? KeyboardTheme.subtitleColor
+                        : Color(UIColor.quaternaryLabel)
+                )
+                .frame(maxWidth: .infinity)
+                .position(x: size.width / 2, y: 105)
+                .animation(.easeInOut(duration: 0.15), value: hoveredPosition)
+                .transition(.opacity)
+        }
     }
 
     @ViewBuilder
@@ -210,59 +255,10 @@ struct RecordArea: View {
         Color.clear.frame(width: 140, height: 52)
     }
 
-    @ViewBuilder
-    private func micAndRippleLayer(in size: CGSize) -> some View {
-        ZStack {
-            // Idle: pill centered in upper half.
-            // Expanded: circle near bottom with ripple behind it.
-            if state.isModeSelectionExpanded {
-                VStack {
-                    Spacer()
-                    ZStack {
-                        Ripple()
-                        micShape(width: 56, height: 56, shadowOpacity: 0.18)
-                            .matchedGeometryEffect(
-                                id: "micShape",
-                                in: micNamespace,
-                                properties: .frame
-                            )
-                            .contentShape(Capsule())
-                            .gesture(modeSelectionGesture(in: size))
-                    }
-                    .padding(.bottom, 28)
-                }
-            } else {
-                VStack(spacing: 16) {
-                    // Push down to the same vertical band as the mockup —
-                    // sits below the "点击说话" hint with comfortable gap.
-                    Spacer().frame(height: 56)
-                    micShape(width: 170, height: 60, shadowOpacity: 0.10)
-                        .matchedGeometryEffect(
-                            id: "micShape",
-                            in: micNamespace,
-                            properties: .frame
-                        )
-                        .scaleEffect(isPressing ? 0.96 : 1.0)
-                        .animation(.easeOut(duration: 0.12), value: isPressing)
-                        .contentShape(Capsule())
-                        .gesture(modeSelectionGesture(in: size))
-
-                    Button {
-                        state.insertReturn()
-                    } label: {
-                        returnPillLabel
-                    }
-                    .transition(.opacity)
-
-                    Spacer()
-                }
-            }
-        }
-    }
-
     /// Single source of truth for the mic visual. Capsule is intentional —
-    /// at width == height it renders as a circle, so the same shape morphs
-    /// from pill (170×60) → circle (56×56) under matchedGeometryEffect.
+    /// at width == height it renders as a circle, so the same shape spans
+    /// the pill (170×60) and circle (56×56) endpoints; SwiftUI animates the
+    /// frame change directly when `isModeSelectionExpanded` flips.
     private func micShape(width: CGFloat, height: CGFloat, shadowOpacity: Double) -> some View {
         Capsule()
             .fill(.white)
@@ -681,11 +677,15 @@ private struct ThinkingPill: View {
 /// (audio level is 0), so animated rings would be visual noise without
 /// information. Acts as a visual "ground" anchoring the small mic circle.
 private struct Ripple: View {
+    /// Sized to fit inside the 232pt content area below the "松开以取消"
+    /// hint at y≈115 — outer ring radius 52pt keeps the topmost arc clear of
+    /// the hint when centered on the mic at y≈176. Visually proportional to
+    /// the 56pt mic (outer ≈ 1.86× mic), close to the mockup's relative scale.
     private let rings: [(diameter: CGFloat, alpha: Double)] = [
-        (88,  0.060),
-        (124, 0.045),
-        (164, 0.030),
-        (204, 0.018),
+        (60,  0.060),
+        (76,  0.045),
+        (92,  0.030),
+        (104, 0.018),
     ]
 
     var body: some View {
