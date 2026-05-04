@@ -7,6 +7,20 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.2.1.2] — 2026-05-04
+
+### Added
+
+- **F-070 iOS keyboard zone-based long-press mode picker**: Long-press on the keyboard mic pill now reveals a zone-based selection layout (matching the mockup) instead of the dual-arc menu. Slide into a zone and release to commit; layout is overlap-free and easier to discover.
+- **F-071 Polish prompt externalization + user-prompt edit-lock hardening**: Base polish prompts moved out of `PromptConfig` into external resource files for easier iteration without recompiling. User-prompt editing is now locked while a recording is in flight to prevent the prompt from changing mid-pipeline.
+
+### Fixed
+
+- **Translate banner overlap (recording circle)**: The translate banner no longer overlaps the recording circle glow on the keyboard.
+- **Keyboard translate banner locale + hint overlap**: Translate banner now respects the user's locale and no longer overlaps the hint label.
+- **Long-press mode picker gesture**: "松开以取消" no longer overlaps the gesture target; gesture handling tightened.
+- **iOS keyboard silent reset**: When no speech is detected, the keyboard silently resets to standby instead of surfacing a confusing error state.
+
 ## [0.2.1.1] — 2026-05-02
 
 ### Added
@@ -378,7 +392,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.1...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.2...HEAD
+[0.2.1.2]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.1...v0.2.1.2
 [0.2.1.1]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.0...v0.2.1.1
 [0.2.1.0]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.1...v0.2.1.0
 [0.2.0.1]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.0...v0.2.0.1
