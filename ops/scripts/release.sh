@@ -114,6 +114,88 @@ read -p "   " -n 1 -r
 echo
 [[ $REPLY =~ ^[Yy]$ ]] || { echo "Please complete the checklist first."; exit 1; }
 
+# --- Preflight: classify commits since last tag by platform impact ---
+# Helps the operator catch the case where a Mac release is being cut but the
+# only commits since the last tag are iOS-only. Informational, not enforced —
+# the third y/N gate gives final authority to the operator.
+echo ""
+echo "▶ Preflight: commits since last release tag..."
+
+LAST_TAG=$(git -C "$PROJECT_ROOT" describe --tags --abbrev=0 --match='v[0-9]*' 2>/dev/null || echo "")
+if [ -z "$LAST_TAG" ]; then
+    echo "  ℹ️  No previous v* tag found — skipping preflight (initial release?)"
+else
+    COMMIT_RANGE="${LAST_TAG}..HEAD"
+    COMMITS=$(git -C "$PROJECT_ROOT" log --pretty=format:'%h %s' "$COMMIT_RANGE")
+
+    if [ -z "$COMMITS" ]; then
+        echo "  ⚠️  No commits since $LAST_TAG. Nothing to release."
+        exit 1
+    fi
+
+    # Tally per category
+    MAC_ONLY=0; IOS_ONLY=0; SHARED=0; META=0; MIXED=0
+
+    while IFS= read -r commit_line; do
+        SHA=$(echo "$commit_line" | awk '{print $1}')
+        SUBJECT=$(echo "$commit_line" | cut -d' ' -f2-)
+        FILES=$(git -C "$PROJECT_ROOT" show --name-only --pretty=format: "$SHA" | grep -v '^$' || true)
+
+        # Per-commit category counters
+        has_mac=0; has_ios=0; has_kit=0; has_meta=0; has_other=0
+        while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+                VowriteMac/*)                                  has_mac=1 ;;
+                VowriteIOS/*|VowriteKeyboard/*)                has_ios=1 ;;
+                VowriteKit/*)                                  has_kit=1 ;;
+                docs/*|ops/*|scripts/*|*.md|.github/*|.gitignore|LICENSE) has_meta=1 ;;
+                *)                                             has_other=1 ;;
+            esac
+        done <<< "$FILES"
+
+        # Classify (priority: mixed > shared > mac > ios > meta)
+        active=$((has_mac + has_ios + has_kit + has_other))
+        if [ "$active" -gt 1 ]; then
+            CATEGORY="mixed";    MIXED=$((MIXED + 1))
+        elif [ "$has_kit" = 1 ]; then
+            CATEGORY="shared";   SHARED=$((SHARED + 1))
+        elif [ "$has_mac" = 1 ]; then
+            CATEGORY="Mac-only"; MAC_ONLY=$((MAC_ONLY + 1))
+        elif [ "$has_ios" = 1 ]; then
+            CATEGORY="iOS-only"; IOS_ONLY=$((IOS_ONLY + 1))
+        elif [ "$has_meta" = 1 ]; then
+            CATEGORY="meta";     META=$((META + 1))
+        else
+            CATEGORY="other";    MIXED=$((MIXED + 1))
+        fi
+
+        printf "  %s  %-9s  %s\n" "$SHA" "[$CATEGORY]" "$SUBJECT"
+    done <<< "$COMMITS"
+
+    echo ""
+    echo "  Summary: $MAC_ONLY Mac-only, $IOS_ONLY iOS-only, $SHARED shared, $MIXED mixed, $META meta"
+
+    if [ "$MAC_ONLY" -eq 0 ] && [ "$SHARED" -eq 0 ] && [ "$MIXED" -eq 0 ]; then
+        echo ""
+        echo "  ⚠️  No Mac-touching commits since $LAST_TAG."
+        echo "     Mac users will see no functional change in this release."
+    fi
+
+    echo ""
+    echo "  ❓ Did you record iOS-only changes to CHANGELOG-IOS.md? (y/N)"
+    read -p "     " -n 1 -r; echo
+    [[ $REPLY =~ ^[Yy]$ ]] || { echo "  Release deferred. Update CHANGELOG-IOS.md and re-run."; exit 0; }
+
+    echo "  ❓ Does CHANGELOG.md [Unreleased] contain only Mac-relevant entries? (y/N)"
+    read -p "     " -n 1 -r; echo
+    [[ $REPLY =~ ^[Yy]$ ]] || { echo "  Release deferred. Edit CHANGELOG.md and re-run."; exit 0; }
+
+    echo "  ❓ Proceed with macOS release $VERSION? (y/N)"
+    read -p "     " -n 1 -r; echo
+    [[ $REPLY =~ ^[Yy]$ ]] || { echo "  Release deferred. No changes made."; exit 0; }
+fi
+
 # --- Step 1: Update CHANGELOG.md ---
 echo ""
 echo "▶ Step 1: Updating CHANGELOG.md..."
