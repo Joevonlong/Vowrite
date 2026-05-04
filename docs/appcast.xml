@@ -10,17 +10,17 @@
       Each release: sign_update signs the DMG, release.sh inserts the <item>.
     -->
     <item>
-      <title>Vowrite 0.2.1.1</title>
-      <description><![CDATA[<h2>What's New in 0.2.1.1</h2><ul></ul><h3>### Added</h3><ul><li><b>VowriteKitTests target</b>: First automated test target. Six XCTest files covering `Mode` Codable roundtrip + F-063 backward-compat decode, `ModeConfig` field mapping and `withStyleOverride` behaviour, `OutputStyle` Codable roundtrip, `ReplacementRule` Codable roundtrip + ID uniqueness, builtin data integrity (Clean mode UUID stability, builtin shortcut index uniqueness, `OutputStyle.noneId` resolution), and the empty-rules early-return path of `ReplacementManager.apply`. `ops/scripts/test.sh` now invokes `swift test` between the Kit build and the Mac build.</li></ul><h3>### Changed</h3><ul><li><b>WindowHelper</b>: dropped redundant `openSettings()` / `openHistory()` wrappers that only delegated to `openMainWindow()`. Five call sites (`VowriteApp` Settings command, `MenuBarView` History/Settings buttons, `VowriteMenuView` Settings/History entries) now call `openMainWindow()` directly.</li></ul><h3>### Fixed</h3><ul><li><b>ModelContainer init failure no longer crashes the app</b>: `AppState.init` on Mac and iOS now falls back to an in-memory store and surfaces a "history temporarily unavailable" banner in `HistoryView` instead of `fatalError`. iOS banner additionally calls out that keyboard extension records are also affected because the keyboard extension reads the App Group SwiftData store directly.</li><li><b>About page shows the real app icon</b> instead of the SF Symbol `mic.circle.fill` placeholder. Pulled directly from `NSApp.applicationIconImage` so it always matches the bundled `AppIcon.icns`. `build.sh` icon regeneration logic also tightened: `.icns` is now rebuilt whenever `Resources/AppIcon-source.png` is newer than the existing `.icns` (previously only ran on first generation), so brand refreshes propagate without a manual clean.</li></ul><h3>### Removed</h3><ul><li><b>MiniMax OAuth flow</b>: removed `MiniMaxOAuthService`, `MiniMaxOAuthCard`, and the `minimax_intl`/`minimax_cn` cases in `OAuthRefreshManager.performRefresh`. `clientID` was never obtained from MiniMax developer support, so the flow was never functional. `MiniMaxOAuthCard` was also a 100% orphan (zero instantiation sites). `PresentationContextBridge` was extracted to its own file because `OpenAICodexOAuthService` still uses it. New `MiniMaxOAuthPurge.runIfNeeded()` one-shot clears stale OAuth tokens and `auth.method.minimax_*` keys on next launch.</li></ul>]]></description>
-      <pubDate>Sat, 02 May 2026 03:56:22 +0200</pubDate>
-      <sparkle:version>7</sparkle:version>
-      <sparkle:shortVersionString>0.2.1.1</sparkle:shortVersionString>
+      <title>Vowrite 0.2.1.2</title>
+      <description><![CDATA[<h2>What's New in 0.2.1.2</h2><ul></ul><h3>### Added</h3><ul><li><b>F-070 iOS keyboard zone-based long-press mode picker</b>: Long-press on the keyboard mic pill now reveals a zone-based selection layout (matching the mockup) instead of the dual-arc menu. Slide into a zone and release to commit; layout is overlap-free and easier to discover.</li><li><b>F-071 Polish prompt externalization + user-prompt edit-lock hardening</b>: Base polish prompts moved out of `PromptConfig` into external resource files for easier iteration without recompiling. User-prompt editing is now locked while a recording is in flight to prevent the prompt from changing mid-pipeline.</li></ul><h3>### Fixed</h3><ul><li><b>Translate banner overlap (recording circle)</b>: The translate banner no longer overlaps the recording circle glow on the keyboard.</li><li><b>Keyboard translate banner locale + hint overlap</b>: Translate banner now respects the user's locale and no longer overlaps the hint label.</li><li><b>Long-press mode picker gesture</b>: "松开以取消" no longer overlaps the gesture target; gesture handling tightened.</li><li><b>iOS keyboard silent reset</b>: When no speech is detected, the keyboard silently resets to standby instead of surfacing a confusing error state.</li></ul>]]></description>
+      <pubDate>Mon, 04 May 2026 02:00:35 +0200</pubDate>
+      <sparkle:version>8</sparkle:version>
+      <sparkle:shortVersionString>0.2.1.2</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
-        url="https://github.com/Joevonlong/Vowrite/releases/download/v0.2.1.1/Vowrite-v0.2.1.1.dmg"
+        url="https://github.com/Joevonlong/Vowrite/releases/download/v0.2.1.2/Vowrite-v0.2.1.2.dmg"
         type="application/octet-stream"
-        sparkle:edSignature="SHjPv7bYMtkffLOOt3S4f+wnazrlVZUV9uaP0jVqyMWq905E/kekHXK/z8M/fGgYQwDnthEmc9spW997aXOyDQ=="
-        length="3185913"
+        sparkle:edSignature="0N7K5vzGjIPbOpEKCNG+BKeDeizxZqxSMttytZGijHvzULtMeNkbuWFr7xJCQJ2eddTAu354aW06udAx6FmuAw=="
+        length="3202326"
       />
     </item>
   </channel>
