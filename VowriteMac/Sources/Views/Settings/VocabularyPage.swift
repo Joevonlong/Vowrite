@@ -1,5 +1,6 @@
 import VowriteKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - Vocabulary Page
 
@@ -14,6 +15,14 @@ struct VocabularyPageView: View {
     @State private var editingRuleId: UUID? = nil
     @State private var editTrigger = ""
     @State private var editReplacement = ""
+
+    // CSV Import / Export state
+    @State private var isImporting = false
+    @State private var isExporting = false
+    @State private var importStatusMessage: String? = nil
+    @State private var importStatusTask: Task<Void, Never>? = nil
+    @State private var importError: String? = nil
+    @State private var showImportError = false
 
     var body: some View {
         ScrollView {
@@ -70,6 +79,92 @@ struct VocabularyPageView: View {
                         .controlSize(.small)
                         .disabled(newWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+
+                // Import / Export row
+                HStack(spacing: VW.Spacing.md) {
+                    Button {
+                        isImporting = true
+                    } label: {
+                        Label("Import…", systemImage: "square.and.arrow.down")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    Button {
+                        isExporting = true
+                    } label: {
+                        Label("Export…", systemImage: "square.and.arrow.up")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(vocabManager.words.isEmpty)
+
+                    Spacer()
+
+                    // Transient import status banner
+                    if let message = importStatusMessage {
+                        Text(message)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .transition(.opacity)
+                    }
+                }
+                .animation(VW.Anim.easeQuick, value: importStatusMessage)
+            }
+        }
+        .fileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.commaSeparatedText],
+            allowsMultipleSelection: false
+        ) { result in
+            handleImport(result: result)
+        }
+        .fileExporter(
+            isPresented: $isExporting,
+            document: VocabularyCSVDocument(csv: vocabManager.exportCSV()),
+            contentType: .commaSeparatedText,
+            defaultFilename: exportFilename()
+        ) { _ in }
+        .alert("Import Error", isPresented: $showImportError, presenting: importError) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { error in
+            Text(error)
+        }
+    }
+
+    private func exportFilename() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return "vowrite-vocabulary-\(formatter.string(from: Date())).csv"
+    }
+
+    private func handleImport(result: Result<[URL], Error>) {
+        switch result {
+        case .failure(let error):
+            importError = error.localizedDescription
+            showImportError = true
+        case .success(let urls):
+            guard let url = urls.first else { return }
+            let accessing = url.startAccessingSecurityScopedResource()
+            defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+            do {
+                let raw = try String(contentsOf: url, encoding: .utf8)
+                let importResult = vocabManager.importCSV(raw)
+                showImportStatus("Imported \(importResult.imported) word\(importResult.imported == 1 ? "" : "s"), skipped \(importResult.duplicates) duplicate\(importResult.duplicates == 1 ? "" : "s")")
+            } catch {
+                importError = "Could not read file: \(error.localizedDescription)"
+                showImportError = true
+            }
+        }
+    }
+
+    private func showImportStatus(_ message: String) {
+        importStatusTask?.cancel()
+        importStatusMessage = message
+        importStatusTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            if !Task.isCancelled {
+                importStatusMessage = nil
             }
         }
     }
@@ -270,5 +365,35 @@ struct VocabularyPageView: View {
         rule.replacement = replacement
         replacementManager.update(rule)
         editingRuleId = nil
+    }
+}
+
+// MARK: - VocabularyCSVDocument (F-074)
+
+/// A SwiftUI FileDocument wrapping vocabulary CSV text.
+/// Shared type: also used by VowriteIOS (PersonalizationView imports VowriteKit which provides
+/// VocabularyManager, but FileDocument itself is SwiftUI — both platform apps import this type
+/// independently since FileDocument is a protocol, not a class).
+struct VocabularyCSVDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.commaSeparatedText] }
+    static var writableContentTypes: [UTType] { [.commaSeparatedText] }
+
+    var csv: String
+
+    init(csv: String) {
+        self.csv = csv
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        guard let data = configuration.file.regularFileContents,
+              let text = String(data: data, encoding: .utf8) else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        self.csv = text
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        let data = Data(csv.utf8)
+        return FileWrapper(regularFileWithContents: data)
     }
 }
