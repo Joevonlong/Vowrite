@@ -79,12 +79,20 @@ public final class SpeculativePolish {
             KimiCodeOAuthService.applyCodingPlanHeaders(to: &request)
         }
 
+        // F-073: Resolve per-model polish overrides (e.g. disable thinking mode) once
+        // at prepare time; apply them at execute time when the payload is serialized.
+        let resolvedOverrides = ProviderRegistry.shared.polishOverrides(
+            providerID: provider.providerID,
+            modelID: model
+        )
+
         preparedConfig = PreparedConfig(
             request: request,
             systemPrompt: systemPrompt,
             model: model,
             temperature: modeConfig.temperature,
-            promptContext: promptContext
+            promptContext: promptContext,
+            polishOverrides: resolvedOverrides
         )
     }
 
@@ -142,8 +150,8 @@ public final class SpeculativePolish {
             )
         }
 
-        // Non-streaming path (unchanged)
-        let payload: [String: Any] = [
+        // Non-streaming path
+        var payload: [String: Any] = [
             "model": config.model,
             "messages": [
                 ["role": "system", "content": expandedSystemPrompt],
@@ -152,6 +160,8 @@ public final class SpeculativePolish {
             "temperature": config.temperature,
             "max_tokens": 4096
         ]
+        // F-073: Apply per-model overrides (e.g. disable thinking mode).
+        applyPolishOverrides(to: &payload, overrides: config.polishOverrides)
 
         var request = config.request
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
@@ -184,7 +194,7 @@ public final class SpeculativePolish {
         wrappedText: String,
         onPartial: (String) -> Void
     ) async throws -> String {
-        let streamPayload: [String: Any] = [
+        var streamPayload: [String: Any] = [
             "model": config.model,
             "messages": [
                 ["role": "system", "content": expandedSystemPrompt],
@@ -194,6 +204,8 @@ public final class SpeculativePolish {
             "max_tokens": 4096,
             "stream": true
         ]
+        // F-073: Apply per-model overrides (e.g. disable thinking mode).
+        applyPolishOverrides(to: &streamPayload, overrides: config.polishOverrides)
 
         var request = config.request
         request.httpBody = try JSONSerialization.data(withJSONObject: streamPayload)
@@ -242,6 +254,8 @@ public final class SpeculativePolish {
         let model: String
         let temperature: Double
         let promptContext: PromptContext?
+        /// F-073: Per-model overrides resolved at prepare() time (from providers.json).
+        let polishOverrides: [String: JSONValue]?
     }
 
     /// Build the system prompt for either polish or translation mode.

@@ -27,6 +27,9 @@ public actor ClaudePolishService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 120
 
+        // Polish overrides (F-073) intentionally not applied here: anthropic-version
+        // 2023-06-01 has no thinking field. If upgrading the API version, merge
+        // {"thinking": {"type": "disabled"}} from model.polishOverrides into the payload.
         let payload: [String: Any] = [
             "model": model,
             "max_tokens": 4096,

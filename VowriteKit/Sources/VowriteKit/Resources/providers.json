@@ -29,7 +29,7 @@
         "defaultModel": "gpt-5.4-mini",
         "models": [
           { "id": "gpt-5.4-mini", "description": "Balanced default — fast and capable" },
-          { "id": "gpt-5.5", "description": "Frontier — best reasoning and coding" },
+          { "id": "gpt-5.5", "description": "Frontier — best reasoning and coding", "polishOverrides": { "reasoning_effort": "minimal" } },
           { "id": "gpt-5.4-nano", "description": "Cheapest, high-volume" },
           { "id": "gpt-4o-mini", "description": "Legacy fallback" }
         ]
@@ -84,11 +84,11 @@
       "polish": {
         "defaultModel": "openai/gpt-oss-120b",
         "models": [
-          { "id": "openai/gpt-oss-120b", "description": "Strong general — replaces retired Maverick" },
-          { "id": "openai/gpt-oss-20b", "description": "Very fast, lighter" },
+          { "id": "openai/gpt-oss-120b", "description": "Strong general — replaces retired Maverick (thinking on, slower)" },
+          { "id": "openai/gpt-oss-20b", "description": "Very fast, lighter (thinking on, slower)" },
           { "id": "llama-3.3-70b-versatile", "description": "Llama 3.3 — balanced" },
           { "id": "llama-3.1-8b-instant", "description": "Fastest Llama" },
-          { "id": "qwen/qwen3-32b", "description": "Reasoning-focused (preview)" }
+          { "id": "qwen/qwen3-32b", "description": "Reasoning-focused (preview)", "polishOverrides": { "reasoning_effort": "none" } }
         ]
       }
     },
@@ -139,8 +139,8 @@
         "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
         "models": [
           { "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo", "description": "Balanced flagship" },
-          { "id": "Qwen/Qwen3.5-9B", "description": "Cheap and fast" },
-          { "id": "deepseek-ai/DeepSeek-V4-Pro", "description": "Reasoning flagship — 512K context" }
+          { "id": "Qwen/Qwen3.5-9B", "description": "Cheap and fast", "polishOverrides": { "reasoning": { "enabled": false } } },
+          { "id": "deepseek-ai/DeepSeek-V4-Pro", "description": "Reasoning flagship — 512K context", "polishOverrides": { "reasoning": { "enabled": false } } }
         ]
       }
     },
@@ -165,9 +165,9 @@
         "defaultModel": "deepseek-v4-flash",
         "models": [
           { "id": "deepseek-v4-flash", "description": "New default — fast and cheap (non-thinking mode)" },
-          { "id": "deepseek-v4-pro", "description": "Flagship V4 Pro — reasoning" },
+          { "id": "deepseek-v4-pro", "description": "Flagship V4 Pro — reasoning", "polishOverrides": { "thinking": { "type": "disabled" } } },
           { "id": "deepseek-chat", "description": "Legacy alias for deepseek-v4-flash non-thinking (deprecates 2026-07-24)" },
-          { "id": "deepseek-reasoner", "description": "Legacy alias for deepseek-v4-flash thinking (deprecates 2026-07-24)" }
+          { "id": "deepseek-reasoner", "description": "Legacy alias for deepseek-v4-flash thinking (deprecates 2026-07-24)", "polishOverrides": { "thinking": { "type": "disabled" } } }
         ]
       }
     },
@@ -196,12 +196,12 @@
         "defaultModel": "deepseek-ai/DeepSeek-V3",
         "models": [
           { "id": "deepseek-ai/DeepSeek-V3", "description": "DeepSeek flagship via SiliconFlow" },
-          { "id": "deepseek-ai/DeepSeek-V3.1-Terminus", "description": "DeepSeek V3.1 Terminus" },
-          { "id": "zai-org/GLM-4.6", "description": "Zhipu GLM-4.6" },
-          { "id": "Qwen/Qwen3-235B-A22B", "description": "Qwen3 large MoE (235B)" },
-          { "id": "Qwen/QwQ-32B", "description": "Qwen reasoning" },
+          { "id": "deepseek-ai/DeepSeek-V3.1-Terminus", "description": "DeepSeek V3.1 Terminus", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "zai-org/GLM-4.6", "description": "Zhipu GLM-4.6", "polishOverrides": { "enable_thinking": false } },
+          { "id": "Qwen/Qwen3-235B-A22B", "description": "Qwen3 large MoE (235B)", "polishOverrides": { "enable_thinking": false } },
+          { "id": "Qwen/QwQ-32B", "description": "Qwen reasoning", "polishOverrides": { "enable_thinking": false } },
           { "id": "Qwen/Qwen2.5-72B-Instruct", "description": "Qwen2.5 72B — high quality CN+EN" },
-          { "id": "Qwen/Qwen3-8B", "description": "Fast, lightweight (free)" }
+          { "id": "Qwen/Qwen3-8B", "description": "Fast, lightweight (free)", "polishOverrides": { "enable_thinking": false } }
         ]
       }
     },
@@ -228,9 +228,9 @@
       "polish": {
         "defaultModel": "kimi-k2.6",
         "models": [
-          { "id": "kimi-k2.6", "description": "Latest Kimi flagship (2026-04)" },
+          { "id": "kimi-k2.6", "description": "Latest Kimi flagship (2026-04)", "polishOverrides": { "thinking": { "type": "disabled" } } },
           { "id": "kimi-k2.5", "description": "Previous flagship" },
-          { "id": "kimi-k2-thinking-turbo", "description": "Reasoning-focused" }
+          { "id": "kimi-k2-thinking-turbo", "description": "Reasoning-focused (thinking on, slower)" }
         ]
       }
     },
@@ -257,9 +257,9 @@
       "polish": {
         "defaultModel": "MiniMax-M2.7",
         "models": [
-          { "id": "MiniMax-M2.7", "description": "Latest flagship" },
-          { "id": "MiniMax-M2.7-highspeed", "description": "Faster M2.7 variant" },
-          { "id": "MiniMax-M2.5", "description": "Previous generation" }
+          { "id": "MiniMax-M2.7", "description": "Latest flagship", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "MiniMax-M2.7-highspeed", "description": "Faster M2.7 variant", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "MiniMax-M2.5", "description": "Previous generation", "polishOverrides": { "thinking": { "type": "disabled" } } }
         ]
       }
     },
@@ -286,9 +286,9 @@
       "polish": {
         "defaultModel": "MiniMax-M2.7",
         "models": [
-          { "id": "MiniMax-M2.7", "description": "Latest flagship" },
-          { "id": "MiniMax-M2.7-highspeed", "description": "Faster M2.7 variant" },
-          { "id": "MiniMax-M2.5", "description": "Previous generation" }
+          { "id": "MiniMax-M2.7", "description": "Latest flagship", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "MiniMax-M2.7-highspeed", "description": "Faster M2.7 variant", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "MiniMax-M2.5", "description": "Previous generation", "polishOverrides": { "thinking": { "type": "disabled" } } }
         ]
       }
     },
@@ -345,9 +345,9 @@
       "polish": {
         "defaultModel": "qwen3.6-plus",
         "models": [
-          { "id": "qwen3.6-plus", "description": "New balanced flagship — 1M context" },
-          { "id": "qwen3.6-max-preview", "description": "Frontier — top coding benchmarks" },
-          { "id": "qwen3.6-flash", "description": "Cheapest, fastest" },
+          { "id": "qwen3.6-plus", "description": "New balanced flagship — 1M context", "polishOverrides": { "enable_thinking": false } },
+          { "id": "qwen3.6-max-preview", "description": "Frontier — top coding benchmarks", "polishOverrides": { "enable_thinking": false } },
+          { "id": "qwen3.6-flash", "description": "Cheapest, fastest", "polishOverrides": { "enable_thinking": false } },
           { "id": "qwen-turbo-latest", "description": "Stable cheap tier" },
           { "id": "qwen-plus-latest", "description": "Stable balanced" },
           { "id": "qwen-max-latest", "description": "Stable flagship (32K context)" }
@@ -374,9 +374,9 @@
       "polish": {
         "defaultModel": "gemini-2.5-flash",
         "models": [
-          { "id": "gemini-2.5-flash", "description": "Balanced default — fast and capable" },
-          { "id": "gemini-2.5-pro", "description": "Stable flagship — large context" },
-          { "id": "gemini-2.5-flash-lite", "description": "Cheapest, fastest" }
+          { "id": "gemini-2.5-flash", "description": "Balanced default — fast and capable", "polishOverrides": { "reasoning_effort": "none" } },
+          { "id": "gemini-2.5-pro", "description": "Stable flagship — large context", "polishOverrides": { "reasoning_effort": "minimal" } },
+          { "id": "gemini-2.5-flash-lite", "description": "Cheapest, fastest", "polishOverrides": { "reasoning_effort": "none" } }
         ]
       }
     },
@@ -400,11 +400,11 @@
       "polish": {
         "defaultModel": "glm-4.7-flash",
         "models": [
-          { "id": "glm-4.7-flash", "description": "Free, fastest" },
+          { "id": "glm-4.7-flash", "description": "Free, fastest", "polishOverrides": { "thinking": { "type": "disabled" } } },
           { "id": "glm-4.6", "description": "Strong general purpose" },
-          { "id": "glm-5", "description": "GLM-5 flagship" },
-          { "id": "glm-5.1", "description": "Latest GLM-5.1" },
-          { "id": "glm-4.5-air", "description": "Balanced air variant" }
+          { "id": "glm-5", "description": "GLM-5 flagship", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "glm-5.1", "description": "Latest GLM-5.1", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "glm-4.5-air", "description": "Balanced air variant", "polishOverrides": { "thinking": { "type": "disabled" } } }
         ]
       }
     },
