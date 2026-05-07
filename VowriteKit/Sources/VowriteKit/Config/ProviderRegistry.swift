@@ -96,4 +96,10 @@ public final class ProviderRegistry: @unchecked Sendable {
     public func sttAdapterID(for providerID: String) -> String {
         provider(for: providerID)?.sttAdapter ?? "openai-compatible"
     }
+
+    /// F-073: Returns the `polishOverrides` declared for a specific model in a
+    /// specific provider, or nil when the model is unlisted or has no overrides.
+    public func polishOverrides(providerID: String, modelID: String) -> [String: JSONValue]? {
+        provider(for: providerID)?.polishOverrides(for: modelID)
+    }
 }

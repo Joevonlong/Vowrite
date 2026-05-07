@@ -86,7 +86,14 @@ public final class AIPolishService {
             KimiCodeOAuthService.applyCodingPlanHeaders(to: &request)
         }
 
-        let payload: [String: Any] = [
+        // F-073: Resolve per-model polish overrides (e.g. disable thinking mode)
+        // from providers.json before building the final payload.
+        let resolvedOverrides = ProviderRegistry.shared.polishOverrides(
+            providerID: provider.providerID,
+            modelID: model
+        )
+
+        var payload: [String: Any] = [
             "model": model,
             "messages": [
                 ["role": "system", "content": systemPrompt],
@@ -95,6 +102,7 @@ public final class AIPolishService {
             "temperature": config.temperature,
             "max_tokens": 4096
         ]
+        applyPolishOverrides(to: &payload, overrides: resolvedOverrides)
 
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
