@@ -125,9 +125,9 @@ public struct Mode: Identifiable, Codable, Equatable {
             polishEnabled: true,
             polishModel: nil,
             systemPrompt: """
-            Optimize for clarity and concision. Lead with the main point.
-            Default to short paragraphs; use bullets when the content has list-like structure.
-            Remove redundancy aggressively; preserve facts exactly.
+            Preserve the speaker's first-person voice and any direct requests they make.
+            When a numbered point contains multiple sub-questions, expand them as nested sub-items (a), (b), (c) — show the structure of the thinking, do not summarize it.
+            Default to short paragraphs; use bullets for list-like content. Remove fillers and redundancy; preserve facts exactly.
             """,
             userPrompt: "",
             temperature: 0.3,
