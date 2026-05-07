@@ -7,6 +7,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Added
+
+- **F-074 Vocabulary CSV import/export**: Personal vocabulary now has Import / Export buttons in the Vocabulary settings page. Export produces a single-column CSV (one word per line, sorted alphabetically, UTF-8 with BOM for Excel compatibility); import accepts the same format and skips blank lines and `#`-prefixed comments. Round-trips through Excel without corruption. Imports dedupe automatically against your existing list and surface a brief `Imported N, skipped M duplicates` status.
+
 ### Changed
 
 - **F-072 Polish output style is more assertive (Typeless-inspired)**: The default polish prompt now treats your dictation as a rough draft to be edited, not a transcript to preserve. Output is more concise and structured — short paragraphs by default, bullets when you enumerate two or more items, the main point surfaced first when you buried it. Language preservation across mixed-language speech (e.g. 中英混合) is unchanged. If you prefer a near-passthrough record of what you said, switch to `Dictation` mode (Cmd+1).
