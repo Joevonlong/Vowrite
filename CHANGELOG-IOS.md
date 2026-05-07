@@ -23,6 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 - **F-072 Polish output style is more assertive (Typeless-inspired)**: The shared polish prompt now treats your dictation as a rough draft. Output is more concise and structured — short paragraphs by default, bullets when you enumerate two or more items, the main point surfaced first when you buried it. Mixed-language preservation (中英混合) is unchanged. If you want a near-passthrough record, the iOS keyboard's Dictation mode disables polish entirely.
 
+### Performance
+
+- **F-073 Polish skips reasoning on thinking-by-default models**: Same shared improvement as macOS — polish requests to reasoning models (DeepSeek V4-pro, Qwen 3.5/3.6, GPT-5.5, Gemini 2.5, Kimi K2.6, Doubao thinking, GLM-5 family, MiniMax M2/M2.5/M2.7, etc.) skip chain-of-thought, typically saving 5–30 seconds per polish on the iOS keyboard.
+
 ### Fixed
 
 ### Removed

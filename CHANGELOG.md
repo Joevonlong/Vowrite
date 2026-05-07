@@ -15,6 +15,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 - **F-072 Polish output style is more assertive (Typeless-inspired)**: The default polish prompt now treats your dictation as a rough draft to be edited, not a transcript to preserve. Output is more concise and structured — short paragraphs by default, bullets when you enumerate two or more items, the main point surfaced first when you buried it. Language preservation across mixed-language speech (e.g. 中英混合) is unchanged. If you prefer a near-passthrough record of what you said, switch to `Dictation` mode (Cmd+1).
 
+### Performance
+
+- **F-073 Polish skips reasoning on thinking-by-default models**: Reasoning models (DeepSeek V4-pro, Qwen 3.5/3.6, GPT-5.5, Gemini 2.5, Kimi K2.6, Doubao thinking, GLM-5/4.7-flash/4.5-air, MiniMax M2/M2.5/M2.7, Together hybrid, SiliconFlow GLM/Qwen3, Groq qwen3-32b, Cerebras GLM, OpenRouter routed) now skip chain-of-thought during polish. Polish is a 200–500 token short task that doesn't benefit from reasoning, so this typically saves 5–30 seconds per polish call with no loss of output quality. The toggle is per-model and lives entirely in `providers.json` — no UI, no settings to fiddle with. Models that can't disable thinking (Kimi `k2-thinking-turbo`, Groq `gpt-oss-*`) now show `(thinking on, slower)` in their picker description so the trade-off is visible when you choose them.
+
 ## [0.2.1.2] — 2026-05-04
 
 ### Added
