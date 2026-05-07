@@ -31,7 +31,7 @@ public struct OutputStyle: Identifiable, Codable, Equatable {
             name: "Bullet List",
             icon: "list.bullet",
             description: "Format output as bullet points.",
-            templatePrompt: "Format the output as a bullet list. Each distinct point or idea should be its own bullet point. Use concise, clear phrasing for each item.",
+            templatePrompt: "Extract distinct points from the speaker's content and present each as its own bullet — one complete idea per bullet, not a one-to-one mapping of sentences. Drop transitional language and conversational scaffolding. Use concise, clear phrasing.",
             isBuiltin: true
         ),
         OutputStyle(
@@ -39,7 +39,7 @@ public struct OutputStyle: Identifiable, Codable, Equatable {
             name: "Numbered List",
             icon: "list.number",
             description: "Format output as numbered steps.",
-            templatePrompt: "Format the output as a numbered list. Each distinct point, step, or idea should be numbered sequentially. Use concise, clear phrasing for each item.",
+            templatePrompt: "Extract sequential or ranked items from the speaker's content and number them. Each numbered item is one complete step or point — not a one-to-one mapping of sentences. Drop transitional language. Use concise, clear phrasing.",
             isBuiltin: true
         ),
         OutputStyle(
@@ -55,7 +55,7 @@ public struct OutputStyle: Identifiable, Codable, Equatable {
             name: "Meeting Notes",
             icon: "person.3",
             description: "Structured meeting notes with key points and action items.",
-            templatePrompt: "Format the output as structured meeting notes. Include sections for key discussion points, decisions made, and action items. Use bullet points within each section. Mark action items clearly.",
+            templatePrompt: "Extract and organize the dictation into three sections: **Discussion** (key points raised), **Decisions** (what was agreed), **Action Items** (what someone will do next — include the owner and any deadline mentioned). Use bullets within each section. Drop side-talk and small-talk. Omit a section entirely if nothing in the dictation belongs to it.",
             isBuiltin: true
         ),
         OutputStyle(
