@@ -124,7 +124,11 @@ public struct Mode: Identifiable, Codable, Equatable {
             language: nil,
             polishEnabled: true,
             polishModel: nil,
-            systemPrompt: "",
+            systemPrompt: """
+            Optimize for clarity and concision. Lead with the main point.
+            Default to short paragraphs; use bullets when the content has list-like structure.
+            Remove redundancy aggressively; preserve facts exactly.
+            """,
             userPrompt: "",
             temperature: 0.3,
             autoPaste: true,
@@ -172,7 +176,11 @@ public struct Mode: Identifiable, Codable, Equatable {
             language: nil,
             polishEnabled: true,
             polishModel: nil,
-            systemPrompt: "Format as clean, organized notes. Use bullet points or numbered lists where appropriate. Keep it concise and well-structured.",
+            systemPrompt: """
+            Extract distinct points from the dictation and present them as bullets.
+            Each bullet is one complete idea. Drop transitional and conversational scaffolding.
+            Group related bullets under a one-line topic header when there are clear sub-themes.
+            """,
             userPrompt: "",
             temperature: 0.3,
             autoPaste: true,
