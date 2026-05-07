@@ -61,6 +61,47 @@ public final class VocabularyManager: ObservableObject {
         VowriteStorage.defaults.set(words, forKey: Self.storageKey)
     }
 
+    // MARK: - CSV Import / Export (F-074)
+
+    /// Represents the result of a CSV import operation.
+    public struct ImportResult: Equatable {
+        public let imported: Int
+        public let duplicates: Int
+    }
+
+    /// Returns a UTF-8 BOM-prefixed CSV string with one word per line, sorted
+    /// alphabetically, plus a comment header line. Suitable for Excel on Windows.
+    public func exportCSV() -> String {
+        let formatter = ISO8601DateFormatter()
+        let header = "# Vowrite vocabulary export — \(formatter.string(from: Date()))\n"
+        let body = words.sorted().joined(separator: "\n")
+        return "\u{FEFF}" + header + body + "\n"
+    }
+
+    /// Imports words from a single-column CSV string.
+    /// - Lines starting with `#` are treated as comments and skipped.
+    /// - Blank lines are skipped.
+    /// - A leading UTF-8 BOM is stripped automatically.
+    /// - Returns a result describing how many words were imported vs. skipped as duplicates.
+    @discardableResult
+    public func importCSV(_ csv: String) -> ImportResult {
+        var imported = 0
+        var duplicates = 0
+        var input = csv
+        if input.hasPrefix("\u{FEFF}") { input.removeFirst() }
+        for raw in input.split(whereSeparator: { $0 == "\n" || $0 == "\r" }) {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            guard !line.isEmpty, !line.hasPrefix("#") else { continue }
+            if words.contains(line) {
+                duplicates += 1
+                continue
+            }
+            add(line)
+            imported += 1
+        }
+        return ImportResult(imported: imported, duplicates: duplicates)
+    }
+
     /// Thread-safe read of all vocabulary words from UserDefaults.
     nonisolated public static var storedWords: [String] {
         VowriteStorage.defaults.stringArray(forKey: storageKey) ?? []
