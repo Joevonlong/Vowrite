@@ -1,9 +1,12 @@
 import Foundation
+import os
 
 /// Singleton registry that loads provider definitions from JSON.
 /// All provider metadata queries go through this registry.
 public final class ProviderRegistry: @unchecked Sendable {
     public static let shared = ProviderRegistry()
+
+    private static let logger = Logger(subsystem: "com.vowrite.kit", category: "provider")
 
     private var _providers: [ProviderDefinition] = []
     private var _index: [String: ProviderDefinition] = [:]
@@ -17,6 +20,7 @@ public final class ProviderRegistry: @unchecked Sendable {
 
     private func loadBuiltIn() {
         guard let url = Bundle.module.url(forResource: "providers", withExtension: "json") else {
+            Self.logger.fault("providers.json not found in VowriteKit bundle — all provider queries will return nil")
             assertionFailure("providers.json not found in VowriteKit bundle")
             return
         }
@@ -28,6 +32,7 @@ public final class ProviderRegistry: @unchecked Sendable {
             _index = Dictionary(uniqueKeysWithValues: file.providers.map { ($0.id, $0) })
             lock.unlock()
         } catch {
+            Self.logger.fault("Failed to decode providers.json: \(error as NSError) — all provider queries will return nil")
             assertionFailure("Failed to decode providers.json: \(error)")
         }
     }
