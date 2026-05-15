@@ -42,6 +42,7 @@ public final class IflytekSTTAdapter: STTAdapter {
         baseURL: String,
         provider: APIProvider
     ) async throws -> String {
+        defer { try? FileManager.default.removeItem(at: audioURL) }
         guard let credentials = parseCredentials(apiKey) else {
             throw IflytekError.invalidCredentials
         }
