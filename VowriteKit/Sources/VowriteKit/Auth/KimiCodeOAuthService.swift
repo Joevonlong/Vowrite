@@ -47,7 +47,7 @@ public enum KimiCodeOAuthService {
     // nonisolated(unsafe) because KimiCodeOAuthService is an enum (no actor isolation).
     // All reads and writes are protected by pollingTaskLock to prevent data races.
     private nonisolated(unsafe) static var pollingTask: Task<OAuthToken, Error>?
-    private nonisolated(unsafe) static let pollingTaskLock = NSLock()
+    private static let pollingTaskLock = NSLock()
 
     public static func cancelSignIn() {
         pollingTaskLock.withLock {
