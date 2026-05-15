@@ -91,9 +91,16 @@ public enum GoogleAuthService {
         PKCEHelper.generateCodeChallenge(from: verifier)
     }
 
+    // MARK: - State Generation (CSRF protection)
+
+    /// Generates a cryptographically random state value for CSRF protection.
+    public static func generateState() -> String {
+        PKCEHelper.generateCodeVerifier()
+    }
+
     // MARK: - Build Authorization URL
 
-    public static func authorizationURL(codeChallenge: String) throws -> URL {
+    public static func authorizationURL(codeChallenge: String, state: String) throws -> URL {
         guard let clientID = clientID, !clientID.isEmpty else {
             throw GoogleAuthError.missingClientID
         }
@@ -108,6 +115,7 @@ public enum GoogleAuthService {
             URLQueryItem(name: "code_challenge_method", value: "S256"),
             URLQueryItem(name: "access_type", value: "offline"),
             URLQueryItem(name: "prompt", value: "consent"),
+            URLQueryItem(name: "state", value: state),
         ]
 
         guard let url = components.url else {
@@ -116,11 +124,16 @@ public enum GoogleAuthService {
         return url
     }
 
-    // MARK: - Extract Authorization Code from Callback URL
+    // MARK: - Extract Authorization Code and State from Callback URL
 
     public static func extractAuthorizationCode(from callbackURL: URL) -> String? {
         let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)
         return components?.queryItems?.first(where: { $0.name == "code" })?.value
+    }
+
+    public static func extractState(from callbackURL: URL) -> String? {
+        let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)
+        return components?.queryItems?.first(where: { $0.name == "state" })?.value
     }
 
     // MARK: - Exchange Code for Tokens
