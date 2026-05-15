@@ -120,12 +120,11 @@ public enum KeychainHelper {
         let migrationKey = "keychain_access_group_migrated"
         guard !VowriteStorage.defaults.bool(forKey: migrationKey) else { return }
 
-        let accounts = [
-            "provider.OpenAI", "provider.Groq", "provider.DeepSeek",
-            "provider.OpenRouter", "provider.Together AI", "provider.Custom",
-            // Google OAuth
-            "access_token", "refresh_token", "id_token"
-        ]
+        // Build provider accounts dynamically from APIProvider.allCases to stay in sync
+        // with any future provider additions and avoid the V-011 omission recurrence.
+        let providerAccounts = APIProvider.allCases.map { "provider.\($0.id)" }
+        let googleOAuthAccounts = ["access_token", "refresh_token", "id_token"]
+        let accounts = providerAccounts + googleOAuthAccounts
 
         let services = [service, googleService]
 
