@@ -24,6 +24,7 @@ public final class SherpaSTTAdapter: STTAdapter {
         baseURL: String,
         provider: APIProvider
     ) async throws -> String {
+        defer { try? FileManager.default.removeItem(at: audioURL) }
         // 1. Ensure model is downloaded
         let modelID = model.isEmpty ? "sensevoice-small" : model
         let modelPath = try await SherpaModelManager.shared.ensureModel(modelID)
