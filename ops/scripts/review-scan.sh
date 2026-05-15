@@ -443,7 +443,7 @@ if should_run "L8"; then
 
     # ── L8.2 App Group UserDefaults plaintext transcript storage ──
     echo "  Checking for App Group UserDefaults storing transcript data..."
-    AG_PATTERN='UserDefaults\(suiteName.*\)\s*\?\??\s*\.set\s*\(.*[Tt]ranscript|set\([^,]*(transcript|rawText|polishedText|finalText)'
+    AG_PATTERN='UserDefaults\(suiteName.*\)\s*\?\??\s*\.set\s*\(.*[Tt]ranscript|set\([^,]*(transcript|rawText|polishedText|finalText)|\.set\([^,]+,\s*forKey:[^)]*([Tt]ranscript|[Rr]esult|rawText)'
     AG_HITS=""
     for dir in "${SOURCES_DIRS[@]}"; do
         if [[ -d "$dir" ]]; then
