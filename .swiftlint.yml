@@ -1,0 +1,100 @@
+included:
+  - VowriteKit/Sources
+  - VowriteMac/Sources
+  - VowriteIOS/Sources
+  - VowriteKeyboard/Sources
+
+excluded:
+  - .build
+  - Vowrite.app
+  - Sparkle
+  - VowriteIOS.xcodeproj
+  - demos
+  - .git
+
+line_length:
+  warning: 140
+  error: 200
+
+function_body_length:
+  warning: 80
+  error: 200
+
+file_length:
+  warning: 500
+  error: 800
+
+type_body_length:
+  warning: 300
+  error: 500
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+nesting:
+  type_level:
+    warning: 3
+    error: 5
+  function_level:
+    warning: 4
+    error: 6
+
+opt_in_rules:
+  - force_unwrapping
+  - empty_count
+  - redundant_nil_coalescing
+  - closure_spacing
+  - first_where
+  - contains_over_first_not_nil
+  - sorted_first_last
+  - array_init
+  - closure_end_indentation
+  - collection_alignment
+  - colon
+  - comma
+  - discouraged_object_literal
+  - empty_string
+  - explicit_init
+  - fallthrough
+  - last_where
+  - literal_expression_end_indentation
+  - multiline_arguments
+  - multiline_parameters
+  - operator_usage_whitespace
+  - overridden_super_call
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - redundant_type_annotation
+  - toggle_bool
+  - trailing_closure
+  - unavailable_function
+  - unneeded_parentheses_in_closure_argument
+
+analyzer_rules:
+  - unused_import
+
+disabled_rules:
+  - todo
+  - identifier_name
+
+custom_rules:
+  no_raw_print:
+    regex: '^\s*print\('
+    message: "Use Logger instead of print()"
+    severity: warning
+
+  todo_with_id:
+    regex: '// ?TODO(?!\(F-\d+\)|\([a-z0-9-]+\))'
+    message: "TODO must reference F-XXX or issue id, e.g. TODO(F-042) or TODO(fix-audio)"
+    severity: warning
+
+  no_force_in_sources:
+    regex: '(try!|as!) '
+    message: "No force try/cast in Sources — use try? or guard let with proper error handling"
+    severity: warning
+
+  transcript_log_guard:
+    regex: '(print|NSLog|os_log|Logger[^\n]*)\([^)]*(transcript|polished|rawText|finalText|rawTranscript)'
+    message: "Possible user-content leak in logging — redact or omit transcript data from logs"
+    severity: error
