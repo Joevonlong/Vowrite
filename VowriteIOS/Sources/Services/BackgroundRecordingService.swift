@@ -649,6 +649,7 @@ final class BackgroundRecordingService: ObservableObject {
 
     private func processAudio(url: URL, duration: TimeInterval) {
         Task {
+            defer { try? FileManager.default.removeItem(at: url) }
             do {
                 // Read keyboard's requested config
                 let aiEnabled = ipc.requestedAIEnabled
@@ -762,7 +763,6 @@ final class BackgroundRecordingService: ObservableObject {
                 speculativePolish.reset()
                 promptContext = nil
                 clearSessionMode()
-                try? FileManager.default.removeItem(at: url)
 
                 #if DEBUG
                 print("[Vowrite BG] Processing complete")
