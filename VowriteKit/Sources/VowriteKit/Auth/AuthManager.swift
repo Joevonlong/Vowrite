@@ -22,6 +22,7 @@ public final class AuthManager: NSObject, ObservableObject {
     @Published public var isAuthenticating: Bool = false
 
     private var codeVerifier: String?
+    private var pendingState: String?
     private var authSession: ASWebAuthenticationSession?
 
     private static let authModeKey = "authMode"
@@ -54,10 +55,12 @@ public final class AuthManager: NSObject, ObservableObject {
         let verifier = GoogleAuthService.generateCodeVerifier()
         self.codeVerifier = verifier
         let challenge = GoogleAuthService.generateCodeChallenge(from: verifier)
+        let state = GoogleAuthService.generateState()
+        self.pendingState = state
 
         let authURL: URL
         do {
-            authURL = try GoogleAuthService.authorizationURL(codeChallenge: challenge)
+            authURL = try GoogleAuthService.authorizationURL(codeChallenge: challenge, state: state)
         } catch {
             authError = error.localizedDescription
             isAuthenticating = false
@@ -90,8 +93,24 @@ public final class AuthManager: NSObject, ObservableObject {
                     return
                 }
 
-                guard let callbackURL = callbackURL,
-                      let code = GoogleAuthService.extractAuthorizationCode(from: callbackURL) else {
+                guard let callbackURL = callbackURL else {
+                    self.authError = GoogleAuthError.noAuthorizationCode.localizedDescription
+                    self.isAuthenticating = false
+                    return
+                }
+
+                // CSRF protection: validate state parameter matches the one we sent
+                let returnedState = GoogleAuthService.extractState(from: callbackURL)
+                guard returnedState != nil, returnedState == self.pendingState else {
+                    self.pendingState = nil
+                    self.codeVerifier = nil
+                    self.authError = "Authentication failed: invalid state parameter (CSRF check failed)."
+                    self.isAuthenticating = false
+                    return
+                }
+                self.pendingState = nil
+
+                guard let code = GoogleAuthService.extractAuthorizationCode(from: callbackURL) else {
                     self.authError = GoogleAuthError.noAuthorizationCode.localizedDescription
                     self.isAuthenticating = false
                     return

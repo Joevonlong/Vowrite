@@ -8,12 +8,14 @@ public enum OpenAICodexOAuthError: LocalizedError {
     case authSessionFailed(String)
     case noAuthorizationCode
     case tokenExchangeFailed(String)
+    case invalidState
 
     public var errorDescription: String? {
         switch self {
         case .authSessionFailed(let msg):   return "OpenAI authentication failed: \(msg)"
         case .noAuthorizationCode:          return "No authorization code received from OpenAI."
         case .tokenExchangeFailed(let msg): return "OpenAI token exchange failed: \(msg)"
+        case .invalidState:                 return "Authentication failed: invalid state parameter (CSRF check failed)."
         }
     }
 }
@@ -34,6 +36,8 @@ public enum OpenAICodexOAuthService {
     public static func signIn(presentationAnchor: ASPresentationAnchor) async throws -> OAuthToken {
         let verifier  = PKCEHelper.generateCodeVerifier()
         let challenge = PKCEHelper.generateCodeChallenge(from: verifier)
+        // Generate a unique, unguessable state value for CSRF protection
+        let state = PKCEHelper.generateCodeVerifier()
 
         var components = URLComponents(string: authEndpoint)!
         components.queryItems = [
@@ -43,6 +47,7 @@ public enum OpenAICodexOAuthService {
             URLQueryItem(name: "scope",                 value: scopes),
             URLQueryItem(name: "code_challenge",        value: challenge),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
+            URLQueryItem(name: "state",                 value: state),
         ]
         guard let authURL = components.url else {
             throw OpenAICodexOAuthError.authSessionFailed("Could not build authorization URL")
@@ -70,9 +75,18 @@ public enum OpenAICodexOAuthService {
                     continuation.resume(throwing: OpenAICodexOAuthError.authSessionFailed(error.localizedDescription))
                     return
                 }
-                guard let callbackURL,
-                      let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
-                        .queryItems?.first(where: { $0.name == "code" })?.value else {
+                guard let callbackURL else {
+                    continuation.resume(throwing: OpenAICodexOAuthError.noAuthorizationCode)
+                    return
+                }
+                let callbackComponents = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)
+                // CSRF protection: validate returned state matches what we sent
+                let returnedState = callbackComponents?.queryItems?.first(where: { $0.name == "state" })?.value
+                guard returnedState != nil, returnedState == state else {
+                    continuation.resume(throwing: OpenAICodexOAuthError.invalidState)
+                    return
+                }
+                guard let code = callbackComponents?.queryItems?.first(where: { $0.name == "code" })?.value else {
                     continuation.resume(throwing: OpenAICodexOAuthError.noAuthorizationCode)
                     return
                 }
