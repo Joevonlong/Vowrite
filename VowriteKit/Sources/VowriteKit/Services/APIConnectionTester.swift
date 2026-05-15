@@ -46,7 +46,7 @@ public enum APIConnectionTester {
         guard httpResponse.statusCode == 200 else {
             let body = String(data: data, encoding: .utf8) ?? "Unknown error"
             if httpResponse.statusCode == 401 {
-                let keyStatus = apiKey != nil ? "key present (\(apiKey!.prefix(4))...)" : "NO KEY FOUND"
+                let keyStatus = apiKey != nil ? "key present" : "NO KEY FOUND"
                 throw VowriteError.apiError("\(configuration.provider.rawValue): 401 Unauthorized [\(keyStatus)]")
             }
             throw VowriteError.apiError("Error \(httpResponse.statusCode): \(body)")
@@ -90,7 +90,7 @@ public enum APIConnectionTester {
         guard httpResponse.statusCode == 200 else {
             let body = String(data: data, encoding: .utf8) ?? "Unknown error"
             if httpResponse.statusCode == 401 {
-                let keyStatus = apiKey != nil ? "key present (\(apiKey!.prefix(4))...)" : "NO KEY FOUND"
+                let keyStatus = apiKey != nil ? "key present" : "NO KEY FOUND"
                 throw VowriteError.apiError("Claude (Anthropic): 401 Unauthorized [\(keyStatus)]")
             }
             throw VowriteError.apiError("Error \(httpResponse.statusCode): \(body)")
