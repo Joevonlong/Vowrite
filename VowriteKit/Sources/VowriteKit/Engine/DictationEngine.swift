@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import os
 
 public enum VowriteState: Equatable {
     case idle
@@ -15,6 +16,8 @@ public final class DictationEngine: ObservableObject {
     @Published public var recordingDuration: TimeInterval = 0
     @Published public var lastResult: String?
     @Published public var lastRawTranscript: String?
+
+    private let logger = Logger(subsystem: "com.vowrite.kit", category: "dictation")
 
     public let audioEngine = AudioEngine()
     public let whisperService = WhisperService()
@@ -182,9 +185,7 @@ public final class DictationEngine: ObservableObject {
                 }
             }
         } catch {
-            #if DEBUG
-            print("[Vowrite] startRecording failed: \(error)")
-            #endif
+            logger.error("startRecording failed: \(error.localizedDescription, privacy: .public)")
             let desc = error.localizedDescription
             let truncated = desc.count > 80 ? String(desc.prefix(80)) + "..." : desc
             state = .error("录音失败: \(truncated)")
@@ -259,6 +260,7 @@ public final class DictationEngine: ObservableObject {
 
     private func processAudio(url: URL) {
         Task {
+            defer { try? FileManager.default.removeItem(at: url) }
             do {
                 // Refresh OAuth tokens before API calls (3s timeout, silent on failure)
                 await CredentialManager.prepareCredentials(for: APIConfig.current)
@@ -276,9 +278,7 @@ public final class DictationEngine: ObservableObject {
                 }
 
                 // Step 1: Whisper STT
-                #if DEBUG
-                print("[Vowrite] Starting STT transcription (mode: \(modeConfig.modeName))...")
-                #endif
+                logger.debug("Starting STT transcription (mode: \(modeConfig.modeName, privacy: .public))...")
                 // Mode language override > global language setting
                 let whisperLanguage: String?
                 if let modeLang = modeConfig.language,
@@ -290,9 +290,7 @@ public final class DictationEngine: ObservableObject {
                 let vocabPrompt = VocabularyManager.whisperPrompt
                 let rawTranscript = try await whisperService.transcribe(audioURL: url, language: whisperLanguage, prompt: vocabPrompt)
                 lastRawTranscript = rawTranscript
-                #if DEBUG
-                print("[Vowrite] STT result: '\(rawTranscript)'")
-                #endif
+                logger.debug("STT result: '\(rawTranscript, privacy: .private)'")
 
                 guard !rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     sessionModeOverride = nil   // F-063
@@ -303,9 +301,7 @@ public final class DictationEngine: ObservableObject {
 
                 // Layer 3: Post-transcription hallucination filter
                 guard !HallucinationFilter.isHallucination(rawTranscript) else {
-                    #if DEBUG
-                    print("[Vowrite] Hallucination filtered: '\(rawTranscript)'")
-                    #endif
+                    logger.debug("Hallucination filtered: '\(rawTranscript, privacy: .private)'")
                     sessionModeOverride = nil   // F-063
                     state = .error("未检测到语音，请重试")
                     overlay.hide()
@@ -314,11 +310,9 @@ public final class DictationEngine: ObservableObject {
 
                 // Step 1.5: F-051 — Apply text replacement rules after STT
                 let correctedTranscript = ReplacementManager.apply(to: rawTranscript)
-                #if DEBUG
                 if correctedTranscript != rawTranscript {
-                    print("[Vowrite] Replacement applied: '\(rawTranscript)' → '\(correctedTranscript)'")
+                    logger.debug("Replacement applied: '\(rawTranscript, privacy: .private)' → '\(correctedTranscript, privacy: .private)'")
                 }
-                #endif
 
                 // Step 2: AI Polish (skip if mode has polishEnabled=false)
                 // F-033: Uses speculative pre-built request for near-instant LLM fire
@@ -327,9 +321,7 @@ public final class DictationEngine: ObservableObject {
                 let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
                 if effectivePolishEnabled {
                     do {
-                        #if DEBUG
-                        print("[Vowrite] Starting AI polish (speculative)...")
-                        #endif
+                        logger.debug("Starting AI polish (speculative)...")
                         let polished = try await speculativePolish.execute(
                             transcript: correctedTranscript,
                             modeConfig: modeConfig,
@@ -342,16 +334,12 @@ public final class DictationEngine: ObservableObject {
                         )
                         // F-051: Apply replacement rules again after LLM (catches re-introduced errors)
                         finalText = ReplacementManager.apply(to: polished)
-                        #if DEBUG
-                        print("[Vowrite] Polish result: '\(polished)'")
+                        logger.debug("Polish result: '\(polished, privacy: .private)'")
                         if finalText != polished {
-                            print("[Vowrite] Post-polish replacement: '\(polished)' → '\(finalText)'")
+                            logger.debug("Post-polish replacement: '\(polished, privacy: .private)' → '\(finalText, privacy: .private)'")
                         }
-                        #endif
                     } catch {
-                        #if DEBUG
-                        print("[Vowrite] Polish failed (using corrected transcript): \(error)")
-                        #endif
+                        logger.debug("Polish failed (using corrected transcript): \(error.localizedDescription, privacy: .public)")
                         // F-063: For translation mode, falling back to the raw
                         // transcript means the user gets the source language back
                         // instead of the expected translation — surface this
@@ -362,9 +350,7 @@ public final class DictationEngine: ObservableObject {
                         }
                     }
                 } else {
-                    #if DEBUG
-                    print("[Vowrite] Polish skipped (Dictation mode)")
-                    #endif
+                    logger.debug("Polish skipped (Dictation mode)")
                 }
                 lastResult = finalText
 
@@ -397,9 +383,7 @@ public final class DictationEngine: ObservableObject {
             } catch {
                 let message: String
                 let desc = error.localizedDescription
-                #if DEBUG
-                print("[Vowrite] Error: \(desc)")
-                #endif
+                logger.error("processAudio error: \(desc, privacy: .public)")
                 if desc.contains("insufficient_quota") {
                     message = "API 额度不足，请充值"
                 } else if desc.contains("invalid_api_key") || desc.contains("Incorrect API key") || desc.contains("401") {
