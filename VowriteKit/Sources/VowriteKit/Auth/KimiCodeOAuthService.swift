@@ -44,11 +44,16 @@ public enum KimiCodeOAuthService {
     private static let grantType           = "urn:ietf:params:oauth:grant-type:device_code"
     static let kimiCodeBaseURL             = "https://api.kimi.com/coding/v1"
 
-    private static var pollingTask: Task<OAuthToken, Error>?
+    // nonisolated(unsafe) because KimiCodeOAuthService is an enum (no actor isolation).
+    // All reads and writes are protected by pollingTaskLock to prevent data races.
+    private nonisolated(unsafe) static var pollingTask: Task<OAuthToken, Error>?
+    private nonisolated(unsafe) static let pollingTaskLock = NSLock()
 
     public static func cancelSignIn() {
-        pollingTask?.cancel()
-        pollingTask = nil
+        pollingTaskLock.withLock {
+            pollingTask?.cancel()
+            pollingTask = nil
+        }
     }
 
     public static func signIn(onDeviceCode: @escaping (String, String) -> Void) async throws -> OAuthToken {
@@ -60,9 +65,9 @@ public enum KimiCodeOAuthService {
                                    interval: deviceResponse.interval,
                                    expiresIn: deviceResponse.expires_in)
         }
-        pollingTask = task
+        pollingTaskLock.withLock { pollingTask = task }
         let token = try await task.value
-        pollingTask = nil
+        pollingTaskLock.withLock { pollingTask = nil }
         return token
     }
 

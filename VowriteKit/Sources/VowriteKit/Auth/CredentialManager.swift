@@ -22,7 +22,7 @@ public enum CredentialManager {
     private static func refreshWithTimeout(providerID: String) async {
         try? await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
-                await OAuthRefreshManager.refreshIfNeeded(for: providerID)
+                await OAuthRefreshManager.shared.refreshIfNeeded(for: providerID)
             }
             group.addTask {
                 try await Task.sleep(nanoseconds: 3_000_000_000)
