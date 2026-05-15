@@ -22,7 +22,6 @@ public final class BackgroundRecordingIPC {
     private enum Key {
         static let state = "bg_recording_state"
         static let result = "bg_recording_result"
-        static let rawTranscript = "bg_recording_raw_transcript"
         static let errorMessage = "bg_recording_error"
         static let audioLevel = "bg_audio_level"
         static let recordingDuration = "bg_recording_duration"
@@ -126,11 +125,6 @@ public final class BackgroundRecordingIPC {
         }
     }
 
-    public var rawTranscript: String? {
-        get { defaults.string(forKey: Key.rawTranscript) }
-        set { defaults.set(newValue, forKey: Key.rawTranscript) }
-    }
-
     public var errorMessage: String? {
         get { defaults.string(forKey: Key.errorMessage) }
         set { defaults.set(newValue, forKey: Key.errorMessage) }
@@ -219,7 +213,6 @@ public final class BackgroundRecordingIPC {
 
     public func clearResult() {
         result = nil
-        rawTranscript = nil
         errorMessage = nil
         state = .idle
     }

@@ -702,7 +702,7 @@ final class BackgroundRecordingService: ObservableObject {
                 // Layer 3: Post-transcription hallucination filter
                 guard !HallucinationFilter.isHallucination(rawTranscript) else {
                     #if DEBUG
-                    print("[Vowrite BG] Hallucination filtered: '\(rawTranscript)'")
+                    print("[Vowrite BG] Hallucination filtered: <redacted>")
                     #endif
                     // Hallucination = noise/silence misinterpreted by STT.
                     // Silent reset, same UX as raw silence.
@@ -710,8 +710,6 @@ final class BackgroundRecordingService: ObservableObject {
                     clearSessionMode()
                     return
                 }
-
-                ipc.rawTranscript = rawTranscript
 
                 // Step 1.5: F-051 — Apply text replacement rules after STT
                 let correctedTranscript = ReplacementManager.apply(to: rawTranscript)
@@ -767,7 +765,7 @@ final class BackgroundRecordingService: ObservableObject {
                 try? FileManager.default.removeItem(at: url)
 
                 #if DEBUG
-                print("[Vowrite BG] Processing complete: '\(finalText)'")
+                print("[Vowrite BG] Processing complete")
                 #endif
 
             } catch {
