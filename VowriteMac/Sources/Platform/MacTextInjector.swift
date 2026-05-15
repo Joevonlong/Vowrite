@@ -1,6 +1,9 @@
 import AppKit
 import Carbon.HIToolbox
+import os.log
 import VowriteKit
+
+private let injectorLog = OSLog(subsystem: "com.vowrite.app", category: "TextInjector")
 
 /// Text injection using the same proven approach as Maccy (12k+ stars).
 /// Strategy: clipboard + Cmd+V via cgSessionEventTap with combinedSessionState.
@@ -26,8 +29,13 @@ final class MacTextInjector: TextOutputProvider {
         NSLog("[TextInjector] Injecting %d chars, AXTrusted=%d",
               text.count, AXIsProcessTrusted() ? 1 : 0)
 
-        // Step 1: Activate the previous app
-        activatePreviousApp()
+        // Step 1: Activate the previous app — abort if activation fails (V-014 guard)
+        guard activatePreviousApp() else {
+            os_log(.error, log: injectorLog,
+                   "V-014: target app activation failed — aborting Cmd+V injection to avoid wrong-app paste")
+            NSLog("[TextInjector] ERROR: activation failed, injection aborted (clipboard untouched)")
+            return
+        }
 
         // Step 2: Wait for focus to settle
         try? await Task.sleep(for: .milliseconds(300))
@@ -46,17 +54,43 @@ final class MacTextInjector: TextOutputProvider {
 
     // MARK: - App Activation
 
-    private func activatePreviousApp() {
+    /// Attempts to activate the previously recorded app.
+    /// Returns `true` only when the target process is confirmed reachable:
+    ///   • NSRunningApplication.activate() succeeds (primary path), OR
+    ///   • AppleScript activate executes without error (fallback).
+    /// Returns `false` if both paths fail — caller MUST NOT inject in this case.
+    @discardableResult
+    private func activatePreviousApp() -> Bool {
+        // Primary: direct NSRunningApplication activation
         if let app = previousApp, !app.isTerminated {
-            app.activate()
-            NSLog("[TextInjector] Activated %@", app.localizedName ?? "?")
+            if app.activate() {
+                NSLog("[TextInjector] Activated %@ (NSRunningApplication)", app.localizedName ?? "?")
+                return true
+            }
+            os_log(.error, log: injectorLog,
+                   "V-014: NSRunningApplication.activate() returned false for %{public}@",
+                   app.localizedName ?? "?")
         }
-        // Backup: AppleScript activation
+
+        // Fallback: AppleScript activation with explicit error-checking
         if let bundleID = previousBundleID {
             let script = NSAppleScript(source: "tell application id \"\(bundleID)\" to activate")
             var error: NSDictionary?
             script?.executeAndReturnError(&error)
+            if let error {
+                os_log(.error, log: injectorLog,
+                       "V-014: AppleScript activation failed for %{public}@: %{public}@",
+                       bundleID, error.description)
+                return false
+            }
+            NSLog("[TextInjector] Activated %@ (AppleScript fallback)", bundleID)
+            return true
         }
+
+        // No target app was recorded
+        os_log(.error, log: injectorLog,
+               "V-014: no target app recorded — injection aborted")
+        return false
     }
 
     // MARK: - Clipboard + Cmd+V (Maccy-proven approach)
