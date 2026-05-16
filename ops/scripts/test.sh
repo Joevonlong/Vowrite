@@ -141,13 +141,6 @@ else
     fail "F-076 regressed: PrimaryLanguage='$LANG_VAL' IsASCIICapable='$ASCII_VAL' (must be mul/true) — re-exposes the system dictation mic"
 fi
 
-KB_VIEW="$PROJECT_ROOT/VowriteKeyboard/Sources/KeyboardView.swift"
-if grep -q 'static let background = Color.clear' "$KB_VIEW"; then
-    fail "F-076 regressed: KeyboardTheme.background reverted to Color.clear — system dictation mic re-exposed via transparent backdrop"
-else
-    pass "F-076 opaque backdrop intact (KeyboardTheme.background is not Color.clear)"
-fi
-
 # --- File Structure ---
 echo ""
 echo "▶ File Structure — VowriteKit"
