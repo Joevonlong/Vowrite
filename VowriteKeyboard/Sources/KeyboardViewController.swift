@@ -1,11 +1,9 @@
 import UIKit
 import SwiftUI
-import Combine
 import VowriteKit
 
 class KeyboardViewController: UIInputViewController {
     private var keyboardState: KeyboardState!
-    private var heightCancellable: AnyCancellable?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,38 +48,13 @@ class KeyboardViewController: UIInputViewController {
 
     private var heightConstraint: NSLayoutConstraint?
 
-    /// Base keyboard height in points. The actual constraint constant is
-    /// `baseKeyboardHeight + keyboardState.extraTopHeight` so the keyboard
-    /// can grow during the F-067 bulk-delete popup gesture.
-    private let baseKeyboardHeight: CGFloat = 280
-
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // Set explicit height to claim the full keyboard area
         if heightConstraint == nil {
-            let constraint = view.heightAnchor.constraint(equalToConstant: baseKeyboardHeight)
+            let constraint = view.heightAnchor.constraint(equalToConstant: 280)
             constraint.priority = .defaultHigh
             constraint.isActive = true
             heightConstraint = constraint
-        }
-        // F-067: Observe popup-driven extra top height and grow the keyboard
-        // so the bulk-delete popup can render in the new top space without
-        // being clipped by the system keyboard window.
-        if heightCancellable == nil {
-            heightCancellable = keyboardState.$extraTopHeight
-                .receive(on: DispatchQueue.main)
-                .sink { [weak self] extra in
-                    guard let self = self,
-                          let constraint = self.heightConstraint else { return }
-                    constraint.constant = self.baseKeyboardHeight + extra
-                    UIView.animate(
-                        withDuration: 0.22,
-                        delay: 0,
-                        options: [.curveEaseOut, .beginFromCurrentState]
-                    ) {
-                        self.view.superview?.layoutIfNeeded()
-                    }
-                }
         }
     }
 

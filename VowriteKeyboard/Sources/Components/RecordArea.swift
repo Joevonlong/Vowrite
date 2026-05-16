@@ -113,11 +113,6 @@ struct RecordArea: View {
                 micPillLabel
             }
             .opacity(0.6)
-            Button {
-                state.insertReturn()
-            } label: {
-                returnPillLabel
-            }
         }
     }
 
@@ -167,18 +162,6 @@ struct RecordArea: View {
                 .contentShape(Capsule())
                 .gesture(modeSelectionGesture(in: size))
 
-                if !state.isModeSelectionExpanded {
-                    Button {
-                        state.insertReturn()
-                    } label: {
-                        returnPillLabel
-                    }
-                    .position(
-                        x: size.width / 2,
-                        y: micCenterY(in: size) + 30 + 16 + KeyboardTheme.returnPillHeight / 2
-                    )
-                    .transition(.opacity)
-                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .coordinateSpace(name: modeSelectionCoordSpace)
@@ -284,16 +267,6 @@ struct RecordArea: View {
                     .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(.black)
             }
-    }
-
-    private var returnPillLabel: some View {
-        Text("换行")
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundStyle(KeyboardTheme.subtitleColor)
-            .frame(width: KeyboardTheme.returnPillWidth,
-                   height: KeyboardTheme.returnPillHeight)
-            .background(KeyboardTheme.buttonFill, in: Capsule())
     }
 
     // MARK: - F-070 Chip + Gesture
@@ -447,8 +420,8 @@ struct RecordArea: View {
     /// Translation layout — banner top, circle center (smaller so banner
     /// and hint stay clear of the glow ring), hint bottom. Each band lives
     /// in its own VStack inside the ZStack so the layout is robust to
-    /// keyboard height changes (`extraTopHeight`, drag offset, etc.) and
-    /// the three elements never share a vertical band.
+    /// keyboard height changes (drag offset, etc.) and the three elements
+    /// never share a vertical band.
     private var translateRecordingLayout: some View {
         ZStack {
             // 1) Banner pinned to top. `.allowsHitTesting(false)` keeps
