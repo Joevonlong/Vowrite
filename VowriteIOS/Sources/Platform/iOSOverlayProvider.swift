@@ -2,6 +2,7 @@ import VowriteKit
 
 /// On iOS the overlay is handled by SwiftUI views directly (RecordingView),
 /// so this provider is a no-op stub. The UI reacts to DictationEngine.state changes.
+// swiftlint:disable:next type_name
 final class iOSOverlayProvider: OverlayProvider {
     func showRecording() {}
     func showProcessing() {}

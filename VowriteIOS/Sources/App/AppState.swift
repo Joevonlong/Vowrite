@@ -48,7 +48,11 @@ final class AppState: ObservableObject {
             // also be unavailable until the underlying issue (App Group entitlement, disk
             // corruption, schema mismatch) is resolved.
             let inMemory = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-            modelContainer = try! ModelContainer(for: schema, configurations: [inMemory])
+            do {
+                modelContainer = try ModelContainer(for: schema, configurations: [inMemory])
+            } catch {
+                fatalError("In-memory model container failed to initialize: \(error)")
+            }
             historyUnavailable = true
         }
 

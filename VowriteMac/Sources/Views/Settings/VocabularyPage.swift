@@ -150,7 +150,10 @@ struct VocabularyPageView: View {
             do {
                 let raw = try String(contentsOf: url, encoding: .utf8)
                 let importResult = vocabManager.importCSV(raw)
-                showImportStatus("Imported \(importResult.imported) word\(importResult.imported == 1 ? "" : "s"), skipped \(importResult.duplicates) duplicate\(importResult.duplicates == 1 ? "" : "s")")
+                let wordCount = importResult.imported
+                let dupCount = importResult.duplicates
+                let msg = "Imported \(wordCount) word\(wordCount == 1 ? "" : "s"), skipped \(dupCount) duplicate\(dupCount == 1 ? "" : "s")"
+                showImportStatus(msg)
             } catch {
                 importError = "Could not read file: \(error.localizedDescription)"
                 showImportError = true
