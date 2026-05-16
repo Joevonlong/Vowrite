@@ -5,13 +5,12 @@ struct VoiceBottomRow: View {
     @ObservedObject var state: KeyboardState
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             Button { state.insertReturn() } label: {
                 Text("换行")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(KeyboardTheme.titleColor)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
+                    .frame(width: 150, height: 48)
                     .background(
                         Capsule()
                             .fill(KeyboardTheme.keyFill)
@@ -19,9 +18,9 @@ struct VoiceBottomRow: View {
                     )
             }
             DeleteButton(state: state)
-                .frame(width: 60, height: 48)
+                .frame(width: 56, height: 48)
         }
-        .padding(.horizontal, 22)
+        .frame(maxWidth: .infinity)
         .frame(height: 56)
     }
 }
