@@ -1,6 +1,7 @@
 import UIKit
 import VowriteKit
 
+// swiftlint:disable:next type_name
 final class iOSFeedback: FeedbackProvider {
     func playStartSound() {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()

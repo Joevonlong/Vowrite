@@ -28,10 +28,11 @@ final class CorrectionMonitor {
             return nil
         }
         // CFGetTypeID guard: AX may return a non-AXUIElement on some hosts
-        // (Electron/Catalyst/web views). Force-cast would trap; bail instead.
+        // (Electron/Catalyst/web views). The typeID check above ensures safety for CF cast.
         guard CFGetTypeID(focusedRef) == AXUIElementGetTypeID() else {
             return nil
         }
+        // swiftlint:disable:next force_cast
         return (focusedRef as! AXUIElement)
     }
 

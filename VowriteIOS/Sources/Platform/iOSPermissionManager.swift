@@ -1,6 +1,7 @@
 import AVFoundation
 import VowriteKit
 
+// swiftlint:disable:next type_name
 final class iOSPermissionManager: PermissionProvider {
     func hasMicrophoneAccess() -> Bool {
         AVAudioApplication.shared.recordPermission == .granted

@@ -309,6 +309,7 @@ struct ModeEditorSheet: View {
 
 // MARK: - Icon Picker (iOS)
 
+// swiftlint:disable:next type_name
 private struct iOSIconPickerView: View {
     @Binding var selected: String
     @Environment(\.dismiss) private var dismiss

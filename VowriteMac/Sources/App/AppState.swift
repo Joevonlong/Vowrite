@@ -42,7 +42,11 @@ final class AppState: ObservableObject {
         } else {
             // Fallback to in-memory store so the app still boots; HistoryView shows a banner.
             let inMemory = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-            modelContainer = try! ModelContainer(for: schema, configurations: [inMemory])
+            do {
+                modelContainer = try ModelContainer(for: schema, configurations: [inMemory])
+            } catch {
+                fatalError("In-memory model container failed to initialize: \(error)")
+            }
             historyUnavailable = true
         }
 

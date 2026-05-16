@@ -45,6 +45,7 @@ enum BGServiceDuration: Int, CaseIterable, Identifiable {
 /// - https://github.com/Picovoice/ios-voice-processor
 /// - https://developer.apple.com/videos/play/wwdc2019/510/
 @MainActor
+// swiftlint:disable:next type_body_length
 final class BackgroundRecordingService: ObservableObject {
     @Published var isActive = false
     @Published var isRecording = false

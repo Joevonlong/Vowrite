@@ -21,7 +21,7 @@ public final class BackgroundRecordingIPC {
     // Keys for App Group UserDefaults
     private enum Key {
         static let state = "bg_recording_state"
-        static let result = "bg_recording_result"
+        static let ipcPayload = "bg_ipc_payload"
         static let errorMessage = "bg_recording_error"
         static let audioLevel = "bg_audio_level"
         static let recordingDuration = "bg_recording_duration"
@@ -117,10 +117,10 @@ public final class BackgroundRecordingIPC {
     public var result: String? {
         get {
             defaults.synchronize()
-            return defaults.string(forKey: Key.result)
+            return defaults.string(forKey: Key.ipcPayload)
         }
         set {
-            defaults.set(newValue, forKey: Key.result)
+            defaults.set(newValue, forKey: Key.ipcPayload)
             defaults.synchronize()
         }
     }
