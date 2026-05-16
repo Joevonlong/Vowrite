@@ -37,6 +37,8 @@
 		A1B0020A /* BottomBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020A /* BottomBar.swift */; };
 		A1B0020B /* ModePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020B /* ModePopover.swift */; };
 		A1B0020D /* StatusBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020D /* StatusBanner.swift */; };
+		A1B00211 /* VoiceBottomRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00211 /* VoiceBottomRow.swift */; };
+		A1B00212 /* KeyboardInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00212 /* KeyboardInputView.swift */; };
 		A1B0020E /* MemoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F0020E /* MemoryMonitor.swift */; };
 		A1B0020F /* VowriteKit in Frameworks */ = {isa = PBXBuildFile; productRef = A1D00002 /* VowriteKit */; };
 		A1B00301 /* BackgroundRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F00301 /* BackgroundRecordingService.swift */; };
@@ -97,6 +99,8 @@
 		A1F0020A /* BottomBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomBar.swift; sourceTree = "<group>"; };
 		A1F0020B /* ModePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModePopover.swift; sourceTree = "<group>"; };
 		A1F0020D /* StatusBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBanner.swift; sourceTree = "<group>"; };
+		A1F00211 /* VoiceBottomRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceBottomRow.swift; sourceTree = "<group>"; };
+		A1F00212 /* KeyboardInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardInputView.swift; sourceTree = "<group>"; };
 		A1F0020E /* MemoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMonitor.swift; sourceTree = "<group>"; };
 		A1F0020F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../VowriteKeyboard/Info.plist; sourceTree = "<group>"; };
 		A1F00210 /* VowriteKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = VowriteKeyboard.entitlements; path = ../VowriteKeyboard/Entitlements/VowriteKeyboard.entitlements; sourceTree = "<group>"; };
@@ -252,6 +256,8 @@
 				A1F0020A /* BottomBar.swift */,
 				A1F0020B /* ModePopover.swift */,
 				A1F0020D /* StatusBanner.swift */,
+				A1F00211 /* VoiceBottomRow.swift */,
+				A1F00212 /* KeyboardInputView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -398,6 +404,8 @@
 				A1B0020A /* BottomBar.swift in Sources */,
 				A1B0020B /* ModePopover.swift in Sources */,
 				A1B0020D /* StatusBanner.swift in Sources */,
+				A1B00211 /* VoiceBottomRow.swift in Sources */,
+				A1B00212 /* KeyboardInputView.swift in Sources */,
 				A1B0020E /* MemoryMonitor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
