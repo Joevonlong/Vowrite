@@ -198,7 +198,7 @@ struct ModelsPageView: View {
     private func saveConfiguration() {
         let presetID = APIPresetStore.matchingPreset(for: workingConfig)?.id
         APIConfig.apply(workingConfig, presetID: presetID)
-        AuthManager.shared.setAuthMode(.apiKey)
+        Task { @MainActor in AuthManager.shared.setAuthMode(.apiKey) }
         configSaved = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { configSaved = false }
     }
