@@ -9,7 +9,6 @@ final class KeyboardState: ObservableObject {
     @Published var viewState: ViewState = .idle
     @Published var audioLevel: Float = 0
     @Published var recordingDuration: TimeInterval = 0
-    @Published var showGlobe: Bool = true
     /// True when background service is not active and user needs to activate it.
     /// The orb is still shown but with a different label ("点击激活").
     @Published var needsActivation: Bool = false

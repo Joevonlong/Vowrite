@@ -81,8 +81,15 @@ struct KeyboardView: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .center)))
             }
 
-            // Globe key — voice mode only; keyboard mode integrates globe in its bottom row
-            if state.showGlobe && state.inputMode == .voice {
+            // F-076: ALWAYS render our own globe (voice mode; keyboard mode
+            // renders it inline in KeyboardInputView). Its GlobeKeyButton wires
+            // handleInputModeList(from:with:) for .allTouchEvents, which tells
+            // iOS this extension owns input-mode switching — so iOS hides its
+            // OWN bottom globe+dictation strip (the system mic). Do NOT gate
+            // this on needsInputModeSwitchKey/showGlobe: when that is false the
+            // wiring disappears and the system re-draws its dock with the mic
+            // (the two-tone strip regression). Proven mechanism from 5beffbe.
+            if state.inputMode == .voice {
                 GlobeKeyButton(inputViewController: state.viewController)
                     .frame(width: 44, height: 44)
                     .padding(.leading, 12)
