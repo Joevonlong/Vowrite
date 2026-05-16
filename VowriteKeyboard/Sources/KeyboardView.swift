@@ -13,6 +13,19 @@ enum KeyboardTheme {
     static let subtitleColor = Color(UIColor.secondaryLabel)
     static let iconColor = Color(UIColor.label)
 
+    // Typeless-parity palette. Regular keys ride the system gray ramp so they
+    // adapt automatically (light: pale gray, dark: charcoal). The primary
+    // action surface (record pill, return key) intentionally INVERTS against
+    // the backdrop — `label` over `systemBackground` — so it reads as a solid
+    // white block on dark and a solid black block on light. Never hardcode a
+    // fixed white/black here: the keyboard tracks the system appearance and a
+    // fixed color goes invisible in one of the two modes.
+    static let keyFill = Color(UIColor.systemGray5)        // letter/space keys
+    static let specialKeyFill = Color(UIColor.systemGray4) // 123 / shift / delete
+    static let accentFill = Color(UIColor.label)           // record pill, return
+    static let accentText = Color(UIColor.systemBackground)
+    static let keyCornerRadius: CGFloat = 8
+
     // F-070 chip active palette (matches mockup pale-blue active state)
     static let chipActiveTop = Color(red: 0.867, green: 0.910, blue: 1.000)   // #DDE8FF
     static let chipActiveBottom = Color(red: 0.761, green: 0.831, blue: 1.000) // #C2D4FF

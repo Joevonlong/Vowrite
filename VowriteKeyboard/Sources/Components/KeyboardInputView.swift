@@ -45,7 +45,7 @@ struct KeyboardInputView: View {
         // Bottom row: return is the primary action key — noticeably wider
         // than the 123/ABC toggle so it reads as the dominant key and the
         // space bar stays a moderate width rather than stretching edge-to-edge.
-        var returnWidth: CGFloat { lettersRow3SpecialWidth * 1.9 }
+        var returnWidth: CGFloat { lettersRow3SpecialWidth * 1.6 }
 
         var keyHeight: CGFloat { 44 }
     }
@@ -144,15 +144,16 @@ struct KeyboardInputView: View {
                 state.keyboardLayout = state.keyboardLayout == .letters ? .numbers : .letters
             }
             Button { state.insertText(" ") } label: {
-                Text("space")
-                    .font(.system(size: 16, weight: .regular))
+                Text("拼")
+                    .font(.system(size: 14, weight: .regular))
                     .foregroundStyle(KeyboardTheme.subtitleColor)
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, 16)
                     .frame(height: layout.keyHeight)
                     .background(
-                        RoundedRectangle(cornerRadius: 5)
-                            .fill(Color(UIColor.systemGray5))
-                            .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
+                        RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
+                            .fill(KeyboardTheme.keyFill)
+                            .shadow(color: .black.opacity(0.12), radius: 0, x: 0, y: 1)
                     )
             }
             returnKey(width: layout.returnWidth, height: layout.keyHeight)
@@ -167,13 +168,13 @@ struct KeyboardInputView: View {
             state.insertText("\n")
         } label: {
             Image(systemName: "return")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Color.white)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(KeyboardTheme.accentText)
                 .frame(width: width, height: height)
                 .background(
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color(white: 0.18))
-                        .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 1)
+                    RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
+                        .fill(KeyboardTheme.accentFill)
+                        .shadow(color: .black.opacity(0.18), radius: 0, x: 0, y: 1)
                 )
         }
     }
@@ -190,7 +191,7 @@ struct KeyboardInputView: View {
                 .foregroundStyle(KeyboardTheme.titleColor)
                 .frame(width: width, height: height)
                 .background(
-                    RoundedRectangle(cornerRadius: 5)
+                    RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
                         .fill(Color(UIColor.systemGray5))
                         .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
                 )
@@ -207,7 +208,7 @@ struct KeyboardInputView: View {
                 .foregroundStyle(KeyboardTheme.titleColor)
                 .frame(width: width, height: height)
                 .background(
-                    RoundedRectangle(cornerRadius: 5)
+                    RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
                         .fill(Color(UIColor.systemGray5))
                         .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
                 )
@@ -224,7 +225,7 @@ struct KeyboardInputView: View {
                 .foregroundStyle(KeyboardTheme.titleColor)
                 .frame(width: width, height: height)
                 .background(
-                    RoundedRectangle(cornerRadius: 5)
+                    RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
                         .fill(Color(UIColor.systemGray4))
                         .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
                 )
@@ -249,7 +250,7 @@ struct KeyboardInputView: View {
             state.handleShiftTap()
         } label: {
             ZStack {
-                RoundedRectangle(cornerRadius: 5)
+                RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
                     .fill(bg)
                     .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
                 VStack(spacing: 2) {
@@ -270,8 +271,8 @@ struct KeyboardInputView: View {
 
     private func kbDeleteKey(width: CGFloat, height: CGFloat) -> some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 5)
-                .fill(Color(UIColor.systemGray4))
+            RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
+                .fill(KeyboardTheme.specialKeyFill)
                 .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
             Image(systemName: "delete.left")
                 .font(.system(size: 15, weight: .medium))
