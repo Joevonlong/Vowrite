@@ -24,6 +24,9 @@
     <key>NSExtension</key>
     <dict>
         <key>NSExtensionAttributes</key>
+        <!-- F-076: keep PrimaryLanguage="mul" + IsASCIICapable=true to suppress
+             the iOS system dictation mic in the keyboard dock. Do NOT revert to
+             "en". Enforced by ops/scripts/test.sh (F-076 assertion). -->
         <dict>
             <key>IsASCIICapable</key>
             <true/>

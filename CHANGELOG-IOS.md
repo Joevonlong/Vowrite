@@ -35,6 +35,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 - **Voice-mode "换行" is now truly centered under the mic**: it is a fixed-width pill horizontally centered on screen so it lines up with the record pill directly above it, with the delete key pinned independently to the right. (Previously it was an HStack centered as a group, which pushed 换行 left-of-center — matching the Typeless reference, 换行 must be screen-centered and delete must not shift it.)
 
-- **System dictation microphone suppressed**: the keyboard now declares itself multilingual + ASCII-capable (`PrimaryLanguage = mul`, `IsASCIICapable = YES`) so iOS no longer renders its system dictation mic in the bottom keyboard dock — matching the behavior of comparable dictation keyboards.
+- **System dictation microphone hidden (F-076)**: the bottom-right system dictation mic in the keyboard dock is now suppressed by two independent, permanent mechanisms — (1) the keyboard declares itself multilingual + ASCII-capable (`PrimaryLanguage = mul`, `IsASCIICapable = YES`) so iOS does not render its dictation key, and (2) the keyboard backdrop is now an opaque, system-appearance-adaptive color (UIKit + SwiftUI layers both opaque to the screen bottom) that physically occludes the system keyboard dock even if iOS still draws it. This intentionally supersedes the earlier translucent backdrop. A build-time guard (`ops/scripts/test.sh`) now fails the suite if either mechanism is reverted, so this can never silently regress.
 
 ### Removed
