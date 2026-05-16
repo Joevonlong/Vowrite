@@ -5,20 +5,24 @@ struct VoiceBottomRow: View {
     @ObservedObject var state: KeyboardState
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Button { state.insertReturn() } label: {
                 Text("换行")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(KeyboardTheme.titleColor)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 36)
-                    .background(Capsule().fill(KeyboardTheme.buttonFill))
+                    .frame(height: 44)
+                    .background(
+                        Capsule()
+                            .fill(Color.white)
+                            .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
+                    )
             }
             DeleteButton(state: state)
                 .frame(width: 44, height: 44)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 48)
+        .padding(.horizontal, 14)
+        .frame(height: 52)
     }
 }
 
@@ -45,8 +49,9 @@ private struct DeleteButton: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(KeyboardTheme.buttonFill)
+                .fill(Color.white)
                 .frame(width: 44, height: 44)
+                .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
             Image(systemName: "delete.left")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(KeyboardTheme.iconColor)

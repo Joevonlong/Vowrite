@@ -150,9 +150,26 @@ struct KeyboardInputView: View {
                             .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
                     )
             }
-            specialFunctionKey(label: "↩", width: layout.lettersRow3SpecialWidth, height: layout.keyHeight) {
-                state.insertText("\n")
-            }
+            returnKey(width: layout.lettersRow3SpecialWidth, height: layout.keyHeight)
+        }
+    }
+
+    // MARK: - Return key (dark — matches image-2 style)
+
+    private func returnKey(width: CGFloat, height: CGFloat) -> some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            state.insertText("\n")
+        } label: {
+            Image(systemName: "return")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color.white)
+                .frame(width: width, height: height)
+                .background(
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color(white: 0.18))
+                        .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 1)
+                )
         }
     }
 

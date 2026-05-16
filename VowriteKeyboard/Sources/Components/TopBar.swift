@@ -46,10 +46,10 @@ private struct ModeToggleButton: View {
             )
         }
         .padding(3)
-        .background(Capsule().fill(KeyboardTheme.buttonFill))
+        .background(Capsule().fill(Color(UIColor.systemGray4)))
         .opacity(isDisabled ? 0.4 : 1.0)
         .allowsHitTesting(!isDisabled)
-        .animation(.easeInOut(duration: 0.15), value: state.inputMode)
+        .animation(.spring(response: 0.28, dampingFraction: 0.82), value: state.inputMode)
     }
 
     @ViewBuilder
@@ -65,8 +65,9 @@ private struct ModeToggleButton: View {
                 .background(
                     Group {
                         if isActive {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color(UIColor.systemGray3))
+                            Capsule()
+                                .fill(Color.white)
+                                .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
                         }
                     }
                 )
