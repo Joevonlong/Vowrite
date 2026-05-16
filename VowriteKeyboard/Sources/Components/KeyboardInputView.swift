@@ -42,6 +42,11 @@ struct KeyboardInputView: View {
         var numbersRow3Width: CGFloat { (availableWidth - 6 * gap) / 8 }
         var numbersRow3SpecialWidth: CGFloat { numbersRow3Width * 1.5 }
 
+        // Bottom row: return is the primary action key — noticeably wider
+        // than the 123/ABC toggle so it reads as the dominant key and the
+        // space bar stays a moderate width rather than stretching edge-to-edge.
+        var returnWidth: CGFloat { lettersRow3SpecialWidth * 1.9 }
+
         var keyHeight: CGFloat { 44 }
     }
 
@@ -150,7 +155,7 @@ struct KeyboardInputView: View {
                             .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
                     )
             }
-            returnKey(width: layout.lettersRow3SpecialWidth, height: layout.keyHeight)
+            returnKey(width: layout.returnWidth, height: layout.keyHeight)
         }
     }
 

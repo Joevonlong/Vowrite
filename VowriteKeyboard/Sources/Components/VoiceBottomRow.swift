@@ -10,8 +10,7 @@ struct VoiceBottomRow: View {
                 Text("换行")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(KeyboardTheme.titleColor)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                    .frame(width: 150, height: 44)
                     .background(
                         Capsule()
                             .fill(Color.white)
@@ -21,7 +20,7 @@ struct VoiceBottomRow: View {
             DeleteButton(state: state)
                 .frame(width: 44, height: 44)
         }
-        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity)
         .frame(height: 52)
     }
 }
