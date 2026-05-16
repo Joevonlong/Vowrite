@@ -199,7 +199,7 @@ struct APIKeysPageView: View {
         )
     }
 
-    private func saveKeys() {
+    @MainActor private func saveKeys() {
         for provider in KeyVault.managedProviders {
             let value = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             if !value.isEmpty {
