@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+- **Voice/Keyboard Mode Toggle (F-071)**: A two-segment pill toggle in the top-right corner of the keyboard extension switches between voice dictation and a full custom QWERTY keyboard. Voice mode preserves all existing behavior (dictation, translation, long-press chip selection). Keyboard mode supports letters, numbers, and symbols with shift/caps-lock state, continuous delete, and a globe key in the bottom row for input method switching. The delete button is relocated to a new bottom row (voice idle state) alongside a return key, preserving the full long-press bulk-delete behavior (F-067).
+
 - **F-074 Vocabulary CSV import/export**: Personalization → Personal Vocabulary now has Import (↓) and Export (↑) toolbar buttons in the section header. Exported files share the same single-column CSV format as macOS, so vocabulary maintained on either platform round-trips cleanly. Imported words sync to the iOS keyboard extension via the existing App Group reload path — no app restart required.
 
 ### Changed
