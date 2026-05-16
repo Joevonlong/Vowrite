@@ -17,8 +17,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  SWIFT_VERSION: "5.10"
 
 jobs:
   # ── 1. macOS Build ──────────────────────────────────────────────────────────
@@ -41,6 +39,7 @@ jobs:
       - name: Build VowriteMac (debug)
         working-directory: VowriteMac
         run: |
+          set -o pipefail
           swift build -c debug 2>&1 | tee /tmp/build-debug.log
           grep -c "warning:" /tmp/build-debug.log && echo "::notice::Debug build warnings found" || true
 
@@ -48,6 +47,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         working-directory: VowriteMac
         run: |
+          set -o pipefail
           swift build -c release 2>&1 | tee /tmp/build-release.log
           WARN_COUNT=$(grep -c "warning:" /tmp/build-release.log || true)
           BASELINE=4
