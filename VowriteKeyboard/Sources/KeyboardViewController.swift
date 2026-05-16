@@ -8,10 +8,11 @@ class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Clear root background so the system keyboard backdrop shows through.
-        // (Custom backgrounds caused a visible color block vs. the system area
-        // above the keyboard — see KeyboardTheme.background.)
-        view.backgroundColor = .clear
+        // F-076: opaque root background. The UIKit container must be opaque
+        // down to the screen bottom so the system UIKeyboardDockView dictation
+        // mic is occluded (a clear background let it show through bottom-right).
+        // Single source of truth: KeyboardTheme.backgroundUIColor.
+        view.backgroundColor = KeyboardTheme.backgroundUIColor
 
         // 1. Configure shared storage
         VowriteStorage.configure(suiteName: VowriteStorage.appGroupID)
@@ -28,7 +29,8 @@ class KeyboardViewController: UIInputViewController {
         let keyboardView = KeyboardView(state: keyboardState)
         let hosting = UIHostingController(rootView: keyboardView)
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
-        hosting.view.backgroundColor = .clear
+        // F-076: opaque hosting background (see above) — occludes system dock mic.
+        hosting.view.backgroundColor = KeyboardTheme.backgroundUIColor
 
         addChild(hosting)
         self.view.addSubview(hosting.view)

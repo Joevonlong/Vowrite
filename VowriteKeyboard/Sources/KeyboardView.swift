@@ -5,9 +5,19 @@ import VowriteKit
 // MARK: - Theme
 
 enum KeyboardTheme {
-    /// Transparent — let UIInputViewController's default keyboard backdrop
-    /// (system blur material) show through.
-    static let background = Color.clear
+    // F-076: opaque backdrop occludes the system UIKeyboardDockView dictation
+    // mic. MUST stay opaque (no Color.clear) — reverting re-exposes the mic
+    // and is blocked by ops/scripts/test.sh. This intentionally supersedes the
+    // earlier clear/translucent choice (commit a936fce): a transparent backdrop
+    // let the system dock mic show through the bottom-right. Tuned to
+    // approximate the iOS native keyboard backdrop; fine-tune the RGB here
+    // (single source of truth) for both light/dark if a seam is visible.
+    static let backgroundUIColor = UIColor { tc in
+        tc.userInterfaceStyle == .dark
+            ? UIColor(white: 0.07, alpha: 1)
+            : UIColor(red: 0.82, green: 0.84, blue: 0.87, alpha: 1)
+    }
+    static let background = Color(backgroundUIColor)
     static let buttonFill = Color(UIColor.systemGray5)
     static let titleColor = Color(UIColor.label)
     static let subtitleColor = Color(UIColor.secondaryLabel)

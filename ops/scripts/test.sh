@@ -128,6 +128,26 @@ else
     fail "Entitlements file missing"
 fi
 
+# --- F-076: iOS Keyboard Dictation Mic Suppression ---
+echo ""
+echo "▶ iOS Keyboard — F-076 Dictation Mic Suppression"
+
+KB_PLIST="$PROJECT_ROOT/VowriteKeyboard/Info.plist"
+LANG_VAL=$(/usr/libexec/PlistBuddy -c "Print :NSExtension:NSExtensionAttributes:PrimaryLanguage" "$KB_PLIST" 2>/dev/null || echo MISSING)
+ASCII_VAL=$(/usr/libexec/PlistBuddy -c "Print :NSExtension:NSExtensionAttributes:IsASCIICapable" "$KB_PLIST" 2>/dev/null || echo MISSING)
+if [ "$LANG_VAL" = "mul" ] && [ "$ASCII_VAL" = "true" ]; then
+    pass "F-076 plist mic-suppression intact (PrimaryLanguage=mul, IsASCIICapable=true)"
+else
+    fail "F-076 regressed: PrimaryLanguage='$LANG_VAL' IsASCIICapable='$ASCII_VAL' (must be mul/true) — re-exposes the system dictation mic"
+fi
+
+KB_VIEW="$PROJECT_ROOT/VowriteKeyboard/Sources/KeyboardView.swift"
+if grep -q 'static let background = Color.clear' "$KB_VIEW"; then
+    fail "F-076 regressed: KeyboardTheme.background reverted to Color.clear — system dictation mic re-exposed via transparent backdrop"
+else
+    pass "F-076 opaque backdrop intact (KeyboardTheme.background is not Color.clear)"
+fi
+
 # --- File Structure ---
 echo ""
 echo "▶ File Structure — VowriteKit"
