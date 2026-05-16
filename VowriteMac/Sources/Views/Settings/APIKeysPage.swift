@@ -199,7 +199,7 @@ struct APIKeysPageView: View {
         )
     }
 
-    @MainActor private func saveKeys() {
+    private func saveKeys() {
         for provider in KeyVault.managedProviders {
             let value = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             if !value.isEmpty {
@@ -208,7 +208,7 @@ struct APIKeysPageView: View {
                 keyEditorExpanded[provider] = false
             }
         }
-        AuthManager.shared.setAuthMode(.apiKey)
+        Task { @MainActor in AuthManager.shared.setAuthMode(.apiKey) }
         keysSaved = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { keysSaved = false }
     }
