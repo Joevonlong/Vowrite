@@ -93,11 +93,6 @@ class KeyboardViewController: UIInputViewController {
         }
     }
 
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        keyboardState?.showGlobe = self.needsInputModeSwitchKey
-    }
-
     override func textWillChange(_ textInput: (any UITextInput)?) {
         super.textWillChange(textInput)
         keyboardState.updateProxy(textDocumentProxy)
