@@ -173,13 +173,14 @@ public final class DictationEngine: ObservableObject {
             feedback.playStartSound()
 
             recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                Task { @MainActor in
-                    self?.recordingDuration += 0.1
+                guard let self else { return }
+                Task { @MainActor [self] in
+                    self.recordingDuration += 0.1
                 }
             }
             levelTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-                Task { @MainActor in
-                    guard let self = self else { return }
+                guard let self else { return }
+                Task { @MainActor [self] in
                     self.audioLevel = self.audioEngine.currentLevel
                     self.overlay.updateLevel(self.audioLevel)
                 }
