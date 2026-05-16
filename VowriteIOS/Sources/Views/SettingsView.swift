@@ -12,6 +12,11 @@ struct SettingsView: View {
     @State private var polishAPIKey: String = ""
     @State private var soundFeedbackEnabled: Bool = SoundFeedback.isEnabled
 
+    // Local state for translation pickers — decoupled from modeManager to prevent
+    // scroll-position snapping caused by @ObservedObject re-renders during picker interaction.
+    @State private var translationSourceLocal: SupportedLanguage = .auto
+    @State private var translationTargetLocal: SupportedLanguage = .en
+
     @ObservedObject private var modeManager = ModeManager.shared
 
     var body: some View {
@@ -127,21 +132,21 @@ struct SettingsView: View {
 
                 // F-066: Translation language quick settings
                 Section {
-                    Picker("Source", selection: Binding(
-                        get: { translationSource },
-                        set: setTranslationSource
-                    )) {
+                    Picker("Source", selection: $translationSourceLocal) {
                         ForEach(SupportedLanguage.allCases) { lang in
                             Text(lang.displayName).tag(lang)
                         }
                     }
-                    Picker("Target", selection: Binding(
-                        get: { translationTarget },
-                        set: setTranslationTarget
-                    )) {
+                    .onChange(of: translationSourceLocal) { _, newValue in
+                        setTranslationSource(newValue)
+                    }
+                    Picker("Target", selection: $translationTargetLocal) {
                         ForEach(SupportedLanguage.allCases.filter { $0 != .auto }) { lang in
                             Text(lang.displayName).tag(lang)
                         }
+                    }
+                    .onChange(of: translationTargetLocal) { _, newValue in
+                        setTranslationTarget(newValue)
                     }
                 } header: {
                     Text("Translation")
@@ -166,6 +171,12 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .onAppear { syncStateFromConfig() }
+            .onChange(of: modeManager.modes) { _, _ in
+                let src = translationSource
+                let tgt = translationTarget
+                if src != translationSourceLocal { translationSourceLocal = src }
+                if tgt != translationTargetLocal { translationTargetLocal = tgt }
+            }
         }
     }
 
@@ -176,6 +187,8 @@ struct SettingsView: View {
         polishModel = APIConfig.polishModel
         sttAPIKey = ""
         polishAPIKey = ""
+        translationSourceLocal = translationSource
+        translationTargetLocal = translationTarget
     }
 
     private func applyConfig() {
