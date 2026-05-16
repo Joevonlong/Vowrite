@@ -5,30 +5,6 @@ import VowriteKit
 struct TopBar: View {
     @ObservedObject var state: KeyboardState
 
-    // F-067: long-press bulk-delete gesture state.
-    @State private var pressActive = false
-    @State private var pressStartedAt: Date?
-    @State private var popupVisible = false
-    @State private var fingerOnPopup = false
-    @State private var popupHoldStartedAt: Date?
-    @State private var popupFrame: CGRect = .zero
-    @State private var popupRevealWorkItem: DispatchWorkItem?
-    @State private var tierHapticWorkItems: [DispatchWorkItem] = []
-
-    // Continuous-delete state (active while popup visible but finger not on popup).
-    @State private var continuousDeleteTimer: Timer?
-    @State private var continuousDeleteSpeed: TimeInterval = 0.1
-
-    private let coordSpace = "topbar.delete"
-    private let longPressThreshold: TimeInterval = 0.4
-    /// Vertical distance from the delete button's top edge to the popup's
-    /// top edge. = popup height (~52pt with new sizing) + small gap.
-    private let popupOffsetAboveButton: CGFloat = 60
-    /// Extra height the keyboard grows by while the popup is visible, so
-    /// the popup renders inside the keyboard's own frame (avoids the
-    /// system keyboard window clipping subviews above 280pt).
-    private let popupKeyboardExtraHeight: CGFloat = 64
-
     var body: some View {
         HStack {
             HStack(spacing: 6) {
@@ -40,297 +16,60 @@ struct TopBar: View {
                     .fontWeight(.bold)
                     .foregroundStyle(KeyboardTheme.titleColor)
             }
-
             Spacer()
-
-            HStack(spacing: 12) {
-                actionButton(text: "@") { state.insertText("@") }
-                actionButton(text: "─") { state.insertSpace() }
-                deleteButton
-            }
+            ModeToggleButton(state: state)
         }
         .padding(.horizontal, 16)
-        .coordinateSpace(name: coordSpace)
-    }
-
-    // MARK: - Action button (non-delete)
-
-    @ViewBuilder
-    private func actionButton(
-        symbol: String? = nil,
-        text: String? = nil,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(KeyboardTheme.buttonFill)
-                    .frame(width: KeyboardTheme.actionButtonSize,
-                           height: KeyboardTheme.actionButtonSize)
-
-                if let symbol {
-                    Image(systemName: symbol)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(KeyboardTheme.iconColor)
-                } else if let text {
-                    Text(text)
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(KeyboardTheme.iconColor)
-                }
-            }
-        }
-    }
-
-    // MARK: - F-067 Delete button + bulk-clear popup
-
-    private var deleteButton: some View {
-        ZStack {
-            Circle()
-                .fill(KeyboardTheme.buttonFill)
-                .frame(width: KeyboardTheme.actionButtonSize,
-                       height: KeyboardTheme.actionButtonSize)
-            Image(systemName: "delete.left")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(KeyboardTheme.iconColor)
-        }
-        .scaleEffect(pressActive && !popupVisible ? 0.94 : 1.0)
-        .animation(.easeOut(duration: 0.12), value: pressActive)
-        .contentShape(Circle())
-        // Popup renders ABOVE the delete button, with its TRAILING edge
-        // aligned to the button's right edge so it extends LEFTWARD into
-        // the topbar. This keeps the "删除全部" text on-screen (the prior
-        // centered alignment clipped the right half off the screen edge)
-        // and gives the popup a clear "上方偏左" position relative to the
-        // delete key. The keyboard grows by `popupOverlayHeight` during
-        // the gesture so the popup lands inside the keyboard's own frame.
-        .overlay(alignment: .topTrailing) {
-            if popupVisible {
-                BulkDeletePopupView(
-                    fingerOnPopup: fingerOnPopup,
-                    popupHoldStartedAt: popupHoldStartedAt,
-                    coordSpaceName: coordSpace,
-                    frameUpdate: { popupFrame = $0 }
-                )
-                .offset(y: -popupOffsetAboveButton)
-                .allowsHitTesting(false)
-                .transition(
-                    .scale(scale: 0.75, anchor: .bottomTrailing)
-                        .combined(with: .opacity)
-                )
-            }
-        }
-        .gesture(deleteGesture)
-    }
-
-    private var deleteGesture: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named(coordSpace))
-            .onChanged { handleDragChanged(value: $0) }
-            .onEnded { handleDragEnded(value: $0) }
-    }
-
-    private func handleDragChanged(value: DragGesture.Value) {
-        if !pressActive {
-            pressActive = true
-            pressStartedAt = Date()
-            scheduleRevealPopup()
-        }
-
-        guard popupVisible else { return }
-
-        let inside = popupFrame.contains(value.location)
-        if inside, !fingerOnPopup {
-            fingerOnPopup = true
-            popupHoldStartedAt = Date()
-            stopContinuousDelete()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            scheduleTierHaptics()
-        } else if !inside, fingerOnPopup {
-            fingerOnPopup = false
-            popupHoldStartedAt = nil
-            cancelTierHaptics()
-            startContinuousDelete()
-        }
-    }
-
-    private func handleDragEnded(value: DragGesture.Value) {
-        popupRevealWorkItem?.cancel()
-        popupRevealWorkItem = nil
-        cancelTierHaptics()
-        stopContinuousDelete()
-
-        let wasPopupVisible = popupVisible
-        let wasFingerOnPopup = fingerOnPopup
-        let popupHoldStart = popupHoldStartedAt
-        let pressStart = pressStartedAt
-        let now = Date()
-
-        // Reset gesture-local state.
-        pressActive = false
-        pressStartedAt = nil
-        fingerOnPopup = false
-        popupHoldStartedAt = nil
-        if wasPopupVisible {
-            withAnimation(.easeOut(duration: 0.22)) {
-                popupVisible = false
-                state.extraTopHeight = 0
-            }
-        }
-
-        if wasPopupVisible, wasFingerOnPopup, let start = popupHoldStart {
-            let elapsed = now.timeIntervalSince(start)
-            let tier = KeyboardState.BulkDeleteTier.from(elapsed: elapsed)
-            state.bulkDelete(tier: tier)
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            return
-        }
-
-        // Quick tap (no popup ever revealed) → single delete, matching the
-        // pre-F-067 muscle memory.
-        if !wasPopupVisible,
-           let start = pressStart,
-           now.timeIntervalSince(start) < longPressThreshold {
-            state.deleteBackward()
-        }
-        // Otherwise: long-press without entering popup → continuous delete
-        // already ran; nothing more to do.
-    }
-
-    private func scheduleRevealPopup() {
-        let work = DispatchWorkItem {
-            guard pressActive, !popupVisible else { return }
-            // Grow the keyboard so the popup has room to render above the
-            // delete button inside the keyboard's frame.
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
-                popupVisible = true
-                state.extraTopHeight = popupKeyboardExtraHeight
-            }
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            startContinuousDelete()
-        }
-        popupRevealWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + longPressThreshold, execute: work)
-    }
-
-    // MARK: - Tier haptics
-
-    /// Schedule selection haptics at the three tier crossings (0.5s / 1.3s /
-    /// 2.5s) so the user feels each escalation even with a stationary finger.
-    /// DragGesture.onChanged doesn't fire on a still finger, so we can't
-    /// drive haptics from there.
-    private func scheduleTierHaptics() {
-        cancelTierHaptics()
-        for delay in [0.5, 1.3, 2.5] as [TimeInterval] {
-            let work = DispatchWorkItem {
-                UISelectionFeedbackGenerator().selectionChanged()
-            }
-            tierHapticWorkItems.append(work)
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
-        }
-    }
-
-    private func cancelTierHaptics() {
-        for w in tierHapticWorkItems { w.cancel() }
-        tierHapticWorkItems.removeAll()
-    }
-
-    // MARK: - Continuous delete (preserved from pre-F-067 behavior)
-
-    private func startContinuousDelete() {
-        stopContinuousDelete()
-        continuousDeleteSpeed = 0.1
-        continuousDeleteTimer = Timer.scheduledTimer(
-            withTimeInterval: continuousDeleteSpeed,
-            repeats: true
-        ) { _ in
-            Task { @MainActor in
-                state.deleteBackward()
-            }
-            if continuousDeleteSpeed > 0.05 {
-                continuousDeleteSpeed -= 0.01
-                continuousDeleteTimer?.invalidate()
-                continuousDeleteTimer = Timer.scheduledTimer(
-                    withTimeInterval: continuousDeleteSpeed,
-                    repeats: true
-                ) { _ in
-                    Task { @MainActor in
-                        state.deleteBackward()
-                    }
-                }
-            }
-        }
-    }
-
-    private func stopContinuousDelete() {
-        continuousDeleteTimer?.invalidate()
-        continuousDeleteTimer = nil
-        continuousDeleteSpeed = 0.1
     }
 }
 
-// MARK: - F-067 Popup view
+// MARK: - F-071 Mode Toggle
 
-private struct BulkDeletePopupView: View {
-    let fingerOnPopup: Bool
-    let popupHoldStartedAt: Date?
-    let coordSpaceName: String
-    let frameUpdate: (CGRect) -> Void
+private struct ModeToggleButton: View {
+    @ObservedObject var state: KeyboardState
+
+    private var isDisabled: Bool {
+        state.viewState == .recording || state.viewState == .processing
+    }
 
     var body: some View {
-        TimelineView(
-            .animation(
-                minimumInterval: 0.08,
-                paused: !(fingerOnPopup && popupHoldStartedAt != nil)
+        HStack(spacing: 0) {
+            segment(
+                isActive: state.inputMode == .voice,
+                label: { Image(systemName: "waveform").font(.system(size: 14, weight: .medium)) },
+                onTap: { state.toggleInputMode() }
             )
-        ) { context in
-            let tier: KeyboardState.BulkDeleteTier? = {
-                guard fingerOnPopup, let start = popupHoldStartedAt else { return nil }
-                return KeyboardState.BulkDeleteTier.from(
-                    elapsed: context.date.timeIntervalSince(start)
-                )
-            }()
-            content(tier: tier)
+            segment(
+                isActive: state.inputMode == .keyboard,
+                label: { Text("拼").font(.system(size: 15, weight: .medium)) },
+                onTap: { state.toggleInputMode() }
+            )
         }
+        .padding(3)
+        .background(Capsule().fill(KeyboardTheme.buttonFill))
+        .opacity(isDisabled ? 0.4 : 1.0)
+        .allowsHitTesting(!isDisabled)
+        .animation(.easeInOut(duration: 0.15), value: state.inputMode)
     }
 
     @ViewBuilder
-    private func content(tier: KeyboardState.BulkDeleteTier?) -> some View {
-        let label = tier?.label ?? "删除全部"
-        HStack(spacing: 8) {
-            Image(systemName: "trash.fill")
-                .font(.system(size: 17, weight: .semibold))
-            Text(label)
-                .font(.system(size: 17, weight: .semibold))
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .background(
-            Capsule().fill(Color.black.opacity(0.88))
-        )
-        .scaleEffect(fingerOnPopup ? 1.05 : 1.0)
-        .shadow(color: .black.opacity(fingerOnPopup ? 0.30 : 0.18),
-                radius: 10, y: 4)
-        .animation(.spring(response: 0.22, dampingFraction: 0.85),
-                   value: fingerOnPopup)
-        .background(
-            GeometryReader { proxy in
-                Color.clear.preference(
-                    key: PopupFrameKey.self,
-                    value: proxy.frame(in: .named(coordSpaceName))
+    private func segment<Label: View>(
+        isActive: Bool,
+        @ViewBuilder label: () -> Label,
+        onTap: @escaping () -> Void
+    ) -> some View {
+        Button(action: onTap) {
+            label()
+                .foregroundStyle(isActive ? KeyboardTheme.titleColor : KeyboardTheme.subtitleColor)
+                .frame(width: 36, height: 28)
+                .background(
+                    Group {
+                        if isActive {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(UIColor.systemGray3))
+                        }
+                    }
                 )
-            }
-        )
-        .onPreferenceChange(PopupFrameKey.self) { rect in
-            frameUpdate(rect)
         }
-    }
-}
-
-private struct PopupFrameKey: PreferenceKey {
-    static var defaultValue: CGRect = .zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        value = nextValue()
     }
 }

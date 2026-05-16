@@ -30,13 +30,10 @@ final class KeyboardState: ObservableObject {
     /// during the selection gesture (matching the design mockup).
     @Published var isModeSelectionExpanded: Bool = false
 
-    /// F-067: Extra height (pt) reserved at the top of the keyboard for the
-    /// long-press bulk-delete popup. KeyboardViewController watches this and
-    /// updates the keyboard's heightAnchor to `280 + extraTopHeight` so the
-    /// popup can render above the delete button inside the keyboard's own
-    /// frame (avoiding the system keyboard window clipping subviews that
-    /// extend above the original 280pt height).
-    @Published var extraTopHeight: CGFloat = 0
+    // F-071: Input mode toggle
+    @Published var inputMode: InputMode = .voice
+    @Published var keyboardLayout: KeyboardLayout = .letters
+    @Published var keyboardShift: ShiftMode = .off
 
     // Configuration state
     @Published var currentMode: Mode = Mode.builtinModes[1] // Clean
@@ -66,6 +63,10 @@ final class KeyboardState: ObservableObject {
         case noFullAccess, noAPIKey, noMicAccess, bgServiceNotRunning
     }
 
+    enum InputMode: Equatable { case voice, keyboard }
+    enum KeyboardLayout: Equatable { case letters, numbers, symbols }
+    enum ShiftMode: Equatable { case off, shift, capsLock }
+
     init(inputViewController: UIInputViewController) {
         self.inputViewController = inputViewController
         reloadConfiguration()
@@ -77,6 +78,11 @@ final class KeyboardState: ObservableObject {
     }
 
     func reloadConfiguration() {
+        // F-071: Always reset input mode on each keyboard activation
+        inputMode = .voice
+        keyboardLayout = .letters
+        keyboardShift = .off
+
         hasFullAccess = inputViewController?.hasFullAccess ?? false
 
         if !hasFullAccess {
@@ -459,6 +465,44 @@ final class KeyboardState: ObservableObject {
 
     func insertText(_ text: String) {
         inputViewController?.textDocumentProxy.insertText(text)
+    }
+
+    // MARK: - F-071 Input Mode
+
+    private var lastShiftTapDate: Date?
+
+    func toggleInputMode() {
+        guard viewState != .recording && viewState != .processing else { return }
+        if inputMode == .voice {
+            inputMode = .keyboard
+        } else {
+            keyboardLayout = .letters
+            keyboardShift = .off
+            inputMode = .voice
+        }
+    }
+
+    func handleShiftTap() {
+        let now = Date()
+        switch keyboardShift {
+        case .capsLock:
+            keyboardShift = .off
+        case .shift:
+            if let last = lastShiftTapDate, now.timeIntervalSince(last) < 0.4 {
+                keyboardShift = .capsLock
+            } else {
+                keyboardShift = .off
+            }
+        case .off:
+            keyboardShift = .shift
+        }
+        lastShiftTapDate = now
+    }
+
+    func typeLetter(_ char: String) {
+        let output = keyboardShift == .off ? char.lowercased() : char.uppercased()
+        insertText(output)
+        if keyboardShift == .shift { keyboardShift = .off }
     }
 
     func dismissKeyboard() {
