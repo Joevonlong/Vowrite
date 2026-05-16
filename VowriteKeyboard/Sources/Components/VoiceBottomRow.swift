@@ -5,22 +5,30 @@ struct VoiceBottomRow: View {
     @ObservedObject var state: KeyboardState
 
     var body: some View {
-        HStack(spacing: 14) {
+        // 换行 is centered on screen so it lines up with the mic pill
+        // directly above it; the delete key is pinned independently to the
+        // right and must NOT shift 换行 off-center. (A grouped HStack would
+        // push 换行 left-of-center — that is the layout we explicitly do
+        // not want; see the Typeless reference.)
+        ZStack {
             Button { state.insertReturn() } label: {
                 Text("换行")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(KeyboardTheme.titleColor)
-                    .frame(width: 150, height: 48)
+                    .frame(width: 168, height: 48)
                     .background(
                         Capsule()
                             .fill(KeyboardTheme.keyFill)
                             .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
                     )
             }
+            .frame(maxWidth: .infinity, alignment: .center)
+
             DeleteButton(state: state)
                 .frame(width: 56, height: 48)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.trailing, 28)
         }
-        .frame(maxWidth: .infinity)
         .frame(height: 56)
     }
 }

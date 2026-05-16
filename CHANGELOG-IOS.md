@@ -33,7 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 - **Keyboard UI matches the Typeless reference layout, with full light/dark adaptation**: Voice mode now shows a compact dark "换行" pill plus a rounded-rect delete key (no more edge-to-edge white bar); keyboard mode gives the return key a prominent inverted accent treatment, trims the space bar, and adds the `拼` input-method hint. The record pill and return key now use an inverting accent (white-on-dark in dark mode, black-on-white in light mode) so no element is ever an invisible white-on-white or black-on-black; all key fills and text ride the system gray/label ramp and follow the system appearance. Keys adopt a softer continuous-corner squircle. (Previously the record pill and return key were hardcoded dark and went unreadable in light mode.)
 
-- **Voice-mode "换行" is a fixed compact pill again**: it was still stretching nearly edge-to-edge; it now renders at a fixed moderate width, centered next to the delete key, instead of a full-width bar.
+- **Voice-mode "换行" is now truly centered under the mic**: it is a fixed-width pill horizontally centered on screen so it lines up with the record pill directly above it, with the delete key pinned independently to the right. (Previously it was an HStack centered as a group, which pushed 换行 left-of-center — matching the Typeless reference, 换行 must be screen-centered and delete must not shift it.)
 
 - **System dictation microphone suppressed**: the keyboard now declares itself multilingual + ASCII-capable (`PrimaryLanguage = mul`, `IsASCIICapable = YES`) so iOS no longer renders its system dictation mic in the bottom keyboard dock — matching the behavior of comparable dictation keyboards.
 
