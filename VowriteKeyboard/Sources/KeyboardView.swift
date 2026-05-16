@@ -5,19 +5,14 @@ import VowriteKit
 // MARK: - Theme
 
 enum KeyboardTheme {
-    // F-076: opaque backdrop occludes the system UIKeyboardDockView dictation
-    // mic. MUST stay opaque (no Color.clear) — reverting re-exposes the mic
-    // and is blocked by ops/scripts/test.sh. This intentionally supersedes the
-    // earlier clear/translucent choice (commit a936fce): a transparent backdrop
-    // let the system dock mic show through the bottom-right. Tuned to
-    // approximate the iOS native keyboard backdrop; fine-tune the RGB here
-    // (single source of truth) for both light/dark if a seam is visible.
-    static let backgroundUIColor = UIColor { tc in
-        tc.userInterfaceStyle == .dark
-            ? UIColor(white: 0.07, alpha: 1)
-            : UIColor(red: 0.82, green: 0.84, blue: 0.87, alpha: 1)
-    }
-    static let background = Color(backgroundUIColor)
+    // F-076: backdrop stays CLEAR so the iOS system keyboard backdrop shows
+    // through — this gives ONE uniform tone edge-to-edge (matching Typeless).
+    // A custom opaque override produced a two-tone seam vs. the system dock
+    // band and was reverted. The system dictation mic is suppressed purely by
+    // the Info.plist declaration (PrimaryLanguage=mul, IsASCIICapable), the
+    // same approach Typeless uses — NOT by painting over the dock. Do not
+    // re-introduce a custom opaque background here.
+    static let background = Color.clear
     static let buttonFill = Color(UIColor.systemGray5)
     static let titleColor = Color(UIColor.label)
     static let subtitleColor = Color(UIColor.secondaryLabel)
@@ -81,20 +76,12 @@ struct KeyboardView: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .center)))
             }
 
-            // F-076: ALWAYS render our own globe (voice mode; keyboard mode
-            // renders it inline in KeyboardInputView). Its GlobeKeyButton wires
-            // handleInputModeList(from:with:) for .allTouchEvents, which tells
-            // iOS this extension owns input-mode switching — so iOS hides its
-            // OWN bottom globe+dictation strip (the system mic). Do NOT gate
-            // this on needsInputModeSwitchKey/showGlobe: when that is false the
-            // wiring disappears and the system re-draws its dock with the mic
-            // (the two-tone strip regression). Proven mechanism from 5beffbe.
-            if state.inputMode == .voice {
-                GlobeKeyButton(inputViewController: state.viewController)
-                    .frame(width: 44, height: 44)
-                    .padding(.leading, 12)
-                    .padding(.bottom, 8)
-            }
+            // F-076: we render NO globe of our own. iOS already provides the
+            // next-keyboard globe in its system keyboard dock at the bottom;
+            // drawing our own produced a duplicate globe. Matching Typeless:
+            // rely on the single system dock globe; the dictation mic next to
+            // it is suppressed by the Info.plist declaration. Do not add a
+            // GlobeKeyButton here.
         }
         .animation(.easeInOut(duration: 0.25), value: state.inputMode)
         .background(KeyboardTheme.background.ignoresSafeArea())

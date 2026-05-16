@@ -132,10 +132,8 @@ struct KeyboardInputView: View {
     @ViewBuilder
     private func bottomRow(layout: KeyLayout) -> some View {
         HStack(spacing: layout.gap) {
-            // F-076: always render (see KeyboardView) — handleInputModeList
-            // wiring suppresses the iOS system globe+dictation strip/mic.
-            GlobeKeyButton(inputViewController: state.viewController)
-                .frame(width: layout.lettersRow3SpecialWidth, height: layout.keyHeight)
+            // F-076: no own globe — the system keyboard dock provides the
+            // next-keyboard globe; drawing our own duplicated it (see KeyboardView).
             specialFunctionKey(
                 label: state.keyboardLayout == .letters ? "123" : "ABC",
                 width: layout.lettersRow3SpecialWidth,
