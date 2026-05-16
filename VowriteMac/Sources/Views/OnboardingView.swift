@@ -411,7 +411,7 @@ struct OnboardingView: View {
         }
     }
 
-    private func saveAPIConfig() {
+    @MainActor private func saveAPIConfig() {
         APIConfig.apply(onboardingConfig, presetID: selectedPresetID)
         for provider in requiredProviders {
             let key = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -424,7 +424,7 @@ struct OnboardingView: View {
         AuthManager.shared.setAuthMode(.apiKey)
     }
 
-    private func saveAndTest() {
+    @MainActor private func saveAndTest() {
         saveAPIConfig()
 
         // Test connection
