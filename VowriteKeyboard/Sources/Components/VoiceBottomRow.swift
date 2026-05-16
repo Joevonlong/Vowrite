@@ -5,23 +5,24 @@ struct VoiceBottomRow: View {
     @ObservedObject var state: KeyboardState
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             Button { state.insertReturn() } label: {
                 Text("换行")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(KeyboardTheme.titleColor)
-                    .frame(width: 150, height: 44)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
                     .background(
                         Capsule()
-                            .fill(Color.white)
-                            .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
+                            .fill(KeyboardTheme.keyFill)
+                            .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
                     )
             }
             DeleteButton(state: state)
-                .frame(width: 44, height: 44)
+                .frame(width: 60, height: 48)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 52)
+        .padding(.horizontal, 22)
+        .frame(height: 56)
     }
 }
 
@@ -47,17 +48,16 @@ private struct DeleteButton: View {
 
     var body: some View {
         ZStack {
-            Circle()
-                .fill(Color.white)
-                .frame(width: 44, height: 44)
-                .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(KeyboardTheme.specialKeyFill)
+                .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
             Image(systemName: "delete.left")
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(KeyboardTheme.iconColor)
         }
         .scaleEffect(pressActive && !popupVisible ? 0.94 : 1.0)
         .animation(.easeOut(duration: 0.12), value: pressActive)
-        .contentShape(Circle())
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(alignment: .topTrailing) {
             if popupVisible {
                 BulkDeletePopupView(

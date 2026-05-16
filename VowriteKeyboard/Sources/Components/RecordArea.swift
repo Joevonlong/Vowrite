@@ -245,27 +245,27 @@ struct RecordArea: View {
     /// frame change directly when `isModeSelectionExpanded` flips.
     private func micShape(width: CGFloat, height: CGFloat, shadowOpacity: Double) -> some View {
         Capsule()
-            .fill(Color(white: 0.10))
+            .fill(KeyboardTheme.accentFill)
             .frame(width: width, height: height)
             .shadow(color: .black.opacity(shadowOpacity), radius: 8, y: 4)
             .overlay {
                 Image(systemName: "mic.fill")
                     .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(KeyboardTheme.accentText)
             }
     }
 
     /// Shared mic pill appearance used by activation Link.
     private var micPillLabel: some View {
         Capsule()
-            .fill(Color(white: 0.10))
+            .fill(KeyboardTheme.accentFill)
             .frame(width: KeyboardTheme.micPillWidth,
                    height: KeyboardTheme.micPillHeight)
             .shadow(color: .black.opacity(0.14), radius: 8, y: 4)
             .overlay {
                 Image(systemName: "mic.fill")
                     .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(KeyboardTheme.accentText)
             }
     }
 

@@ -31,4 +31,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+- **Keyboard UI matches the Typeless reference layout, with full light/dark adaptation**: Voice mode now shows a compact dark "换行" pill plus a rounded-rect delete key (no more edge-to-edge white bar); keyboard mode gives the return key a prominent inverted accent treatment, trims the space bar, and adds the `拼` input-method hint. The record pill and return key now use an inverting accent (white-on-dark in dark mode, black-on-white in light mode) so no element is ever an invisible white-on-white or black-on-black; all key fills and text ride the system gray/label ramp and follow the system appearance. Keys adopt a softer continuous-corner squircle. (Previously the record pill and return key were hardcoded dark and went unreadable in light mode.)
+
 ### Removed
