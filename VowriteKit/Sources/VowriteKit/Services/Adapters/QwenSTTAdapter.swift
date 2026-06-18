@@ -48,7 +48,7 @@ struct QwenSTTAdapter: STTAdapter {
     ) async throws -> String {
         // DashScope multimodal generation endpoint
         let endpoint = baseURL.replacingOccurrences(of: "/compatible-mode/v1", with: "/api/v1/services/aigc/multimodal-generation/generation")
-        var request = URLRequest(url: URL(string: endpoint)!)
+        var request = URLRequest(url: try URL.validated(endpoint, label: "Qwen ASR endpoint"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -100,7 +100,7 @@ struct QwenSTTAdapter: STTAdapter {
         baseURL: String
     ) async throws -> String {
         let endpoint = baseURL.replacingOccurrences(of: "/compatible-mode/v1", with: "/api/v1/services/audio/asr/transcription")
-        var request = URLRequest(url: URL(string: endpoint)!)
+        var request = URLRequest(url: try URL.validated(endpoint, label: "Qwen ASR submit endpoint"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -141,7 +141,7 @@ struct QwenSTTAdapter: STTAdapter {
             try Task.checkCancellation()
             try await Task.sleep(nanoseconds: UInt64(pollInterval * 1_000_000_000))
 
-            var request = URLRequest(url: URL(string: statusEndpoint)!)
+            var request = URLRequest(url: try URL.validated(statusEndpoint, label: "Qwen ASR status endpoint"))
             request.httpMethod = "GET"
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             request.timeoutInterval = 15
