@@ -21,6 +21,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - **No more crash on a malformed custom endpoint URL**: If a custom base URL was malformed — for example a pasted address with a stray space inside the host — the app could crash while building the request. It now surfaces a clear "Invalid … URL" error instead, so a typo in settings never takes the app down. Covers the polish path and the OpenAI-compatible and Qwen (DashScope) speech-to-text paths.
 - **Punctuation-only noise no longer dictated**: On silence or background noise, speech-to-text sometimes emits a punctuation- or symbol-only fragment (e.g. `!!!` or `。。`). The hallucination filter now drops these, alongside the existing "Thank you for watching" / `[BLANK_AUDIO]` filtering. Real speech in any language (including digits and CJK) is untouched.
 - **Recording temp files always cleaned up**: A failed transcription (network error, oversized file, bad endpoint) no longer leaves the temporary audio recording behind in the system temp directory — cleanup now runs on every path, not just on success.
+- **Excel/Windows vocabulary CSV import now works**: Importing a vocabulary CSV saved by Excel (or any Windows editor that uses CRLF line endings) previously collapsed every line into one giant entry, because the CRLF pair wasn't recognized as a line break. Line endings are now normalized, so CRLF, LF, and old-Mac CR files all import correctly — matching the Excel-friendly BOM the export already wrote.
 
 ### Performance
 

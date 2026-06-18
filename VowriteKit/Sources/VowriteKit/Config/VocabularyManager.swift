@@ -78,6 +78,25 @@ public final class VocabularyManager: ObservableObject {
         return "\u{FEFF}" + header + body + "\n"
     }
 
+    /// Pure parse of a single-column CSV into cleaned candidate words.
+    /// Strips a leading UTF-8 BOM, splits on CR/LF, trims each line, and skips
+    /// blank lines and `#` comments. Does NOT dedup against existing vocabulary —
+    /// that is `importCSV`'s responsibility. Order (incl. in-file duplicates) is
+    /// preserved. `nonisolated` + `static` so it is pure and unit-testable.
+    nonisolated static func parseCSVWords(_ csv: String) -> [String] {
+        var input = csv
+        if input.hasPrefix("\u{FEFF}") { input.removeFirst() }
+        // Normalize line endings first: Swift treats "\r\n" (CRLF, as written by
+        // Excel/Windows) as a single grapheme cluster that matches neither "\n"
+        // nor "\r", so splitting on those characters would leave CRLF lines joined.
+        return input
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .split(separator: "\n", omittingEmptySubsequences: true)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty && !$0.hasPrefix("#") }
+    }
+
     /// Imports words from a single-column CSV string.
     /// - Lines starting with `#` are treated as comments and skipped.
     /// - Blank lines are skipped.
@@ -87,11 +106,7 @@ public final class VocabularyManager: ObservableObject {
     public func importCSV(_ csv: String) -> ImportResult {
         var imported = 0
         var duplicates = 0
-        var input = csv
-        if input.hasPrefix("\u{FEFF}") { input.removeFirst() }
-        for raw in input.split(whereSeparator: { $0 == "\n" || $0 == "\r" }) {
-            let line = raw.trimmingCharacters(in: .whitespaces)
-            guard !line.isEmpty, !line.hasPrefix("#") else { continue }
+        for line in Self.parseCSVWords(csv) {
             if words.contains(line) {
                 duplicates += 1
                 continue
