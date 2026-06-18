@@ -13,6 +13,9 @@ struct OpenAISTTAdapter: STTAdapter {
         baseURL: String,
         provider: APIProvider
     ) async throws -> String {
+        // V-021: always clean up the recording temp file, even on failure.
+        defer { try? FileManager.default.removeItem(at: audioURL) }
+
         let endpoint = "\(baseURL)/audio/transcriptions"
 
         let boundary = UUID().uuidString
@@ -65,7 +68,6 @@ struct OpenAISTTAdapter: STTAdapter {
             throw VowriteError.apiError("Failed to decode STT response")
         }
 
-        try? FileManager.default.removeItem(at: audioURL)
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

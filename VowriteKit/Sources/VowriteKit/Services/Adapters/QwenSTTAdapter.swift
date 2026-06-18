@@ -17,6 +17,9 @@ struct QwenSTTAdapter: STTAdapter {
         baseURL: String,
         provider: APIProvider
     ) async throws -> String {
+        // V-021: always clean up the recording temp file, even on failure.
+        defer { try? FileManager.default.removeItem(at: audioURL) }
+
         guard let apiKey = apiKey, !apiKey.isEmpty else {
             throw VowriteError.apiError("Qwen API key is required for STT.")
         }
@@ -33,7 +36,6 @@ struct QwenSTTAdapter: STTAdapter {
             result = try await transcribeAsync(base64Audio: base64Audio, model: model, language: language, apiKey: apiKey, baseURL: baseURL)
         }
 
-        try? FileManager.default.removeItem(at: audioURL)
         return result
     }
 
