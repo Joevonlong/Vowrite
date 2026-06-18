@@ -51,7 +51,14 @@ public enum HallucinationFilter {
             return true
         }
 
-        // 2. Repeated-token pattern: same short phrase repeated 2+ times
+        // 2. Punctuation/symbol-only transcripts ("!!!", "?!", "。。", "♪♪") are
+        //    never real speech. Any letter or digit (incl. CJK/Hangul) counts as
+        //    content, so genuine speech in any language is preserved.
+        if !trimmed.isEmpty, trimmed.rangeOfCharacter(from: .alphanumerics) == nil {
+            return true
+        }
+
+        // 3. Repeated-token pattern: same short phrase repeated 2+ times
         //    e.g. "Thank you. Thank you. Thank you."
         if isRepeatedPhrase(lowered) {
             return true
