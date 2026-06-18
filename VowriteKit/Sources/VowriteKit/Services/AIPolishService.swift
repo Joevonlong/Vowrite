@@ -128,12 +128,22 @@ public final class AIPolishService {
 // MARK: - Think Tag Stripping
 
 extension String {
-    /// Strips `<think>...</think>` tags (used by reasoning models like DeepSeek, QwQ)
-    /// from LLM output. Handles both closed and unclosed/truncated tags.
+    /// Strips reasoning-model chain-of-thought (`<think>…</think>`) from LLM output.
+    ///
+    /// Reasoning models (DeepSeek-R1, QwQ, …) emit their internal monologue inside
+    /// `<think>` tags in the `content` stream. Three real-world shapes are handled,
+    /// case-insensitively (tag casing varies across providers/proxies):
+    ///   1. Well-formed `<think>…</think>` pairs (canonical format).
+    ///   2. Orphan leading `</think>` — the DeepSeek-R1 chat-template regression drops
+    ///      the *opening* tag, so reasoning arrives in front of a lone `</think>`
+    ///      (see open-webui #9823, #9193). Strip from the start through that close tag.
+    ///   3. Unclosed/truncated `<think>` running to end of string (streaming cutoff).
     func strippingThinkTags() -> String {
-        self
-            .replacingOccurrences(of: "<think>[\\s\\S]*?</think>", with: "", options: .regularExpression)
-            .replacingOccurrences(of: "<think>[\\s\\S]*$", with: "", options: .regularExpression)
+        let opts: NSString.CompareOptions = [.regularExpression, .caseInsensitive]
+        return self
+            .replacingOccurrences(of: "<think>[\\s\\S]*?</think>", with: "", options: opts)
+            .replacingOccurrences(of: "^[\\s\\S]*?</think>", with: "", options: opts)
+            .replacingOccurrences(of: "<think>[\\s\\S]*$", with: "", options: opts)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
