@@ -16,7 +16,7 @@ struct OpenAISTTAdapter: STTAdapter {
         let endpoint = "\(baseURL)/audio/transcriptions"
 
         let boundary = UUID().uuidString
-        var request = URLRequest(url: URL(string: endpoint)!)
+        var request = URLRequest(url: try URL.validated(endpoint, label: "STT transcription endpoint"))
         request.httpMethod = "POST"
         if let apiKey = apiKey {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
