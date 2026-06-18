@@ -17,7 +17,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ### Fixed
 
-- **Reasoning-model thinking no longer leaks into polished text**: When polishing with a reasoning model (e.g. DeepSeek-R1), the model's internal chain-of-thought could occasionally appear in your output. Two cases the previous filter missed are now stripped: output that begins with reasoning followed only by a closing `</think>` tag — a known DeepSeek-R1 chat-template behaviour where the opening tag is dropped — and tags emitted in uppercase. Polished output stays clean across providers.
+- **Reasoning-model thinking no longer leaks into polished text**: When polishing with a reasoning model (e.g. DeepSeek-R1), the model's internal chain-of-thought could occasionally appear in your output. Two cases the previous filter missed are now stripped: output that begins with reasoning followed only by a closing `</think>` tag — a known DeepSeek-R1 chat-template behaviour where the opening tag is dropped — and tags emitted in uppercase. Polished output stays clean across providers — including the live streaming preview, which previously flashed the raw `<think>` reasoning token-by-token before the final text was cleaned.
 - **No more crash on a malformed custom endpoint URL**: If a custom base URL was malformed — for example a pasted address with a stray space inside the host — the app could crash while building the request. It now surfaces a clear "Invalid … URL" error instead, so a typo in settings never takes the app down. Covers the polish path and the OpenAI-compatible and Qwen (DashScope) speech-to-text paths.
 
 ### Performance

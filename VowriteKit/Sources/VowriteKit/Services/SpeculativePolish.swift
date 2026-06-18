@@ -232,7 +232,7 @@ public final class SpeculativePolish {
                   !token.isEmpty else { continue }
 
             result += token
-            onPartial(result)
+            onPartial(Self.displayPartial(forAccumulated: result))
         }
 
         guard !result.isEmpty else {
@@ -244,6 +244,14 @@ public final class SpeculativePolish {
     /// Reset prepared state (call after completion or cancellation).
     public func reset() {
         preparedConfig = nil
+    }
+
+    /// Maps the accumulated raw streaming buffer to the display-ready partial
+    /// surfaced via `onPartial`. Strips reasoning-model `<think>` content so the
+    /// chain-of-thought never flashes in the live partial as tokens arrive (V-024).
+    /// Pure; unit-tested.
+    static func displayPartial(forAccumulated raw: String) -> String {
+        raw.strippingThinkTags()
     }
 
     // MARK: - Internal
