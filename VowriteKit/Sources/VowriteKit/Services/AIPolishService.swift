@@ -67,7 +67,7 @@ public final class AIPolishService {
         // OpenAI-compatible path
         let endpoint = "\(baseURL)/chat/completions"
 
-        var request = URLRequest(url: URL(string: endpoint)!)
+        var request = URLRequest(url: try URL.validated(endpoint, label: "polish endpoint"))
         request.httpMethod = "POST"
         if let apiKey = configuration.key {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
