@@ -22,6 +22,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - **Punctuation-only noise no longer dictated**: On silence or background noise, speech-to-text sometimes emits a punctuation- or symbol-only fragment (e.g. `!!!` or `。。`). The hallucination filter now drops these, alongside the existing "Thank you for watching" / `[BLANK_AUDIO]` filtering. Real speech in any language (including digits and CJK) is untouched.
 - **Recording temp files always cleaned up**: A failed transcription (network error, oversized file, bad endpoint) no longer leaves the temporary audio recording behind in the system temp directory — cleanup now runs on every path, not just on success.
 - **Excel/Windows vocabulary CSV import now works**: Importing a vocabulary CSV saved by Excel (or any Windows editor that uses CRLF line endings) previously collapsed every line into one giant entry, because the CRLF pair wasn't recognized as a line break. Line endings are now normalized, so CRLF, LF, and old-Mac CR files all import correctly — matching the Excel-friendly BOM the export already wrote.
+- **OAuth sign-in is more reliable**: Token-exchange request bodies now percent-encode their values, so an authorization code containing a character like `+` (which some providers emit) is no longer corrupted in transit and rejected. Applies to the OpenAI Codex and Google sign-in flows; the Kimi flow (already correct) was consolidated onto the same shared, unit-tested encoder.
 
 ### Performance
 
