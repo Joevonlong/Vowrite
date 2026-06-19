@@ -60,7 +60,11 @@ public struct APIEndpointConfiguration: Codable, Equatable {
 
     public static func normalizeBaseURL(_ baseURL: String?, provider: APIProvider) -> String {
         let trimmed = baseURL?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return trimmed.isEmpty ? provider.defaultBaseURL : trimmed
+        var resolved = trimmed.isEmpty ? provider.defaultBaseURL : trimmed
+        // Strip trailing slashes so endpoint construction ("\(base)/chat/completions")
+        // never produces a double slash ("...//chat/completions") that strict servers reject.
+        while resolved.hasSuffix("/") { resolved.removeLast() }
+        return resolved
     }
 }
 
