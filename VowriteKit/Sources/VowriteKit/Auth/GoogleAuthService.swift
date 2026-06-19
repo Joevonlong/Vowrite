@@ -152,11 +152,11 @@ public enum GoogleAuthService {
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
         let bodyParams = [
-            "code=\(code)",
-            "client_id=\(clientID)",
-            "redirect_uri=\(redirectURI)",
+            "code=\(code.formURLEncoded())",
+            "client_id=\(clientID.formURLEncoded())",
+            "redirect_uri=\(redirectURI.formURLEncoded())",
             "grant_type=authorization_code",
-            "code_verifier=\(codeVerifier)",
+            "code_verifier=\(codeVerifier.formURLEncoded())",
         ]
         request.httpBody = bodyParams.joined(separator: "&").data(using: .utf8)
 

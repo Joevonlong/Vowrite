@@ -110,11 +110,11 @@ public enum OpenAICodexOAuthService {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         let body = [
-            "code=\(code)",
-            "client_id=\(clientID)",
-            "redirect_uri=\(redirectURI)",
+            "code=\(code.formURLEncoded())",
+            "client_id=\(clientID.formURLEncoded())",
+            "redirect_uri=\(redirectURI.formURLEncoded())",
             "grant_type=authorization_code",
-            "code_verifier=\(verifier)",
+            "code_verifier=\(verifier.formURLEncoded())",
         ].joined(separator: "&")
         request.httpBody = body.data(using: .utf8)
 
@@ -152,8 +152,8 @@ public enum OpenAICodexOAuthService {
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         let body = [
             "grant_type=refresh_token",
-            "refresh_token=\(refreshToken)",
-            "client_id=\(clientID)",
+            "refresh_token=\(refreshToken.formURLEncoded())",
+            "client_id=\(clientID.formURLEncoded())",
         ].joined(separator: "&")
         request.httpBody = body.data(using: .utf8)
 

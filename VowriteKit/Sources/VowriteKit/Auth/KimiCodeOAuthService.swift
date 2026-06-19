@@ -182,13 +182,8 @@ public enum KimiCodeOAuthService {
     }
 
     private static func formEncode(_ params: [String: String]) -> Data? {
-        var cs = CharacterSet.urlQueryAllowed
-        cs.remove(charactersIn: "+&=")
-        return params.map { key, value in
-            let k = key.addingPercentEncoding(withAllowedCharacters: cs) ?? key
-            let v = value.addingPercentEncoding(withAllowedCharacters: cs) ?? value
-            return "\(k)=\(v)"
-        }.joined(separator: "&").data(using: .utf8)
+        params.map { "\($0.key.formURLEncoded())=\($0.value.formURLEncoded())" }
+            .joined(separator: "&").data(using: .utf8)
     }
 
     private static func applyKimiHeaders(to request: inout URLRequest) {
