@@ -146,33 +146,46 @@ public enum KimiCodeOAuthService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        // CredentialManager bounds its *wait* for this call to 3s but lets it keep
+        // running in the background past that; a short-but-sane timeout here still
+        // matters so a hung request doesn't linger indefinitely and doesn't race
+        // the next refresh cycle for this provider.
+        request.timeoutInterval = 15
         applyKimiHeaders(to: &request)
         request.httpBody = formEncode([
             "grant_type":    "refresh_token",
             "refresh_token": refreshToken,
             "client_id":     clientID,
         ])
-        guard let (data, _) = try? await URLSession.shared.data(for: request) else { return }
+        guard let (data, response) = try? await URLSession.shared.data(for: request) else { return }
         struct TokenResponse: Codable {
             let access_token: String
             let refresh_token: String?
             let expires_in: Int?
         }
-        guard let tokenResponse = try? JSONDecoder().decode(TokenResponse.self, from: data),
-              !tokenResponse.access_token.isEmpty else {
-            OAuthTokenStore.delete(for: "kimi")
+        if let tokenResponse = try? JSONDecoder().decode(TokenResponse.self, from: data),
+           !tokenResponse.access_token.isEmpty {
+            let expiresAt = tokenResponse.expires_in.map { Date().addingTimeInterval(Double($0)) }
+            let stored = OAuthTokenStore.load(for: "kimi")
+            let newToken = OAuthToken(
+                accessToken: tokenResponse.access_token,
+                refreshToken: tokenResponse.refresh_token ?? refreshToken,
+                expiresAt: expiresAt,
+                email: stored?.email,
+                baseURL: kimiCodeBaseURL
+            )
+            OAuthTokenStore.save(newToken, for: "kimi")
             return
         }
-        let expiresAt = tokenResponse.expires_in.map { Date().addingTimeInterval(Double($0)) }
-        let stored = OAuthTokenStore.load(for: "kimi")
-        let newToken = OAuthToken(
-            accessToken: tokenResponse.access_token,
-            refreshToken: tokenResponse.refresh_token ?? refreshToken,
-            expiresAt: expiresAt,
-            email: stored?.email,
-            baseURL: kimiCodeBaseURL
-        )
-        OAuthTokenStore.save(newToken, for: "kimi")
+
+        // Decode failed — only delete the token when the server explicitly says
+        // the refresh token itself is dead (see OAuthErrorClassifier). A
+        // transient 5xx/HTML/malformed body keeps the existing token so the
+        // next refresh attempt can retry instead of forcing a silent re-auth.
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if OAuthErrorClassifier.shouldInvalidateToken(status: status, body: data) {
+            OAuthTokenStore.delete(for: "kimi")
+        }
     }
 
     public static func signOut() {

@@ -34,6 +34,7 @@ final class AppState: ObservableObject {
         MiniMaxOAuthPurge.runIfNeeded()
         APIConfigMigration.runIfNeeded()
         APIConfig.migratePresetIDs()
+        KimiBaseURLRepairMigration.runIfNeeded()
 
         let schema = Schema([DictationRecord.self])
         let primary = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

@@ -150,6 +150,8 @@ public enum OpenAICodexOAuthService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        // See KimiCodeOAuthService.refresh for why this needs an explicit bound.
+        request.timeoutInterval = 15
         let body = [
             "grant_type=refresh_token",
             "refresh_token=\(refreshToken.formURLEncoded())",
@@ -157,27 +159,35 @@ public enum OpenAICodexOAuthService {
         ].joined(separator: "&")
         request.httpBody = body.data(using: .utf8)
 
-        guard let (data, _) = try? await URLSession.shared.data(for: request) else { return }
+        guard let (data, response) = try? await URLSession.shared.data(for: request) else { return }
 
         struct TokenResponse: Codable {
             let access_token: String
             let refresh_token: String?
             let expires_in: Int?
         }
-        guard let tokenResponse = try? JSONDecoder().decode(TokenResponse.self, from: data) else {
-            OAuthTokenStore.delete(for: "openai")
+        if let tokenResponse = try? JSONDecoder().decode(TokenResponse.self, from: data) {
+            let expiresAt = tokenResponse.expires_in.map { Date().addingTimeInterval(Double($0)) }
+            let stored = OAuthTokenStore.load(for: "openai")
+            let newToken = OAuthToken(
+                accessToken: tokenResponse.access_token,
+                refreshToken: tokenResponse.refresh_token ?? refreshToken,
+                expiresAt: expiresAt,
+                email: stored?.email,
+                baseURL: nil
+            )
+            OAuthTokenStore.save(newToken, for: "openai")
             return
         }
-        let expiresAt = tokenResponse.expires_in.map { Date().addingTimeInterval(Double($0)) }
-        let stored = OAuthTokenStore.load(for: "openai")
-        let newToken = OAuthToken(
-            accessToken: tokenResponse.access_token,
-            refreshToken: tokenResponse.refresh_token ?? refreshToken,
-            expiresAt: expiresAt,
-            email: stored?.email,
-            baseURL: nil
-        )
-        OAuthTokenStore.save(newToken, for: "openai")
+
+        // Decode failed — only delete the token when the server explicitly says
+        // the refresh token itself is dead (see OAuthErrorClassifier). A
+        // transient 5xx/HTML/malformed body keeps the existing token so the
+        // next refresh attempt can retry instead of forcing a silent re-auth.
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if OAuthErrorClassifier.shouldInvalidateToken(status: status, body: data) {
+            OAuthTokenStore.delete(for: "openai")
+        }
     }
 
     // MARK: - Sign Out

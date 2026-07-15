@@ -201,9 +201,23 @@ public final class DictationEngine: ObservableObject {
         levelTimer?.invalidate()
 
         let wasSilent = audioEngine.wasSilent
+        let hadWriteFailures = audioEngine.hadWriteFailures
         guard let audioURL = audioEngine.stopRecording() else {
             sessionModeOverride = nil   // F-063
             state = .error("未录到音频，请重试")
+            overlay.hide()
+            return
+        }
+
+        // One or more audio buffers failed to write to disk (e.g. disk full).
+        // The file may be truncated/corrupt regardless of what peakRMS/silence
+        // detection below reports (that's computed from the in-memory buffer,
+        // not the file) — surface this distinctly instead of silently sending a
+        // partial recording to Whisper.
+        guard !hadWriteFailures else {
+            try? FileManager.default.removeItem(at: audioURL)
+            sessionModeOverride = nil   // F-063
+            state = .error("录音写入失败，请重试")
             overlay.hide()
             return
         }
