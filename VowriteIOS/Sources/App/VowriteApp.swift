@@ -43,6 +43,10 @@ struct VowriteApp: App {
         APIConfigMigration.runIfNeeded()
         APIConfig.migratePresetIDs()
 
+        // 7. Repair APIConfig entries corrupted by the pre-fix setters persisting
+        //    the OAuth-resolved (not plain) base URL (see KimiBaseURLRepairMigration).
+        KimiBaseURLRepairMigration.runIfNeeded()
+
         // Pre-generate sound feedback tones
         SoundFeedback.warmUp()
 

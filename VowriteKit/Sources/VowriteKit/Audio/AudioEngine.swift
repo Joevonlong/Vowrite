@@ -17,6 +17,24 @@ public final class AudioEngine {
     /// Returns true if the recording session contained no meaningful audio (all silence).
     public var wasSilent: Bool { peakRMS < 0.01 }
 
+    /// Count of `AVAudioFile.write(from:)` failures during the current recording
+    /// session. Written from the audio render thread inside `installTap`, read
+    /// from the main thread via `hadWriteFailures` — guarded by `writeFailureLock`
+    /// since it's a genuine cross-thread counter (unlike `currentLevel`/`peakRMS`
+    /// above, a dropped write here must never be silently lost).
+    private let writeFailureLock = NSLock()
+    private var writeFailureCount = 0
+
+    /// True if one or more audio buffers failed to write to disk during the
+    /// current recording session (e.g. disk full, sandbox revoked). The
+    /// resulting file may be truncated or empty even though recording appeared
+    /// to run normally. Reset by `startRecording()`.
+    public var hadWriteFailures: Bool {
+        writeFailureLock.lock()
+        defer { writeFailureLock.unlock() }
+        return writeFailureCount > 0
+    }
+
     /// When false, AudioEngine will NOT configure or deactivate the AVAudioSession.
     /// Set to false when an external caller (e.g. BackgroundRecordingService) manages the session.
     public var manageAudioSession: Bool = true
@@ -47,6 +65,9 @@ public final class AudioEngine {
         #endif
 
         peakRMS = 0
+        writeFailureLock.lock()
+        writeFailureCount = 0
+        writeFailureLock.unlock()
 
         // Try AVAudioEngine first; always fall back to AVAudioRecorder on failure.
         // AVAudioEngine can fail even in the main app on some devices/iOS versions.
@@ -89,7 +110,11 @@ public final class AudioEngine {
 
         // Use native hardware format for the tap — AVAudioFile converts to 16kHz mono on write.
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
-            try? file.write(from: buffer)
+            do {
+                try file.write(from: buffer)
+            } catch {
+                self?.recordWriteFailure()
+            }
             self?.updateLevel(buffer: buffer)
         }
 
@@ -168,6 +193,16 @@ public final class AudioEngine {
         #endif
 
         return outputURL
+    }
+
+    /// Called from the audio render thread (inside the `installTap` closure)
+    /// when `AVAudioFile.write(from:)` throws. Thread-safe via `writeFailureLock`.
+    /// Internal (not `private`) so tests can exercise the counter directly —
+    /// driving the real tap requires live microphone hardware unavailable in CI.
+    func recordWriteFailure() {
+        writeFailureLock.lock()
+        writeFailureCount += 1
+        writeFailureLock.unlock()
     }
 
     private func updateLevel(buffer: AVAudioPCMBuffer) {

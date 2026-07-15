@@ -120,7 +120,13 @@ public enum APIConfig {
         set {
             sttProvider = newValue.provider
             sttModel = newValue.model
-            sttBaseURL = newValue.resolvedBaseURL
+            // Persist the plain configured URL, NOT `resolvedBaseURL` — the latter
+            // returns the OAuth-session-scoped override (e.g. Kimi Code's
+            // api.kimi.com/coding/v1) when one is active, which would otherwise get
+            // written into UserDefaults and keep routing requests to that endpoint
+            // even after sign-out. `baseURL` is already normalized by the
+            // initializer. Request-time resolution still happens via `resolvedBaseURL`.
+            sttBaseURL = newValue.baseURL
         }
     }
 
@@ -131,7 +137,8 @@ public enum APIConfig {
         set {
             polishProvider = newValue.provider
             polishModel = newValue.model
-            polishBaseURL = newValue.resolvedBaseURL
+            // See comment in `stt` setter above.
+            polishBaseURL = newValue.baseURL
         }
     }
 
