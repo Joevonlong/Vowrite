@@ -50,6 +50,12 @@ final class KeyboardState: ObservableObject {
     /// Timestamp when the last .start command was sent, used to ignore stale .idle
     /// IPC reads during the cross-process notification delivery window.
     private var startCommandSentAt: Date?
+    /// The id this keyboard minted for the session it believes is currently
+    /// in flight (nil when idle). Mirrored to `ipc.keyboardSessionId` so a
+    /// recycled `KeyboardState` instance can recover it in
+    /// `reloadConfiguration()`. Compared against `ipc.activeSessionId` (the
+    /// service's echo) to detect stale/foreign reads — see `IPCReconciler`.
+    private var currentSessionId: String?
 
     weak var inputViewController: UIInputViewController?
 
@@ -118,9 +124,57 @@ final class KeyboardState: ObservableObject {
         }
 
         // Check if background service is running — sets flag but doesn't block the orb
-        needsActivation = !ipc.isServiceAlive
+        let serviceAlive = ipc.isServiceAlive
+        needsActivation = !serviceAlive
 
-        viewState = .idle
+        // Reconcile against whatever ipc.state actually is instead of
+        // defaulting straight to idle — a previous instance of this keyboard
+        // (or this same instance, reappearing after the user switched apps)
+        // may have a recording genuinely still in flight, or may have left a
+        // stale .done/.error sitting in App Group storage from a session
+        // that already ended while the keyboard was gone. See IPCReconciler.
+        currentSessionId = ipc.keyboardSessionId
+        let sessionMatches = currentSessionId != nil && ipc.activeSessionId == currentSessionId
+
+        switch IPCReconciler.action(state: ipc.state, sessionMatches: sessionMatches, serviceAlive: serviceAlive) {
+        case .adopt(.recording):
+            viewState = .recording
+            audioLevel = ipc.audioLevel
+            recordingDuration = ipc.recordingDuration
+            startCommandSentAt = nil
+            startPolling()
+
+        case .adopt(.processing):
+            viewState = .processing
+            startCommandSentAt = nil
+            startPolling()
+
+        case .adopt:
+            // .adopt only ever carries .recording/.processing (see
+            // IPCReconciler.action); unreachable in practice.
+            viewState = .idle
+
+        case .none:
+            viewState = .idle
+
+        case .insertResultAndGoIdle, .surfaceErrorAndGoIdle, .discardAndGoIdle, .serviceDied:
+            // Reload never inserts text or surfaces an error, even for a
+            // matching .done/.error — the keyboard just appeared fresh, and
+            // the host app context it would insert into may no longer be the
+            // one the user intended. Discard silently and land idle.
+            ipc.clearResult()
+            clearSessionTracking()
+            viewState = .idle
+        }
+    }
+
+    /// Clear both the in-memory and persisted keyboard-owned session id.
+    /// Called whenever the keyboard determines there is no session it should
+    /// keep tracking (normal completion, error, cancel, or a stale/foreign
+    /// read discarded at reload or during polling).
+    private func clearSessionTracking() {
+        currentSessionId = nil
+        ipc.keyboardSessionId = nil
     }
 
     func updateProxy(_ proxy: UITextDocumentProxy) {
@@ -183,6 +237,10 @@ final class KeyboardState: ObservableObject {
         ipc.requestedModeId = currentMode.id.uuidString
         ipc.requestedStyleName = currentStyleName
 
+        // Mint this session's identity before sending .start so the service
+        // can echo it back on every subsequent state/result write.
+        beginNewSession()
+
         // Send start command
         ipc.sendCommand(.start)
         startCommandSentAt = Date()
@@ -205,6 +263,29 @@ final class KeyboardState: ObservableObject {
         startCommandSentAt = nil
         viewState = .idle
         clearTranslateSession()
+        clearSessionTracking()
+    }
+
+    /// Mint a fresh session id for the recording about to start, remember it
+    /// as this keyboard's own current session (in-memory + persisted so a
+    /// recycled keyboard instance can recover it), and hand it to the
+    /// service via `ipc.requestedSessionId`. See `IPCReconciler`.
+    private func beginNewSession() {
+        let sessionId = UUID().uuidString
+        currentSessionId = sessionId
+        ipc.keyboardSessionId = sessionId
+        ipc.requestedSessionId = sessionId
+    }
+
+    /// Called by `KeyboardViewController.viewWillDisappear` when the keyboard
+    /// UI is about to go away (user dismissed the keyboard, switched apps,
+    /// tapped into another field's keyboard, etc). There is no legitimate
+    /// "keep recording while the keyboard UI is gone" flow — the controlling
+    /// UI just disappeared — so an in-flight recording is cancelled here
+    /// rather than left to keep the mic hot indefinitely.
+    func viewWillDisappear() {
+        guard viewState == .recording else { return }
+        cancelRecording()
     }
 
     // MARK: - F-064 Translate Recording
@@ -243,6 +324,10 @@ final class KeyboardState: ObservableObject {
         translationTargetCode = targetCode
         isInTranslateSession = true
 
+        // Mint this session's identity before sending .start so the service
+        // can echo it back on every subsequent state/result write.
+        beginNewSession()
+
         ipc.sendCommand(.start)
         startCommandSentAt = Date()
         viewState = .recording
@@ -269,7 +354,7 @@ final class KeyboardState: ObservableObject {
     /// so the UI updates when the user activates it via deep link and returns.
     private func startServiceCheckTimer() {
         serviceCheckTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 let alive = self.ipc.isServiceAlive
                 if self.needsActivation && alive {
@@ -292,7 +377,7 @@ final class KeyboardState: ObservableObject {
     private func startPolling() {
         stopPolling()
         pollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.pollIPCState()
             }
         }
@@ -306,14 +391,13 @@ final class KeyboardState: ObservableObject {
     private func pollIPCState() {
         let ipcState = ipc.state
 
-        switch ipcState {
-        case .idle:
+        if ipcState == .idle {
             // After sending .start, ignore .idle for up to 1s — the Darwin notification
             // needs time to reach the main app (especially on first cross-process delivery).
             if let sentAt = startCommandSentAt,
                Date().timeIntervalSince(sentAt) < 1.0,
                viewState == .recording {
-                break
+                return
             }
             // If we were recording/processing and now idle, it was cancelled
             if viewState == .recording || viewState == .processing {
@@ -321,38 +405,39 @@ final class KeyboardState: ObservableObject {
                 stopPolling()
                 startCommandSentAt = nil
                 clearTranslateSession()
+                clearSessionTracking()
             }
+            return
+        }
 
-        case .recording:
-            // Watchdog: if the main app process died mid-recording, the IPC state
-            // sticks on .recording forever (it was written by a process that no
-            // longer exists to move it forward). Detect via the same heartbeat
-            // liveness check used elsewhere instead of hanging indefinitely.
-            guard ipc.isServiceAlive else {
-                stopPolling()
-                startCommandSentAt = nil
-                ipc.clearResult()
-                viewState = .error("Vowrite stopped in background")
-                clearTranslateSession()
-                break
-            }
+        // Any non-idle read is only ours if the service echoed back the
+        // session id this keyboard minted at .start — otherwise it's a
+        // stale/foreign session (e.g. a .done left over from a session that
+        // finished while the keyboard was dismissed) and must be discarded,
+        // never inserted. See IPCReconciler.
+        let sessionMatches = currentSessionId != nil && ipc.activeSessionId == currentSessionId
+        let action = IPCReconciler.action(
+            state: ipcState,
+            sessionMatches: sessionMatches,
+            serviceAlive: ipc.isServiceAlive
+        )
+
+        switch action {
+        case .adopt(.recording):
             startCommandSentAt = nil
             viewState = .recording
             audioLevel = ipc.audioLevel
             recordingDuration = ipc.recordingDuration
 
-        case .processing:
-            guard ipc.isServiceAlive else {
-                stopPolling()
-                startCommandSentAt = nil
-                ipc.clearResult()
-                viewState = .error("Vowrite stopped in background")
-                clearTranslateSession()
-                break
-            }
+        case .adopt(.processing):
             viewState = .processing
 
-        case .done:
+        case .adopt:
+            // .adopt only ever carries .recording/.processing (see
+            // IPCReconciler.action); unreachable in practice.
+            break
+
+        case .insertResultAndGoIdle:
             if let result = ipc.result, !result.isEmpty {
                 inputViewController?.textDocumentProxy.insertText(result)
             }
@@ -360,13 +445,42 @@ final class KeyboardState: ObservableObject {
             stopPolling()
             viewState = .idle
             clearTranslateSession()
+            clearSessionTracking()
 
-        case .error:
+        case .surfaceErrorAndGoIdle:
             let message = ipc.errorMessage ?? "Unknown error"
             viewState = .error(message)
             ipc.clearResult()
             stopPolling()
             clearTranslateSession()
+            clearSessionTracking()
+
+        case .serviceDied:
+            // Watchdog: if the main app process died mid-recording, the IPC
+            // state sticks on .recording/.processing forever (it was written
+            // by a process that no longer exists to move it forward).
+            // Detect via the same heartbeat liveness check used elsewhere
+            // instead of hanging indefinitely.
+            stopPolling()
+            startCommandSentAt = nil
+            ipc.clearResult()
+            viewState = .error("Vowrite stopped in background")
+            clearTranslateSession()
+            clearSessionTracking()
+
+        case .discardAndGoIdle:
+            // Stale/foreign state (mismatched session) — discard silently,
+            // never insert, and stop tracking a session that was never ours.
+            ipc.clearResult()
+            stopPolling()
+            startCommandSentAt = nil
+            viewState = .idle
+            clearTranslateSession()
+            clearSessionTracking()
+
+        case .none:
+            // ipcState != .idle here, so unreachable in practice.
+            break
         }
     }
 

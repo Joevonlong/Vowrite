@@ -69,6 +69,15 @@ class KeyboardViewController: UIInputViewController {
         detectHostBundleID()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // The keyboard UI is going away (dismissed, or the user switched to
+        // another field/app). There is no legitimate "keep recording with
+        // the keyboard closed" flow, so cancel an in-flight recording rather
+        // than leave the mic hot indefinitely.
+        keyboardState.viewWillDisappear()
+    }
+
     /// Detect the host app's bundle ID via private API and store it for the
     /// containing app to use when returning after activation.
     private func detectHostBundleID() {
