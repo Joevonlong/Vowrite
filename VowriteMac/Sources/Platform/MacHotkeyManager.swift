@@ -35,8 +35,13 @@ final class MacHotkeyManager: HotkeyProvider {
 
     var keyCode: UInt32 {
         get {
-            let stored = UserDefaults.standard.integer(forKey: Self.keyCodeKey)
-            return stored == 0 ? Self.defaultKeyCode : UInt32(stored)
+            // `integer(forKey:)` returns 0 both when nothing is stored and when the
+            // stored value legitimately is 0 (kVK_ANSI_A). Check presence explicitly
+            // so a user bound to ⌥A doesn't get reset to the Space default on relaunch.
+            guard UserDefaults.standard.object(forKey: Self.keyCodeKey) != nil else {
+                return Self.defaultKeyCode
+            }
+            return UInt32(UserDefaults.standard.integer(forKey: Self.keyCodeKey))
         }
         set { UserDefaults.standard.set(Int(newValue), forKey: Self.keyCodeKey) }
     }
@@ -53,8 +58,11 @@ final class MacHotkeyManager: HotkeyProvider {
 
     var translateKeyCode: UInt32 {
         get {
-            let stored = UserDefaults.standard.integer(forKey: Self.translateKeyCodeKey)
-            return stored == 0 ? Self.defaultTranslateKeyCode : UInt32(stored)
+            // Same unset-vs-legitimate-zero fix as `keyCode` above.
+            guard UserDefaults.standard.object(forKey: Self.translateKeyCodeKey) != nil else {
+                return Self.defaultTranslateKeyCode
+            }
+            return UInt32(UserDefaults.standard.integer(forKey: Self.translateKeyCodeKey))
         }
         set { UserDefaults.standard.set(Int(newValue), forKey: Self.translateKeyCodeKey) }
     }

@@ -31,6 +31,8 @@
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Vowrite activates the app you're dictating into so it can paste your polished text there.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Vowrite needs microphone access to record your voice for dictation.</string>
 	<key>SUFeedURL</key>

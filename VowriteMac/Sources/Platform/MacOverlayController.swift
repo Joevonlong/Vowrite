@@ -31,7 +31,9 @@ final class MacOverlayController: OverlayProvider {
 
     private var window: NSWindow?
     private var hostingView: NSHostingView<RecordingIndicatorView>?
-    var appState: AppState?
+    // Weak: MacOverlayController is a static singleton with app lifetime; a strong
+    // back-pointer here would keep whatever AppState was last assigned alive forever.
+    weak var appState: AppState?
 
     func showRecording() {
         guard let appState = appState else { return }

@@ -150,7 +150,7 @@ struct PersonalizationPageView: View {
                 }
 
                 // Tip
-                Text("Tip: Use ⌘1–⌘9 to quickly switch scenes.")
+                Text("Tip: Use ⌃1–⌃9 to quickly switch scenes.")
                     .font(.caption)
                     .foregroundColor(.secondary.opacity(0.6))
             }
