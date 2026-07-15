@@ -1,56 +1,38 @@
 # Release Process
 
-## One-Command Release
+> **Canonical pipeline:** `ops/scripts/release.sh` (platform-aware, Sparkle appcast + EdDSA signing).
+> The legacy `scripts/release.sh` was removed 2026-07 — it skipped the appcast and CFBundleVersion bump and auto-pushed without confirmation.
+
+## Commands
 
 ```bash
-./scripts/release.sh <version>
+# Beta (updates appcast-beta.xml)
+cd Vowrite && ops/scripts/release.sh --beta v0.2.2.0-beta.1 "Beta description"
+
+# Stable (updates appcast.xml)
+cd Vowrite && ops/scripts/release.sh v0.2.2.0 "Release description"
+
+git push origin main --tags
 ```
 
-Example:
-```bash
-./scripts/release.sh 0.1.8.0
-```
+## What the script does (in order)
 
-## What It Does (in order)
+1. **Preflight** — lists commits since last tag, classifies per platform (mac/ios/shared/mixed/meta), asks 3 confirmation gates (see CLAUDE.md "Multiplatform Release Policy")
+2. **CHANGELOG** — promotes `[Unreleased]` to the new version section
+3. **Version bump** — `Resources/Info.plist` (CFBundleShortVersionString + CFBundleVersion) and `VowriteKit/Sources/VowriteKit/Version.swift`
+4. **Build** — `swift build -c release`, assemble `Vowrite.app`
+5. **Sign** — codesign with entitlements (self-signed cert `vowrite` keychain)
+6. **Package** — DMG with Applications symlink + install.sh
+7. **Sparkle** — EdDSA-sign the DMG, update `docs/appcast.xml` (or `appcast-beta.xml`)
+8. **Git** — commit, annotated tag
+9. **GitHub Release** — uploads DMG, notes from CHANGELOG
 
-| Step | Action |
-|------|--------|
-| Pre-flight | Checks: gh CLI, clean git, tag is new, CHANGELOG has entry |
-| 1. Version | Updates `Version.swift` + `Info.plist` |
-| 2. Build | `swift build -c release`, copies binary to app bundle |
-| 3. Sign | Ad-hoc code signing (`codesign --force --deep --sign -`) |
-| 4. Package | Creates DMG with `Vowrite.app` + `Applications` symlink |
-| 5. Commit | `git commit` + `git tag v{version}` |
-| 6. Push | `git push` + `git push --tags` |
-| 7. Release | Creates GitHub Release, uploads DMG, extracts notes from CHANGELOG |
+Details on gates and CHANGELOG routing: `ops/CHECKLIST_RELEASE.md` and root `CLAUDE.md`.
 
-## Before Running
+## Version format
 
-1. **Write CHANGELOG entry** — Add a `## [x.y.z.w]` section to `CHANGELOG.md`
-2. **Update link refs** — Add version comparison links at the bottom of CHANGELOG
-3. **Commit all changes** — Working tree must be clean
-4. **Dry run** (optional) — `./scripts/release.sh 0.1.8.0 --dry-run`
+`MAJOR.MINOR.PATCH.BUILD` — see [VERSIONING.md](VERSIONING.md). BUILD bumps get no tag/changelog; PATCH+ gets tag + changelog entry.
 
-## Version Format
+## Code signing
 
-`MAJOR.MINOR.PATCH.BUILD` — see [VERSIONING.md](VERSIONING.md)
-
-- `MAJOR` — Breaking changes
-- `MINOR` — New features
-- `PATCH` — Bug fixes, improvements
-- `BUILD` — Hotfixes within a patch
-
-## Code Signing
-
-Currently **ad-hoc signed** (free, no Apple Developer account).
-
-- Users must right-click → Open on first launch
-- Future: Developer ID + Notarization ($99/year Apple Developer Program)
-
-## DMG Contents
-
-```
-Vowrite.dmg
-├── Vowrite.app          (signed app bundle)
-└── Applications → /Applications  (symlink for drag-to-install)
-```
+Currently self-signed (users right-click → Open on first launch). Future: Developer ID + notarization.
