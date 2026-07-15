@@ -38,8 +38,7 @@ enum BGServiceDuration: Int, CaseIterable, Identifiable {
 /// Listens for commands from keyboard extension via Darwin Notifications,
 /// records audio, processes STT + AI polish, and writes results back via IPC.
 ///
-/// Architecture: The keyboard extension is a remote control only.
-/// All recording happens here in the main app process.
+/// Architecture: The keyboard extension is a remote control only — all recording happens here in the main app process.
 ///
 /// Audio strategy — Background Audio Session pattern (industry standard):
 /// - AVAudioEngine with persistent input tap (started in foreground, runs in background)
@@ -48,10 +47,7 @@ enum BGServiceDuration: Int, CaseIterable, Identifiable {
 /// - Keyboard auto-jumps to container app for activation when session is not active
 /// - Same approach used by Typeless, Willow, iFlytek (讯飞), Baidu Input
 ///
-/// References:
-/// - https://developer.apple.com/documentation/avfaudio/avaudionode/1387122-installtap
-/// - https://github.com/Picovoice/ios-voice-processor
-/// - https://developer.apple.com/videos/play/wwdc2019/510/
+/// References: AVAudioNode.installTap docs, Picovoice ios-voice-processor, WWDC19-510.
 @MainActor
 // swiftlint:disable:next type_body_length
 final class BackgroundRecordingService: ObservableObject {
@@ -398,7 +394,9 @@ final class BackgroundRecordingService: ObservableObject {
             print("[Vowrite BG] Audio interruption began")
             #endif
             if isRecording {
+                let sessionId = ipc.activeSessionId // cancelRecording() clears it; re-stamp after
                 cancelRecording()
+                ipc.activeSessionId = sessionId
                 ipc.state = .error
                 ipc.errorMessage = "Recording interrupted (phone call or other audio)"
             }
@@ -462,6 +460,8 @@ final class BackgroundRecordingService: ObservableObject {
             #endif
             return
         }
+
+        ipc.activeSessionId = ipc.requestedSessionId // attribute writes below to this session (IPCReconciler)
 
         guard let format = inputFormat else {
             ipc.state = .error
