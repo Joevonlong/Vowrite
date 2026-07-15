@@ -8,7 +8,7 @@
 
 | 目标 | 测试框架 | 测试数量 | 状态 |
 |------|----------|----------|------|
-| VowriteKit | XCTest（SPM testTarget） | 6 个测试用例 | ✅ 运行中 |
+| VowriteKit | XCTest（SPM testTarget） | 21 个测试文件 / 101 个用例（2026-07 快照，随 OPT 迭代持续增长） | ✅ 运行中（CI `test-kit` job 把关） |
 | VowriteMac | 无独立测试目标 | — | ⚠️ 仅构建验证 |
 | VowriteIOS | 无独立测试目标（Xcode 项目） | — | ⚠️ 仅构建验证 |
 | VowriteKeyboard | 无独立测试目标 | — | ⚠️ 仅构建验证 |
