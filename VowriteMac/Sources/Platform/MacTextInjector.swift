@@ -7,6 +7,14 @@ private let injectorLog = OSLog(subsystem: "com.vowrite.app", category: "TextInj
 
 /// Text injection using the same proven approach as Maccy (12k+ stars).
 /// Strategy: clipboard + Cmd+V via cgSessionEventTap with combinedSessionState.
+///
+/// `@MainActor`-isolated: every method here eventually touches AppKit APIs that
+/// are documented main-thread-only (`NSRunningApplication.activate()`,
+/// `NSAppleScript.executeAndReturnError`, `NSPasteboard` reads/writes). Isolating
+/// the whole type (rather than just the `TextOutputProvider` requirements) keeps
+/// the private helpers (`activatePreviousApp`, `pasteViaClipboard`) on the same
+/// actor as the public entry points, so there's no isolation mismatch between them.
+@MainActor
 final class MacTextInjector: TextOutputProvider {
     private var previousApp: NSRunningApplication?
     private var previousBundleID: String?
@@ -25,7 +33,12 @@ final class MacTextInjector: TextOutputProvider {
     }
 
     /// Inject text into the previously active app at the cursor position.
-    func output(text: String) async {
+    /// Returns `true` if the paste was actually delivered, `false` if injection
+    /// was aborted (target app activation failed — the V-014 guard). On the
+    /// `false` path the clipboard has NOT been touched by this call (the guard
+    /// runs before any pasteboard write), so the caller cannot assume the text
+    /// is on the clipboard for a manual paste.
+    func output(text: String) async -> Bool {
         NSLog("[TextInjector] Injecting %d chars, AXTrusted=%d",
               text.count, AXIsProcessTrusted() ? 1 : 0)
 
@@ -34,7 +47,7 @@ final class MacTextInjector: TextOutputProvider {
             os_log(.error, log: injectorLog,
                    "V-014: target app activation failed — aborting Cmd+V injection to avoid wrong-app paste")
             NSLog("[TextInjector] ERROR: activation failed, injection aborted (clipboard untouched)")
-            return
+            return false
         }
 
         // Step 2: Wait for focus to settle
@@ -50,6 +63,8 @@ final class MacTextInjector: TextOutputProvider {
         if let element {
             CorrectionMonitor.shared.start(element: element, injectedText: text)
         }
+
+        return true
     }
 
     // MARK: - App Activation
@@ -97,11 +112,31 @@ final class MacTextInjector: TextOutputProvider {
 
     private func pasteViaClipboard(text: String) {
         let pasteboard = NSPasteboard.general
-        let previousContents = pasteboard.string(forType: .string)
 
-        // Write text to clipboard
+        // Snapshot the FULL pre-injection clipboard — every item, every type it
+        // carries (rich text, images, files, etc.), not just the plain string.
+        // NSPasteboardItem instances belong to the current pasteboard contents
+        // and can't be reused after clearContents(), so each item's data is
+        // deep-copied type-by-type into plain Data before we touch anything.
+        let snapshot: [[NSPasteboard.PasteboardType: Data]] = (pasteboard.pasteboardItems ?? []).map { item in
+            var typeData: [NSPasteboard.PasteboardType: Data] = [:]
+            for type in item.types {
+                if let data = item.data(forType: type) {
+                    typeData[type] = data
+                }
+            }
+            return typeData
+        }
+
+        // Write the injection text
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
+
+        // Record the change count right after our own write. The restore below
+        // only fires if this is still the most recent write to the pasteboard —
+        // if the user (or another app) copies something new before the restore
+        // timer fires, changeCount will have advanced and we must not clobber it.
+        let changeCountAfterWrite = pasteboard.changeCount
 
         let source = CGEventSource(stateID: .combinedSessionState)
         source?.setLocalEventsFilterDuringSuppressionState(
@@ -120,12 +155,28 @@ final class MacTextInjector: TextOutputProvider {
 
         NSLog("[TextInjector] Cmd+V posted (combinedSessionState + cgSessionEventTap)")
 
-        // Restore clipboard after paste completes
+        // Restore the pre-injection clipboard after paste completes — but only
+        // if nothing has written to it in the meantime (changeCount unchanged).
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            pasteboard.clearContents()
-            if let prev = previousContents {
-                pasteboard.setString(prev, forType: .string)
+            guard ClipboardRestoreDecision.shouldRestore(
+                currentChangeCount: pasteboard.changeCount,
+                recordedChangeCount: changeCountAfterWrite
+            ) else {
+                NSLog("[TextInjector] Clipboard changed since injection — skipping restore")
+                return
             }
+
+            pasteboard.clearContents()
+            guard !snapshot.isEmpty else { return }
+
+            let items: [NSPasteboardItem] = snapshot.map { typeData in
+                let item = NSPasteboardItem()
+                for (type, data) in typeData {
+                    item.setData(data, forType: type)
+                }
+                return item
+            }
+            pasteboard.writeObjects(items)
         }
     }
 }
