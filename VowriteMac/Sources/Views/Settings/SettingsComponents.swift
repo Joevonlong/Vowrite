@@ -142,28 +142,6 @@ struct AppearancePicker: View {
     }
 }
 
-// MARK: - Stat Card
-
-struct StatCard: View {
-    let icon: String
-    let value: String
-    let label: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: VW.Spacing.md) {
-            HStack(spacing: VW.Spacing.sm) {
-                Image(systemName: icon).foregroundColor(.secondary).font(.caption)
-                Text(value).font(.system(size: 20, weight: .bold))
-            }
-            Text(label).font(.caption).foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(VW.Spacing.xxl)
-        .background(VW.Colors.Background.tertiary)
-        .cornerRadius(VW.Radius.xxxl)
-    }
-}
-
 // MARK: - Quick Action Card
 
 struct QuickActionCard: View {
