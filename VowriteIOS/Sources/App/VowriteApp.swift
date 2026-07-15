@@ -133,8 +133,7 @@ struct VowriteApp: App {
     private func autoActivateIfNeeded() {
         guard VowriteStorage.defaults.bool(forKey: "bgServiceEnabled") else { return }
 
-        let durationRaw = VowriteStorage.defaults.integer(forKey: "bgServiceDuration")
-        let duration = BGServiceDuration(rawValue: durationRaw) ?? .always
+        let duration = BGServiceDuration.persisted(in: VowriteStorage.defaults)
 
         // For finite durations, check if the timer has already expired
         if let seconds = duration.seconds {
@@ -155,8 +154,7 @@ struct VowriteApp: App {
 
     /// Reads user's saved duration preference, defaulting to 5 minutes for session-based approach.
     private var savedBGServiceDuration: BGServiceDuration {
-        let raw = VowriteStorage.defaults.integer(forKey: "bgServiceDuration")
-        return BGServiceDuration(rawValue: raw) ?? .fiveMinutes
+        BGServiceDuration.persisted(in: VowriteStorage.defaults)
     }
 
     /// Try to return to the host app by opening its URL scheme.

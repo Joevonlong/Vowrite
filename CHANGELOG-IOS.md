@@ -37,4 +37,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 - **System dictation microphone hidden (F-076)**: the bottom-right system dictation mic is suppressed by declaring the keyboard multilingual + ASCII-capable in `Info.plist` (`PrimaryLanguage = mul`, `IsASCIICapable = YES`) — the same approach Typeless uses; iOS then renders only the next-keyboard globe in its system dock, no dictation mic. The keyboard backdrop stays clear so the system keyboard backdrop shows through as **one uniform tone edge-to-edge** (no custom opaque override, no two-tone seam), and the keyboard draws **no globe of its own** (the system dock already provides one — drawing our own duplicated it). A build-time guard (`ops/scripts/test.sh`) fails the suite if the plist declaration is reverted. Note: changing `Info.plist` extension attributes requires removing and re-adding the keyboard in iOS Settings for the change to take effect.
 
+- **Translate-mode override no longer leaks into the next dictation**: if the recording file failed to open right after starting a one-shot translate recording, the one-shot Mode override wasn't cleared, so the *next* plain dictation could silently run as a translation. That failure path now clears the override, matching every other recording exit.
+
+- **Background recording now defaults to a 5-minute session on first activation, not an indefinite one**: a first-time user (or a fresh install) previously got an "Always on" mic session because the unset duration preference and the explicit "Always" duration shared the same stored value (0). Users who have explicitly chosen "Always" keep that setting.
+
+- **Keyboard no longer hangs forever if Vowrite is killed in the background**: if the main app process dies while a dictation is recording or processing, the keyboard now detects the lost service heartbeat and shows "Vowrite stopped in background" instead of freezing on the recording/processing screen indefinitely.
+
+- **API keys save once you're done typing, not on every keystroke**: Settings no longer writes a partial key to Keychain on each character typed or pasted. Keys now save when you submit, move to another field, or leave the Settings screen.
+
 ### Removed

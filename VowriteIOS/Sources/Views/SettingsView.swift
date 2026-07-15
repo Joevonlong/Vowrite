@@ -19,6 +19,13 @@ struct SettingsView: View {
 
     @ObservedObject private var modeManager = ModeManager.shared
 
+    /// API key SecureFields save on submit/blur only, not on every keystroke —
+    /// persisting a partial key mid-typing/paste to Keychain is wasted work and
+    /// briefly stores garbage. Track focus so we can save when the user leaves
+    /// the field without hitting return.
+    private enum KeyField: Hashable { case stt, polish }
+    @FocusState private var focusedKeyField: KeyField?
+
     var body: some View {
         NavigationStack {
             Form {
@@ -72,10 +79,8 @@ struct SettingsView: View {
                             .textContentType(.password)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
+                            .focused($focusedKeyField, equals: .stt)
                             .onSubmit { saveKey(sttAPIKey, for: sttProvider) }
-                            .onChange(of: sttAPIKey) { _, newValue in
-                                saveKey(newValue, for: sttProvider)
-                            }
 
                         if KeyVault.hasKey(for: sttProvider) {
                             Label("Key saved", systemImage: "checkmark.circle.fill")
@@ -109,10 +114,8 @@ struct SettingsView: View {
                             .textContentType(.password)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
+                            .focused($focusedKeyField, equals: .polish)
                             .onSubmit { saveKey(polishAPIKey, for: polishProvider) }
-                            .onChange(of: polishAPIKey) { _, newValue in
-                                saveKey(newValue, for: polishProvider)
-                            }
 
                         if KeyVault.hasKey(for: polishProvider) {
                             Label("Key saved", systemImage: "checkmark.circle.fill")
@@ -176,6 +179,23 @@ struct SettingsView: View {
                 let tgt = translationTarget
                 if src != translationSourceLocal { translationSourceLocal = src }
                 if tgt != translationTargetLocal { translationTargetLocal = tgt }
+            }
+            .onChange(of: focusedKeyField) { oldValue, _ in
+                // Save when focus leaves a key field (tab away, dismiss keyboard),
+                // not just on submit — covers the common "type then tap elsewhere" path.
+                switch oldValue {
+                case .stt: saveKey(sttAPIKey, for: sttProvider)
+                case .polish: saveKey(polishAPIKey, for: polishProvider)
+                case nil: break
+                }
+            }
+            .onDisappear {
+                // Backstop: if the view (and its field) disappears while still
+                // focused — e.g. the user types a key then immediately
+                // backgrounds/switches tabs — the focus-change handler above
+                // may not fire in time. Save whatever is currently entered.
+                saveKey(sttAPIKey, for: sttProvider)
+                saveKey(polishAPIKey, for: polishProvider)
             }
         }
     }

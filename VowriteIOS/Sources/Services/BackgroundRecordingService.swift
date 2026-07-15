@@ -24,6 +24,14 @@ enum BGServiceDuration: Int, CaseIterable, Identifiable {
     var seconds: TimeInterval? {
         self == .always ? nil : TimeInterval(rawValue)
     }
+
+    /// Persisted duration preference, defaulting to 5 minutes when unset.
+    /// `UserDefaults.integer(forKey:)` returns 0 for a missing key, which
+    /// collides with `.always`'s rawValue (0); an explicit 0 still means Always.
+    static func persisted(in defaults: UserDefaults, key: String = "bgServiceDuration") -> BGServiceDuration {
+        guard defaults.object(forKey: key) != nil else { return .fiveMinutes }
+        return BGServiceDuration(rawValue: defaults.integer(forKey: key)) ?? .fiveMinutes
+    }
 }
 
 /// Main App background recording service.
@@ -184,8 +192,13 @@ final class BackgroundRecordingService: ObservableObject {
             inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
                 guard let self else { return }
 
+                // Read audioFile under the lock (also the recording-active signal here — avoids racing @MainActor isRecording).
+                self.fileLock.lock()
+                let file = self.audioFile
+                self.fileLock.unlock()
+
                 // Calculate RMS for waveform display + silence detection (only when recording)
-                if self.isRecording {
+                if file != nil {
                     let rms = self.calculateRMS(buffer: buffer)
                     self.lastRMSLevel = rms
                     // Track peak RMS across session for silence detection
@@ -193,9 +206,6 @@ final class BackgroundRecordingService: ObservableObject {
                 }
 
                 // Write to file only when audioFile is set (= recording active)
-                self.fileLock.lock()
-                let file = self.audioFile
-                self.fileLock.unlock()
                 if let file {
                     try? file.write(from: buffer)
                 }
@@ -497,6 +507,8 @@ final class BackgroundRecordingService: ObservableObject {
             #endif
             ipc.state = .error
             ipc.errorMessage = "Recording failed: \(error.localizedDescription)"
+            // Clear the override so it doesn't leak into the next dictation.
+            clearSessionMode()
             return
         }
 

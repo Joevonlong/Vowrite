@@ -7,10 +7,7 @@ struct DashboardView: View {
     @State private var sttTestResult: TestResult?
     @State private var polishTestResult: TestResult?
     @State private var isTesting = false
-    @State private var selectedDuration: BGServiceDuration = {
-        let raw = VowriteStorage.defaults.integer(forKey: "bgServiceDuration")
-        return BGServiceDuration(rawValue: raw) ?? .always
-    }()
+    @State private var selectedDuration: BGServiceDuration = BGServiceDuration.persisted(in: VowriteStorage.defaults)
 
     private var keyboardActive: Bool {
         // Primary: check system input modes for our keyboard bundle ID
