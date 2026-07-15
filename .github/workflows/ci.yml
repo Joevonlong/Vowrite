@@ -4,7 +4,8 @@
 # Jobs:
 #   build-mac   — Swift build (debug on PR, release on push to main)
 #   test-kit    — VowriteKit unit tests
-#   lint        — SwiftLint + swift-format (continue-on-error: soft start)
+#   build-ios   — xcodebuild for VowriteIOS + VowriteKeyboard (hard gate) + F-076 plist check
+#   lint        — SwiftLint (hard gate) + swift-format (advisory)
 #   parity      — iOS-macOS feature parity check (continue-on-error)
 #   secrets     — gitleaks secret scanning (hard gate)
 #   review-scan — Full review-scan.sh sweep (continue-on-error: soft start)
@@ -17,12 +18,16 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # ── 1. macOS Build ──────────────────────────────────────────────────────────
   build-mac:
     name: Build (macOS)
     runs-on: macos-14
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -60,6 +65,7 @@ jobs:
   test-kit:
     name: Test (VowriteKit)
     runs-on: macos-14
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -77,26 +83,61 @@ jobs:
         working-directory: VowriteKit
         run: swift test
 
-  # ── 3. Lint (SwiftLint + swift-format) ─────────────────────────────────────
+  # ── 3. iOS Build (hard gate) ────────────────────────────────────────────────
+  build-ios:
+    name: Build (iOS)
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SPM & DerivedData
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData
+          key: spm-ios-${{ runner.os }}-${{ hashFiles('VowriteKit/Package.swift', 'VowriteIOS/VowriteIOS.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            spm-ios-${{ runner.os }}-
+
+      - name: Build VowriteIOS (+ VowriteKeyboard appex dependency)
+        run: |
+          xcodebuild -project VowriteIOS/VowriteIOS.xcodeproj -scheme VowriteIOS \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+
+      - name: F-076 iOS Keyboard Dictation Mic Suppression (plist regression check)
+        run: |
+          LANG_VAL=$(/usr/libexec/PlistBuddy -c "Print :NSExtension:NSExtensionAttributes:PrimaryLanguage" VowriteKeyboard/Info.plist)
+          ASCII_VAL=$(/usr/libexec/PlistBuddy -c "Print :NSExtension:NSExtensionAttributes:IsASCIICapable" VowriteKeyboard/Info.plist)
+          if [ "$LANG_VAL" = "mul" ] && [ "$ASCII_VAL" = "true" ]; then
+            echo "F-076 plist mic-suppression intact (PrimaryLanguage=mul, IsASCIICapable=true)"
+          else
+            echo "::error::F-076 regressed: PrimaryLanguage='$LANG_VAL' IsASCIICapable='$ASCII_VAL' (must be mul/true) — re-exposes the system dictation mic"
+            exit 1
+          fi
+
+  # ── 4. Lint (SwiftLint hard gate + swift-format advisory) ──────────────────
   lint:
     name: Lint
     runs-on: macos-14
-    continue-on-error: true  # Soft mode: lint findings are advisory until baseline cleared
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
       - name: Install SwiftLint
-        run: brew install swiftlint || true
+        run: brew install swiftlint
 
       - name: Install swift-format
-        run: brew install swift-format || true
+        run: brew install swift-format
 
       - name: SwiftLint
         run: |
           if command -v swiftlint &>/dev/null; then
-            swiftlint lint --config .swiftlint.yml --reporter github-actions-logging || true
+            swiftlint lint --config .swiftlint.yml --reporter github-actions-logging
           else
-            echo "::warning::swiftlint not available"
+            echo "::error::swiftlint not available"
+            exit 1
           fi
 
       - name: swift-format lint
@@ -112,10 +153,11 @@ jobs:
             echo "::warning::swift-format not available"
           fi
 
-  # ── 4. iOS-macOS Feature Parity ────────────────────────────────────────────
+  # ── 5. iOS-macOS Feature Parity ────────────────────────────────────────────
   parity:
     name: Parity Check
     runs-on: macos-14
+    timeout-minutes: 10
     continue-on-error: true  # Advisory until parity gaps are resolved
     steps:
       - uses: actions/checkout@v4
@@ -123,10 +165,11 @@ jobs:
       - name: Check iOS-macOS feature parity
         run: bash scripts/check-parity.sh
 
-  # ── 5. Secret Scanning (gitleaks) ──────────────────────────────────────────
+  # ── 6. Secret Scanning (gitleaks) ──────────────────────────────────────────
   secrets:
     name: Secret Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -148,10 +191,11 @@ jobs:
             --config .gitleaks.toml \
             --exit-code 1
 
-  # ── 6. Review Scan ──────────────────────────────────────────────────────────
+  # ── 7. Review Scan ──────────────────────────────────────────────────────────
   review-scan:
     name: Review Scan
     runs-on: macos-14
+    timeout-minutes: 20
     continue-on-error: true  # Soft mode: advisory until baseline cleared
     steps:
       - uses: actions/checkout@v4
