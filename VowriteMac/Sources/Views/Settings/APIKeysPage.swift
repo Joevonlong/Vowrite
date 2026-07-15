@@ -7,6 +7,7 @@ struct APIKeysPageView: View {
     @State private var keyInputs: [APIProvider: String] = [:]
     @State private var keyEditorExpanded: [APIProvider: Bool] = [:]
     @State private var keysSaved = false
+    @State private var keysSaveFailed = false
 
     var body: some View {
         ScrollView {
@@ -86,6 +87,10 @@ struct APIKeysPageView: View {
                 if keysSaved {
                     Label("Keys saved", systemImage: "checkmark.circle.fill")
                         .foregroundColor(.green)
+                        .font(.caption)
+                } else if keysSaveFailed {
+                    Label("Couldn't save to Keychain", systemImage: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
                         .font(.caption)
                 }
             }
@@ -167,9 +172,15 @@ struct APIKeysPageView: View {
                     .font(.caption)
 
                     Button("Clear") {
-                        _ = KeyVault.deleteKey(for: provider)
-                        keyInputs[provider] = ""
-                        keyEditorExpanded[provider] = false
+                        if KeyVault.deleteKey(for: provider) {
+                            keyInputs[provider] = ""
+                            keyEditorExpanded[provider] = false
+                        } else {
+                            Log.settings.error("Failed to delete Keychain key for provider \(provider.rawValue, privacy: .public)")
+                            keysSaved = false
+                            keysSaveFailed = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { keysSaveFailed = false }
+                        }
                     }
                     .buttonStyle(.borderless)
                     .font(.caption)
@@ -200,17 +211,29 @@ struct APIKeysPageView: View {
     }
 
     private func saveKeys() {
+        var allSucceeded = true
         for provider in KeyVault.managedProviders {
             let value = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             if !value.isEmpty {
-                _ = KeyVault.saveKey(value, for: provider)
-                keyInputs[provider] = ""
-                keyEditorExpanded[provider] = false
+                if KeyVault.saveKey(value, for: provider) {
+                    keyInputs[provider] = ""
+                    keyEditorExpanded[provider] = false
+                } else {
+                    allSucceeded = false
+                    Log.settings.error("Failed to save Keychain key for provider \(provider.rawValue, privacy: .public)")
+                }
             }
         }
         Task { @MainActor in AuthManager.shared.setAuthMode(.apiKey) }
-        keysSaved = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { keysSaved = false }
+        if allSucceeded {
+            keysSaved = true
+            keysSaveFailed = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { keysSaved = false }
+        } else {
+            keysSaved = false
+            keysSaveFailed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { keysSaveFailed = false }
+        }
     }
 
     private var hasPendingKeyChanges: Bool {

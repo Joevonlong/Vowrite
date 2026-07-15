@@ -1,7 +1,10 @@
 import AVFoundation
 import Foundation
+import os
 
 public final class AudioEngine {
+    private let logger = Logger(subsystem: "com.vowrite.kit", category: "audio")
+
     private var audioEngine: AVAudioEngine?
     private var audioFile: AVAudioFile?
     private var audioRecorder: AVAudioRecorder?
@@ -48,19 +51,13 @@ public final class AudioEngine {
             do {
                 try session.setCategory(.record, mode: .default)
             } catch {
-                #if DEBUG
-                print("[Vowrite] AudioEngine: .record failed (\(error.localizedDescription)), trying .playAndRecord")
-                #endif
+                logger.error("session .record failed (\(error.localizedDescription, privacy: .public)), trying .playAndRecord")
                 try session.setCategory(.playAndRecord, mode: .default)
             }
             try session.setActive(true)
-            #if DEBUG
-            print("[Vowrite] AudioEngine: session configured (manageAudioSession=true)")
-            #endif
+            logger.debug("session configured (manageAudioSession=true)")
         } else {
-            #if DEBUG
-            print("[Vowrite] AudioEngine: skipping session setup (manageAudioSession=false)")
-            #endif
+            logger.debug("skipping session setup (manageAudioSession=false)")
         }
         #endif
 
@@ -74,18 +71,12 @@ public final class AudioEngine {
         do {
             try startWithAudioEngine()
             usingRecorderFallback = false
-            #if DEBUG
-            print("[Vowrite] AudioEngine: AVAudioEngine started successfully")
-            #endif
+            logger.debug("AVAudioEngine started successfully")
         } catch {
-            #if DEBUG
-            print("[Vowrite] AudioEngine: AVAudioEngine failed (\(error.localizedDescription)), falling back to AVAudioRecorder")
-            #endif
+            logger.error("AVAudioEngine failed (\(error.localizedDescription, privacy: .public)), falling back to AVAudioRecorder")
             try startWithAudioRecorder()
             usingRecorderFallback = true
-            #if DEBUG
-            print("[Vowrite] AudioEngine: AVAudioRecorder started successfully (fallback)")
-            #endif
+            logger.notice("AVAudioRecorder started successfully (fallback)")
         }
     }
 
@@ -182,13 +173,9 @@ public final class AudioEngine {
         #if os(iOS)
         if manageAudioSession {
             try? AVAudioSession.sharedInstance().setActive(false)
-            #if DEBUG
-            print("[Vowrite] AudioEngine: session deactivated (manageAudioSession=true)")
-            #endif
+            logger.debug("session deactivated (manageAudioSession=true)")
         } else {
-            #if DEBUG
-            print("[Vowrite] AudioEngine: skipping session deactivation (manageAudioSession=false)")
-            #endif
+            logger.debug("skipping session deactivation (manageAudioSession=false)")
         }
         #endif
 

@@ -159,7 +159,10 @@ final class MacHotkeyManager: HotkeyProvider {
 
     private func registerHotKey() {
         let hotkeyID = EventHotKeyID(signature: OSType(0x564F5841), id: 1)
-        RegisterEventHotKey(keyCode, modifiers, hotkeyID, GetApplicationEventTarget(), 0, &hotkeyRef)
+        let status = RegisterEventHotKey(keyCode, modifiers, hotkeyID, GetApplicationEventTarget(), 0, &hotkeyRef)
+        if status != noErr {
+            Log.hotkey.error("RegisterEventHotKey failed for main hotkey (keyCode: \(self.keyCode, privacy: .public), status: \(status, privacy: .public))")
+        }
     }
 
     private func unregisterHotKey() {
@@ -173,7 +176,10 @@ final class MacHotkeyManager: HotkeyProvider {
 
     private func registerTranslateHotKey() {
         let hotkeyID = EventHotKeyID(signature: OSType(0x564F5841), id: 2)
-        RegisterEventHotKey(translateKeyCode, translateModifiers, hotkeyID, GetApplicationEventTarget(), 0, &translateHotkeyRef)
+        let status = RegisterEventHotKey(translateKeyCode, translateModifiers, hotkeyID, GetApplicationEventTarget(), 0, &translateHotkeyRef)
+        if status != noErr {
+            Log.hotkey.error("RegisterEventHotKey failed for translate hotkey (keyCode: \(self.translateKeyCode, privacy: .public), status: \(status, privacy: .public))")
+        }
     }
 
     private func unregisterTranslateHotKey() {
@@ -197,7 +203,10 @@ final class MacHotkeyManager: HotkeyProvider {
         for (i, kc) in keyCodes.enumerated() {
             var ref: EventHotKeyRef?
             let hotkeyID = EventHotKeyID(signature: OSType(0x564F5841), id: UInt32(100 + i))
-            RegisterEventHotKey(kc, UInt32(controlKey), hotkeyID, GetApplicationEventTarget(), 0, &ref)
+            let status = RegisterEventHotKey(kc, UInt32(controlKey), hotkeyID, GetApplicationEventTarget(), 0, &ref)
+            if status != noErr {
+                Log.hotkey.error("RegisterEventHotKey failed for mode hotkey ⌃\(i + 1, privacy: .public) (status: \(status, privacy: .public))")
+            }
             if let ref = ref { modeHotkeyRefs.append(ref) }
         }
     }

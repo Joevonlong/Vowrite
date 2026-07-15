@@ -31,6 +31,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - **"Launch at login" toggle now reflects reality**: The setting previously always showed off on launch regardless of the actual state, and a failure to enable/disable it (e.g. a system permission issue) was silently swallowed. The toggle now loads the real status on open, and any failure reverts the toggle and shows a brief inline error explaining what went wrong.
 - **Paste-target activation permission prompt no longer silently denied**: macOS requires an Automation usage description for Vowrite's fallback app-activation step (used when the primary activation path fails before pasting). Without it, the system auto-denied the request instead of asking you. The app now declares this permission properly.
 - **Personalization page showed the wrong shortcut for scene switching**: The tip under Scenes said "⌘1–⌘9"; scene-switch shortcuts actually use Control, so it now correctly reads "⌃1–⌃9" (matching the Keyboard Shortcuts page).
+- **Keychain save failures and model download failures no longer silent**: Saving or clearing a provider API key in Settings or during onboarding could fail (e.g. Keychain access denied) with no indication anything went wrong. The existing "Keys saved" confirmation now shows a red "Couldn't save to Keychain" variant on failure instead of quietly discarding the result. Likewise, downloading or deleting an offline Sherpa speech model now shows an inline error message on the row if it fails, instead of failing silently.
 
 ### Performance
 

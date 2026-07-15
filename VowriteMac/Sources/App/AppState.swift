@@ -81,7 +81,11 @@ final class AppState: ObservableObject {
             )
             let context = self.modelContainer.mainContext
             context.insert(record)
-            try? context.save()
+            do {
+                try context.save()
+            } catch {
+                Log.history.error("Failed to save DictationRecord: \(error.localizedDescription, privacy: .public)")
+            }
         }
 
         // Wire ESC monitor for cancel on recording start/stop

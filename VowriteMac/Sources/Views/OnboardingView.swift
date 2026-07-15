@@ -11,6 +11,7 @@ struct OnboardingView: View {
     @State private var keyEditorExpanded: [APIProvider: Bool] = [:]
     @State private var testResult: (success: Bool, message: String)?
     @State private var testing = false
+    @State private var keychainSaveFailed = false
     @State private var hasMicrophone = false
     @State private var hasAccessibility = false
     @State private var testRecordingState: TestRecordingState = .idle
@@ -360,9 +361,13 @@ struct OnboardingView: View {
                                 .buttonStyle(.borderless)
 
                                 Button("Clear") {
-                                    _ = KeyVault.deleteKey(for: provider)
-                                    keyInputs[provider] = ""
-                                    keyEditorExpanded[provider] = false
+                                    if KeyVault.deleteKey(for: provider) {
+                                        keyInputs[provider] = ""
+                                        keyEditorExpanded[provider] = false
+                                    } else {
+                                        Log.settings.error("Failed to delete Keychain key for provider \(provider.rawValue, privacy: .public) during onboarding")
+                                        keychainSaveFailed = true
+                                    }
                                 }
                                 .buttonStyle(.borderless)
                             } else {
@@ -391,7 +396,11 @@ struct OnboardingView: View {
 
             // Test button
             HStack {
-                if let result = testResult {
+                if keychainSaveFailed {
+                    Label("Couldn't save to Keychain", systemImage: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                        .font(.caption)
+                } else if let result = testResult {
                     Label(result.message, systemImage: result.success ? "checkmark.circle.fill" : "xmark.circle.fill")
                         .foregroundColor(result.success ? .green : .red)
                         .font(.caption)
@@ -413,14 +422,20 @@ struct OnboardingView: View {
 
     private func saveAPIConfig() {
         APIConfig.apply(onboardingConfig, presetID: selectedPresetID)
+        var allSucceeded = true
         for provider in requiredProviders {
             let key = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             if !key.isEmpty {
-                _ = KeyVault.saveKey(key, for: provider)
-                keyInputs[provider] = ""
-                keyEditorExpanded[provider] = false
+                if KeyVault.saveKey(key, for: provider) {
+                    keyInputs[provider] = ""
+                    keyEditorExpanded[provider] = false
+                } else {
+                    allSucceeded = false
+                    Log.settings.error("Failed to save Keychain key for provider \(provider.rawValue, privacy: .public) during onboarding")
+                }
             }
         }
+        keychainSaveFailed = !allSucceeded
         Task { @MainActor in AuthManager.shared.setAuthMode(.apiKey) }
     }
 

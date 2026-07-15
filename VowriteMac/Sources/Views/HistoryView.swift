@@ -226,7 +226,11 @@ struct HistoryView: View {
     private func deleteRecord(_ record: DictationRecord) {
         withAnimation {
             modelContext.delete(record)
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                Log.history.error("Failed to save after deleteRecord: \(error.localizedDescription, privacy: .public)")
+            }
         }
     }
 
@@ -235,7 +239,11 @@ struct HistoryView: View {
             for record in records where selectedRecords.contains(record.id) {
                 modelContext.delete(record)
             }
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                Log.history.error("Failed to save after batchDelete: \(error.localizedDescription, privacy: .public)")
+            }
             selectedRecords.removeAll()
         }
     }
