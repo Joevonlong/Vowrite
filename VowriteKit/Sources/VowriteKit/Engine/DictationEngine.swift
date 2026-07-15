@@ -373,8 +373,16 @@ public final class DictationEngine: ObservableObject {
                 overlay.hide()
 
                 // Step 4: Output text (inject or copy)
+                // E-5: `output` reports whether delivery actually happened — macOS
+                // aborts (returns false) if it couldn't confirm the target app
+                // activated, to avoid pasting into the wrong window. That must not
+                // be silently swallowed: the pipeline already did the expensive
+                // work (STT + polish), so we still save to history/stats below
+                // (the user can recover the text from there) but report failure
+                // instead of success.
+                var outputDelivered = true
                 if forceAutoPaste || modeConfig.autoPaste {
-                    await textOutput.output(text: finalText)
+                    outputDelivered = await textOutput.output(text: finalText)
                 }
 
                 // Step 5: Save to history via callback
@@ -383,11 +391,14 @@ public final class DictationEngine: ObservableObject {
                 // Step 6: Update stats
                 updateStats(duration: recordingDuration, text: finalText)
 
-                // Step 7: Success feedback (or translate-failed warning)
+                // Step 7: Success feedback (or translate-failed / paste-failed warning)
                 speculativePolish.reset()
                 promptContext = nil
                 sessionModeOverride = nil   // F-063: clear oneshot translate override
-                if translationFailed {
+                if !outputDelivered {
+                    feedback.playErrorSound()
+                    state = .error("粘贴失败，请手动复制文本")
+                } else if translationFailed {
                     feedback.playErrorSound()
                     state = .error("翻译失败，已输出原文")
                 } else {

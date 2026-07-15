@@ -7,9 +7,10 @@ final class iOSClipboardOutput: TextOutputProvider {
         // No-op on iOS — no app switching needed
     }
 
-    func output(text: String) async {
-        await MainActor.run {
-            UIPasteboard.general.string = text
-        }
+    func output(text: String) async -> Bool {
+        // `TextOutputProvider` is `@MainActor`-isolated, so this already runs on
+        // the main actor — the `MainActor.run` hop this used to need is gone.
+        UIPasteboard.general.string = text
+        return true
     }
 }

@@ -12,9 +12,10 @@ final class KeyboardTextOutput: TextOutputProvider {
         // No-op for keyboard (macOS needs to remember focused app)
     }
 
-    func output(text: String) async {
-        await MainActor.run {
-            proxy?.insertText(text)
-        }
+    func output(text: String) async -> Bool {
+        // `TextOutputProvider` is `@MainActor`-isolated, so this already runs on
+        // the main actor — the `MainActor.run` hop this used to need is gone.
+        proxy?.insertText(text)
+        return true
     }
 }
