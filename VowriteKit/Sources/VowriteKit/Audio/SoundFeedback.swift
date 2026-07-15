@@ -5,8 +5,8 @@ import Foundation
 /// Supports preheating (pre-generate + cache) and a user-facing enable/disable toggle.
 public enum SoundFeedback {
 
-    private static let storageKey = "soundFeedbackEnabled"
-
+    /// Stored key is intentionally the negation, "soundFeedbackDisabled" — there is
+    /// no separate "enabled" key.
     public static var isEnabled: Bool {
         get { !VowriteStorage.defaults.bool(forKey: "soundFeedbackDisabled") }
         set { VowriteStorage.defaults.set(!newValue, forKey: "soundFeedbackDisabled") }

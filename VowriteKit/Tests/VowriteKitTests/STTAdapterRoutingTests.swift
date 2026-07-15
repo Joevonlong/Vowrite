@@ -10,11 +10,17 @@ final class STTAdapterRoutingTests: XCTestCase {
     /// Adapter ids WhisperService has implementations for (its `adapterMap` keys).
     /// If a new adapter is added there, add it here too.
     private let implementedAdapterIDs: Set<String> = [
-        "openai-compatible", "deepgram", "volcengine", "qwen", "iflytek", "sherpa",
+        "openai-compatible", "deepgram", "qwen", "iflytek", "sherpa",
     ]
 
+    /// Only providers with STT capability enabled can ever reach `WhisperService`'s
+    /// routing — `DictationEngine.setupErrorMessage(for:)` refuses to start a
+    /// recording when `hasSTTSupport` is false. A provider like volcengine may
+    /// declare a placeholder `sttAdapter` with no matching implementation while its
+    /// STT capability stays off (pending F-063); that's fine until the capability
+    /// flag flips, at which point this test starts checking it.
     func testEveryProviderRoutesToAnImplementedAdapter() {
-        for p in ProviderRegistry.shared.providers {
+        for p in ProviderRegistry.shared.sttProviders {
             let adapterID = ProviderRegistry.shared.sttAdapterID(for: p.id)
             XCTAssertTrue(
                 implementedAdapterIDs.contains(adapterID),
