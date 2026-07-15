@@ -74,6 +74,7 @@ final class KeyboardState: ObservableObject {
 
     deinit {
         serviceCheckTimer?.invalidate()
+        pollTimer?.invalidate()
     }
 
     func reloadConfiguration() {
@@ -323,12 +324,32 @@ final class KeyboardState: ObservableObject {
             }
 
         case .recording:
+            // Watchdog: if the main app process died mid-recording, the IPC state
+            // sticks on .recording forever (it was written by a process that no
+            // longer exists to move it forward). Detect via the same heartbeat
+            // liveness check used elsewhere instead of hanging indefinitely.
+            guard ipc.isServiceAlive else {
+                stopPolling()
+                startCommandSentAt = nil
+                ipc.clearResult()
+                viewState = .error("Vowrite stopped in background")
+                clearTranslateSession()
+                break
+            }
             startCommandSentAt = nil
             viewState = .recording
             audioLevel = ipc.audioLevel
             recordingDuration = ipc.recordingDuration
 
         case .processing:
+            guard ipc.isServiceAlive else {
+                stopPolling()
+                startCommandSentAt = nil
+                ipc.clearResult()
+                viewState = .error("Vowrite stopped in background")
+                clearTranslateSession()
+                break
+            }
             viewState = .processing
 
         case .done:

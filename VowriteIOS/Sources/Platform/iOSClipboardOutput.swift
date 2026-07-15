@@ -8,6 +8,8 @@ final class iOSClipboardOutput: TextOutputProvider {
     }
 
     func output(text: String) async {
-        UIPasteboard.general.string = text
+        await MainActor.run {
+            UIPasteboard.general.string = text
+        }
     }
 }
