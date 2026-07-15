@@ -31,6 +31,7 @@ enum WindowHelper {
 
         let hosting = NSHostingController(rootView: contentView)
         let window = NSWindow(contentViewController: hosting)
+        window.isReleasedWhenClosed = false
         window.title = "Vowrite"
         window.setContentSize(NSSize(width: 860, height: 580))
         window.minSize = NSSize(width: 780, height: 520)

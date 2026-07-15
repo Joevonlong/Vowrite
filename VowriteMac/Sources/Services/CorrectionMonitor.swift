@@ -149,6 +149,7 @@ final class CorrectionMonitor {
             backing: .buffered,
             defer: true
         )
+        panel.isReleasedWhenClosed = false
         panel.isFloatingPanel = true
         panel.level = .statusBar
         panel.backgroundColor = .clear

@@ -13,7 +13,9 @@ struct VowriteApp: App {
             VowriteMenuView()
                 .environmentObject(appState)
                 .onAppear {
-                    AppStateHolder.shared = appState
+                    // AppStateHolder.shared is already set by AppState.init() — see
+                    // App/AppState.swift. Assigning it again here was redundant (and
+                    // re-ran on every menu-bar popover open).
                     // F-017: Show onboarding on first launch
                     if !OnboardingManager.isComplete {
                         showOnboarding()
@@ -59,6 +61,7 @@ struct VowriteApp: App {
 
         let hosting = NSHostingController(rootView: onboardingView)
         let window = NSWindow(contentViewController: hosting)
+        window.isReleasedWhenClosed = false
         window.title = "Welcome to Vowrite"
         window.setContentSize(NSSize(width: 600, height: 500))
         window.styleMask = [.titled, .closable]
@@ -68,7 +71,7 @@ struct VowriteApp: App {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    let updateManager = MacUpdateManager()
+    let updateManager = MacUpdateManager.shared
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)

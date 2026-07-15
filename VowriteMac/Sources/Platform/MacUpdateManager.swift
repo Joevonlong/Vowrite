@@ -3,12 +3,17 @@ import Combine
 import VowriteKit
 
 final class MacUpdateManager: ObservableObject, UpdateProvider {
+    /// Single shared instance. Sparkle's SPUStandardUpdaterController must never be
+    /// started twice — a second instance is a Sparkle programmer error. `init` is
+    /// private so `.shared` is the only way to obtain a MacUpdateManager.
+    static let shared = MacUpdateManager()
+
     let updaterController: SPUStandardUpdaterController
 
     @Published var canCheckForUpdates = false
     @Published var automaticallyChecksForUpdates = false
 
-    init() {
+    private init() {
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: nil,

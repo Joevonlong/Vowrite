@@ -7,8 +7,9 @@ struct AboutPageView: View {
     @ObservedObject private var updateManager: MacUpdateManager
 
     init() {
-        let manager = (NSApp.delegate as? AppDelegate)?.updateManager ?? MacUpdateManager()
-        _updateManager = ObservedObject(wrappedValue: manager)
+        // Always the single shared instance — never construct a second
+        // SPUStandardUpdaterController (see MacUpdateManager.shared).
+        _updateManager = ObservedObject(wrappedValue: MacUpdateManager.shared)
     }
 
     var body: some View {

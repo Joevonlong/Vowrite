@@ -367,6 +367,7 @@ struct RecordingIndicatorPicker: View {
 
 struct GeneralOptionsContent: View {
     @State private var launchAtLogin = false
+    @State private var launchAtLoginError: String?
     @State private var overlayStyle = OverlayStyle.current
     @AppStorage("autoLearnCorrections") private var autoLearnCorrections = true
 
@@ -376,8 +377,28 @@ struct GeneralOptionsContent: View {
                 Toggle("", isOn: $launchAtLogin)
                     .toggleStyle(.switch)
                     .onChange(of: launchAtLogin) { _, v in
-                        do { if v { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } } catch {}
+                        // Skip the no-op assignment that fires when `.onAppear` seeds
+                        // `launchAtLogin` from the real SMAppService status below.
+                        guard (SMAppService.mainApp.status == .enabled) != v else { return }
+                        do {
+                            if v { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+                            launchAtLoginError = nil
+                        } catch {
+                            launchAtLogin = !v
+                            launchAtLoginError = error.localizedDescription
+                        }
                     }
+            }
+            if let launchAtLoginError {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                        .font(.caption)
+                    Text(launchAtLoginError)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                    Spacer()
+                }
             }
             SettingsRow(title: "Sound feedback", description: "Play audio cues when recording starts and stops.") {
                 Toggle("", isOn: Binding(
@@ -403,6 +424,9 @@ struct GeneralOptionsContent: View {
                     }
                 }
             }
+        }
+        .onAppear {
+            launchAtLogin = SMAppService.mainApp.status == .enabled
         }
     }
 }
