@@ -84,7 +84,7 @@ for entry in "${SYMBOLS[@]}"; do
         status="${GREEN}mac-only (OK)${NC}"
     elif [[ "$mac_used" == "✓" && "$ios_used" == "-" && "$kbd_used" == "-" ]]; then
         status="${RED}⚠ MISSING on iOS${NC}"
-        ((gaps++))
+        gaps=$((gaps + 1))
     elif [[ "$mac_used" == "✓" && "$ios_used" == "✓" ]]; then
         status="${GREEN}OK${NC}"
     elif [[ "$mac_used" == "-" ]]; then

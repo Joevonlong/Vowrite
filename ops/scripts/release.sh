@@ -14,7 +14,7 @@
 #   7. GitHub Release creation + DMG upload (interactive)
 #   8. Summary with verification steps
 #
-set -e
+set -euo pipefail
 
 # --- Config ---
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -39,9 +39,34 @@ GITHUB_DOWNLOAD_BASE="https://github.com/$GITHUB_REPO/releases/download"
 # Binary name produced by VowriteMac package
 APP_BINARY_NAME="VowriteMac"
 
+# --- Rollback on failure ---
+# Steps 1-3 below mutate CHANGELOG.md, Info.plist, and Version.swift *before*
+# the build/sign/package steps run. If anything fails after that point (build
+# error, codesign failure, missing EdDSA tooling, etc.), restore those three
+# files so a failed release attempt never leaves a half-bumped working tree.
+# Uses `git -C "$PROJECT_ROOT"` (not a bare relative path) because the script
+# changes its own working directory partway through (see Step 4's `cd
+# "$APP_DIR"`), so a plain `git checkout -- <relative path>` would resolve
+# against the wrong directory depending on when the trap fires.
+rollback_mutated_files() {
+    if ! git -C "$PROJECT_ROOT" diff --quiet -- "$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT" 2>/dev/null; then
+        echo ""
+        echo "  ❌ Release failed — rolling back mutated files..."
+        git -C "$PROJECT_ROOT" checkout -- "$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT" 2>/dev/null || true
+        echo "  ↩️  Reverted: CHANGELOG.md, Info.plist, Version.swift"
+    fi
+}
+# Note: this ERR trap catches genuine command failures (build errors, codesign
+# failures, etc.) under `set -e`, but bash does NOT fire the ERR trap for an
+# explicit `exit N` call (verified: `trap ... ERR; false || exit 1` does not
+# invoke the trap). The EdDSA hard-gate added below (Step 8) aborts via
+# explicit `exit 1`, so it calls rollback_mutated_files directly before each
+# exit rather than relying solely on this trap.
+trap rollback_mutated_files ERR
+
 # --- Parse --beta flag ---
 IS_BETA=false
-if [ "$1" = "--beta" ]; then
+if [ "${1:-}" = "--beta" ]; then
     IS_BETA=true
     shift
 fi
@@ -231,7 +256,7 @@ else
         sed -i '' "s/## \[Unreleased\]/## [Unreleased]\n\n## [$VERSION_NUM] — $TODAY/" "$CHANGELOG"
 
         # Update comparison links at bottom
-        PREV_VERSION=$(grep -oE '\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\]' "$CHANGELOG" | head -2 | tail -1 | tr -d '[]')
+        PREV_VERSION=$(grep -oE '\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\]' "$CHANGELOG" | head -2 | tail -1 | tr -d '[]' || true)
         if [ -n "$PREV_VERSION" ]; then
             sed -i '' "s|^\[Unreleased\]:.*|[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/$VERSION...HEAD|" "$CHANGELOG"
             if ! grep -q "^\[$VERSION_NUM\]:" "$CHANGELOG"; then
@@ -341,54 +366,93 @@ rm -rf "$DMG_STAGING"
 echo "  ✓ DMG created: $DMG_PATH"
 
 # --- Step 8: EdDSA sign DMG + update appcast ---
+# Hard gate: a DMG shipped without a valid EdDSA signature is a tag that every
+# Sparkle client will refuse to auto-update to. Any failure here must ABORT
+# before Step 9 (commit/tag) or Step 10 (GitHub release), for both stable and
+# beta releases — not warn-and-continue.
 echo ""
 echo "▶ Step 8: EdDSA signing and appcast update..."
 
-if [ -x "$SIGN_UPDATE" ]; then
-    SIGN_OUTPUT=$("$SIGN_UPDATE" "$DMG_PATH" 2>&1)
+if [ ! -x "$SIGN_UPDATE" ]; then
+    echo "  ❌ sign_update not found at $SIGN_UPDATE"
+    echo "     Run 'swift build' in $APP_DIR first to fetch Sparkle tools."
+    rollback_mutated_files
+    exit 1
+fi
 
-    if [ -z "$SIGN_OUTPUT" ]; then
-        echo "  ❌ sign_update produced no output — check Keychain for EdDSA key"
-        echo "  Skipping appcast update."
-    else
-        echo "  ✓ DMG signed: $SIGN_OUTPUT"
+SIGN_OUTPUT=$("$SIGN_UPDATE" "$DMG_PATH" 2>&1)
 
-        # Extract edSignature and length from sign_update output
-        ED_SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -oE 'sparkle:edSignature="[^"]+"')
-        ED_LENGTH=$(echo "$SIGN_OUTPUT" | grep -oE 'length="[^"]+"')
+if [ -z "$SIGN_OUTPUT" ]; then
+    echo "  ❌ sign_update produced no output — check Keychain for EdDSA key"
+    rollback_mutated_files
+    exit 1
+fi
 
-        # Select target appcast
-        if $IS_BETA; then
-            TARGET_APPCAST="$APPCAST_BETA"
-        else
-            TARGET_APPCAST="$APPCAST_STABLE"
-        fi
+echo "  ✓ DMG signed: $SIGN_OUTPUT"
 
-        DOWNLOAD_URL="${GITHUB_DOWNLOAD_BASE}/${VERSION}/Vowrite-${VERSION}.dmg"
-        PUB_DATE=$(date "+%a, %d %b %Y %H:%M:%S %z")
+# Extract edSignature and length from sign_update output
+ED_SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -oE 'sparkle:edSignature="[^"]+"' || true)
+ED_LENGTH=$(echo "$SIGN_OUTPUT" | grep -oE 'length="[^"]+"' || true)
 
-        # Extract release notes from CHANGELOG → simple HTML
-        RELEASE_NOTES=""
-        if [ -f "$CHANGELOG" ] && ! $IS_BETA; then
-            CHANGELOG_SECTION=$(sed -n "/## \[$VERSION_NUM\]/,/## \[/p" "$CHANGELOG" | sed '1d;$d' | sed '/^$/d')
-            if [ -n "$CHANGELOG_SECTION" ]; then
-                RELEASE_NOTES="<h2>What's New in $VERSION_NUM</h2><ul>"
-                while IFS= read -r line; do
-                    ITEM=$(echo "$line" | sed -E 's/^- \*\*([^*]+)\*\*(.*)/<li><b>\1<\/b>\2<\/li>/')
-                    ITEM=$(echo "$ITEM" | sed 's/^- /<li>/' | sed 's/^###.*/<\/ul><h3>&<\/h3><ul>/')
-                    RELEASE_NOTES="${RELEASE_NOTES}${ITEM}"
-                done <<< "$CHANGELOG_SECTION"
-                RELEASE_NOTES="${RELEASE_NOTES}</ul>"
+if [ -z "$ED_SIGNATURE" ] || [ -z "$ED_LENGTH" ]; then
+    echo "  ❌ Could not parse EdDSA signature/length from sign_update output:"
+    echo "     $SIGN_OUTPUT"
+    rollback_mutated_files
+    exit 1
+fi
+
+# Select target appcast
+if $IS_BETA; then
+    TARGET_APPCAST="$APPCAST_BETA"
+else
+    TARGET_APPCAST="$APPCAST_STABLE"
+fi
+
+DOWNLOAD_URL="${GITHUB_DOWNLOAD_BASE}/${VERSION}/Vowrite-${VERSION}.dmg"
+PUB_DATE=$(date "+%a, %d %b %Y %H:%M:%S %z")
+
+# Extract release notes from CHANGELOG → simple HTML.
+# Headings ("### Added" / "### Fixed" / ...) open a fresh <ul> lazily — the
+# <ul> is only emitted right before the first item that needs one, so there's
+# no leading empty <ul></ul> before the first heading. Heading text has its
+# "### " prefix stripped before being wrapped in <h3>, so the appcast doesn't
+# render a literal "### Added" as the heading.
+RELEASE_NOTES=""
+if [ -f "$CHANGELOG" ] && ! $IS_BETA; then
+    CHANGELOG_SECTION=$(sed -n "/## \[$VERSION_NUM\]/,/## \[/p" "$CHANGELOG" | sed '1d;$d' | sed '/^$/d')
+    if [ -n "$CHANGELOG_SECTION" ]; then
+        RELEASE_NOTES="<h2>What's New in $VERSION_NUM</h2>"
+        UL_OPEN=false
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^###[[:space:]]+(.*)$ ]]; then
+                if $UL_OPEN; then
+                    RELEASE_NOTES="${RELEASE_NOTES}</ul>"
+                fi
+                RELEASE_NOTES="${RELEASE_NOTES}<h3>${BASH_REMATCH[1]}</h3><ul>"
+                UL_OPEN=true
+                continue
             fi
+            ITEM=$(echo "$line" | sed -E 's/^- \*\*([^*]+)\*\*(.*)/<li><b>\1<\/b>\2<\/li>/')
+            ITEM=$(echo "$ITEM" | sed -E 's/^- (.*)/<li>\1<\/li>/')
+            if ! $UL_OPEN; then
+                RELEASE_NOTES="${RELEASE_NOTES}<ul>"
+                UL_OPEN=true
+            fi
+            RELEASE_NOTES="${RELEASE_NOTES}${ITEM}"
+        done <<< "$CHANGELOG_SECTION"
+        if $UL_OPEN; then
+            RELEASE_NOTES="${RELEASE_NOTES}</ul>"
         fi
-        if [ -z "$RELEASE_NOTES" ]; then
-            RELEASE_NOTES="<p>$DESCRIPTION</p>"
-        fi
+    fi
+fi
+if [ -z "$RELEASE_NOTES" ]; then
+    RELEASE_NOTES="<p>$DESCRIPTION</p>"
+fi
 
-        # Build new appcast: keep header up to -->, replace items with latest only
-        TEMP_APPCAST="/tmp/vowrite-appcast-$$"
-        sed -n '1,/-->/p' "$TARGET_APPCAST" > "$TEMP_APPCAST"
-        cat >> "$TEMP_APPCAST" << APPCAST_EOF
+# Build new appcast: keep header up to -->, replace items with latest only
+TEMP_APPCAST="/tmp/vowrite-appcast-$$"
+sed -n '1,/-->/p' "$TARGET_APPCAST" > "$TEMP_APPCAST"
+cat >> "$TEMP_APPCAST" << APPCAST_EOF
     <item>
       <title>Vowrite $VERSION_NUM</title>
       <description><![CDATA[$RELEASE_NOTES]]></description>
@@ -406,28 +470,39 @@ if [ -x "$SIGN_UPDATE" ]; then
   </channel>
 </rss>
 APPCAST_EOF
-        mv "$TEMP_APPCAST" "$TARGET_APPCAST"
-        echo "  ✓ Appcast updated: $TARGET_APPCAST"
-        echo "  ✓ Download URL: $DOWNLOAD_URL"
-    fi
-else
-    echo "  ⚠️  sign_update not found at $SIGN_UPDATE"
-    echo "  Run 'swift build' in $APP_DIR first to fetch Sparkle tools."
-    echo "  Skipping appcast update."
-fi
+mv "$TEMP_APPCAST" "$TARGET_APPCAST"
+echo "  ✓ Appcast updated: $TARGET_APPCAST"
+echo "  ✓ Download URL: $DOWNLOAD_URL"
 
 # --- Step 9: Git commit + tag ---
 echo ""
 echo "▶ Step 9: Git commit and tag..."
 cd "$PROJECT_ROOT"
-git add -A
+
+# Explicit paths only — never `git add -A`, which would sweep up unrelated
+# working-tree changes (e.g. build artifacts, other in-progress edits) into
+# the release commit.
+git add "$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT"
+if $IS_BETA; then
+    git add "$APPCAST_BETA"
+else
+    git add "$APPCAST_STABLE"
+fi
 git commit -m "$VERSION_NUM: $DESCRIPTION" || echo "  (nothing to commit)"
-git tag -a "$VERSION" -m "$VERSION — $DESCRIPTION" 2>/dev/null || {
-    echo "  Tag $VERSION exists. Overwrite? (y/N)"
-    read -p "   " -n 1 -r
-    echo
-    [[ $REPLY =~ ^[Yy]$ ]] && git tag -fa "$VERSION" -m "$VERSION — $DESCRIPTION"
-}
+
+# Files are committed — the pre-build mutations are no longer "in flight",
+# so a later failure (duplicate tag, gh release error) should not trigger
+# rollback_mutated_files.
+trap - ERR
+
+if ! git tag -a "$VERSION" -m "$VERSION — $DESCRIPTION" 2>/dev/null; then
+    echo "  ❌ Tag $VERSION already exists."
+    echo "     This script never overwrites an existing tag. If you intend to"
+    echo "     replace it, delete it manually first, then re-run:"
+    echo "       git tag -d $VERSION"
+    echo "       git push origin :refs/tags/$VERSION   # only if already pushed"
+    exit 1
+fi
 echo "  ✓ Committed and tagged $VERSION"
 
 # --- Step 10: GitHub Release (interactive) ---

@@ -33,7 +33,10 @@ fi
 
 echo ""
 echo "▶ Tests — VowriteKit"
-if (cd "$KIT_DIR" && swift test 2>&1 | tail -10 | grep -qE "Test Suite 'All tests' passed"); then
+# Rely on `swift test`'s own exit code rather than grepping a `tail -10`
+# window for a pass string — the pass string's position/format can shift
+# between toolchain versions and a truncated tail can silently miss it.
+if (cd "$KIT_DIR" && swift test); then
     pass "VowriteKit unit tests pass"
 else
     fail "VowriteKit unit tests failed"
@@ -43,7 +46,11 @@ echo ""
 echo "▶ Build — VowriteMac"
 
 cd "$MAC_DIR"
-if swift build 2>&1 | grep -q "Build complete"; then
+# Capture this (first, from-scratch-ish) build's output so the warning count
+# below can be derived from it, instead of triggering a second no-op
+# incremental build that recompiles nothing and always reports 0 warnings.
+MAC_DEBUG_BUILD_LOG="/tmp/vowrite_test_mac_debug_build_$$.log"
+if swift build 2>&1 | tee "$MAC_DEBUG_BUILD_LOG" | grep -q "Build complete"; then
     pass "VowriteMac debug build succeeds"
 else
     fail "VowriteMac debug build failed"
@@ -55,16 +62,74 @@ else
     fail "VowriteMac release build failed"
 fi
 
+# --- iOS Compile Check ---
+echo ""
+echo "▶ Build — VowriteIOS (compile check)"
+
+IOS_SDK=$(xcrun --sdk iphoneos --show-sdk-path 2>/dev/null || true)
+if [ -z "$IOS_SDK" ]; then
+    warn "No iOS SDK found — skipping iOS compile check"
+else
+    IOS_XCB_LOG="/tmp/vowrite_test_ios_xcodebuild_$$.log"
+    if xcodebuild -project "$PROJECT_ROOT/VowriteIOS/VowriteIOS.xcodeproj" -scheme VowriteIOS \
+        -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build -quiet \
+        > "$IOS_XCB_LOG" 2>&1; then
+        pass "VowriteIOS (+ VowriteKeyboard) builds via xcodebuild"
+        rm -f "$IOS_XCB_LOG"
+    elif grep -q "Unable to find a destination matching" "$IOS_XCB_LOG"; then
+        # Known local-environment issue: this machine's Xcode is missing the
+        # iOS Simulator platform component, so xcodebuild can't resolve a
+        # destination at all (not a code problem). Fall back to a
+        # typecheck-only harness that still catches real compile errors.
+        warn "xcodebuild destination resolution broken locally (missing iOS platform support) — falling back to swiftc typecheck harness"
+        rm -f "$IOS_XCB_LOG"
+
+        IOS_KIT_LOG="/tmp/vowrite_test_ios_kit_$$.log"
+        if (cd "$KIT_DIR" && swift build --triple arm64-apple-ios17.0 --sdk "$IOS_SDK") > "$IOS_KIT_LOG" 2>&1; then
+            IOS_KIT_MODULES="$KIT_DIR/.build/arm64-apple-ios/debug/Modules"
+
+            IOS_KBD_LOG="/tmp/vowrite_test_ios_kbd_$$.log"
+            if swiftc -typecheck -sdk "$IOS_SDK" -target arm64-apple-ios17.0 -I "$IOS_KIT_MODULES" \
+                $(find "$PROJECT_ROOT/VowriteKeyboard/Sources" -name "*.swift") > "$IOS_KBD_LOG" 2>&1; then
+                pass "VowriteKeyboard typechecks for iOS"
+            else
+                fail "VowriteKeyboard iOS typecheck errors"
+                cat "$IOS_KBD_LOG"
+            fi
+            rm -f "$IOS_KBD_LOG"
+
+            IOS_APP_LOG="/tmp/vowrite_test_ios_app_$$.log"
+            if swiftc -typecheck -sdk "$IOS_SDK" -target arm64-apple-ios17.0 -I "$IOS_KIT_MODULES" \
+                $(find "$PROJECT_ROOT/VowriteIOS/Sources" -name "*.swift") > "$IOS_APP_LOG" 2>&1; then
+                pass "VowriteIOS typechecks for iOS"
+            else
+                fail "VowriteIOS iOS typecheck errors"
+                cat "$IOS_APP_LOG"
+            fi
+            rm -f "$IOS_APP_LOG"
+        else
+            fail "VowriteKit failed to build for iOS target (arm64-apple-ios17.0)"
+            cat "$IOS_KIT_LOG"
+        fi
+        rm -f "$IOS_KIT_LOG"
+    else
+        fail "VowriteIOS xcodebuild failed"
+        tail -40 "$IOS_XCB_LOG"
+        rm -f "$IOS_XCB_LOG"
+    fi
+fi
+
 # --- Code Quality ---
 echo ""
 echo "▶ Code Quality"
 
-WARNING_COUNT=$(cd "$MAC_DIR" && swift build 2>&1 | grep -c "warning:" || true)
+WARNING_COUNT=$(grep -c "warning:" "$MAC_DEBUG_BUILD_LOG" || true)
 if [ "$WARNING_COUNT" -eq 0 ]; then
     pass "No compiler warnings"
 else
     warn "$WARNING_COUNT compiler warning(s)"
 fi
+rm -f "$MAC_DEBUG_BUILD_LOG"
 
 TODO_COUNT=$(grep -rn "TODO\|FIXME\|HACK\|XXX" "$KIT_DIR/Sources" "$MAC_DIR/Sources" --include="*.swift" 2>/dev/null | wc -l | tr -d ' ')
 if [ "$TODO_COUNT" -eq 0 ]; then
@@ -98,9 +163,11 @@ else
     pass "No API keys in git history"
 fi
 
-# Check temp files cleanup
-if ls /tmp/vowrite_* 2>/dev/null | grep -q .; then
-    warn "Temp audio files exist in /tmp"
+# Check temp files cleanup. FileManager.default.temporaryDirectory (used by
+# AudioEngine for recordings) resolves under $TMPDIR on macOS (e.g.
+# /var/folders/.../T/), not /tmp directly — check both locations.
+if ls /tmp/vowrite_* "${TMPDIR:-/tmp}"/vowrite_* 2>/dev/null | grep -q .; then
+    warn "Temp audio files exist in /tmp or \$TMPDIR"
 else
     pass "No leftover temp files"
 fi
