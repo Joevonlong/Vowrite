@@ -22,6 +22,13 @@ struct PersonalizationView: View {
     @State private var editingMode: Mode? = nil
     @State private var isCreatingNew = false
 
+    // F-077: Template picker state. `selectedTemplate` is only ever non-nil
+    // in the window between a template pick and the create sheet's dismissal
+    // — reset in the create sheet's onDismiss, so a later blank "New Scene"
+    // never accidentally inherits a stale template.
+    @State private var isPickingTemplate = false
+    @State private var selectedTemplate: ModeTemplate? = nil
+
     // Vocabulary state
     @State private var newVocabWord = ""
 
@@ -87,6 +94,12 @@ struct PersonalizationView: View {
                     HStack {
                         Text("Dictation Modes")
                         Spacer()
+                        Button {
+                            isPickingTemplate = true
+                        } label: {
+                            Image(systemName: "square.grid.2x2")
+                                .font(.body)
+                        }
                         Button {
                             isCreatingNew = true
                         } label: {
@@ -335,15 +348,28 @@ struct PersonalizationView: View {
                 )
             }
             // Create sheet
-            .sheet(isPresented: $isCreatingNew) {
+            .sheet(isPresented: $isCreatingNew, onDismiss: { selectedTemplate = nil }) {
                 ModeEditorSheet(
                     existingMode: nil,
+                    template: selectedTemplate,
                     onSave: { newMode in
                         withAnimation {
                             modeManager.addMode(newMode)
                         }
                     }
                 )
+            }
+            // F-077: Template picker sheet. Presenting the create sheet in
+            // onDismiss (rather than from the picker's own pick action) avoids
+            // the two `.sheet` modifiers racing on the same view.
+            .sheet(isPresented: $isPickingTemplate, onDismiss: {
+                if selectedTemplate != nil {
+                    isCreatingNew = true
+                }
+            }) {
+                ModeTemplatePickerSheet(onPick: { template in
+                    selectedTemplate = template
+                })
             }
         }
     }
