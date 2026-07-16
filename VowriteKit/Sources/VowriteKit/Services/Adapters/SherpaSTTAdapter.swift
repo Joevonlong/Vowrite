@@ -64,7 +64,9 @@ public final class SherpaSTTAdapter: STTAdapter {
             throw SherpaError.audioConversionFailed
         }
 
-        let sourceBuffer = AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: AVAudioFrameCount(file.length))!
+        guard let sourceBuffer = AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: AVAudioFrameCount(file.length)) else {
+            throw SherpaError.audioConversionFailed
+        }
         try file.read(into: sourceBuffer)
 
         var error: NSError?

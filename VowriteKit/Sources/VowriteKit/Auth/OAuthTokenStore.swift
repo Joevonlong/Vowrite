@@ -25,14 +25,22 @@ public struct OAuthToken: Codable {
 
     /// True if the token is definitively past its expiry date.
     public var isExpired: Bool {
-        guard let exp = expiresAt else { return false }
-        return Date() >= exp
+        isExpired(now: Date())
     }
 
-    /// True if the token expires within `minutes` minutes.
-    public func expiresWithin(minutes: Double) -> Bool {
+    /// True if the token is past its expiry date as of `now`. Exposed separately
+    /// from the `isExpired` property (which always uses the live clock) so
+    /// boundary conditions are testable with a fixed reference date.
+    public func isExpired(now: Date) -> Bool {
         guard let exp = expiresAt else { return false }
-        return Date().addingTimeInterval(minutes * 60) >= exp
+        return now >= exp
+    }
+
+    /// True if the token expires within `minutes` minutes of `now` (defaults to
+    /// the live clock; override for deterministic boundary testing).
+    public func expiresWithin(minutes: Double, now: Date = Date()) -> Bool {
+        guard let exp = expiresAt else { return false }
+        return now.addingTimeInterval(minutes * 60) >= exp
     }
 }
 
