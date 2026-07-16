@@ -1488,6 +1488,7 @@ th.col-other { color: var(--text-muted); opacity: 0.7; }
 .provider-logo-iflytek  { color: #0066cc; }
 .provider-logo-mlx      { color: #1d1d1f; }
 .provider-logo-ollama   { color: #1d1d1f; }
+.provider-logo-cerebras { color: var(--text); font-size: 1.3rem; font-weight: 700; }
 
 .provider-roles {
   display: inline-flex;
