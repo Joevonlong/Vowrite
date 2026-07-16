@@ -13,7 +13,8 @@ public actor ClaudePolishService {
         apiKey: String,
         model: String,
         baseURL: String,
-        temperature: Double
+        temperature: Double,
+        overrides: [String: JSONValue]? = nil
     ) async throws -> String {
         let endpoint = "\(baseURL)/messages"
         guard let url = URL(string: endpoint) else {
@@ -27,10 +28,12 @@ public actor ClaudePolishService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 120
 
-        // Polish overrides (F-073) intentionally not applied here: anthropic-version
-        // 2023-06-01 has no thinking field. If upgrading the API version, merge
-        // {"thinking": {"type": "disabled"}} from model.polishOverrides into the payload.
-        let payload: [String: Any] = [
+        // F-082: per-model overrides from providers.json apply to the native
+        // Messages payload too. Claude 5-era models need them: Sonnet 5 wants
+        // {"thinking": {"type": "disabled"}} for low-latency polish, and
+        // Sonnet 5 / Opus 4.7+ reject non-default `temperature` with HTTP 400,
+        // handled by declaring {"temperature": null} (null = omit the key).
+        var payload: [String: Any] = [
             "model": model,
             "max_tokens": 4096,
             "system": systemPrompt,
@@ -40,6 +43,7 @@ public actor ClaudePolishService {
             "temperature": temperature,
             "stream": true
         ]
+        applyPolishOverrides(to: &payload, overrides: overrides)
 
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
