@@ -4,14 +4,56 @@ import Foundation
 /// `trigger`: what the STT might produce (wrong text, e.g. "伏莱特")
 /// `replacement`: what it should be (correct text, e.g. "Vowrite")
 public struct ReplacementRule: Codable, Identifiable, Equatable, Sendable {
+    /// Where a rule came from (F-080). Drives the Personalization summary
+    /// card and "Clear learned data" — which only ever touches `.learned`.
+    public enum Source: String, Codable, Equatable, Sendable {
+        /// Created by the user through a Corrections UI (Mac VocabularyPage,
+        /// iOS PersonalizationView).
+        case manual
+        /// Auto-created by `CorrectionMonitor` (Mac, F-053) from an observed
+        /// paste correction.
+        case learned
+    }
+
     public let id: UUID
     public var trigger: String
     public var replacement: String
+    public var source: Source
+    /// When this rule was created. `nil` for rules persisted before F-080
+    /// (legacy data) — excluded from "recently learned" but still counted.
+    public var createdAt: Date?
 
-    public init(id: UUID = UUID(), trigger: String, replacement: String) {
+    public init(
+        id: UUID = UUID(),
+        trigger: String,
+        replacement: String,
+        source: Source = .manual,
+        createdAt: Date? = nil
+    ) {
         self.id = id
         self.trigger = trigger
         self.replacement = replacement
+        self.source = source
+        self.createdAt = createdAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, trigger, replacement, source, createdAt
+    }
+
+    /// Custom decode: `source` and `createdAt` are new (F-080) fields.
+    /// Legacy persisted JSON (pre-F-080) has neither key — decode those as
+    /// `.manual` / `nil` rather than throwing, so existing rules survive
+    /// the upgrade unchanged (zero migration breakage, per spec).
+    /// `encode(to:)` stays compiler-synthesized (all properties + CodingKeys
+    /// already line up), so it is not redeclared here.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        trigger = try container.decode(String.self, forKey: .trigger)
+        replacement = try container.decode(String.self, forKey: .replacement)
+        source = try container.decodeIfPresent(Source.self, forKey: .source) ?? .manual
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
     }
 }
 
@@ -38,13 +80,24 @@ public final class ReplacementManager: ObservableObject {
 
     // MARK: - CRUD
 
-    public func add(trigger: String, replacement: String) {
+    /// - Parameter source: `.manual` (default) for user-entered rules (Mac
+    ///   VocabularyPage, iOS PersonalizationView). `CorrectionMonitor` (F-053/
+    ///   F-080) passes `.learned` for rules it auto-creates from observed
+    ///   corrections. Existing call sites are source-compatible.
+    public func add(trigger: String, replacement: String, source: ReplacementRule.Source = .manual) {
         let trimmedTrigger = trigger.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedReplacement = replacement.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTrigger.isEmpty, !trimmedReplacement.isEmpty else { return }
-        // Reject duplicate triggers
+        // Reject duplicate triggers — including when a machine-learned guess
+        // would collide with an existing (manual or learned) rule; the
+        // existing mapping wins rather than being silently overwritten.
         guard !rules.contains(where: { $0.trigger.lowercased() == trimmedTrigger.lowercased() }) else { return }
-        rules.append(ReplacementRule(trigger: trimmedTrigger, replacement: trimmedReplacement))
+        rules.append(ReplacementRule(
+            trigger: trimmedTrigger,
+            replacement: trimmedReplacement,
+            source: source,
+            createdAt: Date()
+        ))
     }
 
     public func update(_ rule: ReplacementRule) {
@@ -83,6 +136,72 @@ public final class ReplacementManager: ObservableObject {
               let rules = try? JSONDecoder().decode([ReplacementRule].self, from: data)
         else { return [] }
         return rules
+    }
+
+    // MARK: - Learning (F-080)
+
+    /// Master switch for automatic learning. While `false`, `CorrectionMonitor`
+    /// (Mac) must not observe pastes or create `.learned` rules — checked
+    /// fresh on every recording (see `CorrectionMonitor.captureElement()`),
+    /// so flipping this takes effect on the next dictation, not just at launch.
+    ///
+    /// Deliberately reuses the `"autoLearnCorrections"` key already written
+    /// by the legacy `@AppStorage("autoLearnCorrections")` toggle in Mac's
+    /// GeneralPage: on macOS `VowriteStorage.defaults` IS `UserDefaults.standard`
+    /// (see `VowriteStorage.swift`), so the two toggles read/write the exact
+    /// same stored bool — no dual state, no migration needed. iOS has no
+    /// legacy toggle, so the App Group key starts fresh there. Default ON.
+    nonisolated public static var learningEnabled: Bool {
+        get {
+            guard VowriteStorage.defaults.object(forKey: StorageKeys.autoLearnCorrections) != nil else {
+                return true
+            }
+            return VowriteStorage.defaults.bool(forKey: StorageKeys.autoLearnCorrections)
+        }
+        set {
+            VowriteStorage.defaults.set(newValue, forKey: StorageKeys.autoLearnCorrections)
+        }
+    }
+
+    /// Number of `.learned` rules currently stored.
+    public var learnedCount: Int { Self.learnedCount(in: rules) }
+
+    /// Up to `limit` most recently learned rules, newest first. Legacy
+    /// `.learned` rules with a `nil` createdAt (should not occur going
+    /// forward, but decoded defensively) are excluded from this list while
+    /// still counting toward `learnedCount`.
+    public func recentLearned(limit: Int = 3) -> [ReplacementRule] {
+        Self.recentLearned(in: rules, limit: limit)
+    }
+
+    /// Deletes every `.learned` rule, leaving `.manual` rules untouched.
+    /// Irreversible — callers must confirm with the user first. The iOS
+    /// keyboard extension picks up the change through its existing
+    /// `ReplacementManager.shared.reload()` call in `reloadConfiguration()`.
+    public func clearLearned() {
+        rules = Self.removingLearned(from: rules)
+    }
+
+    // MARK: - Learning: pure helpers (unit-tested directly, no MainActor/UserDefaults involved)
+
+    nonisolated static func learnedCount(in rules: [ReplacementRule]) -> Int {
+        rules.filter { $0.source == .learned }.count
+    }
+
+    nonisolated static func recentLearned(in rules: [ReplacementRule], limit: Int = 3) -> [ReplacementRule] {
+        rules
+            .filter { $0.source == .learned }
+            .compactMap { rule -> (rule: ReplacementRule, date: Date)? in
+                guard let date = rule.createdAt else { return nil }
+                return (rule, date)
+            }
+            .sorted { $0.date > $1.date }
+            .prefix(limit)
+            .map(\.rule)
+    }
+
+    nonisolated static func removingLearned(from rules: [ReplacementRule]) -> [ReplacementRule] {
+        rules.filter { $0.source != .learned }
     }
 
     // MARK: - Text Replacement Engine

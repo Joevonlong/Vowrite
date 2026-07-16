@@ -16,7 +16,14 @@ final class CorrectionMonitor {
     /// Must be called on any thread; returns immediately (<1ms).
     func captureElement() -> AXUIElement? {
         guard AXIsProcessTrusted() else { return nil }
-        guard UserDefaults.standard.object(forKey: "autoLearnCorrections") as? Bool ?? true else { return nil }
+        // F-080: read via the Kit's learning master toggle rather than the
+        // raw key directly. On macOS this resolves to the identical stored
+        // value the toggle checked before (VowriteStorage.defaults ==
+        // UserDefaults.standard, same "autoLearnCorrections" key) — see
+        // `ReplacementManager.learningEnabled` for why that's intentional.
+        // Checked fresh on every recording, so a toggle flip in Settings
+        // takes effect on the next dictation without restarting the app.
+        guard ReplacementManager.learningEnabled else { return nil }
 
         let systemWide = AXUIElementCreateSystemWide()
         var focusedRef: CFTypeRef?
@@ -108,10 +115,18 @@ final class CorrectionMonitor {
         // Validate the correction
         guard isValidCorrection(trigger: trigger, replacement: replacement, injectedText: injectedText) else { return }
 
-        // Learn the word
+        // Learn the correction. F-080: record it as a `.learned` Replacement
+        // rule (trigger → replacement) — this is what makes the correction
+        // auto-apply on future dictations and is what the Personalization
+        // summary card surfaces ("recently learned"). The vocabulary add is
+        // kept alongside it (unchanged from F-053) so the corrected word
+        // still boosts Whisper transcription; `ReplacementManager.add`
+        // silently no-ops if `trigger` already has a rule, so this never
+        // clobbers an existing manual mapping.
         DispatchQueue.main.async {
+            ReplacementManager.shared.add(trigger: trigger, replacement: replacement, source: .learned)
             VocabularyManager.shared.add(replacement)
-            ToastPresenter.show("✓ 已加入词库：\(replacement)")
+            ToastPresenter.show("✓ 已学习纠错：\(trigger) → \(replacement)")
         }
     }
 
