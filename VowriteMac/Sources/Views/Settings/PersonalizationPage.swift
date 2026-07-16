@@ -6,6 +6,11 @@ import SwiftUI
 struct PersonalizationPageView: View {
     @ObservedObject private var modeManager = ModeManager.shared
 
+    // Learning (F-080): summary card + master toggle + clear.
+    @ObservedObject private var replacementManager = ReplacementManager.shared
+    @ObservedObject private var vocabManager = VocabularyManager.shared
+    @State private var showClearLearnedConfirm = false
+
     // Global Preferences state
     //
     // `userPrompt` is the value bound to the editor. When `isEditing == false`
@@ -41,6 +46,7 @@ struct PersonalizationPageView: View {
 
                 scenesSection
                 globalPreferencesSection
+                learningSection
                 howItWorksSection
             }
             .padding(32)
@@ -102,6 +108,21 @@ struct PersonalizationPageView: View {
             }
         } message: {
             Text("This scene and all its settings will be permanently removed.")
+        }
+        // Clear learned data confirmation (F-080)
+        .confirmationDialog(
+            "Clear all learned data?",
+            isPresented: $showClearLearnedConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Clear Learned Data", role: .destructive) {
+                withAnimation(VW.Anim.easeQuick) {
+                    replacementManager.clearLearned()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(clearLearnedConfirmMessage)
         }
         .onAppear {
             loadGlobalPreferences()
@@ -263,6 +284,80 @@ struct PersonalizationPageView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Learning Section (F-080)
+
+    private var learningSection: some View {
+        SettingsSection(icon: "sparkles", title: "Learning") {
+            VStack(alignment: .leading, spacing: VW.Spacing.xl) {
+                SettingsRow(
+                    title: "Learn from corrections",
+                    description: "When you correct pasted text, Vowrite remembers the fix and applies it automatically next time."
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { ReplacementManager.learningEnabled },
+                        set: { ReplacementManager.learningEnabled = $0 }
+                    ))
+                    .toggleStyle(.switch)
+                }
+
+                Divider()
+
+                // Summary: counts only, no percentage — there is no meaningful
+                // denominator for "how personalized am I", so a fake "X%"
+                // is deliberately avoided (see F-080 spec).
+                HStack(spacing: VW.Spacing.md) {
+                    summaryStat(value: replacementManager.learnedCount, label: "learned rule\(replacementManager.learnedCount == 1 ? "" : "s")")
+                    summaryStat(value: vocabManager.words.count, label: "vocabulary word\(vocabManager.words.count == 1 ? "" : "s")")
+                    Spacer()
+                    Button("Clear Learned Data", role: .destructive) {
+                        showClearLearnedConfirm = true
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(replacementManager.learnedCount == 0)
+                }
+
+                let recent = replacementManager.recentLearned()
+                if !recent.isEmpty {
+                    VStack(alignment: .leading, spacing: VW.Spacing.sm) {
+                        Text("Recently learned")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        ForEach(recent) { rule in
+                            HStack(spacing: VW.Spacing.sm) {
+                                Text(rule.trigger)
+                                    .font(.system(size: 12, weight: .medium))
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(.secondary)
+                                Text(rule.replacement)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func summaryStat(value: Int, label: String) -> some View {
+        HStack(spacing: 4) {
+            Text("\(value)")
+                .font(.body.weight(.semibold))
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+
+    private var clearLearnedConfirmMessage: String {
+        let count = replacementManager.learnedCount
+        let noun = count == 1 ? "correction" : "corrections"
+        return "This permanently deletes the \(count) \(noun) Vowrite learned automatically. "
+            + "Rules you created yourself are not affected. This cannot be undone."
     }
 
     // MARK: - How it works Section

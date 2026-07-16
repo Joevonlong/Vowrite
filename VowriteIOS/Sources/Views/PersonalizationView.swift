@@ -44,6 +44,9 @@ struct PersonalizationView: View {
     @State private var newTrigger = ""
     @State private var newReplacement = ""
 
+    // Learning summary state (F-080)
+    @State private var showClearLearnedConfirm = false
+
     var body: some View {
         NavigationStack {
             Form {
@@ -265,6 +268,77 @@ struct PersonalizationView: View {
                     }
                 }
 
+                // Personalization learning summary (F-080)
+                Section {
+                    Toggle(isOn: Binding(
+                        get: { ReplacementManager.learningEnabled },
+                        set: { ReplacementManager.learningEnabled = $0 }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Learn from corrections")
+                            Text("iOS doesn't learn from corrections yet. This sets your preference for when it does.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    // Counts only, no percentage — there is no meaningful
+                    // denominator for "how personalized am I" (see F-080 spec).
+                    HStack(spacing: 16) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(replacementManager.learnedCount)")
+                                .font(.title3.weight(.semibold))
+                            Text("learned rule\(replacementManager.learnedCount == 1 ? "" : "s")")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(vocabManager.words.count)")
+                                .font(.title3.weight(.semibold))
+                            Text("vocabulary word\(vocabManager.words.count == 1 ? "" : "s")")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+
+                    let recentLearned = replacementManager.recentLearned()
+                    if !recentLearned.isEmpty {
+                        ForEach(recentLearned) { rule in
+                            HStack {
+                                Text(rule.trigger).font(.callout)
+                                Image(systemName: "arrow.right")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                Text(rule.replacement)
+                                    .font(.callout)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+
+                    Button("Clear Learned Data", role: .destructive) {
+                        showClearLearnedConfirm = true
+                    }
+                    .disabled(replacementManager.learnedCount == 0)
+                } header: {
+                    Text("Learning")
+                } footer: {
+                    Text("Counts reflect corrections learned on this device only — learning doesn't sync between Mac and iOS.")
+                }
+                .confirmationDialog(
+                    "Clear all learned data?",
+                    isPresented: $showClearLearnedConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Clear Learned Data", role: .destructive) {
+                        replacementManager.clearLearned()
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text(clearLearnedConfirmMessage)
+                }
+
                 // Text Corrections (F-051)
                 Section {
                     ForEach(replacementManager.rules) { rule in
@@ -372,6 +446,15 @@ struct PersonalizationView: View {
                 })
             }
         }
+    }
+
+    // MARK: - Learning summary helpers (F-080)
+
+    private var clearLearnedConfirmMessage: String {
+        let count = replacementManager.learnedCount
+        let noun = count == 1 ? "correction" : "corrections"
+        return "This permanently deletes the \(count) \(noun) Vowrite learned automatically. "
+            + "Rules you created yourself are not affected. This cannot be undone."
     }
 
     // MARK: - User Prompt edit lifecycle

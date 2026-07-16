@@ -53,6 +53,16 @@ public enum StorageKeys {
 
     public static let vowriteReplacements = "vowriteReplacements"
 
+    // MARK: - Learning master toggle (ReplacementManager.learningEnabled, F-080)
+    //
+    // Deliberately the same string as the pre-F-080 Mac-only
+    // `@AppStorage("autoLearnCorrections")` toggle in GeneralPage.swift — see
+    // `ReplacementManager.learningEnabled` for why that's intentional, not a
+    // collision. Not added to StorageMigration.keysToMigrate: it isn't
+    // pre-App-Group legacy data, it's a brand-new key.
+
+    public static let autoLearnCorrections = "autoLearnCorrections"
+
     // MARK: - Language (LanguageConfig)
 
     public static let globalLanguage = "globalLanguage"
@@ -114,6 +124,7 @@ public enum StorageKeys {
         promptUserPrompt, promptUserPromptLocked,
         personalVocabulary,
         vowriteReplacements,
+        autoLearnCorrections,
         globalLanguage,
         totalDictationTime, totalWords, totalDictations,
         authMode, googleUserEmail, googleUserName,
