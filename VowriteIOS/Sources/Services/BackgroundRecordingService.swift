@@ -603,7 +603,13 @@ final class BackgroundRecordingService: ObservableObject {
         let modeConfig = effectiveModeConfig
         let effectivePolishEnabled = ipc.requestedAIEnabled && modeConfig.polishEnabled
         if effectivePolishEnabled {
-            speculativePolish.prepare(modeConfig: modeConfig, promptContext: promptContext)
+            // F-079: resolve mode.language == nil to the global default
+            // (same cascade the STT step in processAudio uses) before
+            // building the polish system prompt, so a global default region
+            // variant (e.g. zh-TW) gets the polish-output region instruction
+            // even when the mode itself has no language override.
+            let resolvedLanguage = LanguageConfig.resolvedLanguageTag(modeLanguage: modeConfig.language, globalLanguage: LanguageConfig.globalLanguage)
+            speculativePolish.prepare(modeConfig: modeConfig.withResolvedLanguage(resolvedLanguage), promptContext: promptContext)
         }
 
         #if DEBUG
@@ -698,14 +704,9 @@ final class BackgroundRecordingService: ObservableObject {
                     return
                 }
 
-                // Step 1: STT
-                let whisperLanguage: String?
-                if let modeLang = modeConfig.language,
-                   let lang = SupportedLanguage(rawValue: modeLang) {
-                    whisperLanguage = lang.whisperCode
-                } else {
-                    whisperLanguage = LanguageConfig.globalLanguage.whisperCode
-                }
+                // Step 1: STT (F-079: shared with the polish-prompt resolution
+                // above via the same pure helper)
+                let whisperLanguage = LanguageConfig.resolvedLanguageTag(modeLanguage: modeConfig.language, globalLanguage: LanguageConfig.globalLanguage)
                 let vocabPrompt = VocabularyManager.whisperPrompt
                 let rawTranscript = try await whisperService.transcribe(audioURL: url, language: whisperLanguage, prompt: vocabPrompt)
 

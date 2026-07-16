@@ -219,23 +219,23 @@ struct ModeEditorSheet: View {
     @ViewBuilder
     private var translationSections: some View {
         Section("Languages") {
-            Picker("Source Language", selection: Binding(
-                get: { draft.language ?? SupportedLanguage.auto.rawValue },
-                set: { draft.language = ($0 == SupportedLanguage.auto.rawValue) ? nil : $0 }
-            )) {
-                ForEach(SupportedLanguage.allCases) { lang in
-                    Text(lang.displayName).tag(lang.rawValue)
-                }
+            HStack {
+                Text("Source Language")
+                Spacer()
+                LanguageRegionPicker(selection: Binding(
+                    get: { SupportedLanguage(rawValue: draft.language ?? "") ?? .auto },
+                    set: { draft.language = ($0 == .auto) ? nil : $0.rawValue }
+                ))
             }
 
-            Picker("Target Language", selection: Binding(
-                get: { draft.targetLanguage ?? SupportedLanguage.en.rawValue },
-                set: { draft.targetLanguage = $0 }
-            )) {
+            HStack {
+                Text("Target Language")
+                Spacer()
                 // Translation target excludes "Auto-detect" — must be explicit
-                ForEach(SupportedLanguage.allCases.filter { $0 != .auto }) { lang in
-                    Text(lang.displayName).tag(lang.rawValue)
-                }
+                LanguageRegionPicker(selection: Binding(
+                    get: { SupportedLanguage(rawValue: draft.targetLanguage ?? "") ?? .en },
+                    set: { draft.targetLanguage = $0.rawValue }
+                ), excludeAuto: true)
             }
 
             HStack(spacing: 6) {

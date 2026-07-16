@@ -172,6 +172,21 @@ public struct ModeConfig {
         )
     }
 
+    /// Returns a copy with `language` replaced by an already-resolved tag —
+    /// e.g. the mode-nil-falls-back-to-global-default result from
+    /// `LanguageConfig.resolvedLanguageTag(modeLanguage:globalLanguage:)`.
+    /// Used before `SpeculativePolish.prepare(modeConfig:)` so the polish
+    /// system prompt sees the same effective language as the STT path (F-079).
+    public func withResolvedLanguage(_ resolvedLanguage: String?) -> ModeConfig {
+        ModeConfig(
+            polishEnabled: polishEnabled, polishModel: polishModel, sttModel: sttModel,
+            language: resolvedLanguage, systemPrompt: systemPrompt, userPrompt: userPrompt,
+            temperature: temperature, autoPaste: autoPaste, modeName: modeName,
+            outputStyleId: outputStyleId,
+            isTranslation: isTranslation, targetLanguage: targetLanguage
+        )
+    }
+
     private init(polishEnabled: Bool, polishModel: String?, sttModel: String?,
                  language: String?, systemPrompt: String, userPrompt: String,
                  temperature: Double, autoPaste: Bool, modeName: String,

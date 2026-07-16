@@ -134,23 +134,22 @@ struct SettingsView: View {
                 }
 
                 // F-066: Translation language quick settings
+                // F-079: two-level picker — region variant row appears only
+                // for languages that have one (Chinese, English, Spanish,
+                // Portuguese, French).
                 Section {
-                    Picker("Source", selection: $translationSourceLocal) {
-                        ForEach(SupportedLanguage.allCases) { lang in
-                            Text(lang.displayName).tag(lang)
-                        }
-                    }
-                    .onChange(of: translationSourceLocal) { _, newValue in
-                        setTranslationSource(newValue)
-                    }
-                    Picker("Target", selection: $translationTargetLocal) {
-                        ForEach(SupportedLanguage.allCases.filter { $0 != .auto }) { lang in
-                            Text(lang.displayName).tag(lang)
-                        }
-                    }
-                    .onChange(of: translationTargetLocal) { _, newValue in
-                        setTranslationTarget(newValue)
-                    }
+                    // Persistence folded into the binding setter (rather than
+                    // a separate .onChange) so the multi-row picker component
+                    // sits unmodified in the Section, same as the other
+                    // LanguageRegionPicker call sites.
+                    LanguageRegionPicker(label: "Source", selection: Binding(
+                        get: { translationSourceLocal },
+                        set: { translationSourceLocal = $0; setTranslationSource($0) }
+                    ))
+                    LanguageRegionPicker(label: "Target", selection: Binding(
+                        get: { translationTargetLocal },
+                        set: { translationTargetLocal = $0; setTranslationTarget($0) }
+                    ), excludeAuto: true)
                 } header: {
                     Text("Translation")
                 } footer: {
@@ -257,5 +256,53 @@ struct SettingsView: View {
         var mode = modeManager.modes[i]
         mode.targetLanguage = lang.rawValue
         modeManager.updateMode(mode)
+    }
+}
+
+// MARK: - F-079: Language Region Picker (shared)
+
+/// Two-level language picker for iOS `Form`/`Section` contexts — a primary
+/// "main language" `Picker` plus a secondary "region variant" `Picker` that
+/// only appears for languages that have variants defined (e.g. Chinese,
+/// English, Spanish, Portuguese, French). Selecting a new main language
+/// always resets to that language's plain code (no variant); selecting a
+/// variant row updates `selection` to the full BCP-47 tag.
+///
+/// Defined here (rather than its own file) because this Xcode project uses
+/// an explicit file list — adding a new source file requires a project.pbxproj
+/// edit. `SettingsView`, `PersonalizationView`, and `ModeEditorSheet` all
+/// reuse this type from within the VowriteIOS module.
+struct LanguageRegionPicker: View {
+    let label: String
+    @Binding var selection: SupportedLanguage
+    /// Excludes "Auto-detect" from the main-language list (used for
+    /// translation targets, which must be an explicit language).
+    var excludeAuto: Bool = false
+
+    private var family: SupportedLanguage { selection.languageFamily }
+
+    private var familyOptions: [SupportedLanguage] {
+        let roots = SupportedLanguage.familyRoots
+        return excludeAuto ? roots.filter { $0 != .auto } : roots
+    }
+
+    var body: some View {
+        Picker(label, selection: Binding(
+            get: { family },
+            set: { selection = $0 }
+        )) {
+            ForEach(familyOptions) { lang in
+                Text(lang.displayName).tag(lang)
+            }
+        }
+
+        if !family.regionVariants.isEmpty {
+            Picker("Region", selection: $selection) {
+                Text("Auto / Default").tag(family)
+                ForEach(family.regionVariants) { variant in
+                    Text(variant.regionLabel ?? variant.displayName).tag(variant)
+                }
+            }
+        }
     }
 }

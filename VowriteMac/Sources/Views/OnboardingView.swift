@@ -172,7 +172,9 @@ struct OnboardingView: View {
                     .padding(.vertical, 4)
 
                 DisclosureGroup("More languages") {
-                    let others = SupportedLanguage.allCases.filter { !popular.contains($0) }
+                    // F-079: family roots only — region variants (zh-TW, en-GB, ...)
+                    // are chosen later in Settings, not during onboarding.
+                    let others = SupportedLanguage.familyRoots.filter { !popular.contains($0) }
                     ForEach(others) { lang in
                         languageRow(lang)
                     }

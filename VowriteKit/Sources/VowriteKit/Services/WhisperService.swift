@@ -18,11 +18,18 @@ public final class WhisperService {
         let provider = configuration.provider
         let adapter = Self.adapter(for: provider)
 
+        // F-079: additively prepend a script/orthography exemplar hint to the
+        // vocabulary prompt for region variants where it matters (e.g.
+        // zh-TW/zh-HK). `language` here is the full BCP-47 tag from
+        // `SupportedLanguage.whisperCode` — adapters that need the bare
+        // ISO-639-1 code downgrade it themselves.
+        let effectivePrompt = LanguageConfig.sttPrompt(basePrompt: prompt, languageTag: language)
+
         return try await adapter.transcribe(
             audioURL: audioURL,
             model: configuration.model,
             language: language,
-            prompt: prompt,
+            prompt: effectivePrompt,
             apiKey: configuration.key,
             baseURL: configuration.resolvedBaseURL,
             provider: provider

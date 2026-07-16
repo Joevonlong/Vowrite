@@ -40,7 +40,10 @@ struct OpenAISTTAdapter: STTAdapter {
         body.appendMultipart(boundary: boundary, name: "response_format", value: "text")
 
         if let language = language, !language.isEmpty {
-            body.appendMultipart(boundary: boundary, name: "language", value: language)
+            // F-079: Whisper's `language` field only accepts ISO-639-1 main
+            // codes — downgrade a region variant tag (e.g. "zh-TW") before
+            // sending. Plain codes pass through unchanged.
+            body.appendMultipart(boundary: boundary, name: "language", value: LanguageConfig.whisperMainCode(from: language))
         }
         if let prompt = prompt, !prompt.isEmpty {
             body.appendMultipart(boundary: boundary, name: "prompt", value: prompt)
