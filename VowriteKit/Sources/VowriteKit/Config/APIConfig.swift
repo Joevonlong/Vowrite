@@ -163,7 +163,9 @@ public enum APIConfig {
     }
 
     public static var polishModel: String {
-        get { string(forKey: polishModelKey) ?? "deepseek-chat" }
+        // Fallback tracks DeepSeek's current chat tier — the legacy
+        // `deepseek-chat` alias retires upstream on 2026-07-24.
+        get { string(forKey: polishModelKey) ?? "deepseek-v4-flash" }
         set { VowriteStorage.defaults.set(newValue, forKey: polishModelKey) }
     }
 
