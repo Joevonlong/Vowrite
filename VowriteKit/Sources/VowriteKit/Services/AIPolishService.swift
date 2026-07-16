@@ -47,6 +47,14 @@ public final class AIPolishService {
             """
         }
 
+        // F-073/F-082: per-model polish overrides from providers.json
+        // (thinking/reasoning disabled, params to omit). Resolved once here —
+        // both the Claude-native and OpenAI-compatible paths apply them.
+        let resolvedOverrides = ProviderRegistry.shared.polishOverrides(
+            providerID: provider.providerID,
+            modelID: model
+        )
+
         // Claude uses its own Messages API
         if provider == .claude {
             guard let apiKey = configuration.key else {
@@ -59,7 +67,8 @@ public final class AIPolishService {
                 apiKey: apiKey,
                 model: model,
                 baseURL: baseURL,
-                temperature: config.temperature
+                temperature: config.temperature,
+                overrides: resolvedOverrides
             )
             return result.strippingThinkTags()
         }
@@ -85,13 +94,6 @@ public final class AIPolishService {
            KeyVault.hasValidOAuthToken(for: provider) {
             KimiCodeOAuthService.applyCodingPlanHeaders(to: &request)
         }
-
-        // F-073: Resolve per-model polish overrides (e.g. disable thinking mode)
-        // from providers.json before building the final payload.
-        let resolvedOverrides = ProviderRegistry.shared.polishOverrides(
-            providerID: provider.providerID,
-            modelID: model
-        )
 
         var payload: [String: Any] = [
             "model": model,

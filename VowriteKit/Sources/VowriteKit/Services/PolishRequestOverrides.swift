@@ -10,6 +10,11 @@ import Foundation
 /// the merge is always a shallow top-level merge. Override keys win over any
 /// existing key in the payload.
 ///
+/// A `null` override value removes the key from the payload entirely (F-082):
+/// some models reject a parameter outright rather than ignoring it — Claude
+/// Sonnet 5 / Opus 4.7+ return HTTP 400 when `temperature` is non-default —
+/// so `"temperature": null` in providers.json means "never send it".
+///
 /// - Parameters:
 ///   - payload: The mutable request body dictionary to patch in-place.
 ///   - overrides: The per-model overrides from `ModelDef.polishOverrides`.
@@ -20,6 +25,10 @@ func applyPolishOverrides(
 ) {
     guard let overrides, !overrides.isEmpty else { return }
     for (key, value) in overrides {
-        payload[key] = value.toAny()
+        if case .null = value {
+            payload.removeValue(forKey: key)
+        } else {
+            payload[key] = value.toAny()
+        }
     }
 }

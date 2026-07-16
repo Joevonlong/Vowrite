@@ -55,12 +55,12 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
         case .openAIAllInOne:
             return SplitAPIConfiguration(
                 stt: APIEndpointConfiguration(provider: .openai, model: "gpt-4o-mini-transcribe"),
-                polish: APIEndpointConfiguration(provider: .openai, model: "gpt-4o-mini")
+                polish: APIEndpointConfiguration(provider: .openai, model: "gpt-5.4-mini")
             )
         case .siliconflowKimi:
             return SplitAPIConfiguration(
                 stt: APIEndpointConfiguration(provider: .siliconflow, model: "FunAudioLLM/SenseVoiceSmall"),
-                polish: APIEndpointConfiguration(provider: .kimi, model: "kimi-k2.5")
+                polish: APIEndpointConfiguration(provider: .kimi, model: "kimi-k2.6")
             )
         case .localOllama:
             return SplitAPIConfiguration(
@@ -80,7 +80,7 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
                 stt: APIEndpointConfiguration(provider: .groq, model: "whisper-large-v3-turbo"),
                 polish: APIEndpointConfiguration(
                     provider: .mlxServer,
-                    model: "mlx-community/Qwen2.5-7B-Instruct-4bit",
+                    model: "mlx-community/Qwen3.5-9B-MLX-4bit",
                     baseURL: APIProvider.mlxServer.defaultBaseURL
                 )
             )
