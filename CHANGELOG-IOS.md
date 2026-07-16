@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+- **F-077 Command template library**: The Modes section gains a "From Template" entry offering the same 15 built-in command templates as macOS, pre-filling the Mode editor. Note: iOS cannot capture the host app's selected text today, so selection-based commands only reach full value on macOS until Speak-to-Edit lands (I-030).
+
 - **F-078 Markdown output style**: The shared style catalog gains a built-in "Markdown" output style (GitHub-flavored: headings, lists, bold, inline code, fenced code blocks from spoken cues). It appears automatically in the iOS style picker and the keyboard picks it up like any other style.
 
 - **Voice/Keyboard Mode Toggle (F-075)**: A two-segment pill toggle in the top-right corner of the keyboard extension switches between voice dictation and a full custom QWERTY keyboard. Voice mode preserves all existing behavior (dictation, translation, long-press chip selection). Keyboard mode supports letters, numbers, and symbols with shift/caps-lock state, continuous delete, and a globe key in the bottom row for input method switching. The delete button is relocated to a new bottom row (voice idle state) alongside a return key, preserving the full long-press bulk-delete behavior (F-067).
