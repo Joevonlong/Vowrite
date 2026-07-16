@@ -65,6 +65,14 @@ final class KeyboardState: ObservableObject {
 
     enum ViewState: Equatable {
         case idle, recording, processing, error(String)
+        /// BUG-017: transient, non-blocking notice shown after text WAS
+        /// already inserted but AI polish/translate threw and fell back to
+        /// the raw transcript. Distinct from `.error`, which the keyboard
+        /// treats as "nothing was inserted, discard the result" — here the
+        /// insert already happened; this only explains why the text may not
+        /// be polished/translated. Auto-dismisses after ~3s, same as
+        /// `.error` (see `RecordArea.warningContent`).
+        case warning(String)
         case noFullAccess, noAPIKey, noMicAccess, bgServiceNotRunning
     }
 
@@ -441,11 +449,17 @@ final class KeyboardState: ObservableObject {
             if let result = ipc.result, !result.isEmpty {
                 inputViewController?.textDocumentProxy.insertText(result)
             }
+            // BUG-017: read before `clearResult()`, which nils it out.
+            let polishWarning = ipc.polishWarning
             ipc.clearResult()
             stopPolling()
-            viewState = .idle
             clearTranslateSession()
             clearSessionTracking()
+            if let polishWarning, !polishWarning.isEmpty {
+                viewState = .warning(polishWarning)
+            } else {
+                viewState = .idle
+            }
 
         case .surfaceErrorAndGoIdle:
             let message = ipc.errorMessage ?? "Unknown error"

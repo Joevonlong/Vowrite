@@ -58,6 +58,8 @@ struct RecordArea: View {
                 processingContent
             case .error(let message):
                 errorContent(message)
+            case .warning(let message):
+                warningContent(message)
             case .noMicAccess:
                 StatusBanner(
                     icon: "mic.slash.fill",
@@ -598,6 +600,32 @@ struct RecordArea: View {
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 if case .error = state.viewState {
+                    state.reloadConfiguration()
+                }
+            }
+        }
+    }
+
+    // MARK: - Warning (BUG-017)
+
+    /// Text was already inserted this session, but polish/translate threw
+    /// and fell back to the raw transcript — orange (StatusBanner's existing
+    /// "non-fatal" color) instead of `errorContent`'s red, since nothing was
+    /// discarded here. Auto-dismisses after 3s exactly like `errorContent`.
+    private func warningContent(_ message: String) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title2)
+                .foregroundStyle(.orange)
+            Text(message)
+                .font(.caption2)
+                .foregroundStyle(KeyboardTheme.subtitleColor)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                if case .warning = state.viewState {
                     state.reloadConfiguration()
                 }
             }

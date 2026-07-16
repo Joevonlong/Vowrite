@@ -111,7 +111,7 @@ final class CorrectionMonitor {
         // Learn the word
         DispatchQueue.main.async {
             VocabularyManager.shared.add(replacement)
-            self.showToast(word: replacement)
+            ToastPresenter.show("✓ 已加入词库：\(replacement)")
         }
     }
 
@@ -136,69 +136,5 @@ final class CorrectionMonitor {
         guard injectedText.contains(t) else { return false }
 
         return true
-    }
-
-    // MARK: - Toast
-
-    private func showToast(word: String) {
-        guard let screen = NSScreen.main else { return }
-
-        let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 40),
-            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
-            backing: .buffered,
-            defer: true
-        )
-        panel.isReleasedWhenClosed = false
-        panel.isFloatingPanel = true
-        panel.level = .statusBar
-        panel.backgroundColor = .clear
-        panel.isOpaque = false
-        panel.hasShadow = true
-        panel.collectionBehavior = [.canJoinAllSpaces, .transient]
-
-        let label = NSTextField(labelWithString: "✓ 已加入词库：\(word)")
-        label.font = .systemFont(ofSize: 13, weight: .medium)
-        label.textColor = .white
-        label.alignment = .center
-
-        let container = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: 300, height: 40))
-        container.material = .hudWindow
-        container.state = .active
-        container.wantsLayer = true
-        container.layer?.cornerRadius = 10
-        container.layer?.masksToBounds = true
-
-        label.frame = container.bounds
-        container.addSubview(label)
-        panel.contentView = container
-
-        // Size to fit
-        label.sizeToFit()
-        let width = max(label.frame.width + 40, 200)
-        let panelFrame = NSRect(
-            x: screen.frame.midX - width / 2,
-            y: screen.frame.minY + 80,
-            width: width,
-            height: 40
-        )
-        panel.setFrame(panelFrame, display: true)
-        label.frame = container.bounds
-
-        panel.alphaValue = 0
-        panel.orderFrontRegardless()
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.3
-            panel.animator().alphaValue = 1
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            NSAnimationContext.runAnimationGroup({ ctx in
-                ctx.duration = 0.3
-                panel.animator().alphaValue = 0
-            }) {
-                panel.close()
-            }
-        }
     }
 }
