@@ -357,7 +357,6 @@ struct GeneralOptionsContent: View {
     @State private var launchAtLogin = false
     @State private var launchAtLoginError: String?
     @State private var overlayStyle = OverlayStyle.current
-    @AppStorage("autoLearnCorrections") private var autoLearnCorrections = true
 
     var body: some View {
         VStack(spacing: 12) {
@@ -394,10 +393,6 @@ struct GeneralOptionsContent: View {
                     set: { SoundFeedback.isEnabled = $0 }
                 ))
                 .toggleStyle(.switch)
-            }
-            SettingsRow(title: "Auto-learn corrections", description: "Automatically learn when you correct pasted text.") {
-                Toggle("", isOn: $autoLearnCorrections)
-                    .toggleStyle(.switch)
             }
             if IndicatorPreset.current == .classicBar {
                 SettingsRow(title: "Bar size", description: "Size of the classic recording bar") {
