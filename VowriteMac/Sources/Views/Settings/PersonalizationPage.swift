@@ -45,6 +45,7 @@ struct PersonalizationPageView: View {
                     .font(.system(size: 24, weight: .bold))
 
                 scenesSection
+                PerAppModesSectionView()
                 globalPreferencesSection
                 learningSection
                 howItWorksSection
@@ -173,6 +174,8 @@ struct PersonalizationPageView: View {
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                                     modeManager.select(mode)
                                 }
+                                // F-081: manual switch — see noteManualModeSwitch doc.
+                                PerAppModeManager.shared.noteManualModeSwitch()
                             },
                             onEdit: {
                                 editingMode = mode
@@ -204,8 +207,6 @@ struct PersonalizationPageView: View {
             }
         }
     }
-
-
 
     // MARK: - Global Preferences Section
 

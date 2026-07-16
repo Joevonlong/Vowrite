@@ -98,6 +98,21 @@ public enum StorageKeys {
 
     public static let hasCompletedOnboarding = "hasCompletedOnboarding"
 
+    // MARK: - Per-app Mode mapping (F-081, mac-only)
+    //
+    // The manager that reads/writes these keys — `PerAppModeManager` — lives
+    // in VowriteMac/Sources/Services/, not VowriteKit: resolving "which app
+    // is frontmost" requires NSWorkspace (AppKit-only), so this feature has
+    // no iOS surface. The keys are still declared centrally here per this
+    // file's stated purpose (single source of truth for the literal string),
+    // and so `StorageMigrationTests`' `StorageKeys.all` coverage extends to
+    // them even though they're never migrated (mac-only, nothing to move to
+    // an App Group). The pure decision/encode-decode logic they back
+    // (`PerAppModeDecision`) lives in VowriteKit so it's covered by `swift test`.
+
+    public static let perAppModeEnabled = "perAppModeEnabled"
+    public static let perAppModeMapping = "perAppModeMapping"
+
     // MARK: - Indicator preset (Animation/IndicatorTheme)
 
     public static let indicatorPreset = "indicatorPreset"
@@ -131,6 +146,7 @@ public enum StorageKeys {
         googleOAuthClientID,
         authMethodKimi, authMethodOpenAI,
         hasCompletedOnboarding,
+        perAppModeEnabled, perAppModeMapping,
         indicatorPreset,
         soundFeedbackDisabled,
         storageMigrationV2Complete,

@@ -58,6 +58,12 @@ struct RecordingBarView: View {
             guard isTranslate, let raw = appState.engine.sessionTranslationTarget else { return nil }
             return SupportedLanguage(rawValue: raw)?.shortLabel ?? raw.uppercased()
         }()
+        // F-081: per-app mapped Mode badge — mutually exclusive with the
+        // translate badge (isInPerAppModeSession is false during a translate
+        // session; see DictationEngine.isInPerAppModeSession).
+        let perAppModeLabel: String? = appState.engine.isInPerAppModeSession
+            ? appState.engine.sessionModeOverrideName
+            : nil
 
         return ZStack(alignment: .topTrailing) {
             HStack(spacing: 0) {
@@ -125,6 +131,21 @@ struct RecordingBarView: View {
                     Image(systemName: "globe")
                         .font(.system(size: 9, weight: .semibold))
                     Text("→ \(label)")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.accentColor.opacity(0.95)))
+                .overlay(Capsule().stroke(Color.white.opacity(0.6), lineWidth: 0.5))
+                .offset(x: -6, y: -8)
+            } else if let label = perAppModeLabel {
+                // F-081: same chip styling as the F-063 translate badge —
+                // follows precedent rather than inventing a new treatment.
+                HStack(spacing: 3) {
+                    Image(systemName: "theatermasks")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text(label)
                         .font(.system(size: 10, weight: .semibold))
                 }
                 .foregroundColor(.white)
