@@ -9,6 +9,30 @@ public enum VowriteState: Equatable {
     case error(String)
 }
 
+/// BUG-017: pure mapping from failure kind to the user-facing message shown
+/// when AI polish/translation is attempted, throws, and the pipeline falls
+/// back to the raw (or replacement-corrected) transcript. A silent fallback
+/// — success sound, no indication anything went wrong — is the exact defect
+/// this fixes: the user must always be told when the text on screen isn't
+/// what they expected.
+///
+/// Shared by `DictationEngine` (macOS/in-app iOS) and
+/// `BackgroundRecordingService` (iOS keyboard-triggered background
+/// recording) so both platforms use identical failure-kind wording, differing
+/// only in the verb matching how each platform actually delivers the text —
+/// macOS pastes ("output"), the iOS keyboard inserts directly ("input").
+public enum PolishFailureMessage {
+    /// macOS / in-app iOS wording — text is delivered via paste/clipboard.
+    public static func macMessage(isTranslation: Bool) -> String {
+        isTranslation ? "翻译失败，已输出原文" : "润色失败，已输出原文"
+    }
+
+    /// iOS keyboard wording — text is inserted directly into the text field.
+    public static func iosMessage(isTranslation: Bool) -> String {
+        isTranslation ? "翻译失败，已输入原文" : "润色失败，已输入原文"
+    }
+}
+
 @MainActor
 public final class DictationEngine: ObservableObject {
     @Published public var state: VowriteState = .idle
@@ -16,6 +40,14 @@ public final class DictationEngine: ObservableObject {
     @Published public var recordingDuration: TimeInterval = 0
     @Published public var lastResult: String?
     @Published public var lastRawTranscript: String?
+    /// BUG-017: non-nil only for the session that just completed with a
+    /// polish/translate failure fallback — nil at all other times (including
+    /// success, hard STT/API failures, and paste failures). Distinct from
+    /// `state` so platform layers can hook a dedicated visible warning
+    /// (e.g. a toast) onto exactly this case without also firing on every
+    /// other `.error` state, which already has its own surface (menu bar /
+    /// keyboard error banner) and doesn't need a second one.
+    @Published public var polishWarning: String?
 
     private let logger = Logger(subsystem: "com.vowrite.kit", category: "dictation")
 
@@ -162,6 +194,7 @@ public final class DictationEngine: ObservableObject {
             state = .recording
             recordingDuration = 0
             audioLevel = 0
+            polishWarning = nil   // BUG-017: don't let a prior session's warning linger
 
             // Show floating overlay
             overlay.showRecording()
@@ -332,7 +365,12 @@ public final class DictationEngine: ObservableObject {
                 // Step 2: AI Polish (skip if mode has polishEnabled=false)
                 // F-033: Uses speculative pre-built request for near-instant LLM fire
                 var finalText = correctedTranscript
-                var translationFailed = false   // F-063
+                // BUG-017: true whenever polish/translate was attempted and threw —
+                // covers BOTH translation and plain-polish failures. "Skipped"
+                // (effectivePolishEnabled == false, the `else` branch below) is not
+                // a failure and must never set this — only an attempted-and-threw
+                // call falls back to raw text without the user asking for that.
+                var polishFailed = false
                 let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
                 if effectivePolishEnabled {
                     do {
@@ -354,15 +392,11 @@ public final class DictationEngine: ObservableObject {
                             logger.debug("Post-polish replacement: '\(polished, privacy: .private)' → '\(finalText, privacy: .private)'")
                         }
                     } catch {
-                        logger.debug("Polish failed (using corrected transcript): \(error.localizedDescription, privacy: .public)")
-                        // F-063: For translation mode, falling back to the raw
-                        // transcript means the user gets the source language back
-                        // instead of the expected translation — surface this
-                        // explicitly so the user can retry instead of being
-                        // confused by silently-wrong output.
-                        if modeConfig.isTranslation {
-                            translationFailed = true
-                        }
+                        // BUG-017: was `.debug` — a silently-swallowed polish failure
+                        // must be visible in release sysdiagnose, not just local debug
+                        // builds.
+                        logger.error("Polish failed (using corrected transcript): \(error.localizedDescription, privacy: .public)")
+                        polishFailed = true
                     }
                 } else {
                     logger.debug("Polish skipped (Dictation mode)")
@@ -391,17 +425,27 @@ public final class DictationEngine: ObservableObject {
                 // Step 6: Update stats
                 updateStats(duration: recordingDuration, text: finalText)
 
-                // Step 7: Success feedback (or translate-failed / paste-failed warning)
+                // Step 7: Success feedback (or polish/translate-failed / paste-failed warning)
                 speculativePolish.reset()
                 promptContext = nil
                 sessionModeOverride = nil   // F-063: clear oneshot translate override
                 if !outputDelivered {
                     feedback.playErrorSound()
+                    polishWarning = nil
                     state = .error("粘贴失败，请手动复制文本")
-                } else if translationFailed {
+                } else if polishFailed {
+                    // BUG-017: any attempted-and-failed polish/translate must be
+                    // visibly surfaced — was previously silent (success sound +
+                    // .idle) for non-translation modes, which is exactly the
+                    // "polish没有进行却不告诉我" defect. `polishWarning` gives
+                    // platform layers a dedicated hook (e.g. a toast) distinct
+                    // from the general `.error` surface.
+                    let message = PolishFailureMessage.macMessage(isTranslation: modeConfig.isTranslation)
                     feedback.playErrorSound()
-                    state = .error("翻译失败，已输出原文")
+                    polishWarning = message
+                    state = .error(message)
                 } else {
+                    polishWarning = nil
                     feedback.playSuccessSound()
                     state = .idle
                 }

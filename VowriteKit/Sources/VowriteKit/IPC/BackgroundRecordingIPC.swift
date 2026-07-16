@@ -23,6 +23,7 @@ public final class BackgroundRecordingIPC {
         static let state = "bg_recording_state"
         static let ipcPayload = "bg_ipc_payload"
         static let errorMessage = "bg_recording_error"
+        static let polishWarning = "bg_polish_warning"
         static let audioLevel = "bg_audio_level"
         static let recordingDuration = "bg_recording_duration"
         static let requestedModeId = "bg_recording_mode_id"
@@ -101,18 +102,20 @@ public final class BackgroundRecordingIPC {
 
     // MARK: - State (main app writes, keyboard reads)
     //
-    // INVARIANT — write ordering: the service must write `result` (and, when
-    // starting a session, `activeSessionId`) BEFORE it flips `state` to
-    // `.done`/`.error`. UserDefaults has no atomic multi-key commit, so a
-    // reader that observes the *new* `state` must already be able to observe
-    // the correspondingly-updated `result`/`activeSessionId` — never the
-    // other way around, or the keyboard could read `.done` alongside a
-    // leftover `result`/`activeSessionId` from a previous session. See
-    // `BackgroundRecordingService.processAudio()` (`ipc.result = finalText`
-    // then `ipc.state = .done`) and `startRecording()` (`ipc.activeSessionId`
-    // set before the first possible `ipc.state = .error`). The keyboard's
-    // `IPCReconciler` depends on this ordering to distinguish a genuinely
-    // finished session (matching `activeSessionId`) from a stale one.
+    // INVARIANT — write ordering: the service must write `result` and
+    // `polishWarning` (and, when starting a session, `activeSessionId`)
+    // BEFORE it flips `state` to `.done`/`.error`. UserDefaults has no atomic
+    // multi-key commit, so a reader that observes the *new* `state` must
+    // already be able to observe the correspondingly-updated
+    // `result`/`polishWarning`/`activeSessionId` — never the other way
+    // around, or the keyboard could read `.done` alongside a leftover
+    // `result`/`polishWarning`/`activeSessionId` from a previous session. See
+    // `BackgroundRecordingService.processAudio()` (`ipc.polishWarning = ...`
+    // then `ipc.result = finalText` then `ipc.state = .done`) and
+    // `startRecording()` (`ipc.activeSessionId` set before the first possible
+    // `ipc.state = .error`). The keyboard's `IPCReconciler` depends on this
+    // ordering to distinguish a genuinely finished session (matching
+    // `activeSessionId`) from a stale one.
 
     public var state: BackgroundRecordingState {
         get {
@@ -166,6 +169,19 @@ public final class BackgroundRecordingIPC {
     public var errorMessage: String? {
         get { defaults.string(forKey: Key.errorMessage) }
         set { defaults.set(newValue, forKey: Key.errorMessage) }
+    }
+
+    /// BUG-017: non-nil only when the session that just reached `.done`
+    /// attempted AI polish/translation and it threw, falling back to the raw
+    /// (or replacement-corrected) transcript that was still inserted. Unlike
+    /// `errorMessage` (paired with `.error`, which the keyboard treats as
+    /// "discard the result, nothing was inserted"), this is paired with
+    /// `.done` — the text WAS inserted, this only explains it may not be
+    /// polished/translated. Written before `state` per the invariant above;
+    /// cleared by `clearResult()` and at the top of every new session.
+    public var polishWarning: String? {
+        get { defaults.string(forKey: Key.polishWarning) }
+        set { defaults.set(newValue, forKey: Key.polishWarning) }
     }
 
     public var audioLevel: Float {
@@ -293,6 +309,7 @@ public final class BackgroundRecordingIPC {
     public func clearResult() {
         result = nil
         errorMessage = nil
+        polishWarning = nil
         state = .idle
         activeSessionId = nil
     }

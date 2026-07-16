@@ -1,6 +1,8 @@
+// swiftlint:disable file_length
 import AVFoundation
 import SwiftUI
 import VowriteKit
+import os
 
 // MARK: - BGServiceDuration
 
@@ -60,6 +62,7 @@ final class BackgroundRecordingService: ObservableObject {
     private let whisperService = WhisperService()
     private let aiPolishService = AIPolishService()
     private let speculativePolish = SpeculativePolish()
+    private let logger = Logger(subsystem: "com.vowrite.app", category: "background") // BUG-017: was print-only
 
     // MARK: - Audio Engine (replaces AVAudioRecorder)
     // AVAudioEngine with input tap keeps microphone active continuously.
@@ -462,6 +465,7 @@ final class BackgroundRecordingService: ObservableObject {
         }
 
         ipc.activeSessionId = ipc.requestedSessionId // attribute writes below to this session (IPCReconciler)
+        ipc.polishWarning = nil // BUG-017: don't let a prior session's warning linger
 
         guard let format = inputFormat else {
             ipc.state = .error
@@ -730,6 +734,7 @@ final class BackgroundRecordingService: ObservableObject {
 
                 // Step 2: AI Polish (F-033: uses speculative pre-built request)
                 var finalText = correctedTranscript
+                var polishFailureMessage: String? // BUG-017: set only if polish threw, never for "skip, use raw" below
                 let effectivePolishEnabled = aiEnabled && modeConfig.polishEnabled
                 if effectivePolishEnabled {
                     let polishConfig = APIConfig.polish
@@ -745,13 +750,14 @@ final class BackgroundRecordingService: ObservableObject {
                             // F-051: Apply replacement rules again after LLM
                             finalText = ReplacementManager.apply(to: polished)
                         } catch {
-                            #if DEBUG
-                            print("[Vowrite BG] Polish failed, using corrected: \(error)")
-                            #endif
+                            // BUG-017: the reported defect — was DEBUG-print-only, raw text inserted silently.
+                            logger.error("Polish failed, using corrected transcript: \(error.localizedDescription, privacy: .public)")
+                            polishFailureMessage = PolishFailureMessage.iosMessage(isTranslation: modeConfig.isTranslation)
                         }
                     }
                 }
 
+                ipc.polishWarning = polishFailureMessage // written before result/state — see IPC write-ordering invariant
                 ipc.result = finalText
                 ipc.state = .done
 

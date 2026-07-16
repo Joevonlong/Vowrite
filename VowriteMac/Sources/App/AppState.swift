@@ -69,6 +69,24 @@ final class AppState: ObservableObject {
         // Wire overlay to AppState reference
         overlay.appState = self
 
+        // BUG-017: any polish/translate failure that fell back to the raw
+        // transcript must be visibly surfaced, not just noted in the menu-bar
+        // dropdown text (which the user has to open to ever see). Reuses the
+        // toast facility introduced for F-053's vocabulary-learned
+        // notification (`CorrectionMonitor`/`ToastPresenter`) so the warning
+        // shows near paste time without stealing focus. `engine.$state`
+        // already carries `.error` for this case (menu-bar behavior is
+        // unchanged) — `polishWarning` is a narrower signal so this toast
+        // fires only for the polish/translate-fallback case, not every hard
+        // failure (STT/API errors etc.), which already has its own
+        // "nothing was pasted yet" context and doesn't need a toast.
+        engine.$polishWarning
+            .compactMap { $0 }
+            .sink { message in
+                ToastPresenter.show("⚠️ \(message)")
+            }
+            .store(in: &cancellables)
+
         // Wire history save callback
         engine.onRecordComplete = { [weak self] rawTranscript, finalText, duration, wasTranslation in
             guard let self = self else { return }
