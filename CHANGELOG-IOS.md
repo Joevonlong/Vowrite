@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 - **F-077 Command template library**: The Modes section gains a "From Template" entry offering the same 15 built-in command templates as macOS, pre-filling the Mode editor. Note: iOS cannot capture the host app's selected text today, so selection-based commands only reach full value on macOS until Speak-to-Edit lands (I-030).
 
+- **F-079 Language region variants**: Language pickers in Settings, Personalization, and the Mode editor gain a second-level region choice (中文 简体/繁體台灣/繁體香港, English US/UK/AU, Español, Português, Français variants), matching macOS. Traditional-Chinese variants bias recognition and polish output accordingly.
+
 - **F-080 Personalization visibility**: Personalization gains a Learning section mirroring macOS — learned-rule/vocabulary counts, the three most recent learned corrections, the learning master toggle, and Clear Learned Data. Counts are per-device; auto-learning itself currently runs on macOS only (corrections learned there don't sync to iOS).
 
 - **F-078 Markdown output style**: The shared style catalog gains a built-in "Markdown" output style (GitHub-flavored: headings, lists, bold, inline code, fenced code blocks from spoken cues). It appears automatically in the iOS style picker and the keyboard picks it up like any other style.
