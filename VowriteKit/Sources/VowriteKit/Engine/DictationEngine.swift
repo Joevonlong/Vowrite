@@ -65,11 +65,15 @@ public final class DictationEngine: ObservableObject {
     private var levelTimer: Timer?
     private var promptContext: PromptContext?
 
-    /// F-063: Oneshot mode override for the current recording session.
-    /// Set by `startTranslateRecording()` and cleared on completion / cancel.
-    /// When set, `effectiveModeConfig` returns this Mode instead of the
-    /// user's currently-selected ModeManager mode — so a translate hotkey
-    /// press never mutates the user's selected Mode.
+    /// Oneshot mode override for the current recording session. Set by
+    /// `startTranslateRecording()` (F-063) or `setSessionModeOverride(_:)`
+    /// (F-081) and cleared on completion / cancel. When set,
+    /// `effectiveModeConfig` returns this Mode instead of the user's
+    /// currently-selected ModeManager mode — so neither the translate
+    /// hotkey nor a per-app auto-mode mapping ever mutates the user's
+    /// selected Mode. Both features share this exact seam and never
+    /// overlap in a single session: F-081's `PerAppModeDecision.resolve`
+    /// never applies a mapping while a translate session is in progress.
     private var sessionModeOverride: Mode?
 
     /// F-063: True while the current recording was started by the translate hotkey.
@@ -83,6 +87,36 @@ public final class DictationEngine: ObservableObject {
     public var sessionTranslationTarget: String? {
         guard let mode = sessionModeOverride, mode.isTranslation else { return nil }
         return mode.targetLanguage
+    }
+
+    /// F-081: True while the current recording is running under a per-app
+    /// mapped Mode override rather than the user's normally-selected Mode.
+    /// The platform layer (`PerAppModeManager`, VowriteMac) is the only
+    /// caller of `setSessionModeOverride(_:)`, and never calls it during a
+    /// translate session (see `PerAppModeDecision`), so "override is set
+    /// and it isn't a translate session" unambiguously means a per-app
+    /// mapping applied. Read by the overlay to render the Mode-name badge.
+    public var isInPerAppModeSession: Bool {
+        sessionModeOverride != nil && !isInTranslateSession
+    }
+
+    /// F-081: Name of the Mode applied by a per-app mapping, for the
+    /// overlay badge. `nil` unless `isInPerAppModeSession`.
+    public var sessionModeOverrideName: String? {
+        guard isInPerAppModeSession else { return nil }
+        return sessionModeOverride?.name
+    }
+
+    /// F-081: Set a oneshot Mode override for the NEXT recording only,
+    /// without mutating `ModeManager.currentModeId`. Called by
+    /// `PerAppModeManager` (VowriteMac) right before a normal (non-translate)
+    /// recording starts, once it has resolved a per-app mapping hit. No-op
+    /// once a recording/processing session is already in flight — mirrors
+    /// the same guard `startTranslateRecording()` uses, so a slow caller
+    /// can't clobber an in-progress session's mode mid-flight.
+    public func setSessionModeOverride(_ mode: Mode) {
+        guard state != .recording, state != .processing else { return }
+        sessionModeOverride = mode
     }
 
     public var isRecording: Bool { state == .recording }

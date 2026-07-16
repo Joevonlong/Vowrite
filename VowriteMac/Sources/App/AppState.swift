@@ -135,9 +135,13 @@ final class AppState: ObservableObject {
             }
         }
         // F-018: Mode switching via ⌃1-⌃9
+        // F-081: this is a manual Mode switch — note it so a per-app mapping
+        // doesn't immediately overwrite the user's explicit pick on the next
+        // recording (see PerAppModeManager.noteManualModeSwitch).
         hotkeyManager.onModeSwitch = { [weak self] index in
             Task { @MainActor in
                 self?.engine.switchToMode(at: index)
+                PerAppModeManager.shared.noteManualModeSwitch()
             }
         }
         // F-063: Translate hotkey — start recording in Translate mode (oneshot
@@ -153,10 +157,36 @@ final class AppState: ObservableObject {
         hotkeyManager.register()
     }
 
-    func toggleRecording() { engine.toggleRecording() }
+    func toggleRecording() {
+        // F-081: only resolve/apply a per-app mapping right before an actual
+        // "start" — mirrors DictationEngine.toggleRecording()'s own switch so
+        // we don't waste a mapping resolution (or worse, stomp a mid-flight
+        // sessionModeOverride) on what's really a "stop" tap.
+        switch engine.state {
+        case .idle, .error:
+            applyPerAppModeOverrideIfNeeded()
+        case .recording, .processing:
+            break
+        }
+        engine.toggleRecording()
+    }
     func startRecording() { engine.startRecording() }
     func stopRecording() { engine.stopRecording() }
     func cancelRecording() { engine.cancelRecording() }
+
+    /// F-081: Normal hotkey path only — resolve whether the frontmost app
+    /// has a per-app Mode mapping and, if so, apply it as this session's
+    /// oneshot override via the same seam F-063 uses for translate. Reads
+    /// `NSWorkspace.frontmostApplication` synchronously here (not inside
+    /// `DictationEngine`, which is cross-platform Kit code and can't import
+    /// AppKit) — at this point in the call stack nothing has run yet that
+    /// could steal focus, so it's equivalent to reading it at the top of
+    /// `engine.startRecording()` alongside `PromptContext.capture()`.
+    private func applyPerAppModeOverrideIfNeeded() {
+        guard let modeId = PerAppModeManager.shared.resolveSessionOverride(isTranslateSession: false),
+              let mode = ModeManager.shared.modes.first(where: { $0.id == modeId }) else { return }
+        engine.setSessionModeOverride(mode)
+    }
 
     // MARK: - ESC monitors
 

@@ -61,6 +61,7 @@ SYMBOLS=(
     "MacOverlayController::Floating recording overlay::yes"
     "SPUUpdater::Sparkle auto-update::yes"
     "MenuBarView::macOS menu bar extra::yes"
+    "PerAppModeManager::Per-app auto Mode (F-081) — needs NSWorkspace frontmost-app lookup, no iOS host-app API::yes"
 )
 
 echo "Checking key symbol usage across platforms..."
