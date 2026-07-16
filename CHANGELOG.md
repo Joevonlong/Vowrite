@@ -7,6 +7,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.2.2.0] — 2026-07-17
+
 ### Added
 
 - **F-082 Model catalog refresh (2026-07) + three new providers**: Model pickers now offer each provider's newest generation — Claude Sonnet 5 (new Claude default), GPT-5.6 (luna/sol), Gemini 3.5 Flash + 3.1 Flash-Lite, Qwen 3.7, GLM-5.2, MiniMax M3, Doubao Seed 2.1 — with reasoning/thinking pre-disabled wherever the provider allows it, so polish stays fast. Three new polish providers join: xAI (Grok 4.3/4.5), Cerebras (free tier, ~3000 tok/s — the fastest polish backend available), and Baidu Qianfan (ERNIE 4.5 Turbo). OpenRouter can now also be used for speech-to-text (hosted Whisper large-v3 at aggregator pricing, plus Qwen3-ASR with strong Chinese support). Retired upstream IDs were removed — most notably DeepSeek's legacy `deepseek-chat` / `deepseek-reasoner` aliases, which DeepSeek shuts down on 2026-07-24: if one is still selected in your settings, re-pick a DeepSeek V4 model.
@@ -434,7 +436,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.2...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.2.0...HEAD
+[0.2.2.0]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.2...v0.2.2.0
 [0.2.1.2]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.1...v0.2.1.2
 [0.2.1.1]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.0...v0.2.1.1
 [0.2.1.0]: https://github.com/Joevonlong/Vowrite/compare/v0.2.0.1...v0.2.1.0
