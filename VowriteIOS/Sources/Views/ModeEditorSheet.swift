@@ -18,27 +18,51 @@ struct ModeEditorSheet: View {
     @State private var showDeleteConfirm = false
     @State private var showCancelConfirm = false
 
-    init(existingMode: Mode?, onSave: @escaping (Mode) -> Void, onDelete: ((Mode) -> Void)? = nil) {
+    /// F-077: `template` seeds a new (non-builtin) Mode's name/icon/prompt
+    /// from a `ModeTemplate` preset. Ignored when `existingMode` is set.
+    init(existingMode: Mode?, template: ModeTemplate? = nil, onSave: @escaping (Mode) -> Void, onDelete: ((Mode) -> Void)? = nil) {
         self.existingMode = existingMode
         self.onSave = onSave
         self.onDelete = onDelete
 
-        let initial = existingMode ?? Mode(
-            id: UUID(),
-            name: "",
-            icon: "sparkles",
-            isBuiltin: false,
-            sttModel: nil,
-            language: nil,
-            polishEnabled: true,
-            polishModel: nil,
-            systemPrompt: "",
-            userPrompt: "",
-            temperature: 0.3,
-            autoPaste: true,
-            outputStyleId: nil,
-            shortcutIndex: nil
-        )
+        let initial: Mode
+        if let existingMode {
+            initial = existingMode
+        } else if let template {
+            initial = Mode(
+                id: UUID(),
+                name: template.name,
+                icon: template.icon,
+                isBuiltin: false,
+                sttModel: nil,
+                language: nil,
+                polishEnabled: true,
+                polishModel: nil,
+                systemPrompt: template.systemPrompt,
+                userPrompt: "",
+                temperature: 0.3,
+                autoPaste: true,
+                outputStyleId: nil,
+                shortcutIndex: nil
+            )
+        } else {
+            initial = Mode(
+                id: UUID(),
+                name: "",
+                icon: "sparkles",
+                isBuiltin: false,
+                sttModel: nil,
+                language: nil,
+                polishEnabled: true,
+                polishModel: nil,
+                systemPrompt: "",
+                userPrompt: "",
+                temperature: 0.3,
+                autoPaste: true,
+                outputStyleId: nil,
+                shortcutIndex: nil
+            )
+        }
         _draft = State(initialValue: initial)
         _baseline = State(initialValue: initial)
     }
