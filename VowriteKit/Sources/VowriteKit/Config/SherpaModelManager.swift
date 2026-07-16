@@ -159,7 +159,7 @@ public final class SherpaModelManager: ObservableObject {
         // iOS: Process is unavailable. Decompress bz2 data and extract tar manually.
         let archiveData = try Data(contentsOf: archive)
         let decompressed = try decompressBz2(archiveData)
-        try extractTar(decompressed, to: destination, stripComponents: 1)
+        try Self.extractTar(decompressed, to: destination, stripComponents: 1)
         #endif
     }
 
@@ -192,9 +192,15 @@ public final class SherpaModelManager: ObservableObject {
             + "or use a pre-extracted model bundle."
         )
     }
+    #endif
 
-    private func extractTar(_ tarData: Data, to destination: URL, stripComponents: Int) throws {
-        // Minimal tar extractor for POSIX/UStar format
+    /// Minimal tar extractor for POSIX/UStar format.
+    ///
+    /// `nonisolated static` (rather than a `private` instance method) so it has no
+    /// dependency on actor isolation or the `.shared` singleton and is unit-testable
+    /// on any platform — even though at runtime it is only exercised on iOS (macOS
+    /// shells out to `/usr/bin/tar` in `extractTarBz2` instead).
+    nonisolated static func extractTar(_ tarData: Data, to destination: URL, stripComponents: Int) throws {
         let blockSize = 512
         var offset = 0
 
@@ -238,6 +244,12 @@ public final class SherpaModelManager: ObservableObject {
                 try FileManager.default.createDirectory(at: targetURL, withIntermediateDirectories: true)
             } else if typeFlag == 0x30 || typeFlag == 0x00 {
                 // Regular file
+                guard offset + fileSize <= tarData.count else {
+                    throw SherpaError.modelDownloadFailed(
+                        "Corrupt or truncated tar archive: '\(stripped)' declares \(fileSize) bytes "
+                        + "but only \(tarData.count - offset) remain"
+                    )
+                }
                 try FileManager.default.createDirectory(at: targetURL.deletingLastPathComponent(), withIntermediateDirectories: true)
                 let fileData = tarData[offset..<(offset + fileSize)]
                 try Data(fileData).write(to: targetURL)
@@ -247,5 +259,4 @@ public final class SherpaModelManager: ObservableObject {
             offset += dataBlocks * blockSize
         }
     }
-    #endif
 }

@@ -291,7 +291,9 @@ public final class IflytekSTTAdapter: STTAdapter {
         }
 
         // Read source into buffer
-        let sourceBuffer = AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: AVAudioFrameCount(sourceFile.length))!
+        guard let sourceBuffer = AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: AVAudioFrameCount(sourceFile.length)) else {
+            throw IflytekError.audioConversionFailed
+        }
         try sourceFile.read(into: sourceBuffer)
 
         // Convert

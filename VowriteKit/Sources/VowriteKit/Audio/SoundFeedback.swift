@@ -92,7 +92,9 @@ public enum SoundFeedback {
         return wavData(samples: samples, sampleRate: UInt32(sampleRate), channels: channels, bitsPerSample: bitsPerSample)
     }
 
-    private static func wavData(samples: [Int16], sampleRate: UInt32, channels: UInt16, bitsPerSample: UInt16) -> Data {
+    /// Builds a canonical 44-byte-header PCM WAV container from raw samples.
+    /// Internal (rather than private) so its header-field math is unit-testable.
+    static func wavData(samples: [Int16], sampleRate: UInt32, channels: UInt16, bitsPerSample: UInt16) -> Data {
         let byteRate = sampleRate * UInt32(channels) * UInt32(bitsPerSample / 8)
         let blockAlign = channels * (bitsPerSample / 8)
         let dataSize = UInt32(samples.count) * UInt32(blockAlign)
