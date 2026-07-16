@@ -83,8 +83,8 @@ public enum MiniMaxMigration {
     // MARK: - Auth Method
 
     private static func migrateAuthMethod(targetProviderID: String) {
-        let legacyKey = "auth.method.\(legacyProviderID)"
-        let targetKey = "auth.method.\(targetProviderID)"
+        let legacyKey = StorageKeys.authMethodPrefix + legacyProviderID
+        let targetKey = StorageKeys.authMethodPrefix + targetProviderID
 
         guard let value = VowriteStorage.defaults.string(forKey: legacyKey) else { return }
 

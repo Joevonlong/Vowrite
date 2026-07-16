@@ -28,16 +28,23 @@ public enum IndicatorPreset: String, CaseIterable, Codable, Sendable {
         }
     }
 
-    private static let key = "indicatorPreset"
+    private static let key = StorageKeys.indicatorPreset
 
     public static var current: IndicatorPreset {
         get {
-            guard let raw = UserDefaults.standard.string(forKey: key),
+            // VowriteStorage.defaults, not UserDefaults.standard directly — this
+            // used to bypass the Kit's storage abstraction. On macOS the two are
+            // the same suite so this is a no-op change there; on iOS the two can
+            // diverge (App Group vs. standard), where the old code would have
+            // silently split the preference between the container app and the
+            // keyboard extension. See StorageMigration for the compensating
+            // migration entry.
+            guard let raw = VowriteStorage.defaults.string(forKey: key),
                   let preset = IndicatorPreset(rawValue: raw) else { return .classicBar }
             return preset
         }
         set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: key)
+            VowriteStorage.defaults.set(newValue.rawValue, forKey: key)
         }
     }
 }

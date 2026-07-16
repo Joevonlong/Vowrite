@@ -1,7 +1,7 @@
 import Foundation
 
 public enum APIConfigMigration {
-    private static let migrationFlagKey = "splitAPI.migration.v1.complete"
+    private static let migrationFlagKey = StorageKeys.splitAPIMigrationV1Complete
 
     private static let legacyGlobalProviderKey = "apiProvider"
     private static let legacyGlobalBaseURLKey = "apiBaseURL"

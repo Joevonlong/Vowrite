@@ -3,60 +3,76 @@ import Foundation
 /// Migrates v0.1.x UserDefaults.standard data to App Group UserDefaults.
 /// iOS only. On macOS, VowriteStorage.defaults is .standard so this is a no-op.
 public enum StorageMigration {
-    private static let migrationKey = "v2_storage_migrated"
+    private static let migrationKey = StorageKeys.storageMigrationV2Complete
 
-    /// All keys to migrate (confirmed from code)
-    private static let keysToMigrate: [String] = [
+    /// All keys to migrate (confirmed from code).
+    /// Internal (not private) so tests can assert this list stays in sync
+    /// with the real keys the Kit writes (see StorageMigrationTests).
+    static let keysToMigrate: [String] = [
         // APIConfig
-        "splitAPI.stt.provider",
-        "splitAPI.stt.model",
-        "splitAPI.stt.baseURL",
-        "splitAPI.polish.provider",
-        "splitAPI.polish.model",
-        "splitAPI.polish.baseURL",
-        "splitAPI.selectedPresetID",
+        StorageKeys.splitAPISTTProvider,
+        StorageKeys.splitAPISTTModel,
+        StorageKeys.splitAPISTTBaseURL,
+        StorageKeys.splitAPIPolishProvider,
+        StorageKeys.splitAPIPolishModel,
+        StorageKeys.splitAPIPolishBaseURL,
+        StorageKeys.splitAPISelectedPresetID,
 
         // ModeManager
-        "vowriteModes",          // Data (JSON)
-        "vowriteCurrentModeId",  // String (UUID)
+        StorageKeys.vowriteModes,          // Data (JSON)
+        StorageKeys.vowriteCurrentModeId,  // String (UUID)
 
         // OutputStyleManager
-        "vowriteOutputStyles",   // Data (JSON)
+        StorageKeys.vowriteOutputStyles,   // Data (JSON)
 
         // PromptConfig
-        "promptUserPrompt",
-        "promptUserPromptLocked",  // Bool
+        StorageKeys.promptUserPrompt,
+        StorageKeys.promptUserPromptLocked,  // Bool
 
         // VocabularyManager
-        "personalVocabulary",    // [String]
+        StorageKeys.personalVocabulary,    // [String]
 
         // ReplacementManager (F-051)
-        "vowriteReplacements",   // Data (JSON)
+        StorageKeys.vowriteReplacements,   // Data (JSON)
 
         // LanguageConfig
-        "globalLanguage",
+        StorageKeys.globalLanguage,
 
         // DictationEngine stats
-        "totalDictationTime",    // Double
-        "totalWords",            // Int
-        "totalDictations",       // Int
+        StorageKeys.totalDictationTime,    // Double
+        StorageKeys.totalWords,            // Int
+        StorageKeys.totalDictations,       // Int
 
         // APIPreset
-        "splitAPI.userPresets",  // Data (JSON)
+        StorageKeys.splitAPIUserPresets,  // Data (JSON)
 
         // APIConfigMigration
-        "splitAPI.migration.v1.complete",  // Bool
+        StorageKeys.splitAPIMigrationV1Complete,  // Bool
 
         // AuthManager
-        "authMode",
-        "googleEmail",
-        "googleName",
+        StorageKeys.authMode,
+        StorageKeys.googleUserEmail,  // AuthManager.googleEmailKey — was incorrectly "googleEmail"
+        StorageKeys.googleUserName,   // AuthManager.googleNameKey — was incorrectly "googleName"
 
         // GoogleAuthService
-        "googleOAuthClientID",
+        StorageKeys.googleOAuthClientID,
 
         // Onboarding
-        "hasCompletedOnboarding",  // Bool (AppStorage)
+        StorageKeys.hasCompletedOnboarding,  // Bool (AppStorage)
+
+        // IndicatorTheme (Animation) — now routed through VowriteStorage.defaults
+        // instead of bypassing it via UserDefaults.standard directly.
+        StorageKeys.indicatorPreset,
+
+        // SoundFeedback (Audio) — user preference, missing from the original list.
+        StorageKeys.soundFeedbackDisabled,  // Bool (inverted: stored value means "disabled")
+
+        // KeyVault — preferred auth method ("oauth" | "apiKey") per provider.
+        // Only Kimi Code and OpenAI Codex have functional OAuth today; MiniMax's
+        // OAuth state is deliberately excluded — it was never functional and is
+        // one-shot purged by MiniMaxOAuthPurge, which would just remove it again.
+        StorageKeys.authMethodKimi,
+        StorageKeys.authMethodOpenAI,
     ]
 
     public static func runIfNeeded() {

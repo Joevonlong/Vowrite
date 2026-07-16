@@ -4,7 +4,7 @@ import Foundation
 public final class VocabularyManager: ObservableObject {
     public static let shared = VocabularyManager()
 
-    nonisolated private static let storageKey = "personalVocabulary"
+    nonisolated private static let storageKey = StorageKeys.personalVocabulary
     nonisolated private static let seededKey = "vocabularySeeded"
 
     /// Example words seeded on first launch to demonstrate the feature.

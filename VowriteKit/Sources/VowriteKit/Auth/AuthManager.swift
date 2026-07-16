@@ -25,9 +25,9 @@ public final class AuthManager: NSObject, ObservableObject {
     private var pendingState: String?
     private var authSession: ASWebAuthenticationSession?
 
-    private static let authModeKey = "authMode"
-    private static let googleEmailKey = "googleUserEmail"
-    private static let googleNameKey = "googleUserName"
+    private static let authModeKey = StorageKeys.authMode
+    private static let googleEmailKey = StorageKeys.googleUserEmail
+    private static let googleNameKey = StorageKeys.googleUserName
 
     private override init() {
         let raw = VowriteStorage.defaults.string(forKey: Self.authModeKey) ?? AuthMode.apiKey.rawValue

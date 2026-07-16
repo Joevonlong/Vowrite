@@ -4,8 +4,8 @@ import Foundation
 public final class ModeManager: ObservableObject {
     public static let shared = ModeManager()
 
-    nonisolated private static let modesKey = "vowriteModes"
-    nonisolated private static let currentModeIdKey = "vowriteCurrentModeId"
+    nonisolated private static let modesKey = StorageKeys.vowriteModes
+    nonisolated private static let currentModeIdKey = StorageKeys.vowriteCurrentModeId
     nonisolated private static let defaultModeId = UUID(uuidString: "00000000-0000-0000-0000-000000000002")! // Clean mode
 
     @Published public var modes: [Mode] {

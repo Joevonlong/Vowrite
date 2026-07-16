@@ -86,7 +86,7 @@ public enum SupportedLanguage: String, CaseIterable, Identifiable, Codable {
 }
 
 public enum LanguageConfig {
-    private static let globalLanguageKey = "globalLanguage"
+    private static let globalLanguageKey = StorageKeys.globalLanguage
 
     public static var globalLanguage: SupportedLanguage {
         get {
