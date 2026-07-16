@@ -79,6 +79,15 @@ public struct OutputStyle: Identifiable, Codable, Equatable {
             templatePrompt: "Format the output as technical documentation. Use precise, unambiguous language. Structure with clear sections and subsections where appropriate. Preserve all technical terms exactly as spoken.",
             isBuiltin: true
         ),
+        OutputStyle(
+            id: UUID(uuidString: "00000000-0000-0000-0001-000000000008")!,
+            name: "Markdown",
+            icon: "number",
+            description: "GitHub-flavored Markdown with headings, lists, and code blocks.",
+            // swiftlint:disable:next line_length
+            templatePrompt: "Format the output as GitHub-flavored Markdown, structure-first. Map the speaker's structure cues to syntax: named sections become headings (`#`, `##`); enumerated or parallel items become lists (`-` or `1.`); emphasized words become **bold**; commands, filenames, or short technical terms become inline `code`. A spoken code block becomes a fenced code block, tagged with the language if the speaker names one. Keep short, unstructured content as a plain paragraph — never invent headings or lists for content that has none.",
+            isBuiltin: true
+        ),
     ]
 
     /// The "None" style ID — means no extra formatting
