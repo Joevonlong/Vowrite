@@ -4,7 +4,7 @@ import Foundation
 public final class OutputStyleManager: ObservableObject {
     public static let shared = OutputStyleManager()
 
-    nonisolated private static let stylesKey = "vowriteOutputStyles"
+    nonisolated private static let stylesKey = StorageKeys.vowriteOutputStyles
 
     @Published public var styles: [OutputStyle] {
         didSet { saveStyles() }

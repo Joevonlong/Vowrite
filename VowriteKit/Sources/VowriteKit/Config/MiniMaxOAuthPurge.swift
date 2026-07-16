@@ -15,7 +15,7 @@ public enum MiniMaxOAuthPurge {
         guard !VowriteStorage.defaults.bool(forKey: flagKey) else { return }
         for providerID in ["minimax_intl", "minimax_cn", "minimax"] {
             OAuthTokenStore.delete(for: providerID)
-            VowriteStorage.defaults.removeObject(forKey: "auth.method.\(providerID)")
+            VowriteStorage.defaults.removeObject(forKey: StorageKeys.authMethodPrefix + providerID)
         }
         VowriteStorage.defaults.set(true, forKey: flagKey)
     }

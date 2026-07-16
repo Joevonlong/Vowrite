@@ -2,7 +2,7 @@ import Foundation
 
 public enum PromptConfig {
     private static let legacySystemPromptKey = "promptSystemPrompt"
-    private static let userPromptKey = "promptUserPrompt"
+    private static let userPromptKey = StorageKeys.promptUserPrompt
 
     /// The base system prompt. Loaded from bundle resource
     /// `Resources/Prompts/polish.system.md` at first access and cached for the
@@ -20,8 +20,8 @@ public enum PromptConfig {
     }
 
     public static var isUserPromptLocked: Bool {
-        get { VowriteStorage.defaults.bool(forKey: "promptUserPromptLocked") }
-        set { VowriteStorage.defaults.set(newValue, forKey: "promptUserPromptLocked") }
+        get { VowriteStorage.defaults.bool(forKey: StorageKeys.promptUserPromptLocked) }
+        set { VowriteStorage.defaults.set(newValue, forKey: StorageKeys.promptUserPromptLocked) }
     }
 
     /// Remove any legacy user-modified system prompt from UserDefaults.

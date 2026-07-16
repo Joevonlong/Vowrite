@@ -65,7 +65,7 @@ public enum KeyVault {
 
     // MARK: - OAuth-Aware Credential Resolution
 
-    private static let authMethodPrefix = "auth.method."
+    private static let authMethodPrefix = StorageKeys.authMethodPrefix
 
     /// The user's preferred auth method for this provider.
     /// Stored in UserDefaults as "auth.method.{providerID}" = "oauth" | "apiKey".

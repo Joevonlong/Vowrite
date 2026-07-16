@@ -26,7 +26,7 @@ public struct ReplacementRule: Codable, Identifiable, Equatable, Sendable {
 public final class ReplacementManager: ObservableObject {
     public static let shared = ReplacementManager()
 
-    nonisolated private static let storageKey = "vowriteReplacements"
+    nonisolated private static let storageKey = StorageKeys.vowriteReplacements
 
     @Published public var rules: [ReplacementRule] {
         didSet { save() }

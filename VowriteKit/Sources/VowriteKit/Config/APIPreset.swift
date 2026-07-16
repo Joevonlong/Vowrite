@@ -107,7 +107,7 @@ public struct APIPresetOption: Identifiable, Equatable {
 }
 
 public enum APIPresetStore {
-    private static let userPresetsKey = "splitAPI.userPresets"
+    private static let userPresetsKey = StorageKeys.splitAPIUserPresets
 
     public static var builtInPresets: [APIPresetOption] {
         BuiltInAPIPreset.allCases

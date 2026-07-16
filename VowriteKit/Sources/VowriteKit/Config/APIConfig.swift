@@ -84,13 +84,13 @@ public struct SplitAPIConfiguration: Codable, Equatable {
 }
 
 public enum APIConfig {
-    private static let sttProviderKey = "splitAPI.stt.provider"
-    private static let sttModelKey = "splitAPI.stt.model"
-    private static let sttBaseURLKey = "splitAPI.stt.baseURL"
-    private static let polishProviderKey = "splitAPI.polish.provider"
-    private static let polishModelKey = "splitAPI.polish.model"
-    private static let polishBaseURLKey = "splitAPI.polish.baseURL"
-    private static let selectedPresetKey = "splitAPI.selectedPresetID"
+    private static let sttProviderKey = StorageKeys.splitAPISTTProvider
+    private static let sttModelKey = StorageKeys.splitAPISTTModel
+    private static let sttBaseURLKey = StorageKeys.splitAPISTTBaseURL
+    private static let polishProviderKey = StorageKeys.splitAPIPolishProvider
+    private static let polishModelKey = StorageKeys.splitAPIPolishModel
+    private static let polishBaseURLKey = StorageKeys.splitAPIPolishBaseURL
+    private static let selectedPresetKey = StorageKeys.splitAPISelectedPresetID
 
     public static var current: SplitAPIConfiguration {
         get {
