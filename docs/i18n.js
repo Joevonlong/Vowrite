@@ -27,7 +27,7 @@ const i18n = {
     'feat.title': '你的输入管家',
     'feat.sub': '你来说，Vowrite 搞定一切。',
     'feat.clean.t': '智能润色',
-    'feat.clean.d': '去掉口头禅，修正语法，添加标点。你的想法，完美传达。',
+    'feat.clean.d': '去掉口头禅，修正语法，添加标点——你的专属词库还会在持续口述中自动学习纠错。',
     'feat.works.t': '随处可用',
     'feat.works.d': '文字直接出现在光标处——任何应用、任何文本框。能打字的地方，就能用 Vowrite。',
     'feat.choice.t': '自选 AI 服务',
@@ -41,6 +41,12 @@ const i18n = {
     'feat.translate.t': '语音翻译',
     'feat.translate.d': '说任何语言，输出任何语言。Mac 专用快捷键，iOS 长按弧形菜单——不打断当前 Mode。',
     'feat.translate.link': '了解更多 →',
+    'feat.cmd.t': '命令模板',
+    'feat.cmd.d': '15 个内置命令——优化、修正语法、TL;DR、转为专业语气等——直接作用于你选中的文字。',
+    'feat.perapp.t': '按应用自动切换 Mode',
+    'feat.perapp.d': 'Vowrite 会感知你当前所在的应用并自动切换 Mode——Slack 保持随性，编辑器保持代码风格。手动切换永远优先。',
+    'feat.md.t': 'Markdown 与输出风格',
+    'feat.md.d': '内置 Markdown 格式，另有 7 种输出风格可选——项目符号、标题、代码块都能按 Mode 精确呈现。',
 
     // How it works
     'how.title': '三步完成，只需两秒。',
@@ -55,7 +61,6 @@ const i18n = {
 
     // Providers
     'prov.title': '你的 AI，你做主',
-    'prov.sub': '使用你自己的 API 密钥。内置 15+ 服务商，也可自定义。',
     'prov.rec': '推荐',
     'prov.fast': '超快',
     'prov.budget': '经济实惠',
@@ -198,6 +203,7 @@ const i18n = {
     'cmp.cloud': '云端',
     'cmp.rcross': 'Mac + iOS',
     'cmp.maconly': '仅 Mac',
+    'cmp.typeless.foot': '* Typeless 免费版：每周 8,000 词。',
 
     // Pricing page
     'pr.h1': '服务商价格',
@@ -220,13 +226,15 @@ const i18n = {
     'faq.a5': 'Vowrite 支持 20+ 服务商，包括 OpenAI、Groq、DeepSeek、Deepgram、Gemini、Claude、讯飞、Ollama、MLX Server，以及任何 OpenAI 兼容端点。使用你自己的 API 密钥——无订阅，不锁定。',
     'faq.q6': '我的数据安全吗？',
     'faq.a6': '你的听写历史仅存储在本地 Mac 上。音频只发送给你选择的 AI 服务商进行转录——Vowrite 本身不会存储或传输你的数据到任何服务器。',
+    'faq.q7': '如何获取最新的模型？',
+    'faq.a7': 'Vowrite 的服务商目录每月刷新，跟进各家新发布的模型——更新 App 即可自动获得。想要自动更新的列表？把 Vowrite 接到 OpenRouter，它会在新模型发布的第一时间动态列出（400+ 模型）。',
 
     // Coming soon
     'soon.title': '即将推出',
     'soon.s1t': '语音搜索',
     'soon.s1d': '用语音提问，无需离开当前应用即可获得答案。',
-    'soon.s3t': 'iOS 应用',
-    'soon.s3d': '在 iPhone 和 iPad 上作为系统级键盘的语音输入。',
+    'soon.s3t': 'iOS App Store 上架',
+    'soon.s3d': 'iOS 键盘现已开源、可自行编译——正式的 App Store 与 TestFlight 上架仍在计划中。',
 
     // Download
     'dl.title': '准备好告别打字了吗？',
@@ -259,7 +267,7 @@ const i18n = {
     'why.c.dl': '下载 Mac 版',
 
     // Translate page
-    'tr.badge': '🌐 v0.2.1.0 新增 · macOS + iOS',
+    'tr.badge': '🌐 自 v0.2.1.0 起 · macOS + iOS',
     'tr.h1a': '说任何语言。',
     'tr.h1b': '输出任何语言。',
     'tr.sub': 'Mac 上按一个专用快捷键，iOS 上长按麦克风按钮。Vowrite 听懂你说的语言，写出你需要的语言——直接打到光标处，任何应用都能用。',
@@ -383,7 +391,7 @@ const i18n = {
     'feat.title': 'Dein Eingabe-Butler',
     'feat.sub': 'Du sprichst. Vowrite erledigt den Rest.',
     'feat.clean.t': 'Intelligente Bereinigung',
-    'feat.clean.d': 'F\u00fcllw\u00f6rter weg, Grammatik korrigiert, Satzzeichen erg\u00e4nzt. Deine Ideen, perfekt \u00fcbermittelt.',
+    'feat.clean.d': 'F\u00fcllw\u00f6rter weg, Grammatik korrigiert, Satzzeichen erg\u00e4nzt \u2014 und dein pers\u00f6nliches Vokabular korrigiert sich beim Weiterdiktieren automatisch selbst.',
     'feat.works.t': 'Funktioniert \u00fcberall',
     'feat.works.d': 'Text erscheint direkt an deinem Cursor \u2014 jede App, jedes Textfeld. Wo du tippen kannst, funktioniert Vowrite.',
     'feat.choice.t': 'Deine KI, deine Wahl',
@@ -397,6 +405,12 @@ const i18n = {
     'feat.translate.t': 'Sprach\u00fcbersetzung',
     'feat.translate.d': 'Sprich jede Sprache, schreibe jede Sprache. Eigene Tastenkombination auf Mac, Langdruck-Bogen auf iOS \u2014 ohne Mode-Wechsel.',
     'feat.translate.link': 'Mehr erfahren \u2192',
+    'feat.cmd.t': 'Befehlsvorlagen',
+    'feat.cmd.d': '15 integrierte Befehle \u2014 Verbessern, Grammatik korrigieren, TL;DR, Professioneller formulieren und mehr \u2014 direkt auf deinen markierten Text angewendet.',
+    'feat.perapp.t': 'Modes pro App',
+    'feat.perapp.d': 'Vowrite erkennt die App im Vordergrund und wechselt automatisch den Mode \u2014 in Slack bleibt es locker, im Editor code-nah. Manuelle Wechsel haben immer Vorrang.',
+    'feat.md.t': 'Markdown & Ausgabestile',
+    'feat.md.d': 'Integrierte Markdown-Formatierung plus 7 weitere Ausgabestile \u2014 Aufz\u00e4hlungen, \u00dcberschriften und Codebl\u00f6cke landen pro Mode exakt richtig.',
 
     // How it works
     'how.title': 'Drei Schritte. Zwei Sekunden.',
@@ -411,7 +425,6 @@ const i18n = {
 
     // Providers
     'prov.title': 'Deine KI, deine Regeln',
-    'prov.sub': 'Bring deinen eigenen API-Schl\u00fcssel. 15+ Anbieter integriert, oder nutze deinen eigenen.',
     'prov.rec': 'Empfohlen',
     'prov.fast': 'Ultraschnell',
     'prov.budget': 'G\u00fcnstig',
@@ -434,15 +447,15 @@ const i18n = {
     'prov.free': 'Kostenlos',
     'prov.sub': 'Kombiniere jede Speech-to-Text-Engine mit jedem Polish-Modell. Bring deine eigenen Schlüssel mit.',
     'prov.cp.stt': 'Sprache → Text',
-    'prov.cp.llm': 'Polish & Format',
-    'prov.cp.out': 'Cursor',
+    'prov.cp.llm': 'Polieren & Formatieren',
+    'prov.cp.out': 'Am Cursor',
     'prov.combo.badge': '★ Empfohlene Kombination',
     'prov.combo.groq.spec': '~200 ms · Free Tier',
     'prov.combo.ds.spec': '~$0.14 / M · Streaming',
     'prov.combo.foot': 'Warum diese Kombination? Groqs kostenloses Whisper transkribiert in ~200 ms, dann poliert DeepSeek für Cents — schnell, akkurat, das günstigste ernsthafte Setup das wir gefunden haben.',
     'prov.grid.title': 'Oder wähle aus 20+ Anbietern',
-    'prov.role.stt': 'STT',
-    'prov.role.polish': 'Polish',
+    'prov.role.stt': 'Sprache',
+    'prov.role.polish': 'Politur',
 
     // Apps page nav
     'nav.apps': 'Apps',
@@ -554,6 +567,7 @@ const i18n = {
     'cmp.cloud': 'Cloud',
     'cmp.rcross': 'Mac + iOS',
     'cmp.maconly': 'Nur Mac',
+    'cmp.typeless.foot': '* Typeless Free-Tarif: 8.000 Wörter/Woche.',
 
     // Pricing page
     'pr.h1': 'Anbieter-Preise',
@@ -576,13 +590,15 @@ const i18n = {
     'faq.a5': 'Vowrite unterst\u00fctzt 20+ Anbieter, darunter OpenAI, Groq, DeepSeek, Deepgram, Gemini, Claude, iFlytek, Ollama, MLX Server und jeden OpenAI-kompatiblen Endpunkt. Bring deinen eigenen API-Schl\u00fcssel \u2014 kein Abo, kein Lock-in.',
     'faq.q6': 'Sind meine Daten privat?',
     'faq.a6': 'Dein Diktatverlauf wird lokal auf deinem Mac gespeichert. Audio wird nur zum Transkribieren an deinen gew\u00e4hlten KI-Anbieter gesendet \u2014 Vowrite selbst speichert oder \u00fcbertr\u00e4gt deine Daten niemals an einen Server.',
+    'faq.q7': 'Wie bekomme ich die neuesten Modelle?',
+    'faq.a7': 'Vowrites Anbieter-Katalog wird monatlich aktualisiert, sobald Anbieter neue Modelle ver\u00f6ffentlichen \u2014 ein App-Update reicht, um sie automatisch zu bekommen. Willst du eine Liste, die sich von selbst aktualisiert? Verbinde Vowrite mit OpenRouter \u2014 dort erscheinen neue Modelle dynamisch, sobald sie ver\u00f6ffentlicht werden (400+ Modelle).',
 
     // Coming soon
     'soon.title': 'Demn\u00e4chst',
     'soon.s1t': 'Sprachgesteuerte Suche',
     'soon.s1d': 'Stelle Fragen per Sprache und erhalte sofort Antworten, ohne die App zu verlassen.',
-    'soon.s3t': 'iOS-App',
-    'soon.s3d': 'Spracheingabe als systemweite Tastatur auf iPhone und iPad.',
+    'soon.s3t': 'iOS App Store Vertrieb',
+    'soon.s3d': 'Die iOS-Tastatur ist bereits jetzt Open Source und selbst kompilierbar — der offizielle App Store- und TestFlight-Vertrieb ist geplant.',
 
     // Download
     'dl.title': 'Bereit, das Tippen sein zu lassen?',
@@ -615,7 +631,7 @@ const i18n = {
     'why.c.dl': 'F\u00fcr Mac laden',
 
     // Translate page
-    'tr.badge': '\ud83c\udf10 Neu in v0.2.1.0 \u00b7 macOS + iOS',
+    'tr.badge': '\ud83c\udf10 Seit v0.2.1.0 \u00b7 macOS + iOS',
     'tr.h1a': 'Sprich jede Sprache.',
     'tr.h1b': 'Schreibe jede Sprache.',
     'tr.sub': 'Halte eine Tastenkombination auf dem Mac oder dr\u00fccke das Mikro auf iOS lang. Vowrite versteht die Sprache, in der du sprichst, und schreibt die Sprache, die du brauchst \u2014 direkt am Cursor, in jeder App.',

@@ -63,6 +63,21 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
   transform: translateY(0);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .fade-in, .fade-in.visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .flow-animate {
+    opacity: 1;
+    animation: none;
+  }
+  .tr-demo-fade {
+    animation: none;
+  }
+}
+
 /* === Buttons === */
 .btn {
   display: inline-flex;
@@ -80,7 +95,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
 
 .btn-primary {
   background: var(--text);
-  color: #fff;
+  color: var(--bg);
 }
 .btn-primary:hover { opacity: 0.85; }
 
@@ -130,33 +145,6 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
   position: relative;
 }
 .nav-links a.nav-why:hover { color: #a33a15; }
-
-/* Language switcher */
-.lang-switcher {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 0.8rem;
-  margin-left: 4px;
-}
-.lang-switcher button {
-  background: none;
-  border: none;
-  padding: 4px 8px;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-family: inherit;
-  border-radius: 4px;
-  transition: color 0.2s, background 0.2s;
-}
-.lang-switcher button:hover { color: var(--text); }
-.lang-switcher button.active {
-  color: var(--text);
-  font-weight: 600;
-  background: rgba(0,0,0,0.05);
-}
-.lang-switcher .lang-sep { color: var(--border); font-size: 0.75rem; }
 
 /* === Hero === */
 .hero {
@@ -277,7 +265,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.2; }
   width: 40px; height: 40px;
   border-radius: 50%;
   background: var(--text);
-  color: #fff;
+  color: var(--bg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -368,6 +356,12 @@ kbd {
   max-width: 880px;
   margin: 0 auto;
   overflow-x: auto;
+}
+.compare-footnote {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 12px;
 }
 .compare-table {
   width: 100%;
@@ -652,7 +646,7 @@ th.col-other { color: var(--text-muted); opacity: 0.7; }
   gap: 8px;
   padding: 14px 36px;
   background: var(--text);
-  color: #fff;
+  color: var(--bg);
   border-radius: 980px;
   font-size: 1rem;
   font-weight: 500;
@@ -732,9 +726,6 @@ th.col-other { color: var(--text-muted); opacity: 0.7; }
 }
 .lang-menu li:hover { background: #f5f5f7; color: var(--text, #1d1d1f); }
 .lang-menu li.active { color: var(--accent-warm, #c8491c); font-weight: 600; }
-
-/* Hide old switcher styles */
-.lang-switcher { display: none; }
 
 /* ============================================
    Translate page styles
@@ -1045,7 +1036,7 @@ th.col-other { color: var(--text-muted); opacity: 0.7; }
   width: 56px; height: 56px;
   border-radius: 50%;
   background: var(--text);
-  color: #fff;
+  color: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1943,4 +1934,75 @@ th.col-other { color: var(--text-muted); opacity: 0.7; }
   .ap-feat-grid { grid-template-columns: 1fr; }
   .ap-flow { padding: 16px 10px; }
   .ap-flow-arrow { display: none; }
+}
+
+/* ============================================
+   Dark mode
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0f10;
+    --bg-alt: #161618;
+    --bg-card: #1c1c1f;
+    --bg-card-hover: #232327;
+    --text: #f5f5f7;
+    --text-muted: #a1a1a6;
+    --text-tertiary: #98989d;
+    --accent: #f5f5f7;
+    --accent-warm: #ff7a4d;
+    --border: #3a3a3f;
+    --border-light: rgba(255, 255, 255, 0.09);
+    --green: #5bb974;
+    --amber: #f2a33c;
+  }
+
+  /* Fixed nav backdrop was hardcoded to a light blur */
+  .nav { background: rgba(15, 15, 16, 0.8); }
+
+  /* Brand-mark glyphs hardcoded near-black — invisible on a dark tile */
+  .provider-logo-openai,
+  .provider-logo-mlx,
+  .provider-logo-ollama,
+  .ap-platform-icon-mac {
+    color: var(--text);
+  }
+
+  /* Language dropdown panel was a hardcoded white card */
+  .lang-menu {
+    background: var(--bg-card);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+  .lang-menu li:hover { background: var(--bg-alt); }
+
+  /* Translate-page mockups hardcoded to white surfaces with var(--text) content */
+  .tr-demo-pane.tr-demo-out,
+  .tr-key,
+  .tr-arc-opt,
+  .tr-mock {
+    background: var(--bg-card);
+  }
+  .tr-arc-opt.tr-arc-right { background: rgba(255, 122, 77, 0.14); }
+
+  /* Apps-page "alt" section forced its inner cards to white */
+  .ap-platform-alt .ap-step,
+  .ap-platform-alt .ap-flow,
+  .ap-platform-alt .ap-feat,
+  .ap-ios-arch-card {
+    background: var(--bg-card);
+  }
+
+  /* Homepage recommended-combo card gradient */
+  .combo-hero {
+    background: linear-gradient(180deg, #1c1c1f 0%, #1a1613 100%);
+  }
+
+  /* Compare-table tint overlays were black-on-black (invisible) in dark mode */
+  .col-vowrite { background: rgba(255, 255, 255, 0.045); }
+  .col-other { background: rgba(255, 255, 255, 0.02); }
+  .compare-table tbody tr.row-emph td { background: rgba(255, 122, 77, 0.12); }
+  .compare-table tbody tr.row-emph td.col-vowrite { background: rgba(255, 122, 77, 0.18); }
+
+  /* Misc subtle overlays keyed to black, invisible against a dark background */
+  .provider-badge { background: rgba(255, 255, 255, 0.08); }
+  .feature-card:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35); }
 }

@@ -66,7 +66,7 @@
     <!-- Hero -->
     <section class="tr-hero">
       <div class="container">
-        <div class="badge" data-i18n="tr.badge">🌐 New in v0.2.1.0 · macOS + iOS</div>
+        <div class="badge" data-i18n="tr.badge">🌐 Since v0.2.1.0 · macOS + iOS</div>
         <h1>
           <span data-i18n="tr.h1a">Speak any language.</span><br>
           <span class="tr-accent" data-i18n="tr.h1b">Output any language.</span>
@@ -452,10 +452,13 @@
         dots.forEach((d, j) => d.classList.toggle('active', j === i));
       }
 
-      setInterval(() => {
-        idx = (idx + 1) % samples.length;
-        render(idx);
-      }, 4200);
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReducedMotion) {
+        setInterval(() => {
+          idx = (idx + 1) % samples.length;
+          render(idx);
+        }, 4200);
+      }
 
       dots.forEach((d) => {
         d.addEventListener('click', () => {
