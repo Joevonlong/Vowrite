@@ -169,7 +169,7 @@ struct WaveformView: View {
     @State private var animatedLevels: [Float] = Array(repeating: 0, count: 13)
     @State private var timer: Timer?
     @State private var targetLevels: [Float] = Array(repeating: 0, count: 13)
-    @State private var targetTimer: Timer?
+    @State private var ticksSinceTargetRefresh = 0
 
     var body: some View {
         HStack(spacing: 2.5) {
@@ -180,7 +180,7 @@ struct WaveformView: View {
             }
         }
         .onAppear { startAnimation() }
-        .onDisappear { timer?.invalidate(); targetTimer?.invalidate() }
+        .onDisappear { timer?.invalidate() }
         .onChange(of: level) { _, _ in updateTargets() }
     }
 
@@ -197,12 +197,22 @@ struct WaveformView: View {
         return 1.0 - dist * 0.3
     }
 
+    // V-4 perf fix: this used to be two independent Timers (60 Hz interpolation +
+    // a 0.25s target refresh). Merged into one 60 Hz Timer/Task dispatch; the
+    // ~0.25s target refresh now runs off a tick counter inside the same callback
+    // instead of registering its own Timer with the RunLoop. Both operations keep
+    // their original cadence (~60 Hz, ~0.25s) and exact math — only the scheduling
+    // (one Timer object instead of two) changed.
     private func startAnimation() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { _ in
-            Task { @MainActor in interpolateLevels() }
-        }
-        targetTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { _ in
-            Task { @MainActor in updateTargets() }
+            Task { @MainActor in
+                interpolateLevels()
+                ticksSinceTargetRefresh += 1
+                if ticksSinceTargetRefresh >= 15 {
+                    ticksSinceTargetRefresh = 0
+                    updateTargets()
+                }
+            }
         }
     }
 

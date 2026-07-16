@@ -87,35 +87,42 @@ struct MicrophoneListView: View {
     @State private var selectedID: String = ""
 
     var body: some View {
-        ForEach(devices, id: \.uniqueID) { device in
-            Button {
-                selectedID = device.uniqueID
-                UserDefaults.standard.set(device.uniqueID, forKey: "selectedMicrophoneID")
-            } label: {
-                HStack {
-                    Text(device.localizedName)
-                    if device.uniqueID == selectedID {
-                        Spacer()
-                        Image(systemName: "checkmark")
+        Group {
+            ForEach(devices, id: \.uniqueID) { device in
+                Button {
+                    selectedID = device.uniqueID
+                    UserDefaults.standard.set(device.uniqueID, forKey: "selectedMicrophoneID")
+                } label: {
+                    HStack {
+                        Text(device.localizedName)
+                        if device.uniqueID == selectedID {
+                            Spacer()
+                            Image(systemName: "checkmark")
+                        }
                     }
                 }
             }
-        }
 
-        if devices.isEmpty {
-            Text("No microphones found")
-                .foregroundColor(.secondary)
+            if devices.isEmpty {
+                Text("No microphones found")
+                    .foregroundColor(.secondary)
+            }
         }
-    }
-
-    init() {
-        let discoverySession = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.microphone, .external],
-            mediaType: .audio,
-            position: .unspecified
-        )
-        _devices = State(initialValue: discoverySession.devices)
-        _selectedID = State(initialValue: UserDefaults.standard.string(forKey: "selectedMicrophoneID")
-            ?? AVCaptureDevice.default(for: .audio)?.uniqueID ?? "")
+        // V-3 perf fix: AVCaptureDevice.DiscoverySession enumerates hardware and is
+        // expensive; it used to run in `init()`, which SwiftUI invokes every time
+        // the parent menu's body is rebuilt (e.g. 20 Hz while recording), even
+        // while this submenu is closed. Discovery now runs only when the submenu
+        // actually appears, matching the same "rescan every time it's shown"
+        // behavior as before, just without the per-parent-render cost.
+        .onAppear {
+            let discoverySession = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.microphone, .external],
+                mediaType: .audio,
+                position: .unspecified
+            )
+            devices = discoverySession.devices
+            selectedID = UserDefaults.standard.string(forKey: "selectedMicrophoneID")
+                ?? AVCaptureDevice.default(for: .audio)?.uniqueID ?? ""
+        }
     }
 }

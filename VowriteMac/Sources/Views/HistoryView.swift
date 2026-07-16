@@ -19,6 +19,15 @@ struct HistoryView: View {
         }
     }
 
+    // V-3 perf fix: DateFormatter is expensive to allocate/configure; hoist it out
+    // of the per-record closure (was reconstructed for every non-today record on
+    // every body evaluation) into a single shared instance. Output is unchanged.
+    private static let dayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
     var groupedRecords: [(String, [DictationRecord])] {
         let calendar = Calendar.current
         let grouped = Dictionary(grouping: filteredRecords) { record -> String in
@@ -27,9 +36,7 @@ struct HistoryView: View {
             } else if calendar.isDateInYesterday(record.createdAt) {
                 return "Yesterday"
             } else {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd"
-                return formatter.string(from: record.createdAt)
+                return Self.dayFormatter.string(from: record.createdAt)
             }
         }
         return grouped.sorted { a, b in
@@ -263,10 +270,16 @@ struct HistoryRow: View {
     @State private var showDeleteConfirm = false
     @State private var copied = false
 
-    private var timeString: String {
+    // V-3 perf fix: hoisted out of the per-row computed property (was
+    // reconstructed on every row's body evaluation). Output is unchanged.
+    private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "hh:mm a"
-        return formatter.string(from: record.createdAt)
+        return formatter
+    }()
+
+    private var timeString: String {
+        Self.timeFormatter.string(from: record.createdAt)
     }
 
     private var durationString: String {
