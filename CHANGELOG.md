@@ -9,6 +9,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ### Added
 
+- **F-078 Markdown output style**: A new built-in "Markdown" output style produces GitHub-flavored Markdown — spoken structure cues become real syntax (named sections → headings, enumerations → lists, emphasis → bold, commands/filenames → inline code, spoken code → fenced blocks with a language tag). Short unstructured dictation stays a plain paragraph; headings are never invented. Pick it like any other style, per Mode or globally.
 - **F-074 Vocabulary CSV import/export**: Personal vocabulary now has Import / Export buttons in the Vocabulary settings page. Export produces a single-column CSV (one word per line, sorted alphabetically, UTF-8 with BOM for Excel compatibility); import accepts the same format and skips blank lines and `#`-prefixed comments. Round-trips through Excel without corruption. Imports dedupe automatically against your existing list and surface a brief `Imported N, skipped M duplicates` status.
 
 ### Changed
