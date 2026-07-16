@@ -273,9 +273,18 @@ public final class SpeculativePolish {
         // F-063: Translation mode uses a dedicated prompt and skips
         // outputStyle / userPrompt to avoid contaminating translation output.
         if modeConfig.isTranslation, let target = modeConfig.targetLanguage {
+            // F-079: `SupportedLanguage.displayName` is already region-qualified
+            // for variants (e.g. "zh-TW" -> "Chinese (Traditional, Taiwan)"),
+            // so {targetLanguageName} renders correctly with no extra work.
             let langName = SupportedLanguage(rawValue: target)?.displayName ?? target
             var prompt = PromptConfig.translationSystemPromptTemplate
                 .replacingOccurrences(of: "{targetLanguageName}", with: langName)
+
+            // F-079: region variant (e.g. Traditional Taiwan vs. Hong Kong)
+            // gets an explicit script/spelling instruction beyond the language name.
+            if let regionInstruction = LanguageConfig.polishRegionInstruction(for: target) {
+                prompt += "\n\n---\nRegion convention:\n\(regionInstruction)"
+            }
 
             // Optional advanced override: user-specified extra instructions
             // (e.g. "Translate into British English"). Empty by default.
@@ -293,6 +302,16 @@ public final class SpeculativePolish {
 
         // Standard polish path
         var systemPrompt = PromptConfig.effectiveSystemPrompt
+
+        // F-079: when the mode has an explicit language override with a
+        // region variant (e.g. Mode.language == "zh-TW"), tell the LLM which
+        // script/spelling convention to render output in. Note: this only
+        // fires for an explicit per-mode override — a global default
+        // language variant (Mode.language == nil) is not resolved here, to
+        // keep this function free of a dependency on `LanguageConfig.globalLanguage`.
+        if let modeLang = modeConfig.language, let regionInstruction = LanguageConfig.polishRegionInstruction(for: modeLang) {
+            systemPrompt += "\n\n---\nRegion convention:\n\(regionInstruction)"
+        }
 
         if let stylePrompt = OutputStyleManager.templatePrompt(for: modeConfig.outputStyleId) {
             systemPrompt += "\n\n---\nOutput style:\n\(stylePrompt)"

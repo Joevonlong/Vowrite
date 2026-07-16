@@ -110,7 +110,9 @@ struct QwenSTTAdapter: STTAdapter {
 
         var input: [String: Any] = ["file_urls": ["data:audio/m4a;base64,\(base64Audio)"]]
         if let language = language, !language.isEmpty {
-            input["language_hints"] = [language]
+            // F-079: DashScope's language_hints expects ISO-639-1 main codes,
+            // not full BCP-47 region tags — downgrade (e.g. "zh-TW" -> "zh").
+            input["language_hints"] = [LanguageConfig.whisperMainCode(from: language)]
         }
         let payload: [String: Any] = [
             "model": model,

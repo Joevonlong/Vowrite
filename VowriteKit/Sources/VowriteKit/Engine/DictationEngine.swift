@@ -283,7 +283,13 @@ public final class DictationEngine: ObservableObject {
         let modeConfig = effectiveModeConfig
         let effectivePolishEnabled = polishEnabledOverride ?? modeConfig.polishEnabled
         if effectivePolishEnabled {
-            speculativePolish.prepare(modeConfig: modeConfig, promptContext: promptContext)
+            // F-079: resolve mode.language == nil to the global default
+            // (same cascade the STT step below uses) before building the
+            // polish system prompt, so a global default region variant
+            // (e.g. zh-TW) gets the polish-output region instruction even
+            // when the mode itself has no language override.
+            let resolvedLanguage = LanguageConfig.resolvedLanguageTag(modeLanguage: modeConfig.language, globalLanguage: LanguageConfig.globalLanguage)
+            speculativePolish.prepare(modeConfig: modeConfig.withResolvedLanguage(resolvedLanguage), promptContext: promptContext)
         }
 
         processAudio(url: audioURL)
@@ -327,14 +333,9 @@ public final class DictationEngine: ObservableObject {
 
                 // Step 1: Whisper STT
                 logger.debug("Starting STT transcription (mode: \(modeConfig.modeName, privacy: .public))...")
-                // Mode language override > global language setting
-                let whisperLanguage: String?
-                if let modeLang = modeConfig.language,
-                   let lang = SupportedLanguage(rawValue: modeLang) {
-                    whisperLanguage = lang.whisperCode
-                } else {
-                    whisperLanguage = LanguageConfig.globalLanguage.whisperCode
-                }
+                // Mode language override > global language setting (F-079: shared
+                // with the polish-prompt resolution above via the same pure helper).
+                let whisperLanguage = LanguageConfig.resolvedLanguageTag(modeLanguage: modeConfig.language, globalLanguage: LanguageConfig.globalLanguage)
                 let vocabPrompt = VocabularyManager.whisperPrompt
                 let rawTranscript = try await whisperService.transcribe(audioURL: url, language: whisperLanguage, prompt: vocabPrompt)
                 lastRawTranscript = rawTranscript

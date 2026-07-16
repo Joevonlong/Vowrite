@@ -106,16 +106,14 @@ struct LanguageContent: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            SettingsRow(title: "Default Language", description: "Language hint for speech recognition. \"Auto-detect\" works best for most users.") {
-                Picker("", selection: $selectedLanguage) {
-                    ForEach(SupportedLanguage.allCases) { lang in
-                        Text(lang.displayName).tag(lang)
+            SettingsRow(
+                title: "Default Language",
+                description: "Language hint for speech recognition. \"Auto-detect\" works best for most users. Some languages also offer a region variant (e.g. Simplified vs. Traditional Chinese)."
+            ) {
+                LanguageRegionPicker(selection: $selectedLanguage)
+                    .onChange(of: selectedLanguage) { _, v in
+                        LanguageConfig.globalLanguage = v
                     }
-                }
-                .frame(width: 180)
-                .onChange(of: selectedLanguage) { _, v in
-                    LanguageConfig.globalLanguage = v
-                }
             }
 
             if selectedLanguage != .auto {
@@ -160,21 +158,11 @@ struct TranslationLanguagesContent: View {
     var body: some View {
         VStack(spacing: 12) {
             SettingsRow(title: "Source Language", description: "Speech-recognition hint for the Translate mode. Auto-detect handles mixed-language input.") {
-                Picker("", selection: Binding(get: { source }, set: setSource)) {
-                    ForEach(SupportedLanguage.allCases) { lang in
-                        Text(lang.displayName).tag(lang)
-                    }
-                }
-                .frame(width: 180)
+                LanguageRegionPicker(selection: Binding(get: { source }, set: setSource))
             }
 
             SettingsRow(title: "Target Language", description: "Translate output is rendered in this language.") {
-                Picker("", selection: Binding(get: { target }, set: setTarget)) {
-                    ForEach(SupportedLanguage.allCases.filter { $0 != .auto }) { lang in
-                        Text(lang.displayName).tag(lang)
-                    }
-                }
-                .frame(width: 180)
+                LanguageRegionPicker(selection: Binding(get: { target }, set: setTarget), excludeAuto: true)
             }
 
             HStack(spacing: 6) {

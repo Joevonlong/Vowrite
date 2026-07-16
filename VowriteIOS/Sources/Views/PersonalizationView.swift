@@ -208,15 +208,14 @@ struct PersonalizationView: View {
                 }
 
                 // Language
+                // F-079: two-level picker — region variant row appears only
+                // for languages that have one (Chinese, English, Spanish,
+                // Portuguese, French).
                 Section("Language") {
-                    Picker("Recognition Language", selection: Binding(
+                    LanguageRegionPicker(label: "Recognition Language", selection: Binding(
                         get: { LanguageConfig.globalLanguage },
                         set: { LanguageConfig.globalLanguage = $0 }
-                    )) {
-                        ForEach(SupportedLanguage.allCases, id: \.self) { lang in
-                            Text(lang.displayName).tag(lang)
-                        }
-                    }
+                    ))
                 }
 
                 // Personal Vocabulary

@@ -22,7 +22,9 @@ struct DeepgramSTTAdapter: STTAdapter {
             URLQueryItem(name: "model", value: model),
             URLQueryItem(name: "smart_format", value: "true"),
         ]
-        if let language = language, !language.isEmpty {
+        // F-079: Deepgram's /listen API accepts full BCP-47 region tags
+        // (e.g. "en-GB") directly — no downgrade needed.
+        if let language = LanguageConfig.deepgramLanguage(for: language), !language.isEmpty {
             queryItems.append(URLQueryItem(name: "language", value: language))
         }
         components.queryItems = queryItems
