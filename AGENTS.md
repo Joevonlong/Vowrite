@@ -91,6 +91,14 @@ Integration is SHA-pinned: `main` must still equal the task's base SHA. If anoth
 scripts/agent-task.sh refresh --task F-XXX --owner <agent-id> --base <new-main-sha>
 ```
 
+If rebase stops on a conflict, the manifest enters `refreshing` and the worktree remains at the conflict. Resolve and stage only declared write-set paths, then continue; repeat for later conflicts. To return exactly to the pre-refresh branch and manifest state, abort through the coordinator:
+
+```bash
+scripts/agent-task.sh refresh-continue --task F-XXX --owner <agent-id>
+# or
+scripts/agent-task.sh refresh-abort --task F-XXX --owner <agent-id>
+```
+
 If an active or ready task is deliberately cancelled, its owner runs the audited abort from a clean main integration checkout. This records the last recoverable commit and reason before removing only that task's worktree and branch:
 
 ```bash

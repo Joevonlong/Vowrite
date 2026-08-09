@@ -39,7 +39,7 @@ The handoff is complete only when the manifest is `ready`, contains the result S
 
 ## 5. Integrate through the owner
 
-The single integration owner claims the lease and integrates the pinned result. If `main` moved, the worker refreshes onto the new full SHA and repeats handoff; the integrator never merges a stale result dynamically.
+The single integration owner claims the lease and integrates the pinned result. If `main` moved, the worker refreshes onto the new full SHA and repeats handoff; the integrator never merges a stale result dynamically. A conflicting refresh enters the explicit `refreshing` state: resolve and stage only declared write-set paths, then run `refresh-continue` until complete, or use `refresh-abort` to restore the pre-refresh branch and manifest state.
 
 Remote publication requires explicit user authorization. Workers never merge, push, switch shared checkouts, delete branches, or edit tracking.
 

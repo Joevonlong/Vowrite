@@ -107,11 +107,15 @@ guard_file_path() {
         [[ -n "$target_root" ]] || deny "path '$candidate' is outside the current governed repository"
         [[ "$target_root" == "$current_root" ]] || deny "cross-repository/worktree write from '$current_root' to '$target_root'"
         target_branch="$(branch_for_root "$current_root")"
-        if [[ "$target_branch" == "main" || "$target_branch" == "DETACHED" ]]; then
+        if [[ "$target_branch" == "main" ]]; then
             deny "writes require an isolated registered task worktree; '$current_root' is on '$target_branch'"
         fi
         registered_task_manifest "$current_root" \
             || deny "feature branch '$target_branch' is not the unique active registered task worktree"
+        if [[ "$target_branch" == "DETACHED" ]] \
+            && ! jq -e '.status == "refreshing"' "$REGISTERED_MANIFEST" >/dev/null 2>&1; then
+            deny "detached writes are allowed only during a registered refresh conflict"
+        fi
         relative_path="$(repo_relative_candidate "$current_root" "$candidate" "$cwd" 2>/dev/null || true)"
         [[ -n "$relative_path" ]] || deny "cannot normalize write target '$candidate' inside '$current_root'"
         manifest_contains_path "$REGISTERED_MANIFEST" "$relative_path" \
@@ -417,13 +421,17 @@ guard_command() {
 
     if [[ -n "$root" ]]; then
         branch="$(branch_for_root "$root")"
-        if [[ "$branch" == "main" || "$branch" == "DETACHED" ]]; then
+        if [[ "$branch" == "main" ]]; then
             is_read_only_command "$command_text" && return 0
             deny "Bash on '$branch' is read-only; run writes through scripts/agent-task.sh in an isolated worktree"
         fi
         is_read_only_command "$command_text" && return 0
         registered_task_manifest "$root" \
             || deny "feature branch '$branch' is not the unique active registered task worktree"
+        if [[ "$branch" == "DETACHED" ]] \
+            && ! jq -e '.status == "refreshing"' "$REGISTERED_MANIFEST" >/dev/null 2>&1; then
+            deny "detached Bash writes are allowed only during a registered refresh conflict"
+        fi
         if command_targets_other_main_worktree "$command_text" "$root"; then
             deny "feature worktree command targets another/main worktree"
         fi
@@ -555,16 +563,17 @@ registered_task_manifest() {
     root="$(cd "$root" && pwd -P)"
     task_state_paths "$root" || return 1
     branch="$(git -C "$root" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
-    [[ -n "$branch" && -d "$TASKS_DIR" ]] || return 1
+    [[ -d "$TASKS_DIR" ]] || return 1
 
     REGISTERED_MANIFEST=""
     for manifest in "$TASKS_DIR"/*.json; do
         [[ -f "$manifest" ]] || continue
         status="$(jq -r '.status' "$manifest")"
-        [[ "$status" == "active" ]] || continue
+        [[ "$status" == "active" || "$status" == "refreshing" ]] || continue
         manifest_branch="$(jq -r '.branch' "$manifest")"
         manifest_worktree="$(jq -r '.worktree' "$manifest")"
-        if [[ "$manifest_branch" == "$branch" && "$manifest_worktree" == "$root" ]]; then
+        if [[ "$manifest_worktree" == "$root" ]] \
+            && { [[ "$manifest_branch" == "$branch" ]] || [[ -z "$branch" && "$status" == "refreshing" ]]; }; then
             REGISTERED_MANIFEST="$manifest"
             count=$((count + 1))
         fi
@@ -599,8 +608,12 @@ guard_pre_commit() {
     staged_count="$(git diff --cached --name-only --no-renames --diff-filter=ACDMRTUXB -z | tr -cd '\0' | wc -c | tr -d ' ')"
     [[ "$staged_count" -gt 0 ]] || exit 0
 
-    if [[ "$branch" != "main" && "$branch" != "DETACHED" ]]; then
-        registered_task_manifest || deny "feature branch '$branch' is not the active registered task worktree"
+    if [[ "$branch" != "main" ]]; then
+        registered_task_manifest || deny "branch '$branch' is not the active registered task worktree"
+        if [[ "$branch" == "DETACHED" ]] \
+            && ! jq -e '.status == "refreshing"' "$REGISTERED_MANIFEST" >/dev/null 2>&1; then
+            deny "detached commits are allowed only during a registered refresh conflict"
+        fi
         staged_paths_fit_manifest "$REGISTERED_MANIFEST" || deny "staged paths exceed the registered task write-set"
         exit 0
     fi

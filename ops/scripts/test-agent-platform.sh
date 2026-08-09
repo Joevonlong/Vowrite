@@ -319,6 +319,71 @@ fi
 expect_exit 0 "integration checkout provisioning is idempotent for the recorded path" \
     bash -c "cd \"$NO_MAIN_REPO\" && \"$TASK_CLI\" ensure-integration-checkout --owner integrator --worktree \"$NO_MAIN_INTEGRATION\""
 
+REFRESH_REPO="$TEST_ROOT/refresh-repo"
+REFRESH_WORKTREE="$TEST_ROOT/refresh-worktree"
+git init -q -b main "$REFRESH_REPO"
+git -C "$REFRESH_REPO" config user.name "Agent Platform Test"
+git -C "$REFRESH_REPO" config user.email "agent-platform@example.invalid"
+mkdir -p "$REFRESH_REPO/VowriteKit" "$REFRESH_REPO/VowriteMac"
+printf 'fixture\n' > "$REFRESH_REPO/AGENTS.md"
+printf 'marker\n' > "$REFRESH_REPO/VowriteKit/.fixture"
+printf 'marker\n' > "$REFRESH_REPO/VowriteMac/.fixture"
+printf 'base\n' > "$REFRESH_REPO/conflict.txt"
+git -C "$REFRESH_REPO" add AGENTS.md VowriteKit/.fixture VowriteMac/.fixture conflict.txt
+git -C "$REFRESH_REPO" commit -q -m "test: refresh base"
+expect_exit 0 "refresh-conflict task starts from the pinned main base" \
+    bash -c "cd \"$REFRESH_REPO\" && \"$TASK_CLI\" start --task T-REFRESH --owner codex --branch feature/T-REFRESH --worktree \"$REFRESH_WORKTREE\" --write-set conflict.txt --accept 'git diff --check'"
+printf 'feature one\n' > "$REFRESH_WORKTREE/conflict.txt"
+git -C "$REFRESH_WORKTREE" add conflict.txt
+git -C "$REFRESH_WORKTREE" commit -q -m "test: feature conflict one"
+printf 'main one\n' > "$REFRESH_REPO/conflict.txt"
+git -C "$REFRESH_REPO" add conflict.txt
+git -C "$REFRESH_REPO" commit -q -m "test: main conflict one"
+REFRESH_MAIN_ONE="$(git -C "$REFRESH_REPO" rev-parse HEAD)"
+expect_exit 2 "refresh preserves a resolvable conflict instead of silently aborting it" \
+    bash -c "cd \"$REFRESH_REPO\" && \"$TASK_CLI\" refresh --task T-REFRESH --owner codex --base '$REFRESH_MAIN_ONE'"
+refresh_json="$(cd "$REFRESH_REPO" && "$TASK_CLI" status --task T-REFRESH --json 2>/dev/null)"
+if jq -e --arg base "$REFRESH_MAIN_ONE" '.status == "refreshing" and .refresh_target_base_sha == $base' <<<"$refresh_json" >/dev/null 2>&1; then
+    pass "refresh conflict records its target base and resumable state"
+else
+    fail "refresh conflict records its target base and resumable state"
+fi
+refresh_edit_payload="$(jq -cn --arg cwd "$REFRESH_WORKTREE" --arg file "$REFRESH_WORKTREE/conflict.txt" '{cwd:$cwd,tool_name:"Edit",tool_input:{file_path:$file}}')"
+refresh_outside_payload="$(jq -cn --arg cwd "$REFRESH_WORKTREE" --arg file "$REFRESH_WORKTREE/outside.txt" '{cwd:$cwd,tool_name:"Edit",tool_input:{file_path:$file}}')"
+expect_exit 0 "detached refresh conflict may edit its declared write-set" run_hook "$refresh_edit_payload"
+expect_exit 2 "detached refresh conflict still blocks out-of-scope edits" run_hook "$refresh_outside_payload"
+printf 'resolved one\n' > "$REFRESH_WORKTREE/conflict.txt"
+git -C "$REFRESH_WORKTREE" add conflict.txt
+expect_exit 0 "pre-commit accepts staged in-scope refresh resolution" bash -c "cd \"$REFRESH_WORKTREE\" && '$GUARD' --pre-commit"
+expect_exit 0 "refresh-continue completes the governed rebase" \
+    bash -c "cd \"$REFRESH_REPO\" && \"$TASK_CLI\" refresh-continue --task T-REFRESH --owner codex"
+refresh_json="$(cd "$REFRESH_REPO" && "$TASK_CLI" status --task T-REFRESH --json 2>/dev/null)"
+if jq -e --arg base "$REFRESH_MAIN_ONE" '.status == "active" and .base_sha == $base and (.refresh_target_base_sha == null)' <<<"$refresh_json" >/dev/null 2>&1; then
+    pass "completed refresh returns the manifest to active at the new base"
+else
+    fail "completed refresh returns the manifest to active at the new base"
+fi
+printf 'feature two\n' > "$REFRESH_WORKTREE/conflict.txt"
+git -C "$REFRESH_WORKTREE" add conflict.txt
+git -C "$REFRESH_WORKTREE" commit -q -m "test: feature conflict two"
+REFRESH_FEATURE_TWO="$(git -C "$REFRESH_WORKTREE" rev-parse HEAD)"
+printf 'main two\n' > "$REFRESH_REPO/conflict.txt"
+git -C "$REFRESH_REPO" add conflict.txt
+git -C "$REFRESH_REPO" commit -q -m "test: main conflict two"
+REFRESH_MAIN_TWO="$(git -C "$REFRESH_REPO" rev-parse HEAD)"
+expect_exit 2 "second refresh enters the same governed conflict state" \
+    bash -c "cd \"$REFRESH_REPO\" && \"$TASK_CLI\" refresh --task T-REFRESH --owner codex --base '$REFRESH_MAIN_TWO'"
+expect_exit 0 "refresh-abort restores the pre-refresh task branch" \
+    bash -c "cd \"$REFRESH_REPO\" && \"$TASK_CLI\" refresh-abort --task T-REFRESH --owner codex"
+if [[ "$(git -C "$REFRESH_WORKTREE" rev-parse HEAD)" == "$REFRESH_FEATURE_TWO" ]] \
+    && jq -e '.status == "active"' "$(git -C "$REFRESH_REPO" rev-parse --path-format=absolute --git-common-dir)/vowrite-agent-platform/tasks/T-REFRESH.json" >/dev/null 2>&1; then
+    pass "refresh-abort preserves the prior commit and active manifest"
+else
+    fail "refresh-abort preserves the prior commit and active manifest"
+fi
+expect_exit 0 "refresh fixture abort cleans only its task resources" \
+    bash -c "cd \"$REFRESH_REPO\" && \"$TASK_CLI\" abort --task T-REFRESH --owner codex --reason 'refresh fixture complete'"
+
 TASK_REPO="$TEST_ROOT/task-repo"
 TASK_WORKTREE="$TEST_ROOT/task-worktree"
 SECOND_WORKTREE="$TEST_ROOT/second-worktree"
