@@ -535,6 +535,9 @@ if ! git tag -a "$VERSION" -m "$VERSION — $DESCRIPTION" 2>/dev/null; then
     echo "     or stop for a separately reviewed release-incident recovery."
     exit 1
 fi
+TAG_OBJECT="$(git rev-parse "refs/tags/$VERSION")"
+[[ "$(git cat-file -t "$TAG_OBJECT")" == "tag" ]] \
+    || { echo "❌ Release tag $VERSION is not an annotated tag object."; exit 1; }
 echo "  ✓ Committed and tagged $VERSION"
 
 # Pin the only commit, tag, asset, and release metadata that the publication
@@ -563,6 +566,7 @@ RELEASE_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse HEAD)"
 INTENT_TEMP="$(mktemp "$RELEASE_STATE_DIR/.release-intent.XXXXXX")"
 jq -n \
     --arg tag "$VERSION" \
+    --arg tag_object "$TAG_OBJECT" \
     --arg version "$VERSION_NUM" \
     --arg commit "$RELEASE_COMMIT" \
     --arg repository "$GITHUB_REPO" \
@@ -572,7 +576,7 @@ jq -n \
     --arg asset_sha256 "$DMG_SHA256" \
     --arg created_at "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
     --argjson prerelease "$IS_BETA" \
-    '{schema:1,status:"prepared",tag:$tag,version:$version,commit:$commit,repository:$repository,title:$title,notes:$notes,asset:$asset,asset_sha256:$asset_sha256,prerelease:$prerelease,created_at:$created_at}' \
+    '{schema:2,status:"prepared",tag:$tag,tag_object:$tag_object,version:$version,commit:$commit,repository:$repository,title:$title,notes:$notes,asset:$asset,asset_sha256:$asset_sha256,prerelease:$prerelease,created_at:$created_at}' \
     > "$INTENT_TEMP"
 chmod 600 "$INTENT_TEMP"
 mv "$INTENT_TEMP" "$RELEASE_STATE_DIR/release-intent.json"
