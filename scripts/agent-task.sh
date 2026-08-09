@@ -390,6 +390,34 @@ run_acceptance() {
     printf '%s\n' "$log_file"
 }
 
+canonical_requested_worktree_path() {
+    local candidate="$1"
+    local parent
+
+    [[ "$candidate" != *$'\n'* && "$candidate" != *$'\r'* && "$candidate" != *$'\t'* ]] \
+        || die "worktree path cannot contain control characters"
+    parent="$(cd "$(dirname "$candidate")" 2>/dev/null && pwd -P)" \
+        || die "worktree parent does not exist: $(dirname "$candidate")"
+    printf '%s/%s\n' "$parent" "$(basename "$candidate")"
+}
+
+reject_nested_worktree_path() {
+    local candidate="$1"
+    local listed_worktree
+    local listed_canonical
+
+    while IFS= read -r listed_worktree; do
+        [[ -n "$listed_worktree" ]] || continue
+        listed_canonical="$(cd "$listed_worktree" 2>/dev/null && pwd -P)" \
+            || die "cannot resolve existing worktree path: $listed_worktree"
+        case "$candidate/" in
+            "$listed_canonical/"*)
+                die "worktree path must be outside every existing checkout: $candidate is inside $listed_canonical"
+                ;;
+        esac
+    done < <(git worktree list --porcelain | sed -n 's/^worktree //p')
+}
+
 start_task() {
     local task_id=""
     local owner=""
@@ -424,6 +452,8 @@ start_task() {
     [[ "$branch" != "main" ]] || die "task branch cannot be main"
     git check-ref-format --branch "$branch" >/dev/null 2>&1 || die "invalid branch name '$branch'"
     [[ "$worktree" == /* ]] || die "worktree path must be absolute"
+    worktree="$(canonical_requested_worktree_path "$worktree")"
+    reject_nested_worktree_path "$worktree"
     [[ ! -e "$worktree" ]] || die "worktree path already exists: $worktree"
     [[ ${#WRITE_SETS[@]} -gt 0 ]] || die "at least one --write-set is required"
     [[ ${#ACCEPTANCE[@]} -gt 0 ]] || die "at least one --accept command is required"
@@ -594,13 +624,12 @@ handoff_task() {
     [[ -z "$(git -C "$worktree" status --porcelain)" ]] || die "task worktree is not clean: $worktree"
 
     CHANGED_COUNT=0
-    while IFS= read -r changed_file; do
-        [[ -n "$changed_file" ]] || continue
+    while IFS= read -r -d '' changed_file; do
         CHANGED_COUNT=$((CHANGED_COUNT + 1))
         if ! jq -r '.write_set[]' "$manifest" | path_matches_scope "$changed_file"; then
             die "changed file '$changed_file' is outside the declared write-set"
         fi
-    done < <(git diff --name-only --no-renames --diff-filter=ACDMRTUXB "$base_sha..$commit_sha")
+    done < <(git diff --name-only --no-renames --diff-filter=ACDMRTUXB -z "$base_sha..$commit_sha")
     [[ "$CHANGED_COUNT" -gt 0 ]] || die "handoff commit contains no changes from base SHA"
 
     acceptance_log="$(run_acceptance "$manifest" "$commit_sha")" || die "acceptance commands failed"
@@ -773,7 +802,6 @@ ensure_integration_checkout() {
     local listed_worktree=""
     local main_worktree=""
     local worktree_line
-    local worktree_parent
     local main_sha
     local checkout_file="$STATE_DIR/integration-checkout.json"
 
@@ -788,9 +816,7 @@ ensure_integration_checkout() {
         || die "ensure-integration-checkout requires --owner and --worktree"
     validate_identity "$owner" "owner"
     [[ "$worktree" == /* ]] || die "integration worktree path must be absolute"
-    worktree_parent="$(cd "$(dirname "$worktree")" 2>/dev/null && pwd -P)" \
-        || die "integration worktree parent does not exist: $(dirname "$worktree")"
-    worktree="$worktree_parent/$(basename "$worktree")"
+    worktree="$(canonical_requested_worktree_path "$worktree")"
     [[ -z "$(git status --porcelain)" ]] || die "checkout provisioning requires a clean current worktree"
 
     acquire_lock
@@ -807,6 +833,7 @@ ensure_integration_checkout() {
         echo "Main integration checkout already available at $main_worktree"
         return 0
     fi
+    reject_nested_worktree_path "$worktree"
     [[ ! -e "$worktree" ]] || die "integration worktree path already exists: $worktree"
     main_sha="$(resolve_commit refs/heads/main)"
     git worktree add -q "$worktree" main || die "failed to create main integration checkout: $worktree"
@@ -870,6 +897,12 @@ integrate_task() {
     local worktree
     local acceptance_log
     local integration_commit
+    local main_head
+    local expected_tree
+    local actual_tree
+    local parent_count
+    local parent_commit
+    local actual_message
     local temp_file
 
     while [[ $# -gt 0 ]]; do
@@ -891,10 +924,48 @@ integrate_task() {
     [[ "$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)" == "main" ]] || die "integration must run from the main worktree"
     [[ -z "$(git status --porcelain)" ]] || die "main worktree is not clean"
     base_sha="$(jq -r '.base_sha' "$manifest")"
-    [[ "$(git rev-parse HEAD)" == "$base_sha" ]] || die "main moved beyond pinned base $base_sha; refresh the task before integration"
     result_commit="$(jq -r '.result_commit' "$manifest")"
     worktree="$(jq -r '.worktree' "$manifest")"
     [[ "$(git -C "$worktree" rev-parse HEAD)" == "$result_commit" ]] || die "task worktree no longer matches result commit $result_commit"
+    expected_tree="$(git rev-parse "$result_commit^{tree}")"
+    main_head="$(git rev-parse HEAD)"
+
+    if [[ "$main_head" != "$base_sha" ]]; then
+        actual_tree="$(git rev-parse "$main_head^{tree}" 2>/dev/null || true)"
+        parent_count="$(git rev-list --parents -n 1 "$main_head" | awk '{print NF - 1}')"
+        parent_commit="$(git rev-list --parents -n 1 "$main_head" | awk '{print $2}')"
+        actual_message="$(git log -1 --format=%B "$main_head")"
+        if ! jq -e \
+            --arg base_sha "$base_sha" \
+            --arg result_commit "$result_commit" \
+            --arg expected_tree "$expected_tree" \
+            --arg message "$message" \
+            '.integration_attempt.base_sha == $base_sha
+             and .integration_attempt.result_commit == $result_commit
+             and .integration_attempt.expected_tree == $expected_tree
+             and .integration_attempt.message == $message' "$manifest" >/dev/null 2>&1 \
+            || [[ "$parent_count" != "1" || "$parent_commit" != "$base_sha" || "$actual_tree" != "$expected_tree" || "$actual_message" != "$message" ]]; then
+            die "main moved beyond pinned base $base_sha and does not match a recoverable integration attempt"
+        fi
+        acceptance_log="$(run_acceptance "$manifest" "$result_commit")" || die "recovery acceptance commands failed"
+        [[ -z "$(git -C "$worktree" status --porcelain)" ]] || die "recovery acceptance dirtied the task worktree"
+        [[ "$(git -C "$worktree" rev-parse HEAD)" == "$result_commit" ]] || die "recovery acceptance moved the task result commit"
+        [[ "$(git rev-parse HEAD)" == "$main_head" && -z "$(git status --porcelain)" ]] \
+            || die "recovery acceptance changed the integration checkout"
+        jq \
+            --arg integration_commit "$main_head" \
+            --arg integrated_at "$(now_utc)" \
+            --arg integration_acceptance_log "$acceptance_log" \
+            '.status = "integrated"
+             | .integration_commit = $integration_commit
+             | .integrated_at = $integrated_at
+             | .integration_acceptance_log = $integration_acceptance_log
+             | .recovered_after_commit = true
+             | del(.integration_attempt)' "$manifest" | atomic_json_write "$manifest"
+        echo "Task $task_id reconciled after integration commit $main_head"
+        return 0
+    fi
+
     acceptance_log="$(run_acceptance "$manifest" "$result_commit")" || die "integration acceptance commands failed"
     [[ -z "$(git -C "$worktree" status --porcelain)" ]] || die "acceptance commands dirtied the task worktree"
     [[ "$(git -C "$worktree" rev-parse HEAD)" == "$result_commit" ]] || die "acceptance commands moved the task result commit"
@@ -903,6 +974,19 @@ integrate_task() {
     [[ -z "$(git status --porcelain)" ]] || die "acceptance dirtied the main integration worktree"
 
     git merge --squash "$result_commit" >/dev/null || die "squash merge failed"
+    jq \
+        --arg base_sha "$base_sha" \
+        --arg result_commit "$result_commit" \
+        --arg expected_tree "$expected_tree" \
+        --arg message "$message" \
+        --arg started_at "$(now_utc)" \
+        '.integration_attempt = {
+            base_sha: $base_sha,
+            result_commit: $result_commit,
+            expected_tree: $expected_tree,
+            message: $message,
+            started_at: $started_at
+        }' "$manifest" | atomic_json_write "$manifest"
     VOWRITE_INTEGRATION_TASK="$task_id" VOWRITE_INTEGRATION_OWNER="$owner" git commit -m "$message" || die "integration commit failed; inspect the staged squash result"
     integration_commit="$(git rev-parse HEAD)"
     [[ -z "$(git status --porcelain)" ]] || die "integration commit left main dirty; manifest remains ready"
@@ -911,7 +995,7 @@ integrate_task() {
         --arg integration_commit "$integration_commit" \
         --arg integrated_at "$(now_utc)" \
         --arg integration_acceptance_log "$acceptance_log" \
-        '.status = "integrated" | .integration_commit = $integration_commit | .integrated_at = $integrated_at | .integration_acceptance_log = $integration_acceptance_log' \
+        '.status = "integrated" | .integration_commit = $integration_commit | .integrated_at = $integrated_at | .integration_acceptance_log = $integration_acceptance_log | .recovered_after_commit = false | del(.integration_attempt)' \
         "$manifest" > "$temp_file"
     chmod 600 "$temp_file"
     mv "$temp_file" "$manifest"
