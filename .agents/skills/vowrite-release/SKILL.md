@@ -47,7 +47,7 @@ Re-run the relevant smoke checks against the built artifact. Confirm the tag poi
 scripts/publish-release.sh --tag vX.Y.Z.W[-beta.N]
 ```
 
-The wrapper atomically pushes only the pinned `main` commit and annotated tag, then creates or resumes the pinned GitHub Release asset. Verify remote ancestry, tag resolution, and the GitHub asset afterward. Never invoke a direct release `git push`, publish feature branches, delete refs, or widen the prepared intent.
+The wrapper atomically pushes only the pinned `main` commit and annotated tag, then creates or resumes the pinned GitHub Release asset. The pre-push gate requires that exact two-ref pair and rejects main-only or tag-only publication. Verify remote ancestry, tag resolution, and the GitHub asset afterward. Never invoke a direct release `git push`, publish feature branches, delete refs, or widen the prepared intent.
 
 ## 5. Synchronize workspace tracking
 

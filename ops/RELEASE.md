@@ -7,10 +7,10 @@
 
 ```bash
 # Beta (updates appcast-beta.xml)
-cd Vowrite && ops/scripts/release.sh --beta v0.2.2.0-beta.1 "Beta description"
+ops/scripts/release.sh --beta v0.2.2.0-beta.1 "Beta description"
 
 # Stable (updates appcast.xml)
-cd Vowrite && ops/scripts/release.sh v0.2.2.0 "Release description"
+ops/scripts/release.sh v0.2.2.0 "Release description"
 
 scripts/publish-release.sh --tag v0.2.2.0
 ```

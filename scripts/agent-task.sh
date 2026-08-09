@@ -394,8 +394,7 @@ canonical_requested_worktree_path() {
     local candidate="$1"
     local parent
 
-    [[ "$candidate" != *$'\n'* && "$candidate" != *$'\r'* && "$candidate" != *$'\t'* ]] \
-        || die "worktree path cannot contain control characters"
+    [[ "$candidate" != *[[:cntrl:]]* ]] || die "worktree path cannot contain control characters"
     parent="$(cd "$(dirname "$candidate")" 2>/dev/null && pwd -P)" \
         || die "worktree parent does not exist: $(dirname "$candidate")"
     printf '%s/%s\n' "$parent" "$(basename "$candidate")"
@@ -675,6 +674,8 @@ refresh_task() {
     owner_matches "$manifest" "$owner"
     jq -e '.status == "active" or .status == "ready"' "$manifest" >/dev/null 2>&1 \
         || die "task '$task_id' can be refreshed only while active or ready"
+    jq -e '.integration_attempt == null' "$manifest" >/dev/null 2>&1 \
+        || die "task '$task_id' has a pending integration attempt; the same integration owner must rerun integrate with the original message to reconcile it"
     worktree="$(jq -r '.worktree' "$manifest")"
     [[ -z "$(git -C "$worktree" status --porcelain)" ]] || die "task worktree is not clean: $worktree"
     previous_status="$(jq -r '.status' "$manifest")"
@@ -987,7 +988,17 @@ integrate_task() {
             message: $message,
             started_at: $started_at
         }' "$manifest" | atomic_json_write "$manifest"
-    VOWRITE_INTEGRATION_TASK="$task_id" VOWRITE_INTEGRATION_OWNER="$owner" git commit -m "$message" || die "integration commit failed; inspect the staged squash result"
+    if ! VOWRITE_INTEGRATION_TASK="$task_id" VOWRITE_INTEGRATION_OWNER="$owner" git commit -m "$message"; then
+        if [[ "$(git rev-parse HEAD)" != "$base_sha" ]]; then
+            die "integration commit may have been created; rerun integrate with the same owner and message to reconcile it"
+        fi
+        git reset --hard "$base_sha" >/dev/null \
+            || die "integration commit failed before commit creation and the staged squash could not be rolled back"
+        [[ -z "$(git status --porcelain)" ]] \
+            || die "integration commit failed before commit creation and rollback left the integration checkout dirty"
+        jq 'del(.integration_attempt)' "$manifest" | atomic_json_write "$manifest"
+        die "integration commit failed before commit creation; the staged squash was rolled back and the ready task can be retried"
+    fi
     integration_commit="$(git rev-parse HEAD)"
     [[ -z "$(git status --porcelain)" ]] || die "integration commit left main dirty; manifest remains ready"
     temp_file="$(mktemp "$STATE_DIR/.integrate.XXXXXX")"

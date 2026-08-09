@@ -189,12 +189,12 @@ cd VowriteMac && swift build
 - **`AGENTS.md`** — Authoritative product rules, worktree protocol, build commands, and handoff contract
 - **`CLAUDE.md`** — Thin Claude Code import of `AGENTS.md`
 - **`CONTRIBUTING.md`** — Contribution guidelines (if present)
-- **`Vowrite/CHANGELOG.md`** — Release history
+- **`CHANGELOG.md`** — Release history
 
 ### Running Tests
 
 ```bash
-cd Vowrite && ops/scripts/test.sh
+ops/scripts/test.sh
 ```
 
 `ops/scripts/test.sh` runs VowriteKit unit tests plus build, quality, security, bundle, parity, and agent-platform checks.
@@ -230,11 +230,11 @@ cd Vowrite && ops/scripts/test.sh
 ### Release Process
 
 ```bash
-cd Vowrite && ops/scripts/release.sh v0.2.1.0 "Short description"
+ops/scripts/release.sh v0.2.1.0 "Short description"
 scripts/publish-release.sh --tag v0.2.1.0
 ```
 
-The release script handles: macOS changelog promotion → version bump (`Info.plist` + `Version.swift`) → release build → DMG packaging/signing → appcast → git commit/tag → optional GitHub Release. It does not push `main` or tags and does not create an iOS version.
+The release script performs local preparation only: macOS changelog promotion → version bump (`Info.plist` + `Version.swift`) → release build → DMG packaging/signing → appcast → git commit/tag → pinned publication intent. After explicit authorization, `publish-release.sh` atomically publishes the pinned `main` and tag and creates or resumes the matching GitHub Release. The pipeline does not create an iOS version.
 
 ### Conventions
 

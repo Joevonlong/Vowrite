@@ -677,6 +677,8 @@ guard_pre_push() {
     local remote_ref
     local remote_sha
     local ref_count=0
+    local release_main_seen=0
+    local release_tag_seen=0
     local zero_sha="0000000000000000000000000000000000000000"
     local mode=""
 
@@ -698,14 +700,18 @@ guard_pre_push() {
         else
             case "$remote_ref" in
                 refs/heads/main)
+                    [[ "$release_main_seen" -eq 0 ]] || deny "release push repeated refs/heads/main"
                     [[ "$local_ref" == "refs/heads/main" && "$local_sha" == "$RELEASE_COMMIT" ]] \
                         || deny "release main ref must equal the prepared release commit"
+                    release_main_seen=1
                     ;;
                 "refs/tags/$RELEASE_TAG")
+                    [[ "$release_tag_seen" -eq 0 ]] || deny "release push repeated refs/tags/$RELEASE_TAG"
                     [[ "$local_ref" == "refs/tags/$RELEASE_TAG" ]] \
                         || deny "release tag source must be refs/tags/$RELEASE_TAG"
                     [[ "$(git rev-parse "$local_sha^{commit}" 2>/dev/null || true)" == "$RELEASE_COMMIT" ]] \
                         || deny "release tag '$remote_ref' does not pin the prepared release commit"
+                    release_tag_seen=1
                     ;;
                 *)
                     deny "release push attempted an unsupported ref '$remote_ref'"
@@ -713,7 +719,12 @@ guard_pre_push() {
             esac
         fi
     done
-    [[ "$ref_count" -gt 0 ]] || exit 0
+    if [[ "$mode" == "task" ]]; then
+        [[ "$ref_count" -eq 1 ]] || deny "task publish must update exactly one pinned main ref"
+    else
+        [[ "$ref_count" -eq 2 && "$release_main_seen" -eq 1 && "$release_tag_seen" -eq 1 ]] \
+            || deny "release publication must atomically update exactly the pinned main and annotated tag"
+    fi
 }
 
 guard_hook() {
