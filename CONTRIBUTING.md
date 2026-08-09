@@ -27,13 +27,13 @@ git remote add upstream git@github.com:Joevonlong/Vowrite.git
 git fetch upstream
 ```
 
-4. Maintainers and trusted Claude Code/Codex sessions in the canonical repository must activate the repository-owned policy hook:
+4. Choose the repository mode before writing. Maintainers and trusted Claude Code/Codex sessions in the canonical repository use canonical maintainer mode and must activate the repository-owned policy hook:
 
 ```bash
 scripts/bootstrap-agent-platform.sh
 ```
 
-Fork contributors following the ordinary pull-request flow below should skip this maintainer gate. Its pre-push policy deliberately reserves publication for a leased integration owner; GitHub CI still validates incoming pull requests.
+**External fork mode:** contributors working in their own fork should skip this maintainer gate. Its pre-push policy deliberately reserves publication for a leased integration owner. Human-only contributors may follow the ordinary pull-request flow below; AI-assisted fork work follows the registered-worktree instructions under [AI-assisted changes](#ai-assisted-changes). GitHub CI still validates incoming pull requests, but this mode has weaker local Git enforcement than the canonical repository.
 
 ### Build from Source
 
@@ -72,7 +72,7 @@ The build script compiles via SPM, packages into `Vowrite.app`, code-signs with 
    ```
 4. **Run the test suite** (especially if core modules changed):
    ```bash
-   cd Vowrite && ops/scripts/test.sh
+   ops/scripts/test.sh
    ```
 5. **Commit** with a clear message (see [Commit Messages](#commit-messages)):
    ```bash
@@ -95,16 +95,16 @@ scripts/agent-task.sh start \
   --task F-XXX-example \
   --owner codex \
   --branch feature/F-XXX-example \
-  --worktree "$(cd .. && pwd)/Vowrite-F-XXX-example" \
+  --worktree /absolute/path/to/Vowrite-F-XXX-example \
   --write-set 'VowriteKit/**' \
   --accept 'ops/scripts/test.sh' \
   --accept 'git diff --check'
-cd "$(cd .. && pwd)/Vowrite-F-XXX-example"
+cd /absolute/path/to/Vowrite-F-XXX-example
 ```
 
 Replace the task ID, owner, branch, worktree, write-set, and acceptance commands with the reviewed scope. Commit only in that registered worktree, then run `scripts/agent-task.sh handoff` with the exact result SHA. A single lease owner integrates `main`; only that owner may perform an explicitly authorized publish. Do not switch the primary checkout to an unregistered feature branch and do not bypass hooks.
 
-External fork contributors may still use AI assistance, but should leave the maintainer Git gate disabled and use the ordinary fork/PR publication steps above from a human-controlled shell. Project-level Claude Code/Codex hooks still require registered worktrees for agent writes; the agent must never disable or bypass them.
+In external fork mode, leave the maintainer Git gate disabled. Project-level Claude Code/Codex hooks still require the AI writer to create and use a registered worktree and produce a pinned handoff; the agent must never disable or bypass those hooks. After review, a human-controlled shell may push that task branch to the fork and open the PR. Do not run the canonical `integrate` or `publish` flow for a contributor-owned fork.
 
 Run `ops/scripts/test-agent-platform.sh` to verify the standalone agent contract.
 
@@ -222,11 +222,11 @@ Vowrite uses a **beta-first, trunk-based release model** (inspired by [OpenClaw]
 
 ```bash
 # Beta release (for testing)
-cd Vowrite && ops/scripts/release.sh --beta v0.2.1.0-beta.1 "Beta description"
+ops/scripts/release.sh --beta v0.2.1.0-beta.1 "Beta description"
 scripts/publish-release.sh --tag v0.2.1.0-beta.1
 
 # Stable release (user-facing, after beta validation)
-cd Vowrite && ops/scripts/release.sh v0.2.1.0 "Release description"
+ops/scripts/release.sh v0.2.1.0 "Release description"
 scripts/publish-release.sh --tag v0.2.1.0
 ```
 

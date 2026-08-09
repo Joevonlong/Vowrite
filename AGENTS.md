@@ -4,15 +4,17 @@ This file is the product repository's authoritative agent contract. It works in 
 
 Claude Code loads the same contract through `CLAUDE.md`; Codex reads it natively. Product skills and policy code live in `.agents/`. Do not copy shared rules into tool-specific files.
 
-## Session bootstrap
+## Repository mode and session bootstrap
 
-Before any write:
+Canonical maintainer mode is the default for a clone whose work will be integrated or published by the Vowrite maintainers. Before any write in that mode:
 
 ```bash
 scripts/bootstrap-agent-platform.sh
 ```
 
 This activates `.githooks/pre-commit` and `.githooks/pre-push` for the clone. Claude Code and Codex project hooks are useful early guards, but each tool may require a workspace-trust review. The Git hooks are tool-agnostic backstops and fail closed when their canonical guard is missing.
+
+External fork mode is the explicit exception for a contributor-owned fork whose branch will be submitted by pull request. Do not run the maintainer bootstrap in that mode: its pre-push gate intentionally reserves canonical publication for the leased integration owner. An AI writer must still use a registered task worktree and hand off a pinned result; a human then pushes that task branch to the fork and opens the PR. Project-level Claude/Codex hooks remain early guards, while GitHub CI is the tool-independent backstop. This mode has weaker local Git enforcement and must not be represented as a canonical integration or publication.
 
 ## Parallel work contract
 
@@ -85,7 +87,7 @@ scripts/agent-task.sh claim-integration --owner <integrator-id>
 scripts/agent-task.sh integrate --task F-XXX --owner <integrator-id> --message "feat: description"
 ```
 
-Integration is SHA-pinned: `main` must still equal the task's base SHA. If another task landed first, the worker runs `refresh`, resolves any conflict inside its own worktree, reruns `handoff`, and then the integrator retries:
+Integration is SHA-pinned: `main` must still equal the task's base SHA. If another completed task landed first and the manifest has no `integration_attempt`, the worker runs `refresh`, resolves any conflict inside its own worktree, reruns `handoff`, and then the integrator retries:
 
 ```bash
 scripts/agent-task.sh refresh --task F-XXX --owner <agent-id> --base <new-main-sha>
@@ -98,6 +100,8 @@ scripts/agent-task.sh refresh-continue --task F-XXX --owner <agent-id>
 # or
 scripts/agent-task.sh refresh-abort --task F-XXX --owner <agent-id>
 ```
+
+If `integrate` is interrupted after creating the main commit, the ready manifest retains `integration_attempt`. Do not refresh that task. The same lease owner reruns `integrate` with the exact original message; the coordinator verifies and reconciles the already-created commit idempotently. If a pre-commit gate fails before any commit is created, `integrate` rolls the staged squash back to the clean base and removes the attempt so the ready task can be retried normally.
 
 If an active or ready task is deliberately cancelled, its owner runs the audited abort from a clean main integration checkout. This records the last recoverable commit and reason before removing only that task's worktree and branch:
 

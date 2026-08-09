@@ -111,6 +111,26 @@ else
     fail "Claude imports standalone AGENTS.md"
 fi
 
+if grep -Eq 'cd Vowrite && ops/scripts/(test|release)\.sh' \
+    "$PROJECT_ROOT/README.md" "$PROJECT_ROOT/CONTRIBUTING.md" "$PROJECT_ROOT/ops/RELEASE.md"; then
+    fail "standalone runbooks do not depend on a surrounding Vowrite directory"
+else
+    pass "standalone runbooks do not depend on a surrounding Vowrite directory"
+fi
+
+if grep -Fq -- '--worktree "$(cd ' "$PROJECT_ROOT/CONTRIBUTING.md"; then
+    fail "documented task start avoids shell control rejected by the main guard"
+else
+    pass "documented task start avoids shell control rejected by the main guard"
+fi
+
+if grep -q 'External fork mode' "$PROJECT_ROOT/AGENTS.md" \
+    && grep -q 'External fork mode' "$PROJECT_ROOT/CONTRIBUTING.md"; then
+    pass "AGENTS and CONTRIBUTING share one explicit external-fork mode"
+else
+    fail "AGENTS and CONTRIBUTING share one explicit external-fork mode"
+fi
+
 if jq -e '.hooks.PreToolUse | any(.matcher == "Bash|apply_patch")' "$PROJECT_ROOT/.codex/hooks.json" >/dev/null 2>&1; then
     pass "Codex guard covers Bash and apply_patch"
 else
@@ -495,6 +515,7 @@ NEWLINE_WORKTREE="$TEST_ROOT/newline-worktree"
 DIRTY_WORKTREE="$TEST_ROOT/dirty-worktree"
 FEATURE_START_WORKTREE="$TEST_ROOT/feature-start-worktree"
 INVALID_SCOPE_WORKTREE="$TEST_ROOT/invalid-scope-worktree"
+CONTROL_WORKTREE="$TEST_ROOT/control"$'\v'"worktree"
 ADOPT_WORKTREE="$TEST_ROOT/adopt-worktree"
 TASK_REMOTE="$TEST_ROOT/task-remote.git"
 git init -q -b main "$TASK_REPO"
@@ -555,6 +576,9 @@ if [[ -x "$TASK_CLI" ]]; then
     expect_exit 2 "adopt rejects a primary checkout merely switched to a feature branch" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" adopt --task T-PRIMARY --owner codex --base \"$(git -C "$TASK_REPO" rev-parse main)\" --write-set 'src/**' --accept 'git diff --check'"
     git -C "$TASK_REPO" switch -q main
     expect_exit 2 "task write-set rejects ambiguous glob syntax" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-GLOB --owner codex --branch feature/T-GLOB --worktree \"$INVALID_SCOPE_WORKTREE\" --write-set 'src/Foo*Bar' --accept 'git diff --check'"
+    expect_exit 2 "task worktree rejects every control character" \
+        bash -c 'cd "$1" && "$2" start --task T-CONTROL --owner codex --branch feature/T-CONTROL --worktree "$3" --write-set "control/**" --accept "git diff --check"' \
+        _ "$TASK_REPO" "$TASK_CLI" "$CONTROL_WORKTREE"
     expect_exit 2 "task worktree cannot be nested inside an existing checkout" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-NESTED --owner codex --branch feature/T-NESTED --worktree \"$TASK_REPO/.nested-worker\" --write-set 'nested/**' --accept 'git diff --check'"
     if [[ ! -e "$TASK_REPO/.nested-worker" && -z "$(git -C "$TASK_REPO" status --porcelain)" ]] \
         && ! git -C "$TASK_REPO" show-ref --verify --quiet refs/heads/feature/T-NESTED; then
@@ -620,6 +644,24 @@ if [[ -x "$TASK_CLI" ]]; then
         fail "handoff manifest pins the result commit"
     fi
 
+    FAIL_COMMIT_HOOKS="$TEST_ROOT/fail-commit-hooks"
+    mkdir -p "$FAIL_COMMIT_HOOKS"
+    printf '#!/usr/bin/env bash\nexit 41\n' > "$FAIL_COMMIT_HOOKS/pre-commit"
+    chmod +x "$FAIL_COMMIT_HOOKS/pre-commit"
+    git -C "$TASK_REPO" config core.hooksPath "$FAIL_COMMIT_HOOKS"
+    expect_exit 2 "failed integration pre-commit rolls back its staged squash" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" integrate --task T-001 --owner integrator --message 'test: integrate result'"
+    git -C "$TASK_REPO" config core.hooksPath .githooks
+    failed_commit_json="$(cd "$TASK_REPO" && "$TASK_CLI" status --task T-001 --json 2>/dev/null)"
+    if [[ "$(git -C "$TASK_REPO" rev-parse HEAD)" == "$(jq -r '.base_sha' <<<"$failed_commit_json")" ]] \
+        && [[ -z "$(git -C "$TASK_REPO" status --porcelain)" ]] \
+        && jq -e --arg result "$result_commit" \
+            '.status == "ready" and .result_commit == $result and (.integration_attempt == null)' \
+            <<<"$failed_commit_json" >/dev/null 2>&1; then
+        pass "failed integration commit remains clean, ready, and retryable"
+    else
+        fail "failed integration commit remains clean, ready, and retryable"
+    fi
+
     CRASH_HOOKS="$TEST_ROOT/crash-hooks"
     mkdir -p "$CRASH_HOOKS"
     cp "$TASK_REPO/.githooks/pre-commit" "$CRASH_HOOKS/pre-commit"
@@ -636,6 +678,16 @@ if [[ -x "$TASK_CLI" ]]; then
         pass "interrupted integration leaves clean main plus durable recovery evidence"
     else
         fail "interrupted integration leaves clean main plus durable recovery evidence"
+    fi
+    expect_exit 2 "worker refresh is blocked while an integration attempt needs reconciliation" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" refresh --task T-001 --owner codex --base '$interrupted_commit'"
+    blocked_refresh_json="$(cd "$TASK_REPO" && "$TASK_CLI" status --task T-001 --json 2>/dev/null)"
+    if jq -e --arg result "$result_commit" \
+        '.status == "ready" and .result_commit == $result and (.integration_attempt | type == "object")' \
+        <<<"$blocked_refresh_json" >/dev/null 2>&1 \
+        && [[ "$(git -C "$TASK_WORKTREE" rev-parse HEAD)" == "$result_commit" ]]; then
+        pass "blocked refresh preserves the pinned result and recovery evidence"
+    else
+        fail "blocked refresh preserves the pinned result and recovery evidence"
     fi
     expect_exit 0 "integration owner reconciles the already-created pinned commit" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" integrate --task T-001 --owner integrator --message 'test: integrate result'"
     integration_json="$(cd "$TASK_REPO" && "$TASK_CLI" status --task T-001 --json 2>/dev/null)"
@@ -662,7 +714,9 @@ if [[ -x "$TASK_CLI" ]]; then
         '{schema:1,status:"prepared",tag:$tag,version:"0.0.0.1",commit:$commit,repository:"example.invalid/Vowrite",title:"Vowrite test",notes:"test",asset:"releases/Vowrite-test.dmg",asset_sha256:$asset_sha256,prerelease:false}' \
         > "$TASK_COMMON/vowrite-agent-platform/release-intent.json"
     expect_exit 2 "environment-only release context is rejected without its pinned tag" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 .agents/hooks/branch-guard.sh --pre-push"
-    expect_exit 0 "prepared release context accepts only its pinned main and tag" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\nrefs/tags/%s %s refs/tags/%s %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" '$RELEASE_TAG' '$RELEASE_TAG_OBJECT' '$RELEASE_TAG' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
+    expect_exit 2 "release context rejects a main-only push" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
+    expect_exit 2 "release context rejects a tag-only push" bash -c "cd \"$TASK_REPO\" && printf 'refs/tags/%s %s refs/tags/%s %s\n' '$RELEASE_TAG' '$RELEASE_TAG_OBJECT' '$RELEASE_TAG' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
+    expect_exit 0 "prepared release context accepts exactly its pinned main and tag" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\nrefs/tags/%s %s refs/tags/%s %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" '$RELEASE_TAG' '$RELEASE_TAG_OBJECT' '$RELEASE_TAG' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
     expect_exit 2 "release context cannot publish an unrelated branch" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/feature/test %s refs/heads/feature/test %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
     RELEASE_REMOTE="$TEST_ROOT/release-remote.git"
     FAKE_BIN="$TEST_ROOT/fake-bin"
