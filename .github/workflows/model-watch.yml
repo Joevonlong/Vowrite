@@ -1,25 +1,29 @@
-# F-082 — monthly upstream model drift detection.
-# Runs ops/scripts/model-watch.py; on findings (exit 10) files/updates a
-# `model-watch`-labeled issue with the report. Curation stays human-driven:
-# see ops/MODEL_UPDATE_PLAYBOOK.md.
+# F-085 — weekly namespace-aware model drift and retirement detection.
+# Offline regression tests run before the read-only live watcher. Findings
+# (exit 10) create or update one `model-watch`-labeled issue; catalog curation
+# and state updates remain explicitly human-driven. See MODEL_UPDATE_PLAYBOOK.
 name: Model Watch
 
 on:
   schedule:
-    - cron: "0 6 1 * *" # 06:00 UTC on the 1st of every month
+    - cron: "0 6 * * 1" # 06:00 UTC every Monday
   workflow_dispatch:
 
 permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: model-watch
+  cancel-in-progress: false
+
 jobs:
   model-watch:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      # Optional per-provider keys (repo secrets). A missing secret just skips
-      # that reconciliation source; the keyless OpenRouter signal always runs.
+      # Optional per-provider keys (repo secrets). Missing keys are reported as
+      # SKIPPED_NO_KEY. OpenRouter and the Cerebras public catalog are keyless.
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
@@ -32,22 +36,37 @@ jobs:
       QIANFAN_API_KEY: ${{ secrets.QIANFAN_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
-      CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
       ARK_API_KEY: ${{ secrets.ARK_API_KEY }}
       MINIMAX_INTL_API_KEY: ${{ secrets.MINIMAX_INTL_API_KEY }}
       MINIMAX_CN_API_KEY: ${{ secrets.MINIMAX_CN_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run model watch
+      - name: Run offline model-watch regression tests
+        run: python3 ops/scripts/tests/test_model_watch.py
+
+      - name: Run live model watch (read only)
         id: watch
         run: |
           set +e
-          python3 ops/scripts/model-watch.py --report /tmp/model-watch-report.md
+          python3 ops/scripts/model-watch.py --report /tmp/model-watch-report-raw.md
           code=$?
           set -e
+
+          alert_summary=$(grep '^Alert summary:' /tmp/model-watch-report-raw.md | head -1 || true)
+          if [ -z "$alert_summary" ]; then
+            alert_summary="Alert summary: unavailable"
+          fi
+          {
+            echo "## Action summary"
+            echo
+            echo "- $alert_summary"
+            echo
+            cat /tmp/model-watch-report-raw.md
+          } > /tmp/model-watch-report.md
+
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          cat /tmp/model-watch-report.md >> "$GITHUB_STEP_SUMMARY" || true
+          cat /tmp/model-watch-report.md >> "$GITHUB_STEP_SUMMARY"
           # 0 = no drift, 10 = findings, 3 = all sources unreachable (soft).
           if [ "$code" != "0" ] && [ "$code" != "10" ] && [ "$code" != "3" ]; then
             exit "$code"
@@ -60,7 +79,7 @@ jobs:
         run: |
           gh label create model-watch \
             --color 1D76DB \
-            --description "Automated model catalog drift reports (F-082)" \
+            --description "Model drift and retirement guardrails (F-085)" \
             --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
           existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --label model-watch \
             --state open --json number --jq '.[0].number // empty')
@@ -69,6 +88,6 @@ jobs:
               --body-file /tmp/model-watch-report.md
           else
             gh issue create --repo "$GITHUB_REPOSITORY" --label model-watch \
-              --title "Model watch: upstream model drift ($(date -u +%Y-%m))" \
+              --title "Model watch: actionable catalog findings ($(date -u +%Y-%m-%d))" \
               --body-file /tmp/model-watch-report.md
           fi

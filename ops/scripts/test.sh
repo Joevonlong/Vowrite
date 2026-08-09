@@ -43,6 +43,14 @@ else
 fi
 
 echo ""
+echo "▶ Tests — Model Watch (offline regression)"
+if (cd "$PROJECT_ROOT" && python3 ops/scripts/tests/test_model_watch.py); then
+    pass "Model-watch offline regression tests pass"
+else
+    fail "Model-watch offline regression tests failed"
+fi
+
+echo ""
 echo "▶ Build — VowriteMac"
 
 cd "$MAC_DIR"

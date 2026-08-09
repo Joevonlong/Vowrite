@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "evidenceFreshnessDays": 30,
+  "deprecations": [
+    {
+      "provider": "groq",
+      "model": "qwen/qwen3-32b",
+      "capability": "polish",
+      "retireAt": "2026-07-17T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "replacement": "openai/gpt-oss-120b",
+      "sourceURL": "https://console.groq.com/docs/deprecations",
+      "verifiedAt": "2026-08-09"
+    },
+    {
+      "provider": "groq",
+      "model": "llama-3.1-8b-instant",
+      "capability": "polish",
+      "retireAt": "2026-08-16T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "replacement": "openai/gpt-oss-20b",
+      "sourceURL": "https://console.groq.com/docs/deprecations",
+      "verifiedAt": "2026-08-09"
+    },
+    {
+      "provider": "groq",
+      "model": "llama-3.3-70b-versatile",
+      "capability": "polish",
+      "retireAt": "2026-08-16T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "replacement": "openai/gpt-oss-120b",
+      "sourceURL": "https://console.groq.com/docs/deprecations",
+      "verifiedAt": "2026-08-09"
+    }
+  ]
+}
