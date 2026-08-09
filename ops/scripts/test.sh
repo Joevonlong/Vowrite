@@ -260,6 +260,20 @@ else
     pass "VowriteApp (legacy) removed ✓"
 fi
 
+# --- Agent Parity (multi-agent SSOT drift lint, F-083) ---
+# Only runs when the full workspace surrounds this repo; standalone clones skip it.
+AGENT_PARITY="$PROJECT_ROOT/../scripts/check-agent-parity.sh"
+if [ -x "$AGENT_PARITY" ]; then
+    echo ""
+    echo "▶ Agent Parity (SSOT lint)"
+    if "$AGENT_PARITY" > /tmp/agent-parity.out 2>&1; then
+        pass "check-agent-parity.sh: all checks passed"
+    else
+        grep '❌' /tmp/agent-parity.out || true
+        fail "check-agent-parity.sh failed (full output: /tmp/agent-parity.out)"
+    fi
+fi
+
 # --- Summary ---
 echo ""
 echo "═══════════════════════════════════════"

@@ -488,7 +488,9 @@ if $IS_BETA; then
 else
     git add "$APPCAST_STABLE"
 fi
-git commit -m "$VERSION_NUM: $DESCRIPTION" || echo "  (nothing to commit)"
+# VOWRITE_RELEASE=1 exempts this commit from the pre-commit branch guard
+# (release version bumps touch Version.swift directly on main by design).
+VOWRITE_RELEASE=1 git commit -m "$VERSION_NUM: $DESCRIPTION" || echo "  (nothing to commit)"
 
 # Files are committed — the pre-build mutations are no longer "in flight",
 # so a later failure (duplicate tag, gh release error) should not trigger
