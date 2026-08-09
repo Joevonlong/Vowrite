@@ -79,8 +79,20 @@ public struct SplitAPIConfiguration: Codable, Equatable {
 
     public static let recommended = SplitAPIConfiguration(
         stt: APIEndpointConfiguration(provider: .groq, model: "whisper-large-v3-turbo"),
-        polish: APIEndpointConfiguration(provider: .deepseek, model: "deepseek-chat")
+        polish: APIEndpointConfiguration(provider: .deepseek, model: "deepseek-v4-flash")
     )
+}
+
+public enum PresetIDMigrationResult: Equatable, Sendable {
+    case unchanged
+    case renamed
+    case invalidatedUnavailablePreset
+}
+
+public struct UnavailableAPIPresetRecovery: Equatable, Sendable {
+    public let presetID: String
+    public let name: String
+    public let message: String
 }
 
 public enum APIConfig {
@@ -91,96 +103,88 @@ public enum APIConfig {
     private static let polishModelKey = StorageKeys.splitAPIPolishModel
     private static let polishBaseURLKey = StorageKeys.splitAPIPolishBaseURL
     private static let selectedPresetKey = StorageKeys.splitAPISelectedPresetID
+    private static let invalidatedPresetKey = StorageKeys.splitAPIInvalidatedPresetID
 
     public static var current: SplitAPIConfiguration {
         get {
-            SplitAPIConfiguration(
-                stt: APIEndpointConfiguration(
-                    provider: sttProvider,
-                    model: sttModel,
-                    baseURL: sttBaseURL
-                ),
-                polish: APIEndpointConfiguration(
-                    provider: polishProvider,
-                    model: polishModel,
-                    baseURL: polishBaseURL
-                )
-            )
+            ProviderModelConfigurationLock.readSnapshot {
+                configuration(from: VowriteStorage.defaults)
+            }
         }
         set {
-            stt = newValue.stt
-            polish = newValue.polish
+            ProviderModelConfigurationLock.performMutation {
+                write(newValue, to: VowriteStorage.defaults)
+            }
         }
     }
 
     public static var stt: APIEndpointConfiguration {
         get {
-            APIEndpointConfiguration(provider: sttProvider, model: sttModel, baseURL: sttBaseURL)
+            ProviderModelConfigurationLock.readSnapshot {
+                configuration(from: VowriteStorage.defaults).stt
+            }
         }
         set {
-            sttProvider = newValue.provider
-            sttModel = newValue.model
-            // Persist the plain configured URL, NOT `resolvedBaseURL` — the latter
-            // returns the OAuth-session-scoped override (e.g. Kimi Code's
-            // api.kimi.com/coding/v1) when one is active, which would otherwise get
-            // written into UserDefaults and keep routing requests to that endpoint
-            // even after sign-out. `baseURL` is already normalized by the
-            // initializer. Request-time resolution still happens via `resolvedBaseURL`.
-            sttBaseURL = newValue.baseURL
+            ProviderModelConfigurationLock.performMutation {
+                write(newValue, capability: .stt, to: VowriteStorage.defaults)
+            }
         }
     }
 
     public static var polish: APIEndpointConfiguration {
         get {
-            APIEndpointConfiguration(provider: polishProvider, model: polishModel, baseURL: polishBaseURL)
+            ProviderModelConfigurationLock.readSnapshot {
+                configuration(from: VowriteStorage.defaults).polish
+            }
         }
         set {
-            polishProvider = newValue.provider
-            polishModel = newValue.model
-            // See comment in `stt` setter above.
-            polishBaseURL = newValue.baseURL
+            ProviderModelConfigurationLock.performMutation {
+                write(newValue, capability: .polish, to: VowriteStorage.defaults)
+            }
         }
     }
 
     public static var sttProvider: APIProvider {
-        get { provider(forKey: sttProviderKey, fallback: .groq) }
-        set { VowriteStorage.defaults.set(newValue.rawValue, forKey: sttProviderKey) }
+        get { ProviderModelConfigurationLock.readSnapshot { provider(forKey: sttProviderKey, fallback: .groq, defaults: VowriteStorage.defaults) } }
+        set { ProviderModelConfigurationLock.performMutation { VowriteStorage.defaults.set(newValue.rawValue, forKey: sttProviderKey) } }
     }
 
     public static var sttModel: String {
-        get { string(forKey: sttModelKey) ?? "whisper-large-v3-turbo" }
-        set { VowriteStorage.defaults.set(newValue, forKey: sttModelKey) }
+        get { ProviderModelConfigurationLock.readSnapshot { VowriteStorage.defaults.string(forKey: sttModelKey) ?? "whisper-large-v3-turbo" } }
+        set { ProviderModelConfigurationLock.performMutation { VowriteStorage.defaults.set(newValue, forKey: sttModelKey) } }
     }
 
     public static var sttBaseURL: String {
-        get { string(forKey: sttBaseURLKey) ?? sttProvider.defaultBaseURL }
-        set { VowriteStorage.defaults.set(newValue, forKey: sttBaseURLKey) }
+        get { ProviderModelConfigurationLock.readSnapshot { configuration(from: VowriteStorage.defaults).stt.baseURL } }
+        set { ProviderModelConfigurationLock.performMutation { VowriteStorage.defaults.set(newValue, forKey: sttBaseURLKey) } }
     }
 
     public static var polishProvider: APIProvider {
-        get { provider(forKey: polishProviderKey, fallback: .deepseek) }
-        set { VowriteStorage.defaults.set(newValue.rawValue, forKey: polishProviderKey) }
+        get { ProviderModelConfigurationLock.readSnapshot { provider(forKey: polishProviderKey, fallback: .deepseek, defaults: VowriteStorage.defaults) } }
+        set { ProviderModelConfigurationLock.performMutation { VowriteStorage.defaults.set(newValue.rawValue, forKey: polishProviderKey) } }
     }
 
     public static var polishModel: String {
         // Fallback tracks DeepSeek's current chat tier — the legacy
         // `deepseek-chat` alias retires upstream on 2026-07-24.
-        get { string(forKey: polishModelKey) ?? "deepseek-v4-flash" }
-        set { VowriteStorage.defaults.set(newValue, forKey: polishModelKey) }
+        get { ProviderModelConfigurationLock.readSnapshot { VowriteStorage.defaults.string(forKey: polishModelKey) ?? "deepseek-v4-flash" } }
+        set { ProviderModelConfigurationLock.performMutation { VowriteStorage.defaults.set(newValue, forKey: polishModelKey) } }
     }
 
     public static var polishBaseURL: String {
-        get { string(forKey: polishBaseURLKey) ?? polishProvider.defaultBaseURL }
-        set { VowriteStorage.defaults.set(newValue, forKey: polishBaseURLKey) }
+        get { ProviderModelConfigurationLock.readSnapshot { configuration(from: VowriteStorage.defaults).polish.baseURL } }
+        set { ProviderModelConfigurationLock.performMutation { VowriteStorage.defaults.set(newValue, forKey: polishBaseURLKey) } }
     }
 
     public static var selectedPresetID: String? {
-        get { string(forKey: selectedPresetKey) }
+        get { ProviderModelConfigurationLock.readSnapshot { VowriteStorage.defaults.string(forKey: selectedPresetKey) } }
         set {
-            if let newValue {
-                VowriteStorage.defaults.set(newValue, forKey: selectedPresetKey)
-            } else {
-                VowriteStorage.defaults.removeObject(forKey: selectedPresetKey)
+            ProviderModelConfigurationLock.performMutation {
+                if let newValue {
+                    VowriteStorage.defaults.set(newValue, forKey: selectedPresetKey)
+                } else {
+                    VowriteStorage.defaults.removeObject(forKey: selectedPresetKey)
+                }
             }
         }
     }
@@ -194,18 +198,85 @@ public enum APIConfig {
     }
 
     public static func apply(_ configuration: SplitAPIConfiguration, presetID: String? = nil) {
-        current = configuration
-        selectedPresetID = presetID
+        ProviderModelConfigurationLock.performMutation {
+            writeAppliedConfiguration(
+                configuration,
+                presetID: presetID,
+                defaults: VowriteStorage.defaults
+            )
+        }
+    }
+
+    /// Deterministic seam used to prove a normal configuration transaction and
+    /// the migration share the same lock domain.
+    @discardableResult
+    static func apply(
+        _ configuration: SplitAPIConfiguration,
+        presetID: String? = nil,
+        defaults: UserDefaults,
+        lockDirectory: URL
+    ) -> Bool {
+        ProviderModelConfigurationLock.withExclusiveLock(
+            lockDirectory: lockDirectory,
+            unavailable: false
+        ) {
+            writeAppliedConfiguration(
+                configuration,
+                presetID: presetID,
+                defaults: defaults
+            )
+            return true
+        }
     }
 
     public static func apply(_ preset: APIPresetOption) {
         apply(preset.configuration, presetID: preset.id)
     }
 
-    /// Migrate renamed builtin preset IDs (chinaRecommended → siliconflowKimi)
-    public static func migratePresetIDs() {
-        if selectedPresetID == "builtin:chinaRecommended" {
-            selectedPresetID = "builtin:siliconflowKimi"
+    /// Migrates renamed IDs and explicitly invalidates built-ins that no
+    /// longer have a runnable production path. Endpoint values are preserved;
+    /// recovery always requires a visible user choice.
+    @discardableResult
+    public static func migratePresetIDs() -> PresetIDMigrationResult {
+        ProviderModelConfigurationLock.withProductionLock {
+            migratePresetIDs(in: VowriteStorage.defaults)
+        } ?? .unchanged
+    }
+
+    @discardableResult
+    static func migratePresetIDs(in defaults: UserDefaults) -> PresetIDMigrationResult {
+        let selectedID = defaults.string(forKey: selectedPresetKey)
+        if selectedID == "builtin:chinaRecommended" {
+            defaults.set("builtin:siliconflowKimi", forKey: selectedPresetKey)
+            return .renamed
+        }
+        if selectedID == BuiltInAPIPreset.localOllama.id {
+            defaults.set(selectedID, forKey: invalidatedPresetKey)
+            defaults.removeObject(forKey: selectedPresetKey)
+            return .invalidatedUnavailablePreset
+        }
+        return .unchanged
+    }
+
+    public static var pendingPresetRecovery: UnavailableAPIPresetRecovery? {
+        ProviderModelConfigurationLock.readSnapshot {
+            pendingPresetRecovery(in: VowriteStorage.defaults)
+        }
+    }
+
+    static func pendingPresetRecovery(in defaults: UserDefaults) -> UnavailableAPIPresetRecovery? {
+        guard defaults.string(forKey: invalidatedPresetKey)
+                == BuiltInAPIPreset.localOllama.id else { return nil }
+        return UnavailableAPIPresetRecovery(
+            presetID: BuiltInAPIPreset.localOllama.id,
+            name: "Local Ollama",
+            message: "This preset is unavailable because its speech-to-text engine is not included in this build. Your existing provider and model settings were preserved."
+        )
+    }
+
+    public static func acknowledgePresetRecoveryKeepingCurrentConfiguration() {
+        ProviderModelConfigurationLock.performMutation {
+            VowriteStorage.defaults.removeObject(forKey: invalidatedPresetKey)
         }
     }
 
@@ -214,17 +285,70 @@ public enum APIConfig {
             return
         }
         selectedPresetID = nil
+        ProviderModelConfigurationLock.performMutation {
+            VowriteStorage.defaults.removeObject(forKey: invalidatedPresetKey)
+        }
     }
 
-    private static func string(forKey key: String) -> String? {
-        VowriteStorage.defaults.string(forKey: key)
-    }
-
-    private static func provider(forKey key: String, fallback: APIProvider) -> APIProvider {
-        guard let rawValue = VowriteStorage.defaults.string(forKey: key),
+    private static func provider(
+        forKey key: String,
+        fallback: APIProvider,
+        defaults: UserDefaults
+    ) -> APIProvider {
+        guard let rawValue = defaults.string(forKey: key),
               let provider = APIProvider(rawValue: rawValue) else {
             return fallback
         }
         return provider
+    }
+
+    private static func configuration(from defaults: UserDefaults) -> SplitAPIConfiguration {
+        let sttProvider = provider(forKey: sttProviderKey, fallback: .groq, defaults: defaults)
+        let polishProvider = provider(forKey: polishProviderKey, fallback: .deepseek, defaults: defaults)
+        return SplitAPIConfiguration(
+            stt: APIEndpointConfiguration(
+                provider: sttProvider,
+                model: defaults.string(forKey: sttModelKey) ?? "whisper-large-v3-turbo",
+                baseURL: defaults.string(forKey: sttBaseURLKey) ?? sttProvider.defaultBaseURL
+            ),
+            polish: APIEndpointConfiguration(
+                provider: polishProvider,
+                model: defaults.string(forKey: polishModelKey) ?? "deepseek-v4-flash",
+                baseURL: defaults.string(forKey: polishBaseURLKey) ?? polishProvider.defaultBaseURL
+            )
+        )
+    }
+
+    private static func write(_ configuration: SplitAPIConfiguration, to defaults: UserDefaults) {
+        write(configuration.stt, capability: .stt, to: defaults)
+        write(configuration.polish, capability: .polish, to: defaults)
+    }
+
+    private static func writeAppliedConfiguration(
+        _ configuration: SplitAPIConfiguration,
+        presetID: String?,
+        defaults: UserDefaults
+    ) {
+        write(configuration, to: defaults)
+        if let presetID {
+            defaults.set(presetID, forKey: selectedPresetKey)
+        } else {
+            defaults.removeObject(forKey: selectedPresetKey)
+        }
+        defaults.removeObject(forKey: invalidatedPresetKey)
+    }
+
+    private static func write(
+        _ endpoint: APIEndpointConfiguration,
+        capability: ProviderModelCapability,
+        to defaults: UserDefaults
+    ) {
+        let keys = capability == .stt
+            ? (sttProviderKey, sttModelKey, sttBaseURLKey)
+            : (polishProviderKey, polishModelKey, polishBaseURLKey)
+        defaults.set(endpoint.provider.rawValue, forKey: keys.0)
+        defaults.set(endpoint.model, forKey: keys.1)
+        // Persist the configured URL, never an OAuth session override.
+        defaults.set(endpoint.baseURL, forKey: keys.2)
     }
 }

@@ -24,12 +24,18 @@ public enum StorageKeys {
     public static let splitAPIPolishModel = "splitAPI.polish.model"
     public static let splitAPIPolishBaseURL = "splitAPI.polish.baseURL"
     public static let splitAPISelectedPresetID = "splitAPI.selectedPresetID"
+    public static let splitAPIInvalidatedPresetID = "splitAPI.invalidatedPresetID"
 
     /// APIPreset — user-defined provider presets.
     public static let splitAPIUserPresets = "splitAPI.userPresets"
 
     /// APIConfigMigration — one-shot v0.1.x -> split-API migration flag.
     public static let splitAPIMigrationV1Complete = "splitAPI.migration.v1.complete"
+
+    /// F-084 provider-scoped model compatibility migration markers. The ID and
+    /// ruleset hash are written only after every journaled value is verified.
+    public static let providerModelCompatibilityMigrationID = "providerModelCompatibility.migrationID"
+    public static let providerModelCompatibilityRulesetHash = "providerModelCompatibility.rulesetHash"
 
     // MARK: - Modes (ModeManager)
 
@@ -133,7 +139,9 @@ public enum StorageKeys {
     public static let all: Set<String> = [
         splitAPISTTProvider, splitAPISTTModel, splitAPISTTBaseURL,
         splitAPIPolishProvider, splitAPIPolishModel, splitAPIPolishBaseURL,
-        splitAPISelectedPresetID, splitAPIUserPresets, splitAPIMigrationV1Complete,
+        splitAPISelectedPresetID, splitAPIInvalidatedPresetID,
+        splitAPIUserPresets, splitAPIMigrationV1Complete,
+        providerModelCompatibilityMigrationID, providerModelCompatibilityRulesetHash,
         vowriteModes, vowriteCurrentModeId,
         vowriteOutputStyles,
         promptUserPrompt, promptUserPromptLocked,

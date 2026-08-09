@@ -3,8 +3,15 @@ import Foundation
 /// Claude (Anthropic) Messages API client for text polishing.
 /// Claude uses its own API format — not OpenAI-compatible.
 public actor ClaudePolishService {
+    private let session: URLSession
 
-    public init() {}
+    public init() {
+        self.session = .shared
+    }
+
+    init(session: URLSession) {
+        self.session = session
+    }
 
     public func polish(
         text: String,
@@ -47,16 +54,19 @@ public actor ClaudePolishService {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+        let (bytes, response) = try await session.bytes(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw VowriteError.networkError("Invalid response from Claude API")
         }
 
         guard httpResponse.statusCode == 200 else {
-            var errorBody = ""
-            for try await line in bytes.lines { errorBody += line }
-            throw VowriteError.apiError("Claude API error \(httpResponse.statusCode): \(errorBody)")
+            // Do not consume or accumulate a provider error stream. Public failures
+            // are derived entirely from bounded response metadata.
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .claudePolishRequest,
+                response: httpResponse
+            )
         }
 
         var result = ""

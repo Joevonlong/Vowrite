@@ -6,10 +6,11 @@ public enum APIConnectionTester {
         apiKeyOverride: String? = nil
     ) async throws {
         let apiKey = apiKeyOverride?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? configuration.key
+        let payload = chatCompletionProbePayload(configuration: configuration)
 
         // Claude uses its own Messages API
         if configuration.provider == .claude {
-            try await testClaudeConnection(configuration: configuration, apiKey: apiKey)
+            try await testClaudeConnection(configuration: configuration, apiKey: apiKey, payload: payload)
             return
         }
 
@@ -30,12 +31,6 @@ public enum APIConnectionTester {
         // Provider-specific headers (e.g. OpenRouter requires HTTP-Referer)
         configuration.provider.applyHeaders(to: &request)
 
-        let payload: [String: Any] = [
-            "model": configuration.model,
-            "messages": [["role": "user", "content": "Say hi"]],
-            "max_tokens": 5
-        ]
-
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -44,12 +39,11 @@ public enum APIConnectionTester {
         }
 
         guard httpResponse.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            if httpResponse.statusCode == 401 {
-                let keyStatus = apiKey != nil ? "key present" : "NO KEY FOUND"
-                throw VowriteError.apiError("\(configuration.provider.rawValue): 401 Unauthorized [\(keyStatus)]")
-            }
-            throw VowriteError.apiError("Error \(httpResponse.statusCode): \(body)")
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .connectionTest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
     }
 
@@ -57,7 +51,8 @@ public enum APIConnectionTester {
 
     private static func testClaudeConnection(
         configuration: APIEndpointConfiguration,
-        apiKey: String?
+        apiKey: String?,
+        payload: [String: Any]
     ) async throws {
         let endpoint = "\(configuration.resolvedBaseURL)/messages"
         guard let url = URL(string: endpoint) else {
@@ -74,12 +69,6 @@ public enum APIConnectionTester {
             request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         }
 
-        let payload: [String: Any] = [
-            "model": configuration.model,
-            "max_tokens": 5,
-            "messages": [["role": "user", "content": "Say hi"]]
-        ]
-
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -88,13 +77,37 @@ public enum APIConnectionTester {
         }
 
         guard httpResponse.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            if httpResponse.statusCode == 401 {
-                let keyStatus = apiKey != nil ? "key present" : "NO KEY FOUND"
-                throw VowriteError.apiError("Claude (Anthropic): 401 Unauthorized [\(keyStatus)]")
-            }
-            throw VowriteError.apiError("Error \(httpResponse.statusCode): \(body)")
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .claudeConnectionTest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
+    }
+
+    /// Pure probe payload construction used by both OpenAI-compatible and
+    /// Claude-native connection tests. Probe requests obey the same model
+    /// safety and per-model override rules as production dictation requests.
+    static func chatCompletionProbePayload(
+        configuration: APIEndpointConfiguration
+    ) -> [String: Any] {
+        let provider = configuration.provider
+        let model = ProviderModelSafetyRules.safeModel(
+            providerID: provider.providerID,
+            capability: .polish,
+            storedModel: configuration.resolvedModel
+        )
+        let overrides = ProviderRegistry.shared.polishOverrides(
+            providerID: provider.providerID,
+            modelID: model
+        )
+        var payload: [String: Any] = [
+            "model": model,
+            "messages": [["role": "user", "content": "Say hi"]],
+            "max_tokens": 5
+        ]
+        applyPolishOverrides(to: &payload, overrides: overrides)
+        return payload
     }
 
     // MARK: - STT Connection Test
@@ -133,12 +146,11 @@ public enum APIConnectionTester {
         }
 
         guard httpResponse.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            if httpResponse.statusCode == 401 {
-                let keyStatus = configuration.key != nil ? "key present" : "NO KEY FOUND"
-                throw VowriteError.apiError("\(configuration.provider.rawValue): 401 Unauthorized [\(keyStatus)]")
-            }
-            throw VowriteError.apiError("STT Error \(httpResponse.statusCode): \(body)")
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .sttConnectionTest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
     }
 
@@ -168,12 +180,11 @@ public enum APIConnectionTester {
         }
 
         guard httpResponse.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            if httpResponse.statusCode == 401 {
-                let keyStatus = configuration.key != nil ? "key present" : "NO KEY FOUND"
-                throw VowriteError.apiError("Deepgram: 401 Unauthorized [\(keyStatus)]")
-            }
-            throw VowriteError.apiError("Deepgram STT Error \(httpResponse.statusCode): \(body)")
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .deepgramConnectionTest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
     }
 
