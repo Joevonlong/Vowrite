@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// Pre-builds a Polish API request during STT, so when transcription completes
@@ -8,18 +9,85 @@ import Foundation
 ///   2. `execute(transcript:)` — call when STT completes (injects text, fires request)
 ///   3. `warmUpConnection()` — call when recording starts (pre-warms TCP/TLS)
 public final class SpeculativePolish {
+    typealias FallbackPolish = (
+        _ text: String,
+        _ modeConfig: ModeConfig,
+        _ promptContext: PromptContext?
+    ) async throws -> String
+
+    enum TransportStrategy: Equatable {
+        case nativeService
+        case preparedOpenAICompatible
+    }
+
+    struct RequestIdentity: Equatable {
+        let providerID: String
+        let baseURL: String
+        let model: String
+        let authMethod: String
+        let credentialHash: String?
+    }
+
+    static func transportStrategy(for provider: APIProvider) -> TransportStrategy {
+        provider == .claude ? .nativeService : .preparedOpenAICompatible
+    }
+
+    static func requestIdentity(
+        providerID: String,
+        baseURL: String,
+        model: String,
+        authMethod: String,
+        credential: String?
+    ) -> RequestIdentity {
+        let credentialHash = credential.map {
+            SHA256.hash(data: Data($0.utf8)).map { String(format: "%02x", $0) }.joined()
+        }
+        return RequestIdentity(
+            providerID: providerID,
+            baseURL: baseURL,
+            model: model,
+            authMethod: authMethod,
+            credentialHash: credentialHash
+        )
+    }
 
     private var preparedConfig: PreparedConfig?
     private var warmedSession: URLSession?
+    private let configurationProvider: () -> APIEndpointConfiguration
+    private let fallbackPolish: FallbackPolish
 
-    public init() {}
+    public convenience init() {
+        self.init(
+            configurationProvider: { APIConfig.polish },
+            fallbackPolish: { text, modeConfig, promptContext in
+                try await AIPolishService().polish(
+                    text: text,
+                    modeConfig: modeConfig,
+                    promptContext: promptContext
+                )
+            }
+        )
+    }
+
+    init(
+        configurationProvider: @escaping () -> APIEndpointConfiguration,
+        fallbackPolish: @escaping FallbackPolish
+    ) {
+        self.configurationProvider = configurationProvider
+        self.fallbackPolish = fallbackPolish
+    }
 
     // MARK: - Step 1: Connection warmup (call on recording start)
 
     /// Pre-warms TCP/TLS connection to the Polish endpoint during recording.
     /// Runs in background, fire-and-forget.
     public func warmUpConnection() {
-        let configuration = APIConfig.polish
+        let configuration = configurationProvider()
+        guard Self.transportStrategy(for: configuration.provider) == .preparedOpenAICompatible else {
+            warmedSession?.invalidateAndCancel()
+            warmedSession = nil
+            return
+        }
         let baseURL = configuration.resolvedBaseURL
         guard let url = URL(string: "\(baseURL)/chat/completions") else { return }
 
@@ -48,10 +116,20 @@ public final class SpeculativePolish {
     /// Pre-builds everything for the Polish request except the transcript text.
     /// Call this right when recording stops — it runs in parallel with STT.
     public func prepare(modeConfig: ModeConfig, promptContext: PromptContext? = nil) {
-        let configuration = APIConfig.polish
-        let baseURL = configuration.resolvedBaseURL
+        let configuration = configurationProvider()
         let provider = configuration.provider
-        let model = modeConfig.polishModel ?? configuration.resolvedModel
+        guard Self.transportStrategy(for: provider) == .preparedOpenAICompatible else {
+            preparedConfig = nil
+            return
+        }
+
+        let baseURL = configuration.resolvedBaseURL
+        let selectedModel = modeConfig.polishModel ?? configuration.resolvedModel
+        let model = ProviderModelSafetyRules.safeModel(
+            providerID: provider.providerID,
+            capability: .polish,
+            storedModel: selectedModel
+        )
         let endpoint = "\(baseURL)/chat/completions"
 
         guard let url = URL(string: endpoint) else {
@@ -89,6 +167,13 @@ public final class SpeculativePolish {
         preparedConfig = PreparedConfig(
             request: request,
             systemPrompt: systemPrompt,
+            requestIdentity: Self.requestIdentity(
+                providerID: provider.providerID,
+                baseURL: baseURL,
+                model: model,
+                authMethod: KeyVault.preferredAuthMethod(for: provider),
+                credential: configuration.key
+            ),
             model: model,
             temperature: modeConfig.temperature,
             promptContext: promptContext,
@@ -108,9 +193,26 @@ public final class SpeculativePolish {
         promptContext: PromptContext? = nil,
         onPartial: ((String) -> Void)? = nil
     ) async throws -> String {
-        guard let config = preparedConfig else {
+        let currentConfiguration = configurationProvider()
+        let currentProvider = currentConfiguration.provider
+        let currentSelectedModel = modeConfig.polishModel ?? currentConfiguration.resolvedModel
+        let currentModel = ProviderModelSafetyRules.safeModel(
+            providerID: currentProvider.providerID,
+            capability: .polish,
+            storedModel: currentSelectedModel
+        )
+        let currentIdentity = Self.requestIdentity(
+            providerID: currentProvider.providerID,
+            baseURL: currentConfiguration.resolvedBaseURL,
+            model: currentModel,
+            authMethod: KeyVault.preferredAuthMethod(for: currentProvider),
+            credential: currentConfiguration.key
+        )
+        guard let config = preparedConfig,
+              Self.transportStrategy(for: currentProvider) == .preparedOpenAICompatible,
+              config.requestIdentity == currentIdentity else {
             // Fallback: no prepared config, use standard path
-            return try await AIPolishService().polish(text: transcript, modeConfig: modeConfig, promptContext: promptContext)
+            return try await fallbackPolish(transcript, modeConfig, promptContext)
         }
 
         // F-045: Expand context variables in the pre-built system prompt.
@@ -151,17 +253,14 @@ public final class SpeculativePolish {
         }
 
         // Non-streaming path
-        var payload: [String: Any] = [
-            "model": config.model,
-            "messages": [
-                ["role": "system", "content": expandedSystemPrompt],
-                ["role": "user", "content": wrappedText]
-            ],
-            "temperature": config.temperature,
-            "max_tokens": 4096
-        ]
-        // F-073: Apply per-model overrides (e.g. disable thinking mode).
-        applyPolishOverrides(to: &payload, overrides: config.polishOverrides)
+        let payload = makeOpenAICompatiblePolishPayload(
+            model: config.model,
+            systemPrompt: expandedSystemPrompt,
+            userPrompt: wrappedText,
+            temperature: config.temperature,
+            stream: false,
+            overrides: config.polishOverrides
+        )
 
         var request = config.request
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
@@ -170,9 +269,15 @@ public final class SpeculativePolish {
         let session = warmedSession ?? URLSession.shared
         let (data, response) = try await session.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown"
-            throw VowriteError.apiError("Polish API error: \(errorBody)")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VowriteError.networkError("Invalid response from polish API")
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .polishRequest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -194,18 +299,14 @@ public final class SpeculativePolish {
         wrappedText: String,
         onPartial: (String) -> Void
     ) async throws -> String {
-        var streamPayload: [String: Any] = [
-            "model": config.model,
-            "messages": [
-                ["role": "system", "content": expandedSystemPrompt],
-                ["role": "user", "content": wrappedText]
-            ],
-            "temperature": config.temperature,
-            "max_tokens": 4096,
-            "stream": true
-        ]
-        // F-073: Apply per-model overrides (e.g. disable thinking mode).
-        applyPolishOverrides(to: &streamPayload, overrides: config.polishOverrides)
+        let streamPayload = makeOpenAICompatiblePolishPayload(
+            model: config.model,
+            systemPrompt: expandedSystemPrompt,
+            userPrompt: wrappedText,
+            temperature: config.temperature,
+            stream: true,
+            overrides: config.polishOverrides
+        )
 
         var request = config.request
         request.httpBody = try JSONSerialization.data(withJSONObject: streamPayload)
@@ -213,10 +314,16 @@ public final class SpeculativePolish {
         let session = warmedSession ?? URLSession.shared
         let (bytes, response) = try await session.bytes(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            var errorBody = ""
-            for try await line in bytes.lines { errorBody += line }
-            throw VowriteError.apiError("Polish streaming error: \(errorBody)")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VowriteError.networkError("Invalid streaming response from polish API")
+        }
+        guard httpResponse.statusCode == 200 else {
+            // Do not consume or accumulate a provider error stream. Public failures
+            // are derived entirely from bounded response metadata.
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .polishStreamingRequest,
+                response: httpResponse
+            )
         }
 
         var result = ""
@@ -246,6 +353,12 @@ public final class SpeculativePolish {
         preparedConfig = nil
     }
 
+    /// Test-visible request boundary evidence. Claude-native preparation keeps
+    /// this nil, proving no OpenAI-compatible endpoint was constructed.
+    var preparedRequestURL: URL? {
+        preparedConfig?.request.url
+    }
+
     /// Maps the accumulated raw streaming buffer to the display-ready partial
     /// surfaced via `onPartial`. Strips reasoning-model `<think>` content so the
     /// chain-of-thought never flashes in the live partial as tokens arrive (V-024).
@@ -259,6 +372,7 @@ public final class SpeculativePolish {
     private struct PreparedConfig {
         let request: URLRequest
         let systemPrompt: String
+        let requestIdentity: RequestIdentity
         let model: String
         let temperature: Double
         let promptContext: PromptContext?

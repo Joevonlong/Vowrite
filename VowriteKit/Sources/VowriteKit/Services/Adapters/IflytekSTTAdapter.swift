@@ -136,7 +136,11 @@ public final class IflytekSTTAdapter: STTAdapter {
                 }
 
                 if response.code != 0 {
-                    throw IflytekError.apiError(code: response.code, message: response.message ?? "Unknown error")
+                    throw ProviderHTTPErrorPolicy.publicError(
+                        context: .iflytekSTTRequest,
+                        providerCode: response.code,
+                        requestID: response.sid
+                    )
                 }
 
                 if let result = response.data?.result {
@@ -376,8 +380,13 @@ public enum IflytekError: LocalizedError {
             return "Failed to convert audio to PCM 16kHz format"
         case .audioConversionError(let msg):
             return "Audio conversion error: \(msg)"
-        case .apiError(let code, let message):
-            return "iFlytek API error (\(code)): \(message)"
+        case .apiError(let code, _):
+            // Preserve the public enum case for source compatibility, but never
+            // surface the provider-controlled message through localizedDescription.
+            return ProviderHTTPErrorPolicy.publicError(
+                context: .iflytekSTTRequest,
+                providerCode: code
+            ).errorDescription
         }
     }
 }

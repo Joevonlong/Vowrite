@@ -29,8 +29,8 @@
         "defaultModel": "gpt-5.4-mini",
         "models": [
           { "id": "gpt-5.4-mini", "description": "Balanced default — fast and capable" },
-          { "id": "gpt-5.6-luna", "description": "New gen — fast, 1M context", "polishOverrides": { "reasoning_effort": "minimal" } },
-          { "id": "gpt-5.6-sol", "description": "Frontier flagship", "polishOverrides": { "reasoning_effort": "minimal" } },
+          { "id": "gpt-5.6-luna", "description": "New gen — fast, 1M context", "polishOverrides": { "reasoning_effort": "none" } },
+          { "id": "gpt-5.6-sol", "description": "Frontier flagship", "polishOverrides": { "reasoning_effort": "none" } },
           { "id": "gpt-5.4-nano", "description": "Cheapest, high-volume" }
         ]
       }
@@ -89,10 +89,7 @@
         "defaultModel": "openai/gpt-oss-120b",
         "models": [
           { "id": "openai/gpt-oss-120b", "description": "Strong general (light thinking)", "polishOverrides": { "reasoning_effort": "low" } },
-          { "id": "openai/gpt-oss-20b", "description": "Very fast, lighter (light thinking)", "polishOverrides": { "reasoning_effort": "low" } },
-          { "id": "llama-3.3-70b-versatile", "description": "Llama 3.3 — balanced" },
-          { "id": "llama-3.1-8b-instant", "description": "Fastest Llama" },
-          { "id": "qwen/qwen3-32b", "description": "Reasoning-focused (preview)", "polishOverrides": { "reasoning_effort": "none" } }
+          { "id": "openai/gpt-oss-20b", "description": "Very fast, lighter (light thinking)", "polishOverrides": { "reasoning_effort": "low" } }
         ]
       }
     },
@@ -133,9 +130,9 @@
       "capabilities": { "stt": true, "polish": true },
       "sttAdapter": "openai-compatible",
       "stt": {
-        "defaultModel": "whisper-large-v3",
+        "defaultModel": "openai/whisper-large-v3",
         "models": [
-          { "id": "whisper-large-v3", "description": "Higher accuracy" },
+          { "id": "openai/whisper-large-v3", "description": "Higher accuracy" },
           { "id": "nvidia/parakeet-tdt-0.6b-v3", "description": "NVIDIA Parakeet — EN/EU languages only (no Chinese)" }
         ]
       },
@@ -201,7 +198,6 @@
         "models": [
           { "id": "deepseek-ai/DeepSeek-V3", "description": "DeepSeek flagship via SiliconFlow" },
           { "id": "deepseek-ai/DeepSeek-V3.1-Terminus", "description": "DeepSeek V3.1 Terminus", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "zai-org/GLM-4.6", "description": "Zhipu GLM-4.6", "polishOverrides": { "enable_thinking": false } },
           { "id": "Qwen/Qwen3.5-4B", "description": "Newest small — free, 256K", "polishOverrides": { "enable_thinking": false } },
           { "id": "Qwen/Qwen3-8B", "description": "Fast, lightweight (free)", "polishOverrides": { "enable_thinking": false } },
           { "id": "Qwen/Qwen2.5-72B-Instruct", "description": "Qwen2.5 72B — high quality CN+EN" }
@@ -231,8 +227,8 @@
       "polish": {
         "defaultModel": "kimi-k2.6",
         "models": [
-          { "id": "kimi-k2.6", "description": "Recommended — top Kimi with thinking-off (k3 can't)", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "kimi-k2.5", "description": "Cheaper — final availability 2026-08-31", "polishOverrides": { "thinking": { "type": "disabled" } } }
+          { "id": "kimi-k2.6", "description": "Recommended — top Kimi with thinking disabled", "polishOverrides": { "thinking": { "type": "disabled" }, "temperature": 0.6 } },
+          { "id": "kimi-k2.5", "description": "Cheaper K2 generation", "polishOverrides": { "thinking": { "type": "disabled" }, "temperature": 0.6 } }
         ]
       }
     },
@@ -471,7 +467,7 @@
         "requiresKey": true
       },
       "capabilities": { "stt": false, "polish": true },
-      "sttNote": "xAI does not offer speech-to-text.",
+      "sttNote": "xAI offers native speech-to-text, but Vowrite support remains disabled until the F-088 adapter and validation gates pass.",
       "stt": {
         "defaultModel": "",
         "models": []

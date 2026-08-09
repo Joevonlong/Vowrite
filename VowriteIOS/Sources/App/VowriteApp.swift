@@ -47,9 +47,9 @@ struct VowriteApp: App {
         //    the OAuth-resolved (not plain) base URL (see KimiBaseURLRepairMigration).
         KimiBaseURLRepairMigration.runIfNeeded()
 
-        // 8. Rewrite retired DeepSeek aliases (deepseek-chat/reasoner shut down
-        //    upstream 2026-07-24) to deepseek-v4-flash.
-        DeepSeekLegacyModelMigration.runIfNeeded()
+        // 8. Provider-scoped compatibility migration. Modes are validation-only
+        //    and remain byte-for-byte unchanged; request boundaries protect them.
+        ProviderModelMigration202608.runIfNeeded()
 
         // Pre-generate sound feedback tones
         SoundFeedback.warmUp()

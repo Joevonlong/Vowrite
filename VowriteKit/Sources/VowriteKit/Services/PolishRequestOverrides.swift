@@ -32,3 +32,30 @@ func applyPolishOverrides(
         }
     }
 }
+
+/// Shared OpenAI-compatible payload builder used by both the ordinary and
+/// speculative paths. Keeping construction at one seam prevents a model
+/// override from being honored by one path but silently skipped by the other.
+func makeOpenAICompatiblePolishPayload(
+    model: String,
+    systemPrompt: String,
+    userPrompt: String,
+    temperature: Double,
+    stream: Bool,
+    overrides: [String: JSONValue]?
+) -> [String: Any] {
+    var payload: [String: Any] = [
+        "model": model,
+        "messages": [
+            ["role": "system", "content": systemPrompt],
+            ["role": "user", "content": userPrompt]
+        ],
+        "temperature": temperature,
+        "max_tokens": 4096
+    ]
+    if stream {
+        payload["stream"] = true
+    }
+    applyPolishOverrides(to: &payload, overrides: overrides)
+    return payload
+}

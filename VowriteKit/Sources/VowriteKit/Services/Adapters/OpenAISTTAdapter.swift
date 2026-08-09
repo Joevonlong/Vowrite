@@ -64,8 +64,11 @@ struct OpenAISTTAdapter: STTAdapter {
             throw VowriteError.networkError("Invalid response")
         }
         guard httpResponse.statusCode == 200 else {
-            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw VowriteError.apiError("STT API error (\(httpResponse.statusCode)): \(errorBody)")
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .sttRequest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
         guard let text = String(data: data, encoding: .utf8) else {
             throw VowriteError.apiError("Failed to decode STT response")

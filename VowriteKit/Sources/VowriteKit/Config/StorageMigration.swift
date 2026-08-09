@@ -81,20 +81,19 @@ public enum StorageMigration {
         // If target is .standard (macOS), skip
         guard target !== UserDefaults.standard else { return }
 
-        // Already migrated, skip
-        guard !target.bool(forKey: migrationKey) else { return }
-
         let source = UserDefaults.standard
 
-        for key in keysToMigrate {
-            guard let value = source.object(forKey: key) else { continue }
-            // Only write if target doesn't already have this key
-            if target.object(forKey: key) == nil {
-                target.set(value, forKey: key)
+        ProviderModelConfigurationLock.performMutation {
+            guard !target.bool(forKey: migrationKey) else { return }
+            for key in keysToMigrate {
+                guard let value = source.object(forKey: key) else { continue }
+                // Only write if target doesn't already have this key
+                if target.object(forKey: key) == nil {
+                    target.set(value, forKey: key)
+                }
             }
+            target.set(true, forKey: migrationKey)
+            target.synchronize()
         }
-
-        target.set(true, forKey: migrationKey)
-        target.synchronize()
     }
 }
