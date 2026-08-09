@@ -34,7 +34,7 @@ All contributors and automation scripts must follow these rules.
 ### Current Version
 
 ```
-v0.1.8.1
+v0.2.2.0
 ```
 
 ### Version Line
@@ -71,7 +71,7 @@ All commit messages **must be in English**.
 
 ### Version Release Commits
 
-When releasing a PATCH+ version, the commit message format is:
+When creating any stable release, the commit message format is:
 
 ```
 v0.1.6.0: <short summary of the release>
@@ -100,20 +100,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com).
 
 ### Workflow
 
-**During development (BUILD level):**
+**During development (before a release):**
 1. Write clear commit messages following the convention above
 2. For notable changes, add a bullet to the `[Unreleased]` section in `CHANGELOG.md`
 
-**When releasing (PATCH+ level):**
+**When releasing any four-segment version:**
 1. Run `ops/scripts/release.sh v0.1.6.0`
 2. Script automatically:
    - Renames `[Unreleased]` → `[0.1.6.0] — YYYY-MM-DD`
    - Creates new empty `[Unreleased]` section
-   - Updates version in `Info.plist` and `SettingsView.swift`
+   - Updates the macOS version in `VowriteMac/Resources/Info.plist` and `VowriteKit/Sources/VowriteKit/Version.swift`
    - Commits as `v0.1.6.0: <description>`
    - Creates annotated git tag `v0.1.6.0`
    - Builds and packages DMG
-3. After script: push with tags, create GitHub Release
+3. The script performs no network mutation; it writes a pinned publication intent, and `scripts/publish-release.sh --tag <tag>` atomically publishes the exact main commit, tag, artifact, and GitHub Release only after explicit authorization
 
 ### Entry Format
 
@@ -143,7 +143,7 @@ Always maintain comparison links at the bottom of `CHANGELOG.md`:
 
 ## 4. Version Number Update Locations
 
-For each PATCH+ release, update version in **all** of these:
+For every release, including a BUILD-segment release, update version in **all** of these:
 
 | Location | Field |
 |----------|-------|
@@ -153,26 +153,26 @@ For each PATCH+ release, update version in **all** of these:
 | Git tag | `v0.1.x.0` |
 | GitHub Release | Created with changelog content |
 
-BUILD updates: commit only, no version sync needed.
+Ordinary development commits do not change the version. A BUILD-segment increment is a real release and therefore uses the same version, changelog, tag, appcast, and artifact transaction.
 
 ---
 
 ## 5. Git Tag Standard
 
-- **PATCH+ releases only** — no tags for BUILD updates
+- **Every release is tagged**, including BUILD-segment and beta releases
 - **Annotated tags:** `git tag -a v0.1.6.0 -m "v0.1.6.0 — Short description"`
 - **Tag on the release commit** (the `v0.1.6.0:` commit), not on intermediate commits
-- **Push with tags:** `git push origin main --tags`
+- **Publish the pinned release:** `scripts/publish-release.sh --tag v0.1.6.0` (only after explicit publication authorization)
 
 ---
 
 ## 6. GitHub Release Standard
 
-- Created for every PATCH+ release
+- Created for every published release
 - **Title:** `Vowrite v0.1.6.0 — Short Description`
 - **Body:** Copy the changelog entry for this version
 - **Assets:** Attach the DMG file
-- Release is created automatically by `release.sh` (or manually via `gh release create`)
+- `release.sh` prepares a pinned local intent; `scripts/publish-release.sh` creates or resumes the GitHub Release after the atomic ref push
 
 ---
 
@@ -228,36 +228,51 @@ v0.2.0.0-rc1      Release candidate
 ## 8. Branch Strategy
 
 ```
-main              ← Default branch. Daily development + tagged releases.
-  └─ feature/xxx  ← Feature branches for larger changes.
+main                    ← Integration and tagged releases only.
+  └─ feature/F-xxx-*   ← One registered task in one isolated worktree.
 ```
 
 | Branch | Purpose | Push directly? |
 |--------|---------|---------------|
-| `main` | Development + releases (tagged) | ✅ Small fixes, docs, chores |
-| `feature/xxx` | Larger features or experiments | ✅ Freely, then squash merge to main |
+| `main` | Validated integration + tagged releases | No. Only the integration owner may publish a pinned result or an explicitly authorized release. |
+| `feature/F-xxx-*` / `fix/*` | Registered implementation task with an exclusive write-set | No. Commit locally, then hand off the immutable result SHA. |
 
 Releases are identified by **git tags**, not by branches.
 
 ### Feature workflow
 
 ```bash
-git checkout main && git pull
-git checkout -b feature/my-feature
-# ... develop and commit freely ...
-git checkout main
-git merge --squash feature/my-feature
-git commit -m "feat: short description"
-git push origin main
-git branch -d feature/my-feature
+# From a clean main integration checkout, create and register the task worktree.
+scripts/agent-task.sh start \
+  --task F-XXX \
+  --owner <worker-id> \
+  --branch feature/F-XXX-description \
+  --worktree /absolute/path/to/worktree \
+  --write-set 'path/**' \
+  --accept 'ops/scripts/test.sh'
+
+# Work and commit only in that worktree, then pin the clean result.
+scripts/agent-task.sh handoff --task F-XXX --owner <worker-id> --commit <full-result-sha>
+
+# A separate integration owner operates from main.
+scripts/agent-task.sh claim-integration --owner <integrator-id>
+scripts/agent-task.sh integrate --task F-XXX --owner <integrator-id> --message "feat: short description"
+
+# Remote publication is a separate, explicitly authorized action.
+scripts/agent-task.sh publish --task F-XXX --owner <integrator-id>
+scripts/agent-task.sh cleanup --task F-XXX --owner <integrator-id>
+scripts/agent-task.sh release-integration --owner <integrator-id>
 ```
+
+If a trusted tool already created the non-main worktree, register it with
+`scripts/agent-task.sh adopt` before the first write or commit. See `AGENTS.md`
+and the `vowrite-feature-lifecycle` skill for the complete state machine.
 
 ### Release workflow
 
 ```bash
 ops/scripts/release.sh v0.1.6.0 "Short description"
-git push origin main --tags
-gh release create v0.1.6.0 releases/Vowrite-v0.1.6.0.dmg --title "..."
+scripts/publish-release.sh --tag v0.1.6.0
 ```
 
 ---
@@ -265,13 +280,13 @@ gh release create v0.1.6.0 releases/Vowrite-v0.1.6.0.dmg --title "..."
 ## Quick Reference
 
 ```
-Daily work:     git checkout main
-                feat: add new feature → commit → push
+Daily work:     registered task branch + isolated worktree
+                → local commit → immutable handoff → integration owner
                 (add notable items to [Unreleased] in CHANGELOG.md)
 
-Big feature:    git checkout -b feature/xxx → develop → squash merge to main
+Any write:      scripts/agent-task.sh start/adopt → handoff → integrate
 
 Release:        ops/scripts/release.sh v0.1.6.0 "description"
-                → auto: version bump + changelog + build + commit + tag
-                → manual: git push origin main --tags + gh release create
+                → local: version bump + changelog + build + commit + tag + pinned intent
+                → authorized: scripts/publish-release.sh --tag v0.1.6.0
 ```

@@ -17,7 +17,7 @@ final class STTAdapterRoutingTests: XCTestCase {
     /// routing — `DictationEngine.setupErrorMessage(for:)` refuses to start a
     /// recording when `hasSTTSupport` is false. A provider like volcengine may
     /// declare a placeholder `sttAdapter` with no matching implementation while its
-    /// STT capability stays off (pending F-063); that's fine until the capability
+    /// STT capability stays off; that's fine until the capability
     /// flag flips, at which point this test starts checking it.
     func testEveryProviderRoutesToAnImplementedAdapter() {
         for p in ProviderRegistry.shared.sttProviders {

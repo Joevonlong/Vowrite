@@ -11,8 +11,8 @@
 #   4. Release build + code signing + DMG packaging
 #   5. EdDSA signing + appcast.xml update (Sparkle auto-updates)
 #   6. Git commit + annotated tag
-#   7. GitHub Release creation + DMG upload (interactive)
-#   8. Summary with verification steps
+#   7. Pinned release-publication intent (no network mutation)
+#   8. Summary with governed publication and verification steps
 #
 set -euo pipefail
 
@@ -116,10 +116,28 @@ if [ "$CURRENT_BRANCH" != "main" ]; then
 fi
 
 if [ -n "$(git -C "$PROJECT_ROOT" status --porcelain)" ]; then
-    echo "⚠️  Working directory has uncommitted changes."
-    read -p "   Continue anyway? (y/N) " -n 1 -r
-    echo
-    [[ $REPLY =~ ^[Yy]$ ]] || exit 1
+    echo "❌ Working directory must be clean before preparing a release."
+    echo "   Commit or move every unrelated change into its own registered task worktree."
+    exit 1
+fi
+
+for REQUIRED_COMMAND in jq shasum; do
+    if ! command -v "$REQUIRED_COMMAND" >/dev/null 2>&1; then
+        echo "❌ $REQUIRED_COMMAND is required to create the pinned release intent."
+        exit 1
+    fi
+done
+
+if ! git -C "$PROJECT_ROOT" remote get-url origin >/dev/null 2>&1; then
+    echo "❌ origin remote is required for release preparation."
+    exit 1
+fi
+echo "  Fetching remote refs and tags for collision checks..."
+git -C "$PROJECT_ROOT" fetch --tags --prune origin
+if git -C "$PROJECT_ROOT" show-ref --verify --quiet "refs/tags/$VERSION"; then
+    echo "❌ Release tag already exists locally or remotely: $VERSION"
+    echo "   Never overwrite a release tag; choose a new version or perform a separately reviewed incident recovery."
+    exit 1
 fi
 
 # Check required files
@@ -368,7 +386,7 @@ echo "  ✓ DMG created: $DMG_PATH"
 # --- Step 8: EdDSA sign DMG + update appcast ---
 # Hard gate: a DMG shipped without a valid EdDSA signature is a tag that every
 # Sparkle client will refuse to auto-update to. Any failure here must ABORT
-# before Step 9 (commit/tag) or Step 10 (GitHub release), for both stable and
+# before Step 9 (commit/tag) or Step 10 (publication intent), for both stable and
 # beta releases — not warn-and-continue.
 echo ""
 echo "▶ Step 8: EdDSA signing and appcast update..."
@@ -493,63 +511,66 @@ fi
 VOWRITE_RELEASE=1 git commit -m "$VERSION_NUM: $DESCRIPTION" || echo "  (nothing to commit)"
 
 # Files are committed — the pre-build mutations are no longer "in flight",
-# so a later failure (duplicate tag, gh release error) should not trigger
+# so a later failure (duplicate-tag race or intent creation) should not trigger
 # rollback_mutated_files.
 trap - ERR
 
 if ! git tag -a "$VERSION" -m "$VERSION — $DESCRIPTION" 2>/dev/null; then
     echo "  ❌ Tag $VERSION already exists."
-    echo "     This script never overwrites an existing tag. If you intend to"
-    echo "     replace it, delete it manually first, then re-run:"
-    echo "       git tag -d $VERSION"
-    echo "       git push origin :refs/tags/$VERSION   # only if already pushed"
+    echo "     This script never overwrites an existing tag. Choose a new version"
+    echo "     or stop for a separately reviewed release-incident recovery."
     exit 1
 fi
 echo "  ✓ Committed and tagged $VERSION"
 
-# --- Step 10: GitHub Release (interactive) ---
-echo ""
-echo "▶ Step 10: GitHub Release..."
-
-if command -v gh &> /dev/null; then
-    echo "  Create GitHub Release and upload DMG? (Y/n)"
-    read -p "   " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        GH_FLAGS=""
-        if $IS_BETA; then
-            GH_FLAGS="--prerelease"
-        fi
-
-        # Extract release notes from CHANGELOG for the body
-        GH_NOTES=""
-        if [ -f "$CHANGELOG" ] && ! $IS_BETA; then
-            GH_NOTES=$(sed -n "/## \[$VERSION_NUM\]/,/## \[/p" "$CHANGELOG" | sed '1d;$d')
-        fi
-
-        if [ -n "$GH_NOTES" ]; then
-            echo "$GH_NOTES" | gh release create "$VERSION" "$DMG_PATH" \
-                --repo "$GITHUB_REPO" \
-                --title "Vowrite $VERSION — $DESCRIPTION" \
-                --notes-file - \
-                $GH_FLAGS
-        else
-            gh release create "$VERSION" "$DMG_PATH" \
-                --repo "$GITHUB_REPO" \
-                --title "Vowrite $VERSION — $DESCRIPTION" \
-                --notes "$DESCRIPTION" \
-                $GH_FLAGS
-        fi
-
-        echo "  ✓ GitHub Release created: https://github.com/$GITHUB_REPO/releases/tag/$VERSION"
-    else
-        echo "  Skipped. Create manually:"
-        echo "  gh release create $VERSION $DMG_PATH --title \"Vowrite $VERSION — $DESCRIPTION\""
-    fi
-else
-    echo "  ⚠️  gh CLI not installed. Create release manually:"
-    echo "  gh release create $VERSION $DMG_PATH --title \"Vowrite $VERSION — $DESCRIPTION\""
+# Pin the only commit, tag, asset, and release metadata that the publication
+# wrapper may send to GitHub. This state lives in the shared Git directory so
+# it is not swept into the product commit and is visible from the main
+# integration checkout only after the release commit exists.
+COMMON_RAW="$(git -C "$PROJECT_ROOT" rev-parse --git-common-dir)"
+if [[ "$COMMON_RAW" != /* ]]; then
+    COMMON_RAW="$PROJECT_ROOT/$COMMON_RAW"
 fi
+COMMON_DIR="$(cd "$COMMON_RAW" && pwd -P)"
+RELEASE_STATE_DIR="$COMMON_DIR/vowrite-agent-platform"
+mkdir -p "$RELEASE_STATE_DIR"
+
+GH_NOTES="$DESCRIPTION"
+if [ -f "$CHANGELOG" ] && ! $IS_BETA; then
+    CHANGELOG_NOTES=$(sed -n "/## \[$VERSION_NUM\]/,/## \[/p" "$CHANGELOG" | sed '1d;$d')
+    if [ -n "$CHANGELOG_NOTES" ]; then
+        GH_NOTES="$CHANGELOG_NOTES"
+    fi
+fi
+DMG_RELATIVE="${DMG_PATH#"$PROJECT_ROOT/"}"
+[[ "$DMG_RELATIVE" != "$DMG_PATH" ]] || { echo "❌ Release asset must be inside the product repository."; exit 1; }
+DMG_SHA256="$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')"
+RELEASE_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse HEAD)"
+INTENT_TEMP="$(mktemp "$RELEASE_STATE_DIR/.release-intent.XXXXXX")"
+jq -n \
+    --arg tag "$VERSION" \
+    --arg version "$VERSION_NUM" \
+    --arg commit "$RELEASE_COMMIT" \
+    --arg repository "$GITHUB_REPO" \
+    --arg title "Vowrite $VERSION — $DESCRIPTION" \
+    --arg notes "$GH_NOTES" \
+    --arg asset "$DMG_RELATIVE" \
+    --arg asset_sha256 "$DMG_SHA256" \
+    --arg created_at "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
+    --argjson prerelease "$IS_BETA" \
+    '{schema:1,status:"prepared",tag:$tag,version:$version,commit:$commit,repository:$repository,title:$title,notes:$notes,asset:$asset,asset_sha256:$asset_sha256,prerelease:$prerelease,created_at:$created_at}' \
+    > "$INTENT_TEMP"
+chmod 600 "$INTENT_TEMP"
+mv "$INTENT_TEMP" "$RELEASE_STATE_DIR/release-intent.json"
+
+# --- Step 10: Prepare governed publication ---
+echo ""
+echo "▶ Step 10: Release publication intent prepared"
+echo "  ✓ Commit: $RELEASE_COMMIT"
+echo "  ✓ Tag:    $VERSION"
+echo "  ✓ Asset:  $DMG_RELATIVE"
+echo "  No network mutation has occurred. The governed wrapper performs the"
+echo "  atomic main+tag push and creates or resumes the GitHub Release."
 
 # --- Step 11: Summary ---
 echo ""
@@ -564,7 +585,7 @@ echo ""
 echo "  Next steps:"
 echo "  1. Review:  git log --oneline -3 main"
 echo "  2. Test:    open $DMG_PATH"
-echo "  3. Push:    git push origin main --tags"
+echo "  3. Publish: scripts/publish-release.sh --tag $VERSION"
 echo "  4. Verify:  curl -s https://vowrite.com/appcast.xml | head -5"
 echo ""
 if [[ "$RELEASE_TYPE" == "STABLE" ]]; then

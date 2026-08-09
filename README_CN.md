@@ -28,7 +28,7 @@
   <code>🎤 录音</code> → <code>📝 转录</code> → <code>✨ 润色</code> → <code>📋 插入</code>
 </p>
 
-Vowrite 是一款轻量级 macOS 菜单栏应用（+ iOS 键盘），将你的语音转化为整洁、润色过的文字，直接插入到光标所在位置。支持 15+ AI 服务商进行语音识别和文本润色。
+Vowrite 是一款轻量级 macOS 菜单栏应用（+ iOS 键盘），将你的语音转化为整洁、润色过的文字，直接插入到光标所在位置。支持 20+ AI 服务商进行语音识别和文本润色。
 
 不用打字，开口就行。
 
@@ -42,7 +42,7 @@ Vowrite 是一款轻量级 macOS 菜单栏应用（+ iOS 键盘），将你的�
 | 📋 | **智能输入** | 文字直接出现在光标位置 |
 | 🎯 | **全场景适配** | 原生应用、浏览器、Discord、VS Code 等 |
 | ⚡ | **预测式 LLM** | 录音时预热连接——每次听写省 ~200–500ms |
-| 🔌 | **15+ 服务商** | OpenAI、Groq、DeepSeek、Deepgram、Gemini、Claude、讯飞、MLX Server 等 |
+| 🔌 | **20+ 服务商** | OpenAI、Groq、DeepSeek、Deepgram、Gemini、Claude、讯飞、MLX Server 等 |
 | 🔑 | **密钥库** | API Key 按服务商存入 macOS 钥匙串，填一次全局复用 |
 | 📝 | **文本替换** | 自动纠正词汇，弹性模式匹配（STT 后 + LLM 后双位置替换） |
 | 🧠 | **自动学词** | 从你的修改中学习——自动将纠正的词汇加入词库 |
@@ -173,19 +173,21 @@ Vowrite/
 
 ## 🤖 AI Agent 指南
 
-本节面向在此代码库工作的 AI/LLM agent（Claude Code、Cursor、Copilot 等）。
+本节面向在此代码库工作的 coding agent，包括 Claude Code 与 Codex。
 
 ### 快速开始
 
 ```bash
 git clone https://github.com/Joevonlong/Vowrite.git
-cd Vowrite/VowriteMac
-swift build                     # 验证编译
+cd Vowrite
+scripts/bootstrap-agent-platform.sh
+cd VowriteMac && swift build
 ```
 
 ### 优先阅读
 
-- **`CLAUDE.md`** — 项目规范、架构、编译命令、提交格式、完成协议
+- **`AGENTS.md`** — 权威项目规范、worktree 协议、编译命令与 handoff 契约
+- **`CLAUDE.md`** — 仅用于导入 `AGENTS.md` 的 Claude Code 薄壳
 - **`CONTRIBUTING.md`** — 贡献指南（如存在）
 - **`Vowrite/CHANGELOG.md`** — 发布历史
 
@@ -195,7 +197,7 @@ swift build                     # 验证编译
 cd Vowrite && ops/scripts/test.sh
 ```
 
-无单元测试 target——测试为脚本驱动（编译验证、安全扫描、Bundle 校验）。
+`ops/scripts/test.sh` 会运行 VowriteKit 单元测试，以及编译、质量、安全、Bundle、parity 与 agent-platform 检查。
 
 ### 模块指南
 
@@ -205,34 +207,34 @@ cd Vowrite && ops/scripts/test.sh
 | `VowriteKit/Services/` | STT 适配器（OpenAI、Deepgram、讯飞等）+ AIPolishService（流式 GPT） |
 | `VowriteKit/Config/` | `providers.json` 注册表、`APIProvider`、`ProviderRegistry`、预设、密钥库 |
 | `VowriteKit/Engine/` | `DictationEngine`——跨平台编排器（录音 → 转录 → 润色 → 输出） |
-| `VowriteKit/Models/` | SwiftData 模型：`DictationRecord`、`Mode`、`ReplacementRule` |
-| `VowriteKit/Replacement/` | `ReplacementManager`——文本替换规则、弹性匹配、自动学习 |
+| `VowriteKit/Models/` | SwiftData 与领域模型：`DictationRecord`、`Mode`、`OutputStyle` 等 |
+| `VowriteKit/Config/ReplacementManager.swift` | 文本替换规则、弹性匹配、自动学习 |
 | `VowriteMac/Platform/` | macOS 专有：`HotkeyManager`（Carbon）、`TextInjector`（CGEvent）、`MacOverlayController`、Sparkle |
-| `VowriteIOS/` | iOS 应用 + 键盘扩展 |
+| `VowriteIOS/` | iOS 容器应用 |
+| `VowriteKeyboard/` | iOS 键盘扩展 |
 
 ### 添加新服务商
 
-1. 编辑 `VowriteKit/Sources/VowriteKit/Resources/providers.json`——添加包含 `id`、`name`、`baseURL`、`capabilities`（stt/polish）和 `models` 的条目
-2. 如果服务商使用标准 OpenAI 兼容 API，到此完成——`ProviderRegistry` 会自动处理
-3. 如果服务商使用非标准协议（如 Deepgram 的二进制上传或讯飞的 WebSocket），在 `VowriteKit/Services/` 中创建新的 `STTAdapter`
+1. 添加 `providers.json` 条目，并在 `APIProvider` 中加入 case 与 `providerID` 映射
+2. OpenAI-compatible STT 必须先确认服务商支持 Vowrite 使用的 multipart `/audio/transcriptions` 契约
+3. 非标准协议需在 `VowriteKit/Sources/VowriteKit/Services/Adapters/` 新增 `STTAdapter`，并在 `WhisperService` 注册 ID
 
 **完整参考见 [`docs/PROVIDER_GUIDE.md`](docs/PROVIDER_GUIDE.md)** — 字段规范、认证方式、完整示例和适配器参考实现。
 
 ### 添加新 STT 适配器
 
-1. 在 `VowriteKit/Sources/VowriteKit/Services/` 中创建新文件（如 `MySTTAdapter.swift`）
-2. 遵循 `STTAdapter` 协议——实现 `transcribe(audioURL:language:)` → `String`
+1. 在 `VowriteKit/Sources/VowriteKit/Services/Adapters/` 中创建新文件（如 `MySTTAdapter.swift`）
+2. 遵循当前 `STTAdapter` 协议，包括 model、language、prompt、key、base URL 与 provider 输入
 3. 在 STT 路由器（`WhisperService`）中注册适配器
 
 ### 发布流程
 
 ```bash
 cd Vowrite && ops/scripts/release.sh v0.2.1.0 "简短描述"
-git push origin main --tags
-gh release create v0.2.1.0 releases/Vowrite-v0.2.1.0.dmg --title "Vowrite v0.2.1.0 — 描述"
+scripts/publish-release.sh --tag v0.2.1.0
 ```
 
-发布脚本自动处理：更新 changelog → 版本号更新（Info.plist + SettingsView.swift）→ release 编译 → DMG 打包 → git commit + 带注释 tag。
+发布脚本处理 macOS changelog → `Info.plist` + `Version.swift` → release 编译 → DMG 签名/打包 → appcast → git commit/tag → 可选 GitHub Release；它不会 push，也不会生成 iOS 版本。
 
 ### 规范
 

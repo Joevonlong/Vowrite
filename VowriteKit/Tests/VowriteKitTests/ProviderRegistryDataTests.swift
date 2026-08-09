@@ -1,7 +1,7 @@
 import XCTest
 @testable import VowriteKit
 
-/// Data-integrity tests for the hand-edited `providers.json` (19+ providers),
+/// Data-integrity tests for the hand-edited `providers.json`,
 /// loaded by `ProviderRegistry`. These guard against typos that would silently
 /// break a provider: a malformed base URL, a trailing slash (which the request
 /// builder would turn into a double slash), a duplicate id, or an empty id.

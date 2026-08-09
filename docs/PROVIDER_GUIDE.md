@@ -1,183 +1,109 @@
 # Provider Integration Guide
 
-This guide explains how to add new AI providers to Vowrite by editing `providers.json`. This is a developer/contributor guide — not runtime configuration.
+Vowrite's built-in provider catalog is registry-first. Runtime metadata lives in `VowriteKit/Sources/VowriteKit/Resources/providers.json`, is decoded by `ProviderDefinition`, and is queried through `ProviderRegistry`. The Settings UI reads the registry through `APIProvider`.
 
-## Overview
+## Decide the change type
 
-Vowrite uses a JSON registry (`providers.json`) to define all supported AI providers. Each provider entry describes its API endpoint, authentication, capabilities (STT and/or polish), and available models.
+- Existing provider metadata or model refresh: edit `providers.json` and tests.
+- New provider: add a registry entry and an `APIProvider` enum case plus `providerID` mapping, because persisted configuration stores the enum raw value.
+- OpenAI-compatible STT: route to `openai-compatible` only after verifying the provider implements the multipart `/audio/transcriptions` contract.
+- Custom STT protocol: add an adapter under `VowriteKit/Sources/VowriteKit/Services/Adapters/`, register it in `WhisperService.adapterMap`, and reference the same adapter ID from the registry.
+- OpenAI-compatible polish: use the shared `AIPolishService` path. Put per-model request fields in `polishOverrides` when possible.
+- Native polish protocol or nonstandard auth: add a dedicated request service/router only when the real API cannot be represented by the shared path.
 
-**File location:**
-```
-VowriteKit/Sources/VowriteKit/Resources/providers.json
-```
+## Registry schema
 
-## providers.json Structure
-
-The file contains a top-level object with a `version` field and a `providers` array:
+The catalog currently uses schema version 2:
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "providers": [
-    { /* provider entry */ },
-    { /* provider entry */ }
+    {
+      "id": "example",
+      "name": "Example",
+      "baseURL": "https://api.example.com/v1",
+      "isOpenAICompatible": true,
+      "platformFilter": null,
+      "auth": {
+        "style": "bearer",
+        "keyPlaceholder": "ex-...",
+        "keyURL": "https://example.com/keys",
+        "requiresKey": true,
+        "supportsOAuth": false
+      },
+      "capabilities": { "stt": true, "polish": true },
+      "sttAdapter": "openai-compatible",
+      "headers": { "X-Optional-Header": "value" },
+      "stt": {
+        "defaultModel": "speech-model",
+        "models": [
+          { "id": "speech-model", "description": "Default speech model" }
+        ]
+      },
+      "polish": {
+        "defaultModel": "chat-model",
+        "models": [
+          {
+            "id": "chat-model",
+            "description": "Default polish model",
+            "polishOverrides": { "reasoning_effort": "none" }
+          }
+        ]
+      }
+    }
   ]
 }
 ```
 
-## Provider Entry Fields
+Core fields:
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | String | Yes | Unique identifier (lowercase, no spaces). Used as the internal key. |
-| `name` | String | Yes | Display name shown in the UI. |
-| `baseURL` | String | Yes | Base URL for API requests (e.g., `https://api.openai.com/v1`). |
-| `isOpenAICompatible` | Boolean | Yes | Whether the provider uses OpenAI-compatible API format. |
-| `auth` | Object | Yes | Authentication configuration (see below). |
-| `capabilities` | Object | Yes | `{ "stt": true/false, "polish": true/false }` |
-| `sttAdapter` | String | No | STT adapter ID. Use `"openai-compatible"` for standard providers. Omit if `stt` capability is false. |
-| `sttNote` | String | No | Optional note about STT capabilities shown in the UI. |
-| `headers` | Object | No | Extra HTTP headers to include with every request. |
-| `stt` | Object | Yes | STT configuration with `defaultModel` and `models` array. |
-| `polish` | Object | Conditional | Polish configuration. Required if `capabilities.polish` is true. |
+| Field | Meaning |
+|---|---|
+| `id` | Unique registry ID used by `APIProvider.providerID`. |
+| `name` | UI display name. |
+| `baseURL` | Base endpoint without a trailing slash. |
+| `platformFilter` | Optional platform exclusion; local providers are omitted on iOS. |
+| `auth` | Key requirement, placeholder/link, and optional OAuth metadata. |
+| `capabilities` | Whether STT and/or polish are selectable. |
+| `sttAdapter` | Router key; defaults to `openai-compatible` when absent. |
+| `headers` | Static provider headers added by `APIProvider.applyHeaders`. |
+| `stt` / `polish` | Default model and selectable model definitions. Omit an unsupported pipeline. |
+| `polishOverrides` | Typed request-body patch for one polish model; JSON `null` removes a default field. |
 
-### auth Object
+The Codable source in `Config/ProviderDefinition.swift` is authoritative when this guide and code differ.
 
-```json
-{
-  "style": "bearer",
-  "keyPlaceholder": "sk-...",
-  "keyURL": "https://example.com/api-keys",
-  "requiresKey": true
-}
-```
+## Custom STT adapter contract
 
-| Field | Description |
-|-------|-------------|
-| `style` | Auth method: `"bearer"` (most common), `"query"`, or `"custom"` |
-| `keyPlaceholder` | Placeholder text for the API key input field |
-| `keyURL` | URL where users can obtain an API key |
-| `requiresKey` | Whether an API key is required (`false` for local providers like Ollama) |
-
-### stt / polish Objects
-
-```json
-{
-  "defaultModel": "whisper-large-v3-turbo",
-  "models": [
-    { "id": "whisper-large-v3-turbo", "description": "Fastest option" },
-    { "id": "whisper-large-v3", "description": "Higher accuracy" }
-  ]
-}
-```
-
-## Adding an OpenAI-Compatible Provider
-
-Most providers use the OpenAI-compatible API format. Here's how to add one:
-
-### Step 1: Add the entry to providers.json
-
-```json
-{
-  "id": "example-provider",
-  "name": "Example Provider",
-  "baseURL": "https://api.example.com/v1",
-  "isOpenAICompatible": true,
-  "auth": {
-    "style": "bearer",
-    "keyPlaceholder": "ep-...",
-    "keyURL": "https://example.com/api-keys",
-    "requiresKey": true
-  },
-  "capabilities": { "stt": true, "polish": true },
-  "sttAdapter": "openai-compatible",
-  "stt": {
-    "defaultModel": "whisper-1",
-    "models": [
-      { "id": "whisper-1", "description": "Standard Whisper" }
-    ]
-  },
-  "polish": {
-    "defaultModel": "example-model-v1",
-    "models": [
-      { "id": "example-model-v1", "description": "Default model" },
-      { "id": "example-model-v2", "description": "Higher quality" }
-    ]
-  }
-}
-```
-
-### Step 2: Build and test
-
-```bash
-cd VowriteMac && swift build
-./build.sh   # build, sign, and launch
-```
-
-The new provider will appear in the Settings UI automatically. No code changes needed.
-
-### Step 3: Verify
-
-1. Launch the app
-2. Go to Settings > STT (or Polish)
-3. Select the new provider
-4. Enter an API key
-5. Test with a recording
-
-## Adding a Non-Standard Provider
-
-Providers that don't use the OpenAI-compatible API (e.g., Deepgram's binary upload, iFlytek's WebSocket protocol) require a custom STT adapter.
-
-### Step 1: Create an STT adapter
-
-Create a new file in `VowriteKit/Sources/VowriteKit/Services/` that conforms to the `STTAdapter` protocol:
+Adapters conform to the current public seam:
 
 ```swift
-// VowriteKit/Sources/VowriteKit/Services/ExampleSTTAdapter.swift
-import Foundation
-
-final class ExampleSTTAdapter: STTAdapter {
-    func transcribe(audioURL: URL, language: String?) async throws -> String {
-        // Implement your provider's API protocol here
-        // ...
-        return transcribedText
-    }
+public protocol STTAdapter {
+    func transcribe(
+        audioURL: URL,
+        model: String,
+        language: String?,
+        prompt: String?,
+        apiKey: String?,
+        baseURL: String,
+        provider: APIProvider
+    ) async throws -> String
 }
 ```
 
-### Step 2: Register the adapter
+Use `DeepgramSTTAdapter`, `QwenSTTAdapter`, and `IflytekSTTAdapter` as protocol-specific references. Unknown adapter IDs currently fall back to OpenAI-compatible routing, so `STTAdapterRoutingTests` must include every enabled adapter ID.
 
-Register your adapter in the STT router (`WhisperService`) so it's used when your provider is selected.
+## Evidence and validation
 
-### Step 3: Add the providers.json entry
+Use first-party provider documentation for endpoint, auth, model IDs, geographic constraints, pricing, data handling, and license. Mark any API behavior not exercised with authorized credentials as unverified.
 
-```json
-{
-  "id": "example-custom",
-  "name": "Example Custom",
-  "baseURL": "https://api.example.com",
-  "isOpenAICompatible": false,
-  "auth": { ... },
-  "capabilities": { "stt": true, "polish": false },
-  "sttAdapter": "example-custom",
-  "stt": {
-    "defaultModel": "default",
-    "models": [
-      { "id": "default", "description": "Default model" }
-    ]
-  }
-}
+Run:
+
+```bash
+cd VowriteKit && swift test
+cd ../VowriteMac && swift build
+cd .. && scripts/check-parity.sh
+ops/scripts/test.sh
 ```
 
-**Reference implementations:**
-- `DeepgramSTTAdapter` — HTTP POST with binary audio body + Token auth
-- `IFlytekSTTAdapter` — WebSocket streaming with HMAC-SHA256 auth
-- `ClaudePolishAdapter` — Anthropic native API (non-OpenAI chat format)
-
-## Important Notes
-
-- Changes to `providers.json` take effect after rebuilding the app.
-- Provider `id` values must be unique and lowercase.
-- The `models` array can be empty (`[]`) if the provider uses a fixed model or auto-selects.
-- For polish-only providers, set `"stt": false` in capabilities and include a minimal `stt` block.
-- When submitting a PR to add a new provider, include the provider name, a link to their API docs, and a note about any free tier availability.
+`ProviderRegistryDataTests` protects catalog integrity; add focused adapter, URL, request, override, migration, and error tests for changed behavior. A successful build is not a live provider connection test.

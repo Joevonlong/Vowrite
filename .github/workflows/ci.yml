@@ -23,6 +23,16 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  agent-platform:
+    name: Agent Platform Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify standalone Claude Code + Codex behavior
+        run: ops/scripts/test-agent-platform.sh
+
   # ── 1. macOS Build ──────────────────────────────────────────────────────────
   build-mac:
     name: Build (macOS)
