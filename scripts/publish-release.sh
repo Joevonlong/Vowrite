@@ -41,9 +41,12 @@ INTENT="$COMMON_DIR/vowrite-agent-platform/release-intent.json"
 [[ ! -L "$INTENT" ]] || die "release intent must be a regular file"
 
 HEAD_SHA="$(git rev-parse HEAD)"
+TAG_OBJECT="$(git rev-parse "refs/tags/$TAG" 2>/dev/null)" || die "tag '$TAG' does not exist"
+[[ "$(git cat-file -t "$TAG_OBJECT" 2>/dev/null || true)" == "tag" ]] \
+    || die "tag '$TAG' must be annotated"
 TAG_COMMIT="$(git rev-parse "$TAG^{commit}" 2>/dev/null)" || die "tag '$TAG' does not exist"
-jq -e --arg tag "$TAG" --arg commit "$HEAD_SHA" \
-    '.schema == 1 and (.status == "prepared" or .status == "git_published") and .tag == $tag and .commit == $commit
+jq -e --arg tag "$TAG" --arg tag_object "$TAG_OBJECT" --arg commit "$HEAD_SHA" \
+    '.schema == 2 and (.status == "prepared" or .status == "git_published") and .tag == $tag and .tag_object == $tag_object and .commit == $commit
      and (.repository | type == "string" and length > 0)
      and (.title | type == "string" and length > 0)
      and (.notes | type == "string")
@@ -96,9 +99,10 @@ if [[ "$STATUS" == "prepared" ]]; then
 fi
 
 REMOTE_MAIN="$(git ls-remote origin refs/heads/main | awk 'NR == 1 {print $1}')"
+REMOTE_TAG_OBJECT="$(git ls-remote origin "refs/tags/$TAG" | awk 'NR == 1 {print $1}')"
 REMOTE_TAG_COMMIT="$(git ls-remote origin "refs/tags/$TAG^{}" | awk 'NR == 1 {print $1}')"
-[[ "$REMOTE_MAIN" == "$HEAD_SHA" && "$REMOTE_TAG_COMMIT" == "$HEAD_SHA" ]] \
-    || die "origin does not resolve both main and $TAG to the prepared commit"
+[[ "$REMOTE_MAIN" == "$HEAD_SHA" && "$REMOTE_TAG_OBJECT" == "$TAG_OBJECT" && "$REMOTE_TAG_COMMIT" == "$HEAD_SHA" ]] \
+    || die "origin does not resolve main plus the exact prepared annotated tag object"
 if [[ "$STATUS" == "prepared" ]]; then
     update_intent '.status = "git_published" | .remote = "origin"' git_published_at
 fi

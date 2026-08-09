@@ -171,6 +171,7 @@ resolve_commit() {
 validate_scope() {
     local scope="$1"
     [[ -n "$scope" ]] || die "write-set cannot be empty"
+    [[ "$scope" != *[[:cntrl:]]* ]] || die "write-set cannot contain control characters"
     [[ "$scope" != /* ]] || die "write-set must be repository-relative: $scope"
     [[ "$scope" != ".." && "$scope" != ../* && "$scope" != */../* && "$scope" != */.. ]] || die "write-set cannot traverse parents: $scope"
     [[ "$scope" != ./* && "$scope" != */ && "$scope" != *//* ]] || die "write-set must use a normalized path: $scope"
@@ -875,6 +876,7 @@ claim_integration() {
 
 release_integration() {
     local owner=""
+    local manifest
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --owner) owner="${2:-}"; shift 2 ;;
@@ -884,6 +886,12 @@ release_integration() {
     [[ -n "$owner" ]] || die "release-integration requires --owner"
     acquire_lock
     lease_matches "$owner"
+    for manifest in "$TASKS_DIR"/*.json; do
+        [[ -f "$manifest" ]] || continue
+        if jq -e '.status == "ready" and (.integration_attempt | type == "object")' "$manifest" >/dev/null 2>&1; then
+            die "integration lease cannot be released while task '$(jq -r '.task' "$manifest")' needs reconciliation"
+        fi
+    done
     rm "$LEASE_FILE"
     echo "Integration lease released by $owner"
 }
@@ -1126,6 +1134,8 @@ abort_task() {
     task_status="$(jq -r '.status' "$manifest")"
     [[ "$task_status" == "active" || "$task_status" == "ready" ]] \
         || die "task '$task_id' can be aborted only while active or ready"
+    jq -e '.integration_attempt == null' "$manifest" >/dev/null 2>&1 \
+        || die "task '$task_id' has a pending integration attempt; the same integration owner must reconcile it before abort"
     worktree="$(jq -r '.worktree' "$manifest")"
     branch="$(jq -r '.branch' "$manifest")"
     [[ -d "$worktree" ]] || die "task worktree is missing: $worktree"

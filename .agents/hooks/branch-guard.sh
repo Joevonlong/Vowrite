@@ -616,6 +616,14 @@ scope_contains_path() {
     [[ "$path" == "$scope" ]]
 }
 
+manifest_write_set_valid() {
+    local manifest="$1"
+    jq -e '
+        (.write_set | type == "array" and length > 0)
+        and all(.write_set[]; type == "string" and (test("[[:cntrl:]]") | not))
+    ' "$manifest" >/dev/null 2>&1
+}
+
 repo_relative_candidate() {
     local root="$1"
     local candidate="$2"
@@ -666,6 +674,7 @@ registered_task_manifest() {
         [[ -f "$manifest" ]] || continue
         status="$(jq -r '.status' "$manifest")"
         [[ "$status" == "active" || "$status" == "refreshing" ]] || continue
+        manifest_write_set_valid "$manifest" || continue
         manifest_branch="$(jq -r '.branch' "$manifest")"
         manifest_worktree="$(jq -r '.worktree' "$manifest")"
         if [[ "$manifest_worktree" == "$root" ]] \
@@ -757,8 +766,10 @@ release_push_context_valid() {
     intent="$STATE_DIR/release-intent.json"
     [[ -f "$intent" && ! -L "$intent" ]] || return 1
     RELEASE_COMMIT="$(git rev-parse HEAD 2>/dev/null)" || return 1
-    jq -e --arg tag "$RELEASE_TAG" --arg commit "$RELEASE_COMMIT" \
-        '.schema == 1 and .status == "prepared" and .tag == $tag and .commit == $commit' \
+    RELEASE_TAG_OBJECT="$(git rev-parse "refs/tags/$RELEASE_TAG" 2>/dev/null)" || return 1
+    [[ "$(git cat-file -t "$RELEASE_TAG_OBJECT" 2>/dev/null || true)" == "tag" ]] || return 1
+    jq -e --arg tag "$RELEASE_TAG" --arg tag_object "$RELEASE_TAG_OBJECT" --arg commit "$RELEASE_COMMIT" \
+        '.schema == 2 and .status == "prepared" and .tag == $tag and .tag_object == $tag_object and .commit == $commit' \
         "$intent" >/dev/null 2>&1 || return 1
     tag_commit="$(git rev-parse "$RELEASE_TAG^{commit}" 2>/dev/null)" || return 1
     [[ "$tag_commit" == "$RELEASE_COMMIT" ]]
@@ -802,6 +813,8 @@ guard_pre_push() {
                     [[ "$release_tag_seen" -eq 0 ]] || deny "release push repeated refs/tags/$RELEASE_TAG"
                     [[ "$local_ref" == "refs/tags/$RELEASE_TAG" ]] \
                         || deny "release tag source must be refs/tags/$RELEASE_TAG"
+                    [[ "$local_sha" == "$RELEASE_TAG_OBJECT" ]] \
+                        || deny "release tag object does not match the prepared annotated tag"
                     [[ "$(git rev-parse "$local_sha^{commit}" 2>/dev/null || true)" == "$RELEASE_COMMIT" ]] \
                         || deny "release tag '$remote_ref' does not pin the prepared release commit"
                     release_tag_seen=1

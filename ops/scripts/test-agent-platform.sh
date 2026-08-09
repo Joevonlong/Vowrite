@@ -226,6 +226,20 @@ if [[ -x "$GUARD" && -n "$MAIN_ROOT" ]]; then
     expect_exit 2 "registered workers cannot run opaque source-mutating generators" run_hook "$feature_unknown_mutator_payload"
     expect_exit 2 "approved validators cannot hide a chained out-of-scope mutation" run_hook "$feature_validator_chain_payload"
     expect_exit 2 "apply_patch cannot escape through a symlinked directory" run_hook "$symlink_escape_patch_payload"
+    jq -n \
+        --arg task "fixture-feature" \
+        --arg branch "feature/test" \
+        --arg worktree "$(cd "$FEATURE_ROOT" && pwd -P)" \
+        --arg scope $'AGENTS.md\nVowriteKit/outside.swift' \
+        '{schema:1, task:$task, branch:$branch, worktree:$worktree, write_set:[$scope], status:"active"}' \
+        > "$FEATURE_COMMON/vowrite-agent-platform/tasks/fixture-feature.json"
+    expect_exit 2 "guard rejects a manifest write-set containing control characters" run_hook "$feature_outside_edit_payload"
+    jq -n \
+        --arg task "fixture-feature" \
+        --arg branch "feature/test" \
+        --arg worktree "$(cd "$FEATURE_ROOT" && pwd -P)" \
+        '{schema:1, task:$task, branch:$branch, worktree:$worktree, write_set:["AGENTS.md", "escape/**"], status:"active"}' \
+        > "$FEATURE_COMMON/vowrite-agent-platform/tasks/fixture-feature.json"
     expect_exit 2 "apply_patch Move is blocked on product main" run_hook "$move_patch_payload"
     expect_exit 2 "Bash redirection is blocked on product main" run_hook "$bash_write_payload"
     expect_exit 2 "Bash copy is blocked on product main" run_hook "$bash_copy_payload"
@@ -562,6 +576,7 @@ NEWLINE_WORKTREE="$TEST_ROOT/newline-worktree"
 DIRTY_WORKTREE="$TEST_ROOT/dirty-worktree"
 FEATURE_START_WORKTREE="$TEST_ROOT/feature-start-worktree"
 INVALID_SCOPE_WORKTREE="$TEST_ROOT/invalid-scope-worktree"
+INVALID_SCOPE_CONTROL_WORKTREE="$TEST_ROOT/invalid-scope-control-worktree"
 CONTROL_WORKTREE="$TEST_ROOT/control"$'\v'"worktree"
 ADOPT_WORKTREE="$TEST_ROOT/adopt-worktree"
 TASK_REMOTE="$TEST_ROOT/task-remote.git"
@@ -623,6 +638,9 @@ if [[ -x "$TASK_CLI" ]]; then
     expect_exit 2 "adopt rejects a primary checkout merely switched to a feature branch" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" adopt --task T-PRIMARY --owner codex --base \"$(git -C "$TASK_REPO" rev-parse main)\" --write-set 'src/**' --accept 'git diff --check'"
     git -C "$TASK_REPO" switch -q main
     expect_exit 2 "task write-set rejects ambiguous glob syntax" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-GLOB --owner codex --branch feature/T-GLOB --worktree \"$INVALID_SCOPE_WORKTREE\" --write-set 'src/Foo*Bar' --accept 'git diff --check'"
+    expect_exit 2 "task write-set rejects control characters" \
+        bash -c 'cd "$1" && "$2" start --task T-SCOPE-CONTROL --owner codex --branch feature/T-SCOPE-CONTROL --worktree "$3" --write-set "$4" --accept "git diff --check"' \
+        _ "$TASK_REPO" "$TASK_CLI" "$INVALID_SCOPE_CONTROL_WORKTREE" $'safe.txt\noverlap.txt'
     expect_exit 2 "task worktree rejects every control character" \
         bash -c 'cd "$1" && "$2" start --task T-CONTROL --owner codex --branch feature/T-CONTROL --worktree "$3" --write-set "control/**" --accept "git diff --check"' \
         _ "$TASK_REPO" "$TASK_CLI" "$CONTROL_WORKTREE"
@@ -727,6 +745,17 @@ if [[ -x "$TASK_CLI" ]]; then
         fail "interrupted integration leaves clean main plus durable recovery evidence"
     fi
     expect_exit 2 "worker refresh is blocked while an integration attempt needs reconciliation" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" refresh --task T-001 --owner codex --base '$interrupted_commit'"
+    PENDING_ABORT_SNAPSHOT="$TEST_ROOT/pending-integration-attempt.json"
+    cp "$TASK_COMMON/vowrite-agent-platform/tasks/T-001.json" "$PENDING_ABORT_SNAPSHOT"
+    expect_exit 2 "worker abort is blocked while an integration attempt needs reconciliation" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" abort --task T-001 --owner codex --reason 'must reconcile instead'"
+    if [[ ! -d "$TASK_WORKTREE" ]]; then
+        git -C "$TASK_REPO" worktree add -q -b feature/T-001 "$TASK_WORKTREE" "$result_commit"
+        cp "$PENDING_ABORT_SNAPSHOT" "$TASK_COMMON/vowrite-agent-platform/tasks/T-001.json"
+    fi
+    expect_exit 2 "integration lease cannot transfer while an attempt needs reconciliation" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" release-integration --owner integrator"
+    if [[ ! -f "$TASK_COMMON/vowrite-agent-platform/integration-lease.json" ]]; then
+        "$TASK_CLI" claim-integration --owner integrator >/dev/null
+    fi
     blocked_refresh_json="$(cd "$TASK_REPO" && "$TASK_CLI" status --task T-001 --json 2>/dev/null)"
     if jq -e --arg result "$result_commit" \
         '.status == "ready" and .result_commit == $result and (.integration_attempt | type == "object")' \
@@ -756,14 +785,29 @@ if [[ -x "$TASK_CLI" ]]; then
     RELEASE_ASSET_SHA256="$(shasum -a 256 "$TASK_REPO/releases/Vowrite-test.dmg" | awk '{print $1}')"
     jq -n \
         --arg tag "$RELEASE_TAG" \
+        --arg tag_object "$RELEASE_TAG_OBJECT" \
         --arg commit "$RELEASE_COMMIT" \
         --arg asset_sha256 "$RELEASE_ASSET_SHA256" \
-        '{schema:1,status:"prepared",tag:$tag,version:"0.0.0.1",commit:$commit,repository:"example.invalid/Vowrite",title:"Vowrite test",notes:"test",asset:"releases/Vowrite-test.dmg",asset_sha256:$asset_sha256,prerelease:false}' \
+        '{schema:2,status:"prepared",tag:$tag,tag_object:$tag_object,version:"0.0.0.1",commit:$commit,repository:"example.invalid/Vowrite",title:"Vowrite test",notes:"test",asset:"releases/Vowrite-test.dmg",asset_sha256:$asset_sha256,prerelease:false}' \
         > "$TASK_COMMON/vowrite-agent-platform/release-intent.json"
     expect_exit 2 "environment-only release context is rejected without its pinned tag" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 .agents/hooks/branch-guard.sh --pre-push"
     expect_exit 2 "release context rejects a main-only push" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
     expect_exit 2 "release context rejects a tag-only push" bash -c "cd \"$TASK_REPO\" && printf 'refs/tags/%s %s refs/tags/%s %s\n' '$RELEASE_TAG' '$RELEASE_TAG_OBJECT' '$RELEASE_TAG' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
     expect_exit 0 "prepared release context accepts exactly its pinned main and tag" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\nrefs/tags/%s %s refs/tags/%s %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" '$RELEASE_TAG' '$RELEASE_TAG_OBJECT' '$RELEASE_TAG' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
+    LIGHTWEIGHT_RELEASE_TAG="v0.0.0.2"
+    git -C "$TASK_REPO" tag "$LIGHTWEIGHT_RELEASE_TAG" "$RELEASE_COMMIT"
+    LIGHTWEIGHT_RELEASE_TAG_OBJECT="$(git -C "$TASK_REPO" rev-parse "refs/tags/$LIGHTWEIGHT_RELEASE_TAG")"
+    jq --arg tag "$LIGHTWEIGHT_RELEASE_TAG" --arg tag_object "$LIGHTWEIGHT_RELEASE_TAG_OBJECT" \
+        '.tag = $tag | .tag_object = $tag_object' \
+        "$TASK_COMMON/vowrite-agent-platform/release-intent.json" \
+        > "$TASK_COMMON/vowrite-agent-platform/release-intent.tmp"
+    mv "$TASK_COMMON/vowrite-agent-platform/release-intent.tmp" "$TASK_COMMON/vowrite-agent-platform/release-intent.json"
+    expect_exit 2 "release context rejects a lightweight tag even when it pins the prepared commit" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\nrefs/tags/%s %s refs/tags/%s %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" '$LIGHTWEIGHT_RELEASE_TAG' '$LIGHTWEIGHT_RELEASE_TAG_OBJECT' '$LIGHTWEIGHT_RELEASE_TAG' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$LIGHTWEIGHT_RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
+    jq --arg tag "$RELEASE_TAG" --arg tag_object "$RELEASE_TAG_OBJECT" \
+        '.tag = $tag | .tag_object = $tag_object' \
+        "$TASK_COMMON/vowrite-agent-platform/release-intent.json" \
+        > "$TASK_COMMON/vowrite-agent-platform/release-intent.tmp"
+    mv "$TASK_COMMON/vowrite-agent-platform/release-intent.tmp" "$TASK_COMMON/vowrite-agent-platform/release-intent.json"
     expect_exit 2 "release context cannot publish an unrelated branch" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/feature/test %s refs/heads/feature/test %s\n' '$RELEASE_COMMIT' \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 VOWRITE_RELEASE_TAG='$RELEASE_TAG' .agents/hooks/branch-guard.sh --pre-push"
     RELEASE_REMOTE="$TEST_ROOT/release-remote.git"
     FAKE_BIN="$TEST_ROOT/fake-bin"
