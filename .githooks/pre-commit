@@ -5,15 +5,15 @@
 # Install: git config core.hooksPath .githooks
 #
 # Behavior:
-#   ⓪ branch guard — blocks committing .swift changes while on main (Task Initiation
-#     Protocol backstop for ALL agents and humans). Exempt: squash-merge in progress
-#     (.git/SQUASH_MSG) or VOWRITE_RELEASE=1 (release.sh version-bump commits).
+#   ⓪ branch guard — delegates to the canonical .agents hook and blocks every
+#     staged product change on main unless a validated integration lease or
+#     VOWRITE_RELEASE=1 is present.
 #   ① gitleaks  — ALWAYS runs, cannot be skipped. Secret detection is a hard security gate.
 #   ② swiftlint — Only staged .swift files; only ERROR level blocks commit (warnings pass through).
 #   ③ swift-format — Lint report only, never blocks, never auto-rewrites.
 #
 # Skip ②③ (lint only): SKIP=lint git commit
-# There is NO way to skip ⓪ branch guard or ① gitleaks.
+# SKIP cannot bypass ⓪ branch guard or ① gitleaks.
 
 set -euo pipefail
 
@@ -25,23 +25,16 @@ if [[ "${SKIP:-}" == *lint* ]]; then
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ⓪ BRANCH GUARD — no .swift commits directly on main (see AGENTS.md)
+# ⓪ BRANCH GUARD — canonical policy shared with Claude Code and Codex
 # ─────────────────────────────────────────────────────────────────────────────
-CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
-if [[ "$CURRENT_BRANCH" == "main" && "${VOWRITE_RELEASE:-}" != "1" ]]; then
-    GIT_DIR="$(git rev-parse --git-dir)"
-    if [[ ! -f "$GIT_DIR/SQUASH_MSG" ]]; then
-        STAGED_SWIFT_COUNT="$(git diff --cached --name-only --diff-filter=ACMRD | grep -c '\.swift$' || true)"
-        if [[ "$STAGED_SWIFT_COUNT" -gt 0 ]]; then
-            echo "⛔ [pre-commit] Branch guard: $STAGED_SWIFT_COUNT staged .swift file(s) on 'main'."
-            echo "   Code work must happen on a branch (Task Initiation Protocol):"
-            echo "     git checkout -b feature/F-{ID}-{slug}   # or fix/{short-description}"
-            echo "   Legitimate exceptions handled automatically:"
-            echo "     • squash-merge onto main (.git/SQUASH_MSG present)"
-            echo "     • release.sh version bumps (VOWRITE_RELEASE=1)"
-            exit 1
-        fi
-    fi
+BRANCH_GUARD="$REPO_ROOT/.agents/hooks/branch-guard.sh"
+if [[ ! -x "$BRANCH_GUARD" ]]; then
+    echo "❌ [pre-commit] Canonical branch guard missing or not executable: $BRANCH_GUARD"
+    exit 1
+fi
+if ! "$BRANCH_GUARD" --pre-commit; then
+    echo "   Start work with scripts/agent-task.sh; only the integration owner writes main."
+    exit 1
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────

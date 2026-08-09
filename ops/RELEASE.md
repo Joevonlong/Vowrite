@@ -12,7 +12,7 @@ cd Vowrite && ops/scripts/release.sh --beta v0.2.2.0-beta.1 "Beta description"
 # Stable (updates appcast.xml)
 cd Vowrite && ops/scripts/release.sh v0.2.2.0 "Release description"
 
-git push origin main --tags
+scripts/publish-release.sh --tag v0.2.2.0
 ```
 
 ## What the script does (in order)
@@ -25,7 +25,8 @@ git push origin main --tags
 6. **Package** — DMG with Applications symlink + install.sh
 7. **Sparkle** — EdDSA-sign the DMG, update `docs/appcast.xml` (or `appcast-beta.xml`)
 8. **Git** — commit, annotated tag
-9. **GitHub Release** — uploads DMG, notes from CHANGELOG
+9. **Publication intent** — pins the release commit, tag, DMG, and notes outside the worktree
+10. **Governed publication** — `scripts/publish-release.sh` atomically pushes exactly pinned `main` + tag, then creates or resumes the GitHub Release
 
 Details on gates and CHANGELOG routing: `ops/CHECKLIST_RELEASE.md` and root `CLAUDE.md`.
 

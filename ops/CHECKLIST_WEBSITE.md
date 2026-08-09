@@ -51,12 +51,16 @@
    ops/scripts/website-check.sh
    ```
 
-6. **Commit:**
+6. **Commit in the registered website task worktree:**
    ```bash
    git add docs/pricing.html
    git commit -m "docs(website-A): refresh pricing for <reason>"
-   git push origin main
+   scripts/agent-task.sh handoff --task <task-id> --owner <worker-id> --commit "$(git rev-parse HEAD)"
    ```
+
+   The integration owner lands the pinned result with `scripts/agent-task.sh
+   integrate`; any remote publication is a separate authorized
+   `scripts/agent-task.sh publish` action.
 
 7. **Update state:** edit `Vowrite-internal/tracking/website.md` — bump "上次 Track A" date and add a History row.
 
@@ -91,12 +95,15 @@ Run immediately after `ops/scripts/release.sh` completes a stable release (the s
    ```
    Must be green before commit.
 
-5. **Commit:**
+5. **Commit in the registered website task worktree:**
    ```bash
    git add docs/index.html docs/pricing.html
    git commit -m "docs(website-B): sync to vX.Y.Z.B"
-   git push origin main
+   scripts/agent-task.sh handoff --task <task-id> --owner <worker-id> --commit "$(git rev-parse HEAD)"
    ```
+
+   The integration owner lands and, when explicitly authorized, publishes the
+   pinned result through `scripts/agent-task.sh`.
 
 6. **Update state:** edit `Vowrite-internal/tracking/website.md` — bump "上次 Track B" date + version, add History row.
 
@@ -123,12 +130,15 @@ Run immediately after `ops/scripts/release.sh` completes a stable release (the s
    ```bash
    ops/scripts/website-check.sh
    ```
-5. **Commit:**
+5. **Commit in the registered website task worktree:**
    ```bash
    git add docs/<assets>
    git commit -m "docs(website-C): <what changed>"
-   git push origin main
+   scripts/agent-task.sh handoff --task <task-id> --owner <worker-id> --commit "$(git rev-parse HEAD)"
    ```
+
+   The integration owner lands and, when explicitly authorized, publishes the
+   pinned result through `scripts/agent-task.sh`.
 
 ---
 

@@ -1,14 +1,14 @@
 {
-  "description": "Vowrite product repo hooks — delegates to the workspace shared branch guard when present; standalone clones fall back to .githooks/pre-commit.",
+  "description": "Vowrite product policy hooks. The canonical guard is stored in this repository so standalone clones and linked worktrees fail closed.",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "apply_patch",
+        "matcher": "Bash|apply_patch",
         "hooks": [
           {
             "type": "command",
-            "command": "G=\"$(git rev-parse --show-toplevel)/../.agents/hooks/codex-branch-guard.sh\"; if [ -x \"$G\" ]; then bash \"$G\"; else exit 0; fi",
-            "statusMessage": "Branch guard (Task Initiation Protocol)"
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/branch-guard.sh\"",
+            "statusMessage": "Vowrite worktree branch policy"
           }
         ]
       }

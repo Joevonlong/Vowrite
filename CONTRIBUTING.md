@@ -27,6 +27,12 @@ git remote add upstream git@github.com:Joevonlong/Vowrite.git
 git fetch upstream
 ```
 
+4. Activate the repository-owned policy hook:
+
+```bash
+scripts/bootstrap-agent-platform.sh
+```
+
 ### Build from Source
 
 There are two ways to build the project:
@@ -77,13 +83,20 @@ The build script compiles via SPM, packages into `Vowrite.app`, code-signs with 
    ```
 7. **Open a Pull Request** against the `main` branch of the upstream repository. Include a description of what changed and why.
 
+### AI-assisted changes
+
+Claude Code and Codex share the same rules, skills, and branch policy. Read `AGENTS.md`; `CLAUDE.md` is only an import wrapper. Every agent write task uses `scripts/agent-task.sh` to create an isolated worktree with a pinned base SHA, owner, write-set, and acceptance commands. Workers commit and hand off their result SHA; a single integration owner handles `main` and any authorized push.
+
+Run `ops/scripts/test-agent-platform.sh` to verify the standalone agent contract.
+
 ### Project Structure
 
 ```
 Vowrite/
 ├── VowriteKit/       # Shared cross-platform code (models, services, utilities)
 ├── VowriteMac/       # macOS app (menu bar, settings, overlay)
-├── VowriteIOS/       # iOS keyboard extension + container app
+├── VowriteIOS/       # iOS container app
+├── VowriteKeyboard/  # iOS keyboard extension
 ├── demos/            # Remotion demo videos
 ├── docs/             # Landing page (GitHub Pages)
 └── ops/              # Scripts (release, test, clean)
@@ -110,15 +123,16 @@ Start a [discussion](https://github.com/Joevonlong/Vowrite/discussions) or open 
 
 ### Adding a New AI Provider
 
-Vowrite already supports 15+ STT and polish providers, and we welcome PRs that add more. Provider definitions live in a single JSON file — for OpenAI-compatible APIs, **no Swift code is required**.
+Vowrite supports a broad catalog of STT and polish providers, and we welcome evidence-backed additions. Provider metadata lives in a single JSON registry. A new provider also needs an `APIProvider` case and `providerID` mapping because persisted settings use that enum; model-only updates to an existing provider are usually registry-only.
 
 **👉 See [`docs/PROVIDER_GUIDE.md`](docs/PROVIDER_GUIDE.md) for the full reference** (field schema, auth styles, examples, and how to add non-standard protocols).
 
 Quick summary:
 
-1. Edit `VowriteKit/Sources/VowriteKit/Resources/providers.json` — add an entry with `id`, `name`, `baseURL`, `auth`, `capabilities`, and model lists
-2. `cd VowriteMac && ./build.sh` — the new provider appears automatically in Settings
-3. Test with a real API key, then open a PR
+1. Verify endpoint, auth, models, region, data handling, and license against first-party documentation
+2. Add the registry entry and `APIProvider` mapping
+3. Run registry/adapter tests and the full suite
+4. Test with an authorized real API key, then state exactly which live paths were exercised
 
 Non-OpenAI-compatible STT (e.g. Deepgram-style binary upload, WebSocket protocols) requires a small `STTAdapter` Swift file in addition to the JSON entry — the guide covers this with reference implementations.
 
@@ -161,10 +175,12 @@ docs: update README with new provider list
 
 4-segment: `MAJOR.MINOR.PATCH.BUILD`
 
-- **BUILD** — bug fixes, infra (no tag/changelog)
+- **BUILD** — a smaller release iteration for bug fixes or infrastructure (tag + changelog when released)
 - **PATCH** — feature batches (tag + changelog)
 - **MINOR** — product milestones
 - **MAJOR** — breaking changes
+
+Ordinary commits do not bump a version. Every actual four-segment release, including a BUILD increment, is created by `ops/scripts/release.sh` and receives its changelog entry and tag.
 
 ### Branch Model
 
@@ -188,11 +204,11 @@ Vowrite uses a **beta-first, trunk-based release model** (inspired by [OpenClaw]
 ```bash
 # Beta release (for testing)
 cd Vowrite && ops/scripts/release.sh --beta v0.2.1.0-beta.1 "Beta description"
-git push origin main --tags
+scripts/publish-release.sh --tag v0.2.1.0-beta.1
 
 # Stable release (user-facing, after beta validation)
 cd Vowrite && ops/scripts/release.sh v0.2.1.0 "Release description"
-git push origin main --tags
+scripts/publish-release.sh --tag v0.2.1.0
 ```
 
 ### Hotfix (Emergency)

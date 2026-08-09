@@ -28,7 +28,7 @@
   <code>🎤 Record</code> → <code>📝 Transcribe</code> → <code>✨ Polish</code> → <code>📋 Insert</code>
 </p>
 
-Vowrite is a lightweight macOS menu bar app (+ iOS keyboard) that turns your voice into clean, polished text — inserted right where your cursor is. Powered by 15+ AI providers for transcription and text polishing.
+Vowrite is a lightweight macOS menu bar app (+ iOS keyboard) that turns your voice into clean, polished text — inserted right where your cursor is. Powered by 20+ AI providers for transcription and text polishing.
 
 No more typing. Just speak.
 
@@ -42,7 +42,7 @@ No more typing. Just speak.
 | 📋 | **Smart Injection** | Text appears directly at your cursor position |
 | 🎯 | **Works Everywhere** | Native apps, browsers, Discord, VS Code, and more |
 | ⚡ | **Speculative LLM** | Pre-warms connections during recording — saves ~200–500ms per dictation |
-| 🔌 | **15+ Providers** | OpenAI, Groq, DeepSeek, Deepgram, Gemini, Claude, iFlytek, MLX Server, and more |
+| 🔌 | **20+ Providers** | OpenAI, Groq, DeepSeek, Deepgram, Gemini, Claude, iFlytek, MLX Server, and more |
 | 🔑 | **Key Vault** | API keys stored per-provider in macOS Keychain — enter once, reuse everywhere |
 | 📝 | **Text Replacement** | Auto-correct vocabulary with flex pattern matching (post-STT + post-LLM) |
 | 🧠 | **Auto Dictionary** | Learns from your corrections — auto-adds words you fix to the dictionary |
@@ -173,19 +173,21 @@ Vowrite/
 
 ## 🤖 For AI Agents
 
-This section is for AI/LLM agents (Claude Code, Cursor, Copilot, etc.) working on this codebase.
+This section is for coding agents, including Claude Code and Codex, working on this codebase.
 
 ### Quick Start
 
 ```bash
 git clone https://github.com/Joevonlong/Vowrite.git
-cd Vowrite/VowriteMac
-swift build                     # verify build
+cd Vowrite
+scripts/bootstrap-agent-platform.sh
+cd VowriteMac && swift build
 ```
 
 ### Read First
 
-- **`CLAUDE.md`** — Project conventions, architecture, build commands, commit format, completion protocol
+- **`AGENTS.md`** — Authoritative product rules, worktree protocol, build commands, and handoff contract
+- **`CLAUDE.md`** — Thin Claude Code import of `AGENTS.md`
 - **`CONTRIBUTING.md`** — Contribution guidelines (if present)
 - **`Vowrite/CHANGELOG.md`** — Release history
 
@@ -195,7 +197,7 @@ swift build                     # verify build
 cd Vowrite && ops/scripts/test.sh
 ```
 
-No unit test target — testing is script-based (build verification, security scanning, bundle validation).
+`ops/scripts/test.sh` runs VowriteKit unit tests plus build, quality, security, bundle, parity, and agent-platform checks.
 
 ### Module Guide
 
@@ -205,34 +207,34 @@ No unit test target — testing is script-based (build verification, security sc
 | `VowriteKit/Services/` | STT adapters (OpenAI, Deepgram, iFlytek, etc.) + AIPolishService (streaming GPT) |
 | `VowriteKit/Config/` | `providers.json` registry, `APIProvider`, `ProviderRegistry`, presets, Key Vault |
 | `VowriteKit/Engine/` | `DictationEngine` — platform-agnostic orchestrator (record → transcribe → polish → output) |
-| `VowriteKit/Models/` | SwiftData models: `DictationRecord`, `Mode`, `ReplacementRule` |
-| `VowriteKit/Replacement/` | `ReplacementManager` — text replacement rules, flex matching, auto-learning |
+| `VowriteKit/Models/` | SwiftData and domain models such as `DictationRecord`, `Mode`, and `OutputStyle` |
+| `VowriteKit/Config/ReplacementManager.swift` | Text replacement rules, flex matching, and auto-learning |
 | `VowriteMac/Platform/` | macOS-only: `HotkeyManager` (Carbon), `TextInjector` (CGEvent), `MacOverlayController`, Sparkle |
-| `VowriteIOS/` | iOS app + keyboard extension |
+| `VowriteIOS/` | iOS container app |
+| `VowriteKeyboard/` | iOS keyboard extension |
 
 ### Adding a New Provider
 
-1. Edit `VowriteKit/Sources/VowriteKit/Resources/providers.json` — add a new entry with `id`, `name`, `baseURL`, `capabilities` (stt/polish), and `models`
-2. If the provider uses a standard OpenAI-compatible API, that's all — the `ProviderRegistry` handles the rest
-3. If the provider uses a non-standard protocol (like Deepgram's binary upload or iFlytek's WebSocket), create a new `STTAdapter` conforming to the `STTAdapter` protocol in `VowriteKit/Services/`
+1. Add the `providers.json` entry and an `APIProvider` case plus `providerID` mapping
+2. For OpenAI-compatible STT, verify the provider supports Vowrite's multipart `/audio/transcriptions` contract before selecting the shared adapter
+3. For a non-standard protocol, add an `STTAdapter` under `VowriteKit/Sources/VowriteKit/Services/Adapters/` and register its ID in `WhisperService`
 
 **See [`docs/PROVIDER_GUIDE.md`](docs/PROVIDER_GUIDE.md) for the full reference** — field schema, auth styles, complete examples, and reference adapter implementations.
 
 ### Adding a New STT Adapter
 
-1. Create a new file in `VowriteKit/Sources/VowriteKit/Services/` (e.g., `MySTTAdapter.swift`)
-2. Conform to the `STTAdapter` protocol — implement `transcribe(audioURL:language:)` → `String`
+1. Create a new file in `VowriteKit/Sources/VowriteKit/Services/Adapters/` (for example, `MySTTAdapter.swift`)
+2. Conform to the current `STTAdapter` protocol, including model, language, prompt, key, base URL, and provider inputs
 3. Register the adapter in the STT router (`WhisperService`)
 
 ### Release Process
 
 ```bash
 cd Vowrite && ops/scripts/release.sh v0.2.1.0 "Short description"
-git push origin main --tags
-gh release create v0.2.1.0 releases/Vowrite-v0.2.1.0.dmg --title "Vowrite v0.2.1.0 — Description"
+scripts/publish-release.sh --tag v0.2.1.0
 ```
 
-The release script handles: changelog update → version bump (Info.plist + SettingsView.swift) → release build → DMG packaging → git commit + annotated tag.
+The release script handles: macOS changelog promotion → version bump (`Info.plist` + `Version.swift`) → release build → DMG packaging/signing → appcast → git commit/tag → optional GitHub Release. It does not push `main` or tags and does not create an iOS version.
 
 ### Conventions
 

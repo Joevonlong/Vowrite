@@ -8,7 +8,7 @@ Vowrite is designed to be customizable. This guide covers all the ways you can p
 |------|-------|-------------|
 | App Icon | [APP_ICON_GUIDE.md](APP_ICON_GUIDE.md) | Replace the app icon with your own design |
 | Recording Indicator | [THEME_GUIDE.md](THEME_GUIDE.md) | Choose or create recording animation presets |
-| AI Providers | [PROVIDER_GUIDE.md](PROVIDER_GUIDE.md) | Add new AI providers via `providers.json` |
+| AI Providers | [PROVIDER_GUIDE.md](PROVIDER_GUIDE.md) | Add provider metadata, enum mapping, and adapters when required |
 
 ## App Icon
 
@@ -34,6 +34,6 @@ See [THEME_GUIDE.md](THEME_GUIDE.md) for details on creating new presets.
 
 ## AI Providers
 
-Vowrite supports 15+ AI providers for speech-to-text and text polishing. You can add new providers by editing `providers.json`.
+Vowrite supports a broad catalog of providers for speech-to-text and text polishing. Existing-provider model updates are usually registry-only; a new provider also needs an `APIProvider` mapping, and non-standard protocols need an adapter.
 
 See [PROVIDER_GUIDE.md](PROVIDER_GUIDE.md) for the full provider integration guide.
