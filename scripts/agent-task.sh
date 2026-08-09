@@ -17,6 +17,8 @@ Usage:
       --write-set PATH [--write-set PATH ...] --accept COMMAND [--accept COMMAND ...]
   scripts/agent-task.sh handoff --task ID --owner NAME --commit SHA
   scripts/agent-task.sh refresh --task ID --owner NAME [--base SHA]
+  scripts/agent-task.sh refresh-continue --task ID --owner NAME
+  scripts/agent-task.sh refresh-abort --task ID --owner NAME
   scripts/agent-task.sh ensure-integration-checkout --owner NAME --worktree ABS_PATH
   scripts/agent-task.sh claim-integration --owner NAME
   scripts/agent-task.sh release-integration --owner NAME
@@ -216,7 +218,7 @@ reject_scope_conflicts() {
     for manifest in "$TASKS_DIR"/*.json; do
         [[ -f "$manifest" ]] || continue
         existing_status="$(jq -r '.status' "$manifest")"
-        [[ "$existing_status" == "active" || "$existing_status" == "ready" ]] || continue
+        [[ "$existing_status" == "active" || "$existing_status" == "ready" || "$existing_status" == "refreshing" ]] || continue
         existing_task="$(jq -r '.task' "$manifest")"
         while IFS= read -r existing_scope; do
             for requested_scope in "${WRITE_SETS[@]}"; do
@@ -478,7 +480,6 @@ adopt_task() {
     local listed_worktree=""
     local main_worktree=""
     local worktree_line
-    local worktree_parent
     WRITE_SETS=()
     ACCEPTANCE=()
 
@@ -625,6 +626,7 @@ refresh_task() {
     local base_sha
     local manifest
     local worktree
+    local previous_status
     local temp_file
 
     while [[ $# -gt 0 ]]; do
@@ -646,18 +648,123 @@ refresh_task() {
         || die "task '$task_id' can be refreshed only while active or ready"
     worktree="$(jq -r '.worktree' "$manifest")"
     [[ -z "$(git -C "$worktree" status --porcelain)" ]] || die "task worktree is not clean: $worktree"
+    previous_status="$(jq -r '.status' "$manifest")"
     if ! git -C "$worktree" rebase "$base_sha"; then
-        git -C "$worktree" rebase --abort >/dev/null 2>&1 || true
-        die "rebase conflicted and was aborted; resolve the task against $base_sha in $worktree"
+        if rebase_in_progress "$worktree"; then
+            temp_file="$(mktemp "$STATE_DIR/.refresh-conflict.XXXXXX")"
+            jq \
+                --arg previous_status "$previous_status" \
+                --arg target_base_sha "$base_sha" \
+                --arg refresh_started_at "$(now_utc)" \
+                '.status = "refreshing" | .refresh_previous_status = $previous_status | .refresh_target_base_sha = $target_base_sha | .refresh_started_at = $refresh_started_at' \
+                "$manifest" > "$temp_file"
+            chmod 600 "$temp_file"
+            mv "$temp_file" "$manifest"
+            die "rebase stopped on a conflict in $worktree; resolve only declared write-set paths, stage them, then run refresh-continue"
+        fi
+        die "rebase failed before creating a resolvable conflict state"
     fi
+    complete_refresh "$manifest" "$base_sha" "$worktree"
+}
+
+rebase_in_progress() {
+    local worktree="$1"
+    local git_dir
+    git_dir="$(git -C "$worktree" rev-parse --absolute-git-dir 2>/dev/null)" || return 1
+    [[ -d "$git_dir/rebase-merge" || -d "$git_dir/rebase-apply" ]]
+}
+
+complete_refresh() {
+    local manifest="$1"
+    local base_sha="$2"
+    local worktree="$3"
+    local task_id
+    local temp_file
+
+    task_id="$(jq -r '.task' "$manifest")"
     [[ -z "$(git -C "$worktree" status --porcelain)" ]] || die "refresh left the task worktree dirty"
     temp_file="$(mktemp "$STATE_DIR/.refresh.XXXXXX")"
     jq --arg base_sha "$base_sha" --arg refreshed_at "$(now_utc)" \
-        '.base_sha = $base_sha | .status = "active" | .refreshed_at = $refreshed_at | del(.result_commit, .handed_off_at, .acceptance_log)' \
+        '.base_sha = $base_sha | .status = "active" | .refreshed_at = $refreshed_at | del(.result_commit, .handed_off_at, .acceptance_log, .refresh_previous_status, .refresh_target_base_sha, .refresh_started_at)' \
         "$manifest" > "$temp_file"
     chmod 600 "$temp_file"
     mv "$temp_file" "$manifest"
     echo "Task $task_id rebased onto $base_sha; run handoff again"
+}
+
+refresh_continue_task() {
+    local task_id=""
+    local owner=""
+    local manifest
+    local worktree
+    local target_base_sha
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --task) task_id="${2:-}"; shift 2 ;;
+            --owner) owner="${2:-}"; shift 2 ;;
+            *) die "unknown refresh-continue argument '$1'" ;;
+        esac
+    done
+    [[ -n "$task_id" && -n "$owner" ]] || die "refresh-continue requires --task and --owner"
+    validate_identity "$task_id" "task"
+    validate_identity "$owner" "owner"
+
+    acquire_lock
+    manifest="$(require_task_file "$task_id")"
+    owner_matches "$manifest" "$owner"
+    jq -e '.status == "refreshing" and (.refresh_target_base_sha | type == "string")' "$manifest" >/dev/null 2>&1 \
+        || die "task '$task_id' is not waiting on a refresh conflict"
+    worktree="$(jq -r '.worktree' "$manifest")"
+    target_base_sha="$(jq -r '.refresh_target_base_sha' "$manifest")"
+    rebase_in_progress "$worktree" || die "task '$task_id' has no Git rebase in progress"
+    [[ -z "$(git -C "$worktree" diff --name-only --diff-filter=U)" ]] \
+        || die "refresh still has unresolved paths; resolve and stage them first"
+    if ! GIT_EDITOR=true git -C "$worktree" rebase --continue; then
+        if rebase_in_progress "$worktree"; then
+            die "refresh reached another conflict; resolve declared write-set paths, stage them, and run refresh-continue again"
+        fi
+        die "refresh-continue failed outside a recoverable rebase state"
+    fi
+    complete_refresh "$manifest" "$target_base_sha" "$worktree"
+}
+
+refresh_abort_task() {
+    local task_id=""
+    local owner=""
+    local manifest
+    local worktree
+    local previous_status
+    local temp_file
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --task) task_id="${2:-}"; shift 2 ;;
+            --owner) owner="${2:-}"; shift 2 ;;
+            *) die "unknown refresh-abort argument '$1'" ;;
+        esac
+    done
+    [[ -n "$task_id" && -n "$owner" ]] || die "refresh-abort requires --task and --owner"
+    validate_identity "$task_id" "task"
+    validate_identity "$owner" "owner"
+
+    acquire_lock
+    manifest="$(require_task_file "$task_id")"
+    owner_matches "$manifest" "$owner"
+    jq -e '.status == "refreshing"' "$manifest" >/dev/null 2>&1 \
+        || die "task '$task_id' is not waiting on a refresh conflict"
+    worktree="$(jq -r '.worktree' "$manifest")"
+    previous_status="$(jq -r '.refresh_previous_status // "active"' "$manifest")"
+    rebase_in_progress "$worktree" || die "task '$task_id' has no Git rebase in progress"
+    git -C "$worktree" rebase --abort || die "failed to abort refresh rebase"
+    [[ -z "$(git -C "$worktree" status --porcelain)" ]] || die "refresh-abort left the task worktree dirty"
+    temp_file="$(mktemp "$STATE_DIR/.refresh-abort.XXXXXX")"
+    jq --arg previous_status "$previous_status" --arg refresh_aborted_at "$(now_utc)" \
+        '.status = $previous_status | .refresh_aborted_at = $refresh_aborted_at | del(.refresh_previous_status, .refresh_target_base_sha, .refresh_started_at)' \
+        "$manifest" > "$temp_file"
+    chmod 600 "$temp_file"
+    mv "$temp_file" "$manifest"
+    echo "Task $task_id refresh aborted; status restored to $previous_status"
 }
 
 ensure_integration_checkout() {
@@ -666,6 +773,7 @@ ensure_integration_checkout() {
     local listed_worktree=""
     local main_worktree=""
     local worktree_line
+    local worktree_parent
     local main_sha
     local checkout_file="$STATE_DIR/integration-checkout.json"
 
@@ -988,6 +1096,8 @@ case "$COMMAND" in
     adopt) adopt_task "$@" ;;
     handoff) handoff_task "$@" ;;
     refresh) refresh_task "$@" ;;
+    refresh-continue) refresh_continue_task "$@" ;;
+    refresh-abort) refresh_abort_task "$@" ;;
     ensure-integration-checkout) ensure_integration_checkout "$@" ;;
     claim-integration) claim_integration "$@" ;;
     release-integration) release_integration "$@" ;;
