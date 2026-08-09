@@ -233,6 +233,7 @@ is_read_only_command() {
     [[ "$command_text" =~ (^|[[:space:]])--open-files-in-pager(=|[[:space:]]|$) ]] && return 1
     [[ "$command_text" =~ (^|[[:space:]])--pre(=|[[:space:]]|$) ]] && return 1
     [[ "$command_text" =~ (^|[[:space:]])--(ext-diff|textconv)([[:space:]]|$) ]] && return 1
+    [[ "$command_text" =~ (^|[[:space:]])-O([^[:space:]]*|[[:space:]]+[^[:space:]]+) ]] && return 1
 
     if parse_git_invocation "$command_text"; then
         [[ "$GIT_DANGEROUS_GLOBAL" == false ]] || return 1

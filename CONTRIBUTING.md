@@ -27,11 +27,13 @@ git remote add upstream git@github.com:Joevonlong/Vowrite.git
 git fetch upstream
 ```
 
-4. Activate the repository-owned policy hook:
+4. Maintainers and trusted Claude Code/Codex sessions in the canonical repository must activate the repository-owned policy hook:
 
 ```bash
 scripts/bootstrap-agent-platform.sh
 ```
+
+Fork contributors following the ordinary pull-request flow below should skip this maintainer gate. Its pre-push policy deliberately reserves publication for a leased integration owner; GitHub CI still validates incoming pull requests.
 
 ### Build from Source
 
@@ -57,11 +59,11 @@ The build script compiles via SPM, packages into `Vowrite.app`, code-signs with 
 
 ### Submitting a Pull Request
 
-1. **Create a feature branch** from `main`:
+1. **Create a feature branch** from `main` in your fork checkout:
    ```bash
-   git checkout main
-   git pull upstream main
-   git checkout -b feature/your-feature
+   git switch main
+   git pull --ff-only upstream main
+   git switch -c feature/your-feature
    ```
 2. **Make your changes** following the conventions below.
 3. **Verify the build:**
@@ -85,7 +87,24 @@ The build script compiles via SPM, packages into `Vowrite.app`, code-signs with 
 
 ### AI-assisted changes
 
-Claude Code and Codex share the same rules, skills, and branch policy. Read `AGENTS.md`; `CLAUDE.md` is only an import wrapper. Every agent write task uses `scripts/agent-task.sh` to create an isolated worktree with a pinned base SHA, owner, write-set, and acceptance commands. Workers commit and hand off their result SHA; a single integration owner handles `main` and any authorized push.
+Claude Code and Codex share the same rules, skills, and branch policy. Read `AGENTS.md`; `CLAUDE.md` is only an import wrapper. In the canonical maintainer repository, bootstrap once, then create every agent write task from the clean `main` integration checkout as a registered sibling worktree:
+
+```bash
+scripts/bootstrap-agent-platform.sh
+scripts/agent-task.sh start \
+  --task F-XXX-example \
+  --owner codex \
+  --branch feature/F-XXX-example \
+  --worktree "$(cd .. && pwd)/Vowrite-F-XXX-example" \
+  --write-set 'VowriteKit/**' \
+  --accept 'ops/scripts/test.sh' \
+  --accept 'git diff --check'
+cd "$(cd .. && pwd)/Vowrite-F-XXX-example"
+```
+
+Replace the task ID, owner, branch, worktree, write-set, and acceptance commands with the reviewed scope. Commit only in that registered worktree, then run `scripts/agent-task.sh handoff` with the exact result SHA. A single lease owner integrates `main`; only that owner may perform an explicitly authorized publish. Do not switch the primary checkout to an unregistered feature branch and do not bypass hooks.
+
+External fork contributors may still use AI assistance, but should leave the maintainer Git gate disabled and use the ordinary fork/PR publication steps above from a human-controlled shell. Project-level Claude Code/Codex hooks still require registered worktrees for agent writes; the agent must never disable or bypass them.
 
 Run `ops/scripts/test-agent-platform.sh` to verify the standalone agent contract.
 
