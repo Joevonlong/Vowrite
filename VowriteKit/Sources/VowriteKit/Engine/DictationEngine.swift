@@ -371,7 +371,12 @@ public final class DictationEngine: ObservableObject {
                 // with the polish-prompt resolution above via the same pure helper).
                 let whisperLanguage = LanguageConfig.resolvedLanguageTag(modeLanguage: modeConfig.language, globalLanguage: LanguageConfig.globalLanguage)
                 let vocabPrompt = VocabularyManager.whisperPrompt
-                let rawTranscript = try await whisperService.transcribe(audioURL: url, language: whisperLanguage, prompt: vocabPrompt)
+                let rawTranscript = try await whisperService.transcribe(
+                    audioURL: url,
+                    language: whisperLanguage,
+                    prompt: vocabPrompt,
+                    model: modeConfig.sttModel
+                )
                 lastRawTranscript = rawTranscript
                 logger.debug("STT result: '\(rawTranscript, privacy: .private)'")
 

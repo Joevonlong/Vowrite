@@ -40,6 +40,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+- **F-084 Model request compatibility**: The iOS app and keyboard now apply the shared provider-scoped model safeguards and run the same locked, journaled migration even when the keyboard launches first, while preserving provider-less Mode overrides.
+
 - **Stored DeepSeek legacy aliases migrate automatically before the upstream shutdown**: same one-time migration as macOS (`deepseek-chat` / `deepseek-reasoner` → `deepseek-v4-flash`, upstream sunset 2026-07-24), registered in the iOS app entry point so keyboard dictation keeps working without touching settings.
 - **A failed AI polish or translation now shows a warning banner instead of silently typing the raw transcript**: If the polish/translate provider fails (e.g. an API key with no remaining credit), the keyboard still inserts the raw transcription as a fallback — but previously gave zero indication, so a "translation" that was actually the untranslated original looked like a success. The keyboard now shows a transient orange banner ("润色失败，已输入原文" / "翻译失败，已输入原文") for ~3 seconds after inserting the fallback text. Distinct from the red error state, which still means nothing was inserted. The failure is also logged visibly (os.Logger) instead of a debug-only print.
 

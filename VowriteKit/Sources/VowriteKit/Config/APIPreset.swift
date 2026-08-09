@@ -23,12 +23,18 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
         "builtin:\(rawValue)"
     }
 
+    /// True only when every endpoint has a production request path in this
+    /// build. The legacy ID remains decodable for explicit upgrade recovery.
+    public var isRuntimeEligible: Bool {
+        self != .localOllama
+    }
+
     public var name: String {
         switch self {
         case .recommended: return "Recommended"
         case .openAIAllInOne: return "OpenAI all-in-one"
         case .siliconflowKimi: return "SiliconFlow + Kimi"
-        case .localOllama: return "Local Ollama"
+        case .localOllama: return "Sherpa + Ollama"
         case .localMLX: return "Groq STT + MLX Polish"
         }
     }
@@ -42,7 +48,7 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
         case .siliconflowKimi:
             return "SiliconFlow STT (SenseVoice) + Kimi polish"
         case .localOllama:
-            return "Run both pipelines locally on Ollama"
+            return "Offline Sherpa STT + local Ollama polish"
         case .localMLX:
             return "Groq STT + local MLX polish (Apple Silicon optimized)"
         }
@@ -65,9 +71,9 @@ public enum BuiltInAPIPreset: String, CaseIterable, Identifiable {
         case .localOllama:
             return SplitAPIConfiguration(
                 stt: APIEndpointConfiguration(
-                    provider: .ollama,
-                    model: "whisper-large-v3-turbo",
-                    baseURL: APIProvider.ollama.defaultBaseURL
+                    provider: .sherpa,
+                    model: "sensevoice-small",
+                    baseURL: APIProvider.sherpa.defaultBaseURL
                 ),
                 polish: APIEndpointConfiguration(
                     provider: .ollama,
@@ -112,6 +118,7 @@ public enum APIPresetStore {
     public static var builtInPresets: [APIPresetOption] {
         BuiltInAPIPreset.allCases
             .filter { preset in
+                guard preset.isRuntimeEligible else { return false }
                 #if os(iOS)
                 return preset != .localOllama && preset != .localMLX
                 #else
@@ -132,15 +139,14 @@ public enum APIPresetStore {
 
     public static var userPresets: [UserAPIPreset] {
         get {
-            guard let data = VowriteStorage.defaults.data(forKey: userPresetsKey),
-                  let presets = try? JSONDecoder().decode([UserAPIPreset].self, from: data) else {
-                return []
+            ProviderModelConfigurationLock.readSnapshot {
+                loadUserPresets(from: VowriteStorage.defaults)
             }
-            return presets.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         }
         set {
-            guard let data = try? JSONEncoder().encode(newValue) else { return }
-            VowriteStorage.defaults.set(data, forKey: userPresetsKey)
+            ProviderModelConfigurationLock.performMutation {
+                writeUserPresets(newValue, to: VowriteStorage.defaults)
+            }
         }
     }
 
@@ -173,14 +179,20 @@ public enum APIPresetStore {
             name: trimmedName.isEmpty ? defaultPresetName(for: configuration) : trimmedName,
             configuration: configuration
         )
-        var presets = userPresets
-        presets.append(preset)
-        userPresets = presets
+        ProviderModelConfigurationLock.performMutation {
+            var presets = loadUserPresets(from: VowriteStorage.defaults)
+            presets.append(preset)
+            writeUserPresets(presets, to: VowriteStorage.defaults)
+        }
         return preset
     }
 
     public static func deleteUserPreset(id: UUID) {
-        userPresets.removeAll { $0.id == id }
+        ProviderModelConfigurationLock.performMutation {
+            var presets = loadUserPresets(from: VowriteStorage.defaults)
+            presets.removeAll { $0.id == id }
+            writeUserPresets(presets, to: VowriteStorage.defaults)
+        }
     }
 
     public static func defaultPresetName(for configuration: SplitAPIConfiguration) -> String {
@@ -193,5 +205,20 @@ public enum APIPresetStore {
 
     public static func userPresetID(for id: UUID) -> String {
         "user:\(id.uuidString.lowercased())"
+    }
+
+    private static func loadUserPresets(from defaults: UserDefaults) -> [UserAPIPreset] {
+        guard let data = defaults.data(forKey: userPresetsKey),
+              let presets = try? JSONDecoder().decode([UserAPIPreset].self, from: data) else {
+            return []
+        }
+        return presets.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+    }
+
+    private static func writeUserPresets(_ presets: [UserAPIPreset], to defaults: UserDefaults) {
+        guard let data = try? JSONEncoder().encode(presets) else { return }
+        defaults.set(data, forKey: userPresetsKey)
     }
 }

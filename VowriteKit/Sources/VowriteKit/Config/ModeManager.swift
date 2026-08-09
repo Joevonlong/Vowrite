@@ -96,7 +96,9 @@ public final class ModeManager: ObservableObject {
 
     private func saveModes() {
         if let data = try? JSONEncoder().encode(modes) {
-            VowriteStorage.defaults.set(data, forKey: Self.modesKey)
+            ProviderModelConfigurationLock.performMutation {
+                VowriteStorage.defaults.set(data, forKey: Self.modesKey)
+            }
         }
     }
 

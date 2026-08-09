@@ -529,7 +529,12 @@ enum SettingsConnectionTester {
             request.setValue("Vowrite", forHTTPHeaderField: "X-Title")
         }
 
-        request.httpBody = transcriptionProbeBody(boundary: boundary, model: configuration.model)
+        let safeModel = ProviderModelSafetyRules.safeModel(
+            providerID: configuration.provider.providerID,
+            capability: .stt,
+            storedModel: configuration.resolvedModel
+        )
+        request.httpBody = transcriptionProbeBody(boundary: boundary, model: safeModel)
 
         let (data, response) = try await URLSession.shared.data(for: request)
 

@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var sttAPIKey: String = ""
     @State private var polishAPIKey: String = ""
     @State private var soundFeedbackEnabled: Bool = SoundFeedback.isEnabled
+    @State private var presetRecovery = APIConfig.pendingPresetRecovery
 
     // Local state for translation pickers — decoupled from modeManager to prevent
     // scroll-position snapping caused by @ObservedObject re-renders during picker interaction.
@@ -31,6 +32,29 @@ struct SettingsView: View {
             Form {
                 // API Preset
                 Section("Quick Setup") {
+                    if let recovery = presetRecovery {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("\(recovery.name) preset unavailable", systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            Text(recovery.message)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            HStack {
+                                Button("Use Recommended") {
+                                    let preset = BuiltInAPIPreset.recommended
+                                    APIConfig.apply(preset.configuration, presetID: preset.id)
+                                    syncStateFromConfig()
+                                    presetRecovery = nil
+                                }
+                                Button("Keep Current") {
+                                    APIConfig.acknowledgePresetRecoveryKeepingCurrentConfiguration()
+                                    presetRecovery = nil
+                                }
+                            }
+                            .font(.caption)
+                        }
+                    }
+
                     ForEach(APIPresetStore.builtInPresets, id: \.id) { preset in
                         Button {
                             APIConfig.apply(preset)
@@ -211,11 +235,20 @@ struct SettingsView: View {
     }
 
     private func applyConfig() {
-        APIConfig.sttProvider = sttProvider
-        APIConfig.sttModel = sttModel
-        APIConfig.polishProvider = polishProvider
-        APIConfig.polishModel = polishModel
-        APIConfig.clearSelectedPresetIfNeeded(for: APIConfig.current)
+        let existing = APIConfig.current
+        let configuration = SplitAPIConfiguration(
+            stt: APIEndpointConfiguration(
+                provider: sttProvider,
+                model: sttModel,
+                baseURL: existing.stt.baseURL
+            ),
+            polish: APIEndpointConfiguration(
+                provider: polishProvider,
+                model: polishModel,
+                baseURL: existing.polish.baseURL
+            )
+        )
+        APIConfig.apply(configuration)
     }
 
     private func saveKey(_ key: String, for provider: APIProvider) {

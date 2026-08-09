@@ -30,13 +30,6 @@ final class AppState: ObservableObject {
     var totalDictations: Int { engine.totalDictations }
 
     init() {
-        MiniMaxMigration.runIfNeeded()
-        MiniMaxOAuthPurge.runIfNeeded()
-        APIConfigMigration.runIfNeeded()
-        APIConfig.migratePresetIDs()
-        KimiBaseURLRepairMigration.runIfNeeded()
-        DeepSeekLegacyModelMigration.runIfNeeded()
-
         let schema = Schema([DictationRecord.self])
         let primary = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         if let container = try? ModelContainer(for: schema, configurations: [primary]) {

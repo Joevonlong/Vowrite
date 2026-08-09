@@ -1,12 +1,34 @@
 import Foundation
 
 public final class AIPolishService {
-    private let claudeService = ClaudePolishService()
+    private let configurationProvider: () -> APIEndpointConfiguration
+    private let credentialProvider: (APIEndpointConfiguration) -> String?
+    private let claudeService: ClaudePolishService
+    private let session: URLSession
 
-    public init() {}
+    public convenience init() {
+        self.init(
+            configurationProvider: { APIConfig.polish },
+            credentialProvider: { $0.key },
+            claudeService: ClaudePolishService(),
+            session: .shared
+        )
+    }
+
+    init(
+        configurationProvider: @escaping () -> APIEndpointConfiguration,
+        credentialProvider: @escaping (APIEndpointConfiguration) -> String?,
+        claudeService: ClaudePolishService,
+        session: URLSession
+    ) {
+        self.configurationProvider = configurationProvider
+        self.credentialProvider = credentialProvider
+        self.claudeService = claudeService
+        self.session = session
+    }
 
     public func polish(text: String, modeConfig: ModeConfig? = nil, promptContext: PromptContext? = nil) async throws -> String {
-        let configuration = APIConfig.polish
+        let configuration = configurationProvider()
         let baseURL = configuration.resolvedBaseURL
         let provider = configuration.provider
         let config = modeConfig ?? ModeManager.currentModeConfig
@@ -15,7 +37,12 @@ public final class AIPolishService {
         // OAuth-active providers may rewrite the requested model server-side
         // (e.g. Kimi Code Coding Plan → `kimi-for-coding`), so when no mode
         // override is set, prefer the OAuth-resolved model alias.
-        let model = config.polishModel ?? configuration.resolvedModel
+        let selectedModel = config.polishModel ?? configuration.resolvedModel
+        let model = ProviderModelSafetyRules.safeModel(
+            providerID: provider.providerID,
+            capability: .polish,
+            storedModel: selectedModel
+        )
 
         // F-063: branch translation vs polish via shared helper for consistency.
         var systemPrompt = SpeculativePolish.buildSystemPrompt(for: config)
@@ -57,7 +84,7 @@ public final class AIPolishService {
 
         // Claude uses its own Messages API
         if provider == .claude {
-            guard let apiKey = configuration.key else {
+            guard let apiKey = credentialProvider(configuration) else {
                 throw VowriteError.apiError("No API key configured for Claude")
             }
             let result = try await claudeService.polish(
@@ -78,7 +105,7 @@ public final class AIPolishService {
 
         var request = URLRequest(url: try URL.validated(endpoint, label: "polish endpoint"))
         request.httpMethod = "POST"
-        if let apiKey = configuration.key {
+        if let apiKey = credentialProvider(configuration) {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -95,24 +122,28 @@ public final class AIPolishService {
             KimiCodeOAuthService.applyCodingPlanHeaders(to: &request)
         }
 
-        var payload: [String: Any] = [
-            "model": model,
-            "messages": [
-                ["role": "system", "content": systemPrompt],
-                ["role": "user", "content": wrappedText]
-            ],
-            "temperature": config.temperature,
-            "max_tokens": 4096
-        ]
-        applyPolishOverrides(to: &payload, overrides: resolvedOverrides)
+        let payload = makeOpenAICompatiblePolishPayload(
+            model: model,
+            systemPrompt: systemPrompt,
+            userPrompt: wrappedText,
+            temperature: config.temperature,
+            stream: false,
+            overrides: resolvedOverrides
+        )
 
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown"
-            throw VowriteError.apiError("Polish API error: \(errorBody)")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VowriteError.networkError("Invalid response from polish API")
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .polishRequest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],

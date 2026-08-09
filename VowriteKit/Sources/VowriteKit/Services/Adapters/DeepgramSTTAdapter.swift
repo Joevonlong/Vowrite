@@ -48,11 +48,11 @@ struct DeepgramSTTAdapter: STTAdapter {
             throw VowriteError.networkError("Invalid response")
         }
         guard httpResponse.statusCode == 200 else {
-            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
-            if httpResponse.statusCode == 401 {
-                throw VowriteError.apiError("Deepgram: 401 Unauthorized — check your API key")
-            }
-            throw VowriteError.apiError("Deepgram STT error (\(httpResponse.statusCode)): \(errorBody)")
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .deepgramSTTRequest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],

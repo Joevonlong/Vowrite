@@ -17,15 +17,19 @@ class KeyboardViewController: UIInputViewController {
         // 1. Configure shared storage
         VowriteStorage.configure(suiteName: VowriteStorage.appGroupID)
 
-        // 2. Keychain migration (if needed)
+        // 2. Keyboard-first upgrades must complete the same provider-scoped,
+        // journaled migration before KeyboardState reads APIConfig.
+        ProviderModelMigration202608.runIfNeeded()
+
+        // 3. Keychain migration (if needed)
         KeychainHelper.migrateToAccessGroup()
 
-        // 3. Create state
+        // 4. Create state
         keyboardState = KeyboardState(
             inputViewController: self
         )
 
-        // 4. SwiftUI keyboard view
+        // 5. SwiftUI keyboard view
         let keyboardView = KeyboardView(state: keyboardState)
         let hosting = UIHostingController(rootView: keyboardView)
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
@@ -43,7 +47,7 @@ class KeyboardViewController: UIInputViewController {
             hosting.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
         ])
 
-        // 5. Write status for Container App detection
+        // 6. Write status for Container App detection
         VowriteStorage.defaults.set(true, forKey: "keyboard_active")
         VowriteStorage.defaults.set(hasFullAccess, forKey: "keyboard_full_access")
     }
