@@ -1,9 +1,17 @@
 # Vowrite — Feature Backlog
 
-> 最后更新: 2026-03-27
+> 最后更新: 2026-08-10
 >
 > 详细 Feature spec 见 `Vowrite-internal/tracking/features/F-xxx-*.md`
 > 完整 Feature 列表和状态见 `Vowrite-internal/tracking/FEATURES.md`
+
+## Recently integrated to product `main`
+
+| ID | Feature | Status | Product `main` commit |
+|----|---------|--------|-----------------------|
+| F-084 | Model request compatibility and retirement-safe migration | Partial — external provider and physical-device gates remain | `1075d7d20fa94a47b9534a853666c8f80e84df92` |
+| F-085 | model-watch normalization and deprecation guardrails | Partial — hosted Actions and keyed-source gates remain | `90e88781803737c2035987a0844555895f1b343f` |
+| F-086 | Guarded 2026-08 model evaluation | Partial — candidate evaluation only; no public catalog activation | `67c3b932569ca4ce89a3b47c8560e9d049c01148` |
 
 ## 📋 最近完成
 
