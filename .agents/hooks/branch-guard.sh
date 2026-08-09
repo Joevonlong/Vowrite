@@ -168,60 +168,60 @@ parse_git_invocation() {
     local tokens=()
     local token
     local index
-    local next
 
     GIT_FOUND=false
     GIT_SUBCOMMAND=""
     GIT_DANGEROUS_GLOBAL=false
+    GIT_HAS_C=false
     IFS=$' \t' read -r -a tokens <<< "$command_text"
-    for ((index = 0; index < ${#tokens[@]}; index++)); do
+    (( ${#tokens[@]} > 0 )) || return 1
+    token="${tokens[0]}"
+    token="${token#\"}"; token="${token#\'}"
+    token="${token%\"}"; token="${token%\'}"
+    [[ "${token##*/}" == "git" ]] || return 1
+
+    GIT_FOUND=true
+    index=1
+    while (( index < ${#tokens[@]} )); do
         token="${tokens[$index]}"
         token="${token#\"}"; token="${token#\'}"
         token="${token%\"}"; token="${token%\'}"
-        [[ "${token##*/}" == "git" ]] || continue
-        GIT_FOUND=true
-        index=$((index + 1))
-        while (( index < ${#tokens[@]} )); do
-            token="${tokens[$index]}"
-            token="${token#\"}"; token="${token#\'}"
-            token="${token%\"}"; token="${token%\'}"
-            case "$token" in
-                -C)
-                    index=$((index + 2))
-                    continue
-                    ;;
-                -c|--config-env|--git-dir|--work-tree|--namespace|--super-prefix|--exec-path)
-                    GIT_DANGEROUS_GLOBAL=true
-                    index=$((index + 2))
-                    continue
-                    ;;
-                -c*|--config-env=*|--git-dir=*|--work-tree=*|--namespace=*|--super-prefix=*|--exec-path=*)
-                    GIT_DANGEROUS_GLOBAL=true
-                    index=$((index + 1))
-                    continue
-                    ;;
-                --no-pager|--paginate|--no-replace-objects|--bare|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs|--no-lazy-fetch)
-                    index=$((index + 1))
-                    continue
-                    ;;
-                --)
-                    index=$((index + 1))
-                    continue
-                    ;;
-                -*)
-                    GIT_DANGEROUS_GLOBAL=true
-                    index=$((index + 1))
-                    continue
-                    ;;
-                *)
-                    GIT_SUBCOMMAND="${token##*/}"
-                    return 0
-                    ;;
-            esac
-        done
-        return 0
+        case "$token" in
+            -C)
+                GIT_HAS_C=true
+                index=$((index + 2))
+                continue
+                ;;
+            -c|--config-env|--git-dir|--work-tree|--namespace|--super-prefix|--exec-path)
+                GIT_DANGEROUS_GLOBAL=true
+                index=$((index + 2))
+                continue
+                ;;
+            -c*|--config-env=*|--git-dir=*|--work-tree=*|--namespace=*|--super-prefix=*|--exec-path=*)
+                GIT_DANGEROUS_GLOBAL=true
+                index=$((index + 1))
+                continue
+                ;;
+            --no-pager|--no-replace-objects|--bare|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs|--no-lazy-fetch)
+                index=$((index + 1))
+                continue
+                ;;
+            --)
+                index=$((index + 1))
+                continue
+                ;;
+            -*)
+                GIT_DANGEROUS_GLOBAL=true
+                index=$((index + 1))
+                continue
+                ;;
+            *)
+                GIT_SUBCOMMAND="${token##*/}"
+                return 0
+                ;;
+        esac
     done
-    return 1
+    return 0
 }
 
 is_read_only_command() {
@@ -232,6 +232,7 @@ is_read_only_command() {
     [[ "$command_text" =~ (^|[[:space:]])--in-place(=|[[:space:]]|$) ]] && return 1
     [[ "$command_text" =~ (^|[[:space:]])--open-files-in-pager(=|[[:space:]]|$) ]] && return 1
     [[ "$command_text" =~ (^|[[:space:]])--pre(=|[[:space:]]|$) ]] && return 1
+    [[ "$command_text" =~ (^|[[:space:]])--(ext-diff|textconv)([[:space:]]|$) ]] && return 1
 
     if parse_git_invocation "$command_text"; then
         [[ "$GIT_DANGEROUS_GLOBAL" == false ]] || return 1
@@ -358,6 +359,7 @@ registered_worker_command_allowed() {
 
     if parse_git_invocation "$command_text"; then
         [[ "$GIT_DANGEROUS_GLOBAL" == false ]] || return 1
+        [[ "$GIT_HAS_C" == false ]] || return 1
         case "$GIT_SUBCOMMAND" in
             add|commit) return 0 ;;
             *) return 1 ;;

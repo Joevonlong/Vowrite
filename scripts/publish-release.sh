@@ -105,21 +105,20 @@ fi
 
 NOTES_TEMP="$(mktemp "$COMMON_DIR/vowrite-agent-platform/.release-notes.XXXXXX")"
 trap 'rm -f "$NOTES_TEMP"' EXIT
-jq -r '.notes' "$INTENT" > "$NOTES_TEMP"
+jq -j '.notes' "$INTENT" > "$NOTES_TEMP"
 
-if RELEASE_JSON="$(gh release view "$TAG" --repo "$REPOSITORY" --json tagName,isPrerelease,assets 2>/dev/null)"; then
+release_metadata_matches_intent() {
+    local release_json="$1"
+    jq -e --arg tag "$TAG" --argjson prerelease "$PRERELEASE" --arg title "$TITLE" --rawfile notes "$NOTES_TEMP" \
+        '.tagName == $tag and .isPrerelease == $prerelease and .name == $title
+         and (.body == $notes or .body == ($notes + "\n"))' <<<"$release_json" >/dev/null 2>&1
+}
+
+if RELEASE_JSON="$(gh release view "$TAG" --repo "$REPOSITORY" --json tagName,isPrerelease,name,body,assets 2>/dev/null)"; then
     ASSET_NAME="$(basename "$ASSET")"
-    jq -e --arg tag "$TAG" --argjson prerelease "$PRERELEASE" \
-        '.tagName == $tag and .isPrerelease == $prerelease' <<<"$RELEASE_JSON" >/dev/null 2>&1 \
+    release_metadata_matches_intent "$RELEASE_JSON" \
         || die "existing GitHub Release metadata conflicts with the prepared intent"
-    if jq -e --arg asset "$ASSET_NAME" '.assets | any(.name == $asset)' <<<"$RELEASE_JSON" >/dev/null 2>&1; then
-        VERIFY_DIR="$(mktemp -d /tmp/vowrite-release-asset.XXXXXX)"
-        trap 'rm -f "$NOTES_TEMP"; [[ -z "${VERIFY_DIR:-}" ]] || rm -rf -- "$VERIFY_DIR"' EXIT
-        gh release download "$TAG" --repo "$REPOSITORY" --pattern "$ASSET_NAME" --dir "$VERIFY_DIR"
-        [[ -f "$VERIFY_DIR/$ASSET_NAME" ]] \
-            && [[ "$(shasum -a 256 "$VERIFY_DIR/$ASSET_NAME" | awk '{print $1}')" == "$ASSET_SHA256" ]] \
-            || die "existing GitHub Release asset conflicts with the prepared digest"
-    else
+    if ! jq -e --arg asset "$ASSET_NAME" '.assets | any(.name == $asset)' <<<"$RELEASE_JSON" >/dev/null 2>&1; then
         gh release upload "$TAG" "$ASSET" --repo "$REPOSITORY"
     fi
 else
@@ -129,6 +128,20 @@ else
     fi
     gh "${GH_ARGS[@]}"
 fi
+
+RELEASE_JSON="$(gh release view "$TAG" --repo "$REPOSITORY" --json tagName,isPrerelease,name,body,assets 2>/dev/null)" \
+    || die "GitHub Release is unavailable after create/upload"
+release_metadata_matches_intent "$RELEASE_JSON" \
+    || die "GitHub Release metadata does not match the prepared intent after create/upload"
+ASSET_NAME="$(basename "$ASSET")"
+jq -e --arg asset "$ASSET_NAME" '.assets | any(.name == $asset)' <<<"$RELEASE_JSON" >/dev/null 2>&1 \
+    || die "GitHub Release asset is missing after create/upload"
+VERIFY_DIR="$(mktemp -d /tmp/vowrite-release-asset.XXXXXX)"
+trap 'rm -f "$NOTES_TEMP"; rm -rf -- "$VERIFY_DIR"' EXIT
+gh release download "$TAG" --repo "$REPOSITORY" --pattern "$ASSET_NAME" --dir "$VERIFY_DIR"
+[[ -f "$VERIFY_DIR/$ASSET_NAME" ]] \
+    && [[ "$(shasum -a 256 "$VERIFY_DIR/$ASSET_NAME" | awk '{print $1}')" == "$ASSET_SHA256" ]] \
+    || die "GitHub Release asset does not match the prepared digest after create/upload"
 
 update_intent '.status = "published"' published_at
 echo "Release $TAG published to origin and GitHub repository $REPOSITORY"

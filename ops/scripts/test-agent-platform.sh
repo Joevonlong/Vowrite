@@ -137,6 +137,10 @@ git -C "$FEATURE_ROOT" switch -q -c feature/test
 pass "main and feature topology fixtures created"
 
 if [[ -x "$GUARD" && -n "$MAIN_ROOT" ]]; then
+    EXTERNAL_DIFF_MARKER="$TEST_ROOT/external-diff-ran"
+    EXTERNAL_DIFF_HELPER="$TEST_ROOT/external-diff-helper"
+    printf '#!/usr/bin/env bash\nprintf "executed\\n" > %q\nexit 0\n' "$EXTERNAL_DIFF_MARKER" > "$EXTERNAL_DIFF_HELPER"
+    chmod +x "$EXTERNAL_DIFF_HELPER"
     main_edit_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg file "$MAIN_ROOT/AGENTS.md" '{cwd:$cwd,tool_name:"Edit",tool_input:{file_path:$file}}')"
     feature_edit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg file "$FEATURE_ROOT/AGENTS.md" '{cwd:$cwd,tool_name:"Edit",tool_input:{file_path:$file}}')"
     feature_outside_edit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg file "$FEATURE_ROOT/VowriteKit/outside.swift" '{cwd:$cwd,tool_name:"Edit",tool_input:{file_path:$file}}')"
@@ -166,6 +170,8 @@ if [[ -x "$GUARD" && -n "$MAIN_ROOT" ]]; then
     git_no_pager_push_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg command 'git --no-pager push --no-verify escape HEAD:refs/heads/main' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     git_config_commit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg command 'git -c core.hooksPath=/dev/null commit -m bypass' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     git_no_verify_commit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg command 'git commit --no-verify -m bypass' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
+    git_config_env_commit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg command 'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null git commit -m bypass' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
+    external_diff_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg command "GIT_EXTERNAL_DIFF=$EXTERNAL_DIFF_HELPER git diff --ext-diff" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     release_push_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg command 'VOWRITE_RELEASE=1 git push origin main --tags' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     release_wrapper_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg command 'scripts/publish-release.sh --tag v0.0.0.1' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     cross_worktree_bash_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg command "touch $MAIN_ROOT/Probe.swift" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
@@ -196,6 +202,15 @@ if [[ -x "$GUARD" && -n "$MAIN_ROOT" ]]; then
     expect_exit 2 "Bash copy is blocked on product main" run_hook "$bash_copy_payload"
     expect_exit 2 "Bash generators are blocked on product main" run_hook "$bash_generator_payload"
     expect_exit 0 "read-only Bash is allowed on product main" run_hook "$bash_read_payload"
+    printf 'external diff probe\n' >> "$MAIN_ROOT/AGENTS.md"
+    expect_exit 2 "Git environment cannot turn a read-only diff into an external mutator" \
+        bash -c "printf '%s\n' '$external_diff_payload' | '$GUARD' && cd '$MAIN_ROOT' && GIT_EXTERNAL_DIFF='$EXTERNAL_DIFF_HELPER' git diff --ext-diff"
+    if [[ ! -e "$EXTERNAL_DIFF_MARKER" ]]; then
+        pass "blocked external diff helper never executes"
+    else
+        fail "blocked external diff helper never executes"
+    fi
+    git -C "$MAIN_ROOT" restore AGENTS.md
     expect_exit 2 "git diff --output is not classified as read-only" run_hook "$git_output_payload"
     expect_exit 2 "sort -o is not classified as read-only" run_hook "$sort_output_payload"
     expect_exit 2 "sed --in-place is not classified as read-only" run_hook "$sed_in_place_payload"
@@ -214,6 +229,26 @@ if [[ -x "$GUARD" && -n "$MAIN_ROOT" ]]; then
     expect_exit 2 "git --no-pager cannot hide a --no-verify push" run_hook "$git_no_pager_push_payload"
     expect_exit 2 "git -c cannot disable hooks for commit" run_hook "$git_config_commit_payload"
     expect_exit 2 "workers cannot commit with --no-verify" run_hook "$git_no_verify_commit_payload"
+    mkdir -p "$FEATURE_ROOT/.agents/hooks" "$FEATURE_ROOT/.githooks"
+    cp "$GUARD" "$FEATURE_ROOT/.agents/hooks/branch-guard.sh"
+    chmod +x "$FEATURE_ROOT/.agents/hooks/branch-guard.sh"
+    printf '#!/usr/bin/env bash\nexec "$(git rev-parse --show-toplevel)/.agents/hooks/branch-guard.sh" --pre-commit\n' > "$FEATURE_ROOT/.githooks/pre-commit"
+    chmod +x "$FEATURE_ROOT/.githooks/pre-commit"
+    git -C "$FEATURE_ROOT" config core.hooksPath .githooks
+    printf 'out of scope\n' > "$FEATURE_ROOT/VowriteKit/env-bypass.swift"
+    git -C "$FEATURE_ROOT" add VowriteKit/env-bypass.swift
+    expect_exit 2 "normal pre-commit rejects the staged out-of-scope env fixture" \
+        bash -c "cd '$FEATURE_ROOT' && .agents/hooks/branch-guard.sh --pre-commit"
+    feature_before_env_bypass="$(git -C "$FEATURE_ROOT" rev-parse HEAD)"
+    expect_exit 2 "Git config environment cannot disable hooks for a worker commit" \
+        bash -c "printf '%s\n' '$git_config_env_commit_payload' | '$GUARD' && cd '$FEATURE_ROOT' && GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null git commit -m bypass"
+    if [[ "$(git -C "$FEATURE_ROOT" rev-parse HEAD)" == "$feature_before_env_bypass" ]]; then
+        pass "blocked Git config environment leaves the worker ref unchanged"
+    else
+        fail "blocked Git config environment leaves the worker ref unchanged"
+    fi
+    git -C "$FEATURE_ROOT" reset -q HEAD -- VowriteKit/env-bypass.swift
+    rm -f "$FEATURE_ROOT/VowriteKit/env-bypass.swift"
     expect_exit 2 "agents cannot bypass the release wrapper with a direct push" run_hook "$release_push_payload"
     expect_exit 0 "the governed release wrapper can reach the Git pre-push gate" run_hook "$release_wrapper_payload"
     expect_exit 2 "feature Bash cannot target the shared main worktree" run_hook "$cross_worktree_bash_payload"
@@ -309,6 +344,13 @@ printf 'fixture\n' > "$NO_MAIN_REPO/base.txt"
 git -C "$NO_MAIN_REPO" add base.txt
 git -C "$NO_MAIN_REPO" commit -q -m "test: base"
 git -C "$NO_MAIN_REPO" switch -q -c feature/primary-worker
+expect_exit 2 "integration checkout cannot be nested inside an existing checkout" \
+    bash -c "cd \"$NO_MAIN_REPO\" && \"$TASK_CLI\" ensure-integration-checkout --owner integrator --worktree \"$NO_MAIN_REPO/.nested-integration\""
+if [[ ! -e "$NO_MAIN_REPO/.nested-integration" && -z "$(git -C "$NO_MAIN_REPO" status --porcelain)" ]]; then
+    pass "rejected nested integration checkout leaves the primary checkout clean"
+else
+    fail "rejected nested integration checkout leaves the primary checkout clean"
+fi
 expect_exit 0 "coordinator provisions a dedicated main checkout when the primary checkout is a worker" \
     bash -c "cd \"$NO_MAIN_REPO\" && \"$TASK_CLI\" ensure-integration-checkout --owner integrator --worktree \"$NO_MAIN_INTEGRATION\""
 if [[ "$(git -C "$NO_MAIN_INTEGRATION" symbolic-ref --quiet --short HEAD 2>/dev/null || true)" == "main" ]]; then
@@ -387,6 +429,9 @@ expect_exit 0 "refresh fixture abort cleans only its task resources" \
 TASK_REPO="$TEST_ROOT/task-repo"
 TASK_WORKTREE="$TEST_ROOT/task-worktree"
 SECOND_WORKTREE="$TEST_ROOT/second-worktree"
+CROSS_A_WORKTREE="$TEST_ROOT/cross-a-worktree"
+CROSS_B_WORKTREE="$TEST_ROOT/cross-b-worktree"
+NEWLINE_WORKTREE="$TEST_ROOT/newline-worktree"
 DIRTY_WORKTREE="$TEST_ROOT/dirty-worktree"
 FEATURE_START_WORKTREE="$TEST_ROOT/feature-start-worktree"
 INVALID_SCOPE_WORKTREE="$TEST_ROOT/invalid-scope-worktree"
@@ -450,8 +495,55 @@ if [[ -x "$TASK_CLI" ]]; then
     expect_exit 2 "adopt rejects a primary checkout merely switched to a feature branch" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" adopt --task T-PRIMARY --owner codex --base \"$(git -C "$TASK_REPO" rev-parse main)\" --write-set 'src/**' --accept 'git diff --check'"
     git -C "$TASK_REPO" switch -q main
     expect_exit 2 "task write-set rejects ambiguous glob syntax" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-GLOB --owner codex --branch feature/T-GLOB --worktree \"$INVALID_SCOPE_WORKTREE\" --write-set 'src/Foo*Bar' --accept 'git diff --check'"
+    expect_exit 2 "task worktree cannot be nested inside an existing checkout" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-NESTED --owner codex --branch feature/T-NESTED --worktree \"$TASK_REPO/.nested-worker\" --write-set 'nested/**' --accept 'git diff --check'"
+    if [[ ! -e "$TASK_REPO/.nested-worker" && -z "$(git -C "$TASK_REPO" status --porcelain)" ]] \
+        && ! git -C "$TASK_REPO" show-ref --verify --quiet refs/heads/feature/T-NESTED; then
+        pass "rejected nested task worktree leaves main clean and unmodified"
+    else
+        fail "rejected nested task worktree leaves main clean and unmodified"
+    fi
     expect_exit 0 "agent task creates an isolated worktree" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-001 --owner codex --branch feature/T-001 --worktree \"$TASK_WORKTREE\" --write-set 'src/**' --accept 'git diff --check'"
     expect_exit 2 "agent task rejects overlapping active write-sets" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-002 --owner claude --branch feature/T-002 --worktree \"$SECOND_WORKTREE\" --write-set 'src/base.txt' --accept 'git diff --check'"
+
+    expect_exit 0 "first cross-worker fixture registers its own worktree" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-CROSS-A --owner agent-a --branch feature/T-CROSS-A --worktree \"$CROSS_A_WORKTREE\" --write-set 'agent-a/**' --accept 'git diff --check'"
+    expect_exit 0 "second cross-worker fixture registers a disjoint worktree" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-CROSS-B --owner agent-b --branch feature/T-CROSS-B --worktree \"$CROSS_B_WORKTREE\" --write-set 'agent-b/**' --accept 'git diff --check'"
+    mkdir -p "$CROSS_B_WORKTREE/agent-b"
+    printf 'owned by B\n' > "$CROSS_B_WORKTREE/agent-b/result.txt"
+    cross_add_command="git -C $CROSS_B_WORKTREE add agent-b/result.txt"
+    cross_add_payload="$(jq -cn --arg cwd "$CROSS_A_WORKTREE" --arg command "$cross_add_command" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
+    expect_exit 2 "worker A cannot stage files in worker B via git -C" \
+        bash -c "printf '%s\n' '$cross_add_payload' | '$GUARD' && $cross_add_command"
+    if git -C "$CROSS_B_WORKTREE" diff --cached --quiet; then
+        pass "blocked cross-worker add leaves worker B index unchanged"
+    else
+        fail "blocked cross-worker add leaves worker B index unchanged"
+    fi
+    git -C "$CROSS_B_WORKTREE" add agent-b/result.txt
+    cross_b_before="$(git -C "$CROSS_B_WORKTREE" rev-parse HEAD)"
+    cross_commit_command="git -C $CROSS_B_WORKTREE commit -m cross-worker-bypass"
+    cross_commit_payload="$(jq -cn --arg cwd "$CROSS_A_WORKTREE" --arg command "$cross_commit_command" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
+    expect_exit 2 "worker A cannot commit worker B via git -C" \
+        bash -c "printf '%s\n' '$cross_commit_payload' | '$GUARD' && $cross_commit_command"
+    if [[ "$(git -C "$CROSS_B_WORKTREE" rev-parse HEAD)" == "$cross_b_before" ]]; then
+        pass "blocked cross-worker commit leaves worker B ref unchanged"
+    else
+        fail "blocked cross-worker commit leaves worker B ref unchanged"
+    fi
+    git -C "$CROSS_B_WORKTREE" reset -q HEAD -- agent-b/result.txt
+    rm -f "$CROSS_B_WORKTREE/agent-b/result.txt"
+    rmdir "$CROSS_B_WORKTREE/agent-b"
+    expect_exit 0 "worker A fixture aborts without touching worker B" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" abort --task T-CROSS-A --owner agent-a --reason 'cross-worker fixture complete'"
+    expect_exit 0 "worker B fixture aborts with its own ownership intact" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" abort --task T-CROSS-B --owner agent-b --reason 'cross-worker fixture complete'"
+
+    expect_exit 0 "newline-path fixture registers a directory write-set" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" start --task T-NEWLINE --owner codex --branch feature/T-NEWLINE --worktree \"$NEWLINE_WORKTREE\" --write-set 'docs/**' --accept 'git diff --check'"
+    mkdir -p "$NEWLINE_WORKTREE/docs"
+    newline_relative=$'docs/line\nbreak.md'
+    printf 'newline filename\n' > "$NEWLINE_WORKTREE/$newline_relative"
+    git -C "$NEWLINE_WORKTREE" add -- "$newline_relative"
+    git -C "$NEWLINE_WORKTREE" commit -q -m "test: newline path"
+    newline_commit="$(git -C "$NEWLINE_WORKTREE" rev-parse HEAD)"
+    expect_exit 0 "handoff is NUL-safe for a legal newline filename" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" handoff --task T-NEWLINE --owner codex --commit '$newline_commit'"
+    expect_exit 0 "newline-path fixture abort preserves its recorded result" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" abort --task T-NEWLINE --owner codex --reason 'newline fixture complete'"
 
     printf 'result\n' > "$TASK_WORKTREE/src/result.txt"
     git -C "$TASK_WORKTREE" add src/result.txt
@@ -468,13 +560,30 @@ if [[ -x "$TASK_CLI" ]]; then
         fail "handoff manifest pins the result commit"
     fi
 
-    expect_exit 0 "integration owner lands the pinned result on main" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" integrate --task T-001 --owner integrator --message 'test: integrate result'"
+    CRASH_HOOKS="$TEST_ROOT/crash-hooks"
+    mkdir -p "$CRASH_HOOKS"
+    cp "$TASK_REPO/.githooks/pre-commit" "$CRASH_HOOKS/pre-commit"
+    printf '#!/usr/bin/env bash\nkill -KILL "$PPID"\n' > "$CRASH_HOOKS/post-commit"
+    chmod +x "$CRASH_HOOKS/pre-commit" "$CRASH_HOOKS/post-commit"
+    git -C "$TASK_REPO" config core.hooksPath "$CRASH_HOOKS"
+    expect_exit 2 "interrupted integration records a recoverable attempt after the commit" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" integrate --task T-001 --owner integrator --message 'test: integrate result'"
+    git -C "$TASK_REPO" config core.hooksPath .githooks
+    interrupted_json="$(cd "$TASK_REPO" && "$TASK_CLI" status --task T-001 --json 2>/dev/null)"
+    interrupted_commit="$(git -C "$TASK_REPO" rev-parse HEAD)"
+    if [[ "$interrupted_commit" != "$(jq -r '.base_sha' <<<"$interrupted_json")" ]] \
+        && [[ -z "$(git -C "$TASK_REPO" status --porcelain)" ]] \
+        && jq -e '.status == "ready" and (.integration_attempt | type == "object")' <<<"$interrupted_json" >/dev/null 2>&1; then
+        pass "interrupted integration leaves clean main plus durable recovery evidence"
+    else
+        fail "interrupted integration leaves clean main plus durable recovery evidence"
+    fi
+    expect_exit 0 "integration owner reconciles the already-created pinned commit" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" integrate --task T-001 --owner integrator --message 'test: integrate result'"
     integration_json="$(cd "$TASK_REPO" && "$TASK_CLI" status --task T-001 --json 2>/dev/null)"
     integration_commit="$(git -C "$TASK_REPO" rev-parse HEAD)"
-    if jq -e --arg commit "$integration_commit" '.status == "integrated" and .integration_commit == $commit' <<<"$integration_json" >/dev/null 2>&1; then
-        pass "integration manifest pins the main commit"
+    if jq -e --arg commit "$integration_commit" '.status == "integrated" and .integration_commit == $commit and .recovered_after_commit == true and (.integration_attempt == null)' <<<"$integration_json" >/dev/null 2>&1; then
+        pass "integration manifest pins and reconciles the interrupted main commit"
     else
-        fail "integration manifest pins the main commit"
+        fail "integration manifest pins and reconciles the interrupted main commit"
     fi
     expect_exit 2 "direct pre-push without a publish context is rejected" bash -c "cd \"$TASK_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\n' \"$(git rev-parse HEAD)\" \"$(printf '0%.0s' {1..40})\" | .agents/hooks/branch-guard.sh --pre-push"
     RELEASE_TAG="v0.0.0.1"
@@ -498,13 +607,37 @@ if [[ -x "$TASK_CLI" ]]; then
     RELEASE_REMOTE="$TEST_ROOT/release-remote.git"
     FAKE_BIN="$TEST_ROOT/fake-bin"
     GH_LOG="$TEST_ROOT/gh.log"
+    GH_STATE="$TEST_ROOT/gh-release-created"
     git init -q --bare "$RELEASE_REMOTE"
     git -C "$TASK_REPO" remote add origin git@github.com:example.invalid/Vowrite.git
     git -C "$TASK_REPO" config "url.$RELEASE_REMOTE.insteadOf" git@github.com:example.invalid/Vowrite.git
     mkdir -p "$FAKE_BIN"
-    printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> %q\nif [[ "$1 $2" == "release view" ]]; then exit 1; fi\nexit 0\n' "$GH_LOG" > "$FAKE_BIN/gh"
+    printf '%s\n' \
+        '#!/usr/bin/env bash' \
+        'set -euo pipefail' \
+        'printf "%s\n" "$*" >> "$FAKE_GH_LOG"' \
+        'case "${1:-} ${2:-}" in' \
+        '  "release view")' \
+        '    [[ -f "$FAKE_GH_STATE" ]] || exit 1' \
+        '    name="Vowrite test"; body="test"' \
+        '    if [[ "${FAKE_GH_MODE:-matching}" == "wrong-metadata" ]]; then name="Wrong title"; body="wrong body"; fi' \
+        '    jq -n --arg name "$name" --arg body "$body" --arg asset "$(basename "$FAKE_GH_ASSET")" '\''{tagName:"v0.0.0.1",isPrerelease:false,name:$name,body:$body,assets:[{name:$asset}]}'\''' \
+        '    ;;' \
+        '  "release create"|"release upload")' \
+        '    touch "$FAKE_GH_STATE"' \
+        '    ;;' \
+        '  "release download")' \
+        '    destination=""' \
+        '    while [[ $# -gt 0 ]]; do' \
+        '      if [[ "$1" == "--dir" ]]; then destination="$2"; shift 2; else shift; fi' \
+        '    done' \
+        '    [[ -n "$destination" ]]' \
+        '    mkdir -p "$destination"' \
+        '    cp "$FAKE_GH_ASSET" "$destination/$(basename "$FAKE_GH_ASSET")"' \
+        '    ;;' \
+        'esac' > "$FAKE_BIN/gh"
     chmod +x "$FAKE_BIN/gh"
-    expect_exit 0 "release wrapper atomically publishes the pinned main, tag, and GitHub Release" bash -c "cd \"$TASK_REPO\" && PATH='$FAKE_BIN':\"\$PATH\" '$PUBLISH_RELEASE' --tag '$RELEASE_TAG'"
+    expect_exit 0 "release wrapper atomically publishes and re-verifies the pinned release" bash -c "cd \"$TASK_REPO\" && FAKE_GH_STATE='$GH_STATE' FAKE_GH_LOG='$GH_LOG' FAKE_GH_ASSET='$TASK_REPO/releases/Vowrite-test.dmg' PATH='$FAKE_BIN':\"\$PATH\" '$PUBLISH_RELEASE' --tag '$RELEASE_TAG'"
     if [[ "$(git --git-dir="$RELEASE_REMOTE" rev-parse refs/heads/main 2>/dev/null || true)" == "$RELEASE_COMMIT" ]] \
         && [[ "$(git --git-dir="$RELEASE_REMOTE" rev-parse "refs/tags/$RELEASE_TAG^{commit}" 2>/dev/null || true)" == "$RELEASE_COMMIT" ]] \
         && jq -e '.status == "published"' "$TASK_COMMON/vowrite-agent-platform/release-intent.json" >/dev/null 2>&1; then
@@ -512,6 +645,15 @@ if [[ -x "$TASK_CLI" ]]; then
     else
         fail "release wrapper records and publishes only the pinned release"
     fi
+    jq '.status = "git_published" | del(.published_at)' "$TASK_COMMON/vowrite-agent-platform/release-intent.json" > "$TASK_COMMON/vowrite-agent-platform/release-intent.resume.json"
+    mv "$TASK_COMMON/vowrite-agent-platform/release-intent.resume.json" "$TASK_COMMON/vowrite-agent-platform/release-intent.json"
+    expect_exit 2 "release resume rejects a GitHub title or body that conflicts with intent" bash -c "cd \"$TASK_REPO\" && FAKE_GH_STATE='$GH_STATE' FAKE_GH_LOG='$GH_LOG' FAKE_GH_ASSET='$TASK_REPO/releases/Vowrite-test.dmg' FAKE_GH_MODE=wrong-metadata PATH='$FAKE_BIN':\"\$PATH\" '$PUBLISH_RELEASE' --tag '$RELEASE_TAG'"
+    if jq -e '.status == "git_published"' "$TASK_COMMON/vowrite-agent-platform/release-intent.json" >/dev/null 2>&1; then
+        pass "metadata conflict does not falsely mark the release published"
+    else
+        fail "metadata conflict does not falsely mark the release published"
+    fi
+    expect_exit 0 "release resume verifies matching metadata and downloaded asset digest" bash -c "cd \"$TASK_REPO\" && FAKE_GH_STATE='$GH_STATE' FAKE_GH_LOG='$GH_LOG' FAKE_GH_ASSET='$TASK_REPO/releases/Vowrite-test.dmg' PATH='$FAKE_BIN':\"\$PATH\" '$PUBLISH_RELEASE' --tag '$RELEASE_TAG'"
     expect_exit 0 "integration owner publishes only the pinned commit" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" publish --task T-001 --owner integrator --remote publish-test"
     expect_exit 0 "integration owner cleans a published integration" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" cleanup --task T-001 --owner integrator"
     expect_exit 0 "integration owner releases the lease" bash -c "cd \"$TASK_REPO\" && \"$TASK_CLI\" release-integration --owner integrator"
