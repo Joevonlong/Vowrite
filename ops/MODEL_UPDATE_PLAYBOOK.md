@@ -1,177 +1,326 @@
 # Model Update Playbook
 
-> F-082. The repeatable procedure for keeping Vowrite's model catalog
-> (`VowriteKit/Sources/VowriteKit/Resources/providers.json`) current: newest
-> polish (LLM) models, newest STT models, retired IDs cleaned up, website in
-> sync. Detection is automated; **curation is deliberately human/agent-driven**
-> — aggregator catalogs are full of irrelevant or renamed entries, and a
-> fabricated model ID ships a 404 to users (the F-062 `deepseek-v4` lesson).
+> F-082 established read-only upstream model detection. F-085 adds
+> source/namespace normalization, scoped deprecation guardrails, public
+> Cerebras reconciliation, and versioned state. F-086 owns the next catalog
+> curation and the first permitted v2 re-baseline.
 
----
+This is the repeatable procedure for keeping Vowrite's model catalog
+(`VowriteKit/Sources/VowriteKit/Resources/providers.json`) current. Detection
+is automated; catalog edits and baseline updates are deliberately reviewed.
+Aggregator catalogs contain aliases, proxy pricing, and provider-like slugs
+that are not proof of a direct-provider API model ID.
 
-## Cadence & triggers
+## Safety invariants
+
+1. The watcher is read-only unless a reviewer explicitly supplies
+   `--update-state`.
+2. CI never supplies `--update-state`, edits the catalog, commits, or pushes.
+3. An aggregator signal is discovery evidence only. It never proves a direct
+   provider ID, retirement, price, or availability.
+4. A catalog change requires an official provider document or an official
+   direct-provider API response.
+5. A replacement in the deprecation manifest is a reviewed suggestion, never
+   an automatic migration.
+6. During F-085, do not run `--update-state`. The first v2 baseline may be
+   written only after F-086 catalog curation and validation are complete.
+
+## Cadence and triggers
 
 | Trigger | What happens |
 |---|---|
-| **Monthly cron** — `.github/workflows/model-watch.yml` (06:00 UTC, 1st) | Runs `model-watch.py`; on drift files/updates a `model-watch`-labeled GitHub issue with the report |
-| **Manual** — `workflow_dispatch` or local run | Same report on demand (e.g. right after a big vendor launch) |
-| **Provider announcement** (deprecation email, launch news) | Run the playbook without waiting for the cron |
-
-The website Content Audit (Track A in `ops/CHECKLIST_WEBSITE.md`) has the same
-monthly rhythm — do them together: catalog first, website second.
+| **Weekly cron** — `.github/workflows/model-watch.yml` (Monday, 06:00 UTC) | Runs offline regression tests, then the read-only live watcher; actionable output creates or updates one open `model-watch` issue |
+| **Manual** — `workflow_dispatch` or local run | Produces the same read-only report on demand |
+| **Provider announcement** — launch, retirement, or account notice | Run the playbook immediately; do not wait for the cron |
+| **Monthly website audit** | Perform Track A in `ops/CHECKLIST_WEBSITE.md` after any approved catalog curation |
 
 ## Pipeline overview
 
-```
- OpenRouter public catalog ──┐
- (keyless, created + prices) │   ops/scripts/model-watch.py     GitHub issue
-                             ├─► diff vs providers.json +  ──►  (monthly, label
- Provider GET /models ───────┘   ops/model-watch/state.json     model-watch)
- (per-key, exact recon)                                              │
-                                                                     ▼
-                                    curation (this playbook, steps 1-9)
-                                    research → edit → build/test → website
-                                                                     │
-                                              --update-state ◄───────┘
-                                              (re-baseline, report goes quiet)
+```text
+ OpenRouter public catalog ─────────────── aggregator namespace ─┐
+                                                                │
+ Cerebras public /models ─────────────────── direct namespace ───┤
+                                                                ├─> normalize
+ Keyed provider /models ── or SKIPPED_NO_KEY ─ direct namespace ┤    + compare
+                                                                │
+ Reviewed deprecations.json ───────── scope + evidence date ─────┘
+                                      │
+                                      ├─> read-only report + one GitHub issue
+                                      └─> v2 raw/canonical state
+                                           (explicit update only after curation)
 ```
 
-## Procedure
+OpenRouter answers "what appeared in this aggregator?" Direct sources answer
+"what does this provider expose?" Those questions remain separate even when
+the strings happen to match.
 
-1. **Get the signal.** Read the month's `model-watch` issue, or run locally:
+## Source, namespace, and alias rules
+
+Every signal retains its `source`, `namespace`, `rawID`, and `canonicalID`.
+The namespace is source-specific: OpenRouter remains an aggregator namespace;
+Cerebras and keyed provider endpoints remain provider-specific direct
+namespaces.
+
+The alias-collapse allow-list is intentionally narrow:
+
+| Source | Allowed normalization | Audit behavior |
+|---|---|---|
+| OpenRouter | Remove one terminal `:batch` suffix | Retain both raw base/batch IDs and increment the collapsed-alias count |
+| Every other source | None | Preserve the ID exactly, aside from an endpoint's documented response wrapper handling |
+
+Normalization requirements:
+
+- Collapse a base and its `:batch` alias only within the same source and
+  namespace.
+- Keep all raw IDs so a reviewer can recover or audit the decision.
+- `--show-aliases` may expose the raw members but never changes the canonical
+  decision.
+- Do not generically strip `:free`, `:thinking`, dates, organization prefixes,
+  or any future suffix.
+- Do not merge identical strings across sources or namespaces.
+- Treat a vendor-like OpenRouter prefix only as a `providerHint` for triage.
+  Never copy or derive a direct-provider ID from it.
+
+The fixed F-085 OpenRouter fixture is the normalization contract: 65 raw
+signals become seven canonical signals, with 58 aliases collapsed and retained
+for audit.
+
+## Source coverage and status language
+
+| Source | Authentication | Meaning |
+|---|---|---|
+| OpenRouter public catalog | None | Cross-ecosystem discovery signal; never direct-provider proof |
+| Cerebras public catalog (`https://api.cerebras.ai/public/v1/models`) | None | Independent direct Cerebras reconciliation |
+| Supported provider `/models` endpoints | Provider key | Direct reconciliation for that provider only |
+
+For a keyed source without its environment variable, report
+`SKIPPED_NO_KEY`. It means "not checked," never "checked with no change."
+Cerebras must still run without `CEREBRAS_API_KEY`; do not turn its public
+endpoint into a keyed skip.
+
+Keep source failures distinguishable in the report: authentication failure
+(401/403), rate limiting (429), timeout/network failure, and malformed JSON are
+not interchangeable. Exit `3` means all network sources were unavailable; it
+does not mean the catalog is current.
+
+## Tier-aware deprecation evidence
+
+Reviewed retirement facts live in `ops/model-watch/deprecations.json`. Each
+entry records at least:
+
+```json
+{
+  "provider": "groq",
+  "model": "qwen/qwen3-32b",
+  "capability": "polish",
+  "retireAt": "2026-07-17T00:00:00Z",
+  "scope": "free_developer",
+  "unaffectedScope": "committed_spend_enterprise",
+  "replacement": "openai/gpt-oss-120b",
+  "sourceURL": "https://console.groq.com/docs/deprecations",
+  "verifiedAt": "2026-08-09"
+}
+```
+
+`scope` and `unaffectedScope` must appear in every retirement report row and
+GitHub issue summary. Never widen a tier-scoped notice to the whole provider.
+In particular, the reviewed Groq Qwen and Llama retirements apply to
+Free/Developer accounts; committed-spend Enterprise accounts are explicitly
+unaffected by those notices.
+
+Use progressively stronger deadline labels for an applicable catalog entry:
+
+| Time to `retireAt` | Report action |
+|---|---|
+| More than 30 days | No deadline escalation |
+| 30 days or fewer | `WARNING_30D` |
+| 14 days or fewer | `URGENT_14D` |
+| 7 days or fewer | `CRITICAL_7D` |
+| Retired and still configured for the applicable scope | `BLOCKER_RETIRED` |
+
+Missing replacement text remains visible; it does not suppress the warning.
+No severity authorizes an automatic catalog edit.
+
+### Evidence freshness interval
+
+Retirement evidence becomes stale when `verifiedAt` is **more than 30 calendar
+days old** at evaluation time. Evidence exactly 30 calendar days old is still
+current. A stale row must identify its `sourceURL`, `verifiedAt`, `scope`, and
+`unaffectedScope` so a reviewer can re-check the fact. Refreshing evidence is a
+reviewed manifest change with git history, not an HTML-scraping side effect.
+
+## State schema and atomic updates
+
+F-085 reads the F-082 v1 state backward-compatibly and normalizes it in memory.
+The v2 schema retains both layers:
+
+- raw source evidence, including every collapsed alias;
+- canonical source/namespace signals used for stable comparisons;
+- provider reconciliation snapshots and the last curated timestamp.
+
+Identical normalized input must produce byte-stable ordering. An explicit
+state update writes a same-directory temporary file and atomically replaces
+`ops/model-watch/state.json`; a failed write must leave the previous baseline
+intact.
+
+The update gate is strict:
+
+- F-085 implementation and CI: `--update-state` is prohibited.
+- First v2 baseline: allowed only after F-086 has curated and validated the
+  product catalog and the proposed state diff has been reviewed.
+- Later cycles: allowed only inside an approved catalog-curation feature after
+  the same source verification and test gates.
+
+## Curation procedure
+
+1. **Get the signal.** Read the open `model-watch` issue or run locally:
+
    ```bash
    python3 ops/scripts/model-watch.py
-   # more reconciliation coverage with keys in env, e.g.:
+   python3 ops/scripts/model-watch.py --show-aliases
+   # Optional keyed coverage, for example:
    # OPENAI_API_KEY=... GROQ_API_KEY=... python3 ops/scripts/model-watch.py
    ```
-2. **Verify against official docs — never trust the aggregator alone.**
-   For each interesting delta, confirm on the provider's own models/pricing
-   page (links below): exact API model ID, price, context, reasoning-control
-   parameter, deprecation dates. Delegate this to cheap-model research agents
-   or check manually. OpenRouter prices are proxy prices; the website uses
-   official ones.
-3. **Edit `providers.json`** on a `feature/F-XXX-…` branch, following the
-   catalog rules below.
-4. **New provider?** Follow the new-provider checklist below (small code
-   change required).
-5. **Validate:**
+
+2. **Read coverage before findings.** Record which sources were direct,
+   aggregator-only, `SKIPPED_NO_KEY`, or failed. Never turn missing coverage
+   into a no-change conclusion.
+
+3. **Verify every candidate with an official source.** Confirm the exact API
+   ID, availability scope, price, context, reasoning controls, and retirement
+   date. OpenRouter pricing and slugs remain proxy/aggregator evidence.
+
+4. **Check retirement scope.** Confirm both affected and unaffected account
+   tiers. Update `deprecations.json` only from a reviewed provider source.
+
+5. **Curate `providers.json` on the approved feature branch.** For the current
+   cycle this is F-086, not F-085. Follow the catalog rules below.
+
+6. **Validate code and catalog:**
+
    ```bash
-   cd VowriteMac && swift build          # registry decode asserts on bad JSON
+   python3 ops/scripts/tests/test_model_watch.py
+   cd VowriteMac && swift build
    cd ../VowriteKit && swift test
-   cd .. && ops/scripts/test.sh          # full suite
-   python3 -c 'import json;json.load(open("VowriteKit/Sources/VowriteKit/Resources/providers.json"))'
+   cd .. && ops/scripts/test.sh
+   python3 -c 'import json; json.load(open("VowriteKit/Sources/VowriteKit/Resources/providers.json"))'
    ```
-   Smoke-test at least the new default models with real keys via the app's
-   API connection tester (Settings → API Keys).
-6. **Website Track A** — sync `docs/pricing.html` (+ provider sections) per
-   `ops/CHECKLIST_WEBSITE.md`, dedicated `docs(website-A):` commit.
-7. **Tracking docs** — internal FEATURES/DASHBOARD/spec updates; CHANGELOG
-   routing is `[mac, ios]` for catalog changes (both files, per-platform prose).
-8. **STT watchlist** — refresh `Vowrite-internal/tracking/models/STT_WATCHLIST.md`
-   (cloud + local candidates better than Whisper); promote candidates worth
-   integrating into IDEAS/FEATURES.
-9. **Re-baseline:**
+
+   Smoke-test new defaults with real provider keys through Settings > API Keys.
+   Missing live credentials remain an explicit external validation gate.
+
+7. **Update adjacent surfaces.** Run website Track A, refresh the internal STT
+   watchlist, and update feature/tracking docs. Catalog changes are shared, so
+   route user-visible entries to both platform changelogs with platform-specific
+   wording.
+
+8. **Review the proposed baseline.** Verify that raw aliases, canonical
+   namespaces, source statuses, and scoped retirements are all preserved.
+
+9. **Re-baseline only after the curation gate.** The first v2 update belongs to
+   F-086 after its catalog diff and validation pass:
+
    ```bash
    python3 ops/scripts/model-watch.py --update-state
-   git add ops/model-watch/state.json && git commit -m "chore: model-watch re-baseline"
+   git diff -- ops/model-watch/state.json
+   git add ops/model-watch/state.json
+   git commit -m "chore: model-watch re-baseline"
    ```
-   Close the month's `model-watch` issue.
 
-## providers.json catalog rules
+   Re-run the read-only watcher. Close the `model-watch` issue only when the
+   remaining findings and incomplete source coverage are understood and
+   recorded.
 
-1. **Official-source-only IDs.** Every model ID must be copied from an
-   official doc or an official `/models` response fetched during this update.
-   No guessing version suffixes.
-2. **Thinking off by default (F-073).** Any reasoning-capable model gets
-   `polishOverrides` that disable/minimize thinking (table below). If thinking
-   cannot be disabled, append `(thinking on, slower)` to the description so
-   the picker is honest.
-3. **Tiering per provider:** `defaultModel` = the balanced fast-cheap choice;
-   list one flagship and one cheapest; keep ≤ 6 models per pipeline per
-   provider — the picker is not a museum. Older generations stay only while
-   they serve a real fallback purpose.
-4. **`defaultModel` must appear in `models[]`.**
-5. **Retirements.** Upstream-announced sunset → keep the entry until the
-   sunset date with `description: "… (deprecates YYYY-MM-DD)"`, then delete.
-   Silently-gone IDs (reconciliation "possibly retired") → verify, then delete.
-6. **Descriptions:** ≤ ~8 words, user-facing benefit ("Fastest", "Cheapest,
-   high-volume", "Frontier — best reasoning"). Chinese OK for CN-only
-   providers (existing style).
-7. **ID formats differ:** SiliconFlow/Together/OpenRouter use `org/model`;
-   DashScope/DeepSeek/Moonshot/Zhipu use bare names; Gemini compat layer
-   strips the `models/` prefix. Copy exactly.
+## `providers.json` catalog rules
 
-### Thinking-disable parameter cheat sheet (verify each cycle)
+1. **Official-source-only IDs.** Copy each model ID from official provider
+   documentation or a direct official API response gathered in this update.
+2. **Thinking off by default (F-073).** Add verified `polishOverrides` for
+   reasoning-capable models. If thinking cannot be disabled, say so in the
+   user-facing description.
+3. **Curate, do not accumulate.** For cloud providers, keep a balanced default,
+   a flagship, and a low-cost option, with no more than six models per pipeline
+   unless an approved feature documents an exception.
+4. **Default integrity.** Every `defaultModel` must appear in its `models` list.
+5. **Retirements.** Keep a dated deprecation marker until the applicable
+   retirement, then remove or migrate it through a reviewed feature. A direct
+   endpoint mismatch still requires verification before deletion.
+6. **Descriptions.** Keep them short and user-facing. Regional providers may
+   use localized descriptions when that improves clarity.
+7. **Preserve official ID syntax.** Organization prefixes and compatibility
+   wrappers differ by provider; never normalize catalog IDs from aggregator
+   conventions.
 
-| Provider | Parameter (OpenAI-compat top-level) |
+### Thinking-control reference (verify every cycle)
+
+| Provider | OpenAI-compatible top-level parameter |
 |---|---|
-| OpenAI (gpt-5.x) | `"reasoning_effort": "minimal"` (`"none"` where supported) |
-| Gemini (compat layer) | `"reasoning_effort": "none"` (pro tiers: `"minimal"`) |
+| OpenAI (supported GPT-5.x models) | `"reasoning_effort": "none"`; use another value only when official model docs require it |
+| Gemini compatibility layer | `"reasoning_effort": "none"` (some pro tiers may require `"minimal"`) |
 | DeepSeek | `"thinking": {"type": "disabled"}` |
 | Qwen / DashScope | `"enable_thinking": false` |
 | Kimi / Moonshot | `"thinking": {"type": "disabled"}` |
 | Zhipu GLM | `"thinking": {"type": "disabled"}` |
 | MiniMax | `"thinking": {"type": "disabled"}` |
 | Volcengine Doubao | `"thinking": {"type": "disabled"}` |
-| Together (hybrid models) | `"reasoning": {"enabled": false}` |
-| Groq (qwen3 etc.) | `"reasoning_effort": "none"` |
-| Anthropic (native Messages) | thinking off unless requested — no override needed |
+| Together hybrid models | `"reasoning": {"enabled": false}` |
+| Groq reasoning models | `"reasoning_effort": "none"` |
+| Anthropic native Messages | Thinking is off unless requested; no override needed |
 
 ## New-provider checklist
 
-Metadata is registry-driven, but provider *identity* is still a Swift enum:
+Registry metadata is data-driven, but provider identity is still a Swift enum:
 
-1. `VowriteKit/Sources/VowriteKit/Config/APIProvider.swift` — new case +
-   `providerID` mapping (raw value = display name; mind Keychain identity).
-2. `providers.json` — full entry: `baseURL`, `auth` (style/placeholder/keyURL),
-   `capabilities`, `stt`/`polish` blocks, `platformFilter` if local-only.
-3. KeyVault / Settings UI / iOS — automatic via `availableCases` generics
-   (verified by F-068); no per-provider UI code.
-4. Optional: `APIPreset.swift` one-click preset — only for a genuinely
-   recommended combo.
-5. `ops/scripts/model-watch.py` — add the provider to `KEY_ENV` (has an
-   OpenAI-compatible `GET /models`) or `SKIP_REASONS` (doesn't), and its
-   OpenRouter vendor prefix to `WATCH_PREFIXES` if one exists.
-6. Non-OpenAI STT protocol → STTAdapter implementation (F-039 pattern);
-   polish-only OpenAI-compatible providers need zero service code.
-7. Validate per step 5 above; note regional latency in the spec and UI.
+1. Add the provider case and stable `providerID` mapping in
+   `VowriteKit/Sources/VowriteKit/Config/APIProvider.swift`.
+2. Add the complete `providers.json` entry: base URL, authentication,
+   capabilities, model blocks, and any platform filter.
+3. Verify KeyVault, Settings, and iOS availability through the generic
+   `availableCases` path.
+4. Add an `APIPreset` only for a genuinely recommended combination.
+5. Add an official direct catalog source to the watcher when one exists.
+   Otherwise document a precise skip reason. An OpenRouter prefix is never a
+   substitute.
+6. Add an `STTAdapter` for a non-OpenAI STT protocol; OpenAI-compatible polish
+   providers generally need no service-specific code.
+7. Run the full validation procedure and record regional latency or data
+   handling constraints in the feature spec and UI.
 
-Reference implementations: F-030 (SiliconFlow/Kimi/MiniMax), F-068 (region
-split), F-062 (previous full refresh).
+Reference implementations: F-030 (provider integration), F-068 (region split),
+and F-062 (catalog refresh).
 
 ## Official data sources
 
 | Provider | Models / pricing |
 |---|---|
-| OpenAI | <https://platform.openai.com/docs/models> · <https://openai.com/api/pricing/> |
-| Anthropic | <https://platform.claude.com/docs/en/about-claude/models> · pricing page |
-| Google Gemini | <https://ai.google.dev/gemini-api/docs/models> · <https://ai.google.dev/gemini-api/docs/pricing> |
+| OpenAI | <https://platform.openai.com/docs/models> and <https://openai.com/api/pricing/> |
+| Anthropic | <https://platform.claude.com/docs/en/about-claude/models> and the official pricing page |
+| Google Gemini | <https://ai.google.dev/gemini-api/docs/models> and <https://ai.google.dev/gemini-api/docs/pricing> |
 | DeepSeek | <https://api-docs.deepseek.com/quick_start/pricing> |
 | Qwen / DashScope | <https://help.aliyun.com/zh/model-studio/models> |
-| Kimi / Moonshot | <https://platform.moonshot.cn/docs/price/chat>（迁移中：platform.kimi.com） |
-| MiniMax | <https://platform.minimax.io/docs> · <https://platform.minimaxi.com/> |
-| Zhipu | <https://docs.bigmodel.cn/> · <https://bigmodel.cn/pricing> |
-| Volcengine Ark | <https://www.volcengine.com/docs/82379> · <https://www.volcengine.com/pricing> |
-| SiliconFlow | <https://docs.siliconflow.cn/> · <https://www.siliconflow.com/pricing> |
-| Groq | <https://console.groq.com/docs/models> · <https://groq.com/pricing> |
+| Kimi / Moonshot | <https://platform.moonshot.cn/docs/price/chat> and <https://platform.kimi.com/> |
+| MiniMax | <https://platform.minimax.io/docs> and <https://platform.minimaxi.com/> |
+| Zhipu | <https://docs.bigmodel.cn/> and <https://bigmodel.cn/pricing> |
+| Volcengine Ark | <https://www.volcengine.com/docs/82379> and <https://www.volcengine.com/pricing> |
+| SiliconFlow | <https://docs.siliconflow.cn/> and <https://www.siliconflow.com/pricing> |
+| Groq | <https://console.groq.com/docs/models>, <https://console.groq.com/docs/deprecations>, and <https://groq.com/pricing> |
 | Together | <https://docs.together.ai/docs/serverless-models> |
 | Mistral | <https://docs.mistral.ai/getting-started/models/> |
 | xAI | <https://docs.x.ai/docs/models> |
+| Cerebras | <https://api.cerebras.ai/public/v1/models> and official model documentation |
 | Deepgram | <https://developers.deepgram.com/docs/models-languages-overview> |
-| OpenRouter (signal only) | <https://openrouter.ai/api/v1/models> |
-| STT leaderboards | HF Open ASR leaderboard · artificialanalysis.ai/speech-to-text · SpeechIO |
+| OpenRouter (discovery only) | <https://openrouter.ai/api/v1/models> |
 
-## model-watch.py reference
+## Watcher command reference
 
-- **Sources:** OpenRouter public catalog (always) + per-provider `GET /models`
-  for every provider with its env key set (`KEY_ENV` in the script).
-- **State:** `ops/model-watch/state.json` — the last curated baseline
-  (OpenRouter IDs + per-provider IDs). Committed. A run only reports deltas
-  vs this baseline, so the monthly issue keeps nagging until curation lands.
-- **Exit codes:** `0` no drift · `10` findings · `3` no source reachable ·
-  `1` fatal (bad providers.json).
-- **Flags:** `--report FILE` (write markdown), `--update-state` (re-baseline),
-  `--limit-new N`, `--timeout S`.
-- **CI:** monthly + manual dispatch; provider keys are optional repo secrets —
-  absent secrets simply reduce reconciliation coverage, the OpenRouter signal
-  never needs one.
+- **Sources:** OpenRouter public catalog, Cerebras public catalog, and supported
+  keyed direct-provider endpoints.
+- **State:** `ops/model-watch/state.json`, the last reviewed raw and canonical
+  baseline. A read-only run continues to report drift until curation lands.
+- **Exit codes:** `0` no actionable drift or deadline; `10` actionable
+  discovery/deprecation warning; `3` every network source unavailable; `1`
+  local catalog, manifest, state, or JSON fatal error.
+- **Flags:** `--report FILE`, `--show-aliases`, `--limit-new N`, `--timeout S`,
+  and the explicitly gated `--update-state`.
+- **CI:** weekly plus manual dispatch; offline tests run first; missing optional
+  keys remain visible as `SKIPPED_NO_KEY`; no state or catalog mutation occurs.

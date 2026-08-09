@@ -1,0 +1,45 @@
+{
+  "providers": [
+    {
+      "id": "openrouter",
+      "baseURL": "https://openrouter.ai/api/v1",
+      "stt": {"models": []},
+      "polish": {"models": []}
+    },
+    {
+      "id": "cerebras",
+      "baseURL": "https://api.cerebras.ai/v1",
+      "stt": {"models": []},
+      "polish": {"models": [{"id": "gpt-oss-120b"}]}
+    },
+    {
+      "id": "groq",
+      "baseURL": "https://api.groq.com/openai/v1",
+      "stt": {"models": []},
+      "polish": {"models": [{"id": "retired-model"}]}
+    }
+  ],
+  "state": {
+    "schema": 1,
+    "last_run": "2026-08-01T00:00:00+00:00",
+    "openrouter_known_ids": ["openai/known"],
+    "provider_models": {"cerebras": ["gpt-oss-120b"]}
+  },
+  "manifest": {
+    "schema": 1,
+    "evidenceFreshnessDays": 30,
+    "deprecations": [
+      {
+        "provider": "groq",
+        "model": "retired-model",
+        "capability": "polish",
+        "retireAt": "2026-08-08T00:00:00Z",
+        "scope": "free_developer",
+        "unaffectedScope": "committed_spend_enterprise",
+        "replacement": "replacement-model",
+        "sourceURL": "https://example.test/deprecations",
+        "verifiedAt": "2026-08-09"
+      }
+    ]
+  }
+}

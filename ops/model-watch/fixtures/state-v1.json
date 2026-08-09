@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "last_run": "2026-07-16T22:23:08+00:00",
+  "openrouter_known_ids": [
+    "openai/known-model",
+    "openai/known-model:batch"
+  ],
+  "provider_models": {
+    "openai": [
+      "gpt-direct",
+      "gpt-direct:batch"
+    ]
+  }
+}

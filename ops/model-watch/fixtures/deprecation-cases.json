@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "evidenceFreshnessDays": 30,
+  "deprecations": [
+    {
+      "provider": "fixture",
+      "model": "retired-model",
+      "capability": "polish",
+      "retireAt": "2026-08-08T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "replacement": "replacement-a",
+      "sourceURL": "https://example.test/deprecations",
+      "verifiedAt": "2026-08-09"
+    },
+    {
+      "provider": "fixture",
+      "model": "seven-day-model",
+      "capability": "polish",
+      "retireAt": "2026-08-16T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "replacement": "replacement-b",
+      "sourceURL": "https://example.test/deprecations",
+      "verifiedAt": "2026-08-09"
+    },
+    {
+      "provider": "fixture",
+      "model": "fourteen-day-model",
+      "capability": "polish",
+      "retireAt": "2026-08-23T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "replacement": "replacement-c",
+      "sourceURL": "https://example.test/deprecations",
+      "verifiedAt": "2026-08-09"
+    },
+    {
+      "provider": "fixture",
+      "model": "thirty-day-model",
+      "capability": "polish",
+      "retireAt": "2026-09-08T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "replacement": "replacement-d",
+      "sourceURL": "https://example.test/deprecations",
+      "verifiedAt": "2026-08-09"
+    },
+    {
+      "provider": "fixture",
+      "model": "missing-replacement-model",
+      "capability": "polish",
+      "retireAt": "2026-09-08T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "sourceURL": "https://example.test/deprecations",
+      "verifiedAt": "2026-08-09"
+    },
+    {
+      "provider": "fixture",
+      "model": "stale-evidence-model",
+      "capability": "polish",
+      "retireAt": "2026-12-01T00:00:00Z",
+      "scope": "free_developer",
+      "unaffectedScope": "committed_spend_enterprise",
+      "replacement": "replacement-e",
+      "sourceURL": "https://example.test/deprecations",
+      "verifiedAt": "2026-07-09"
+    }
+  ]
+}

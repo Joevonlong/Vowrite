@@ -1,0 +1,9 @@
+{
+  "expectedCodes": {
+    "401": "ERROR_HTTP_401",
+    "429": "ERROR_HTTP_429",
+    "timeout": "ERROR_TIMEOUT",
+    "malformed": "ERROR_MALFORMED_JSON",
+    "invalid_utf8": "ERROR_PARSE"
+  }
+}
