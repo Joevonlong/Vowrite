@@ -3,7 +3,7 @@
 > F-082 established read-only upstream model detection. F-085 adds
 > source/namespace normalization, scoped deprecation guardrails, public
 > Cerebras reconciliation, and versioned state. F-086 owns the next catalog
-> curation and the first permitted v2 re-baseline.
+> curation and the first permitted v2 re-baseline after external acceptance.
 
 This is the repeatable procedure for keeping Vowrite's model catalog
 (`VowriteKit/Sources/VowriteKit/Resources/providers.json`) current. Detection
@@ -23,7 +23,8 @@ that are not proof of a direct-provider API model ID.
 5. A replacement in the deprecation manifest is a reviewed suggestion, never
    an automatic migration.
 6. During F-085, do not run `--update-state`. The first v2 baseline may be
-   written only after F-086 catalog curation and validation are complete.
+   written only after F-086's target-account requests and quantified evaluation
+   are accepted, approved public rows land, and the resulting diff is reviewed.
 
 ## Cadence and triggers
 
@@ -166,8 +167,9 @@ intact.
 The update gate is strict:
 
 - F-085 implementation and CI: `--update-state` is prohibited.
-- First v2 baseline: allowed only after F-086 has curated and validated the
-  product catalog and the proposed state diff has been reviewed.
+- First v2 baseline: allowed only after F-086 has accepted the target-key live
+  requests and 36-sample polish / 30-clip STT evidence, landed only the approved
+  public rows and migrations, and reviewed the proposed state diff.
 - Later cycles: allowed only inside an approved catalog-curation feature after
   the same source verification and test gates.
 
@@ -193,10 +195,13 @@ The update gate is strict:
 4. **Check retirement scope.** Confirm both affected and unaffected account
    tiers. Update `deprecations.json` only from a reviewed provider source.
 
-5. **Curate `providers.json` on the approved feature branch.** For the current
-   cycle this is F-086, not F-085. Follow the catalog rules below.
+5. **Evaluate before public curation.** Use target-tier keys and the controlled
+   datasets. Record the sanitized evidence in the cycle's evaluation artifact.
+   Until it is accepted, do not add or replace bundled rows, enable a migration,
+   write a public changelog entry, or re-baseline watcher state.
 
-6. **Validate code and catalog:**
+6. **Curate and validate after acceptance.** On the approved feature branch,
+   add only accepted rows and provider-scoped migrations, then run:
 
    ```bash
    python3 ops/scripts/tests/test_model_watch.py
@@ -206,19 +211,22 @@ The update gate is strict:
    python3 -c 'import json; json.load(open("VowriteKit/Sources/VowriteKit/Resources/providers.json"))'
    ```
 
-   Smoke-test new defaults with real provider keys through Settings > API Keys.
+   Smoke-test every new or changed row with real provider keys through Settings
+   > API Keys. A default additionally requires the stricter default gate.
    Missing live credentials remain an explicit external validation gate.
 
-7. **Update adjacent surfaces.** Run website Track A, refresh the internal STT
-   watchlist, and update feature/tracking docs. Catalog changes are shared, so
-   route user-visible entries to both platform changelogs with platform-specific
-   wording.
+7. **Update adjacent surfaces after public enablement.** Run website Track A,
+   refresh the internal STT watchlist, and update feature/tracking docs. Accepted
+   shared catalog changes go to both platform changelogs with platform-specific
+   wording; pending candidates never appear as shipped changes.
 
 8. **Review the proposed baseline.** Verify that raw aliases, canonical
    namespaces, source statuses, and scoped retirements are all preserved.
 
-9. **Re-baseline only after the curation gate.** The first v2 update belongs to
-   F-086 after its catalog diff and validation pass:
+9. **Re-baseline only after the external and curation gates.** The first v2
+   update belongs to F-086 only after target-key requests, the 36/30 evaluation,
+   public rows, migrations, catalog validation, and changelog review are all
+   accepted:
 
    ```bash
    python3 ops/scripts/model-watch.py --update-state
@@ -251,6 +259,40 @@ The update gate is strict:
    wrappers differ by provider; never normalize catalog IDs from aggregator
    conventions.
 
+### F-086 pending candidate contract (2026-08)
+
+These are evaluation candidates, not bundled catalog rows or approved
+migrations. The request rules below are the exact contracts to test; a passing
+offline fixture is not a substitute for target-account evidence.
+
+| Provider / capability | Candidate action after acceptance | Request contract to validate | Default remains |
+|---|---|---|---|
+| OpenAI polish | Add `gpt-5.6-terra` | `"reasoning_effort": "none"` | `gpt-5.4-mini` |
+| Claude polish | Replace `claude-opus-4-8` with `claude-opus-5` | Native Messages; `"thinking": {"type": "disabled"}`; omit temperature | `claude-sonnet-5` |
+| Gemini polish | Replace `gemini-3.5-flash` with `gemini-3.6-flash` and `gemini-3.1-flash-lite` with `gemini-3.5-flash-lite` | `"reasoning_effort": "none"`; omit deprecated scene temperature | `gemini-2.5-flash` |
+| SiliconFlow polish | Add `deepseek-ai/DeepSeek-V4-Flash` as non-default after acceptance | `"thinking": {"type": "disabled"}` | `deepseek-ai/DeepSeek-V3` |
+| SiliconFlow polish | Replace `deepseek-ai/DeepSeek-V3.1-Terminus` only with accepted `deepseek-ai/DeepSeek-V4-Pro` | `"thinking": {"type": "disabled"}` | `deepseek-ai/DeepSeek-V3` |
+| SiliconFlow polish | Add `zai-org/GLM-5.2` as non-default after acceptance | `"thinking": {"type": "disabled"}` | `deepseek-ai/DeepSeek-V3` |
+| Qianfan polish | Evaluate ERNIE 5.1 only after `/models` proves its exact target-account slug | Record the exact accepted request payload; no slug is pre-approved | `ernie-4.5-turbo-128k` |
+| OpenRouter STT | Add `openai/whisper-large-v3-turbo` | Existing OpenRouter transcription request contract | `openai/whisper-large-v3` |
+
+Each candidate requires a recorded target account, tier, and region; at least
+five successful live requests with zero schema/parameter 4xx failures; and an
+accepted 36-sample polish or 30-clip STT result. Polish overrides must pass both
+ordinary and speculative paths. Only then may its bundled row and any
+provider-qualified migration land. Re-baseline only after every accepted public
+row has landed and the final watcher diff is reviewed.
+
+No default changes are part of F-086. A later default proposal must separately
+pass the stricter default thresholds and record Joe's explicit approval.
+Provider-less Mode storage remains byte-for-byte unchanged.
+
+Qwen Flash remains gated on the target region's `/models` response plus five
+chat requests. MiniMax M3 remains unchanged until international and CN
+endpoints are proved independently. Claude Fable 5/Mythos 5, Kimi K3/K2.7
+Code, Qwen 3.8 Max Preview, Ollama `:cloud` tags, and Volcengine Seed Evolving
+remain excluded. xAI batch STT belongs to F-088 and remains disabled here.
+
 ### Thinking-control reference (verify every cycle)
 
 | Provider | OpenAI-compatible top-level parameter |
@@ -265,7 +307,7 @@ The update gate is strict:
 | Volcengine Doubao | `"thinking": {"type": "disabled"}` |
 | Together hybrid models | `"reasoning": {"enabled": false}` |
 | Groq reasoning models | `"reasoning_effort": "none"` |
-| Anthropic native Messages | Thinking is off unless requested; no override needed |
+| Anthropic native Messages | Thinking is off unless requested; any explicit disabled object is a candidate-specific contract that still requires live validation |
 
 ## New-provider checklist
 
