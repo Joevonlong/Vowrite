@@ -446,6 +446,8 @@ registered_worker_command_allowed() {
     local relative_path
     local index
 
+    has_shell_control_syntax "$command_text" && return 1
+
     if parse_git_invocation "$command_text"; then
         [[ "$GIT_DANGEROUS_GLOBAL" == false ]] || return 1
         [[ "$GIT_HAS_C" == false ]] || return 1
