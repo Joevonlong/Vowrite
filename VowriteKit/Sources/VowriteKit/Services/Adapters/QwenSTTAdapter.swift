@@ -73,9 +73,15 @@ struct QwenSTTAdapter: STTAdapter {
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw VowriteError.apiError("Qwen ASR error: \(body)")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VowriteError.networkError("Invalid response from Qwen ASR API")
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .qwenASRRequest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -122,9 +128,15 @@ struct QwenSTTAdapter: STTAdapter {
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw VowriteError.apiError("Qwen ASR submit failed: \(body)")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VowriteError.networkError("Invalid response from Qwen ASR submit API")
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw ProviderHTTPErrorPolicy.publicError(
+                context: .qwenASRSubmitRequest,
+                response: httpResponse,
+                discardingResponseBody: data
+            )
         }
 
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -150,7 +162,18 @@ struct QwenSTTAdapter: STTAdapter {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             request.timeoutInterval = 15
 
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw VowriteError.networkError("Invalid response from Qwen ASR status API")
+            }
+            guard httpResponse.statusCode == 200 else {
+                throw ProviderHTTPErrorPolicy.publicError(
+                    context: .qwenASRStatusRequest,
+                    response: httpResponse,
+                    discardingResponseBody: data
+                )
+            }
 
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let output = json["output"] as? [String: Any],
@@ -168,8 +191,10 @@ struct QwenSTTAdapter: STTAdapter {
             }
 
             if status == "FAILED" {
-                let msg = output["message"] as? String ?? "Unknown error"
-                throw VowriteError.apiError("Qwen ASR error: \(msg)")
+                throw ProviderHTTPErrorPolicy.publicError(
+                    context: .qwenASRTask,
+                    responseMetadata: httpResponse
+                )
             }
         }
 

@@ -5,8 +5,20 @@ import VowriteKit
 
 @main
 struct VowriteApp: App {
-    @StateObject private var appState = AppState()
+    @StateObject private var appState: AppState
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    init() {
+        // Configuration compatibility migrations must finish before AppState
+        // creates services that read APIConfig.
+        MiniMaxMigration.runIfNeeded()
+        MiniMaxOAuthPurge.runIfNeeded()
+        APIConfigMigration.runIfNeeded()
+        APIConfig.migratePresetIDs()
+        KimiBaseURLRepairMigration.runIfNeeded()
+        ProviderModelMigration202608.runIfNeeded()
+        _appState = StateObject(wrappedValue: AppState())
+    }
 
     var body: some Scene {
         MenuBarExtra {

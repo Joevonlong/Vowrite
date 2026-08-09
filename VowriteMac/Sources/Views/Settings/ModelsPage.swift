@@ -11,6 +11,7 @@ struct ModelsPageView: View {
     @State private var configSaved = false
     @State private var sttTestState: EndpointTestState = .idle
     @State private var polishTestState: EndpointTestState = .idle
+    @State private var presetRecovery = APIConfig.pendingPresetRecovery
 
     private static let customPresetID = "__custom_preset__"
 
@@ -73,6 +74,34 @@ struct ModelsPageView: View {
 
     private var presetsContent: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if let recovery = presetRecovery {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("\(recovery.name) preset unavailable", systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    Text(recovery.message)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        Button("Use Recommended") {
+                            let preset = BuiltInAPIPreset.recommended
+                            APIConfig.apply(preset.configuration, presetID: preset.id)
+                            workingConfig = preset.configuration
+                            selectedPresetID = preset.id
+                            presetRecovery = nil
+                        }
+                        .buttonStyle(.borderedProminent)
+                        Button("Keep Current Settings") {
+                            APIConfig.acknowledgePresetRecoveryKeepingCurrentConfiguration()
+                            selectedPresetID = Self.customPresetID
+                            presetRecovery = nil
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                Divider()
+            }
+
             SettingsRow(
                 title: "Active Preset",
                 description: currentPresetDescription,
@@ -190,6 +219,7 @@ struct ModelsPageView: View {
 
     private func loadState() {
         workingConfig = APIConfig.current
+        presetRecovery = APIConfig.pendingPresetRecovery
         selectedPresetID = APIConfig.activePreset?.id ?? APIPresetStore.matchingPreset(for: workingConfig)?.id ?? Self.customPresetID
         sttTestState = .idle
         polishTestState = .idle

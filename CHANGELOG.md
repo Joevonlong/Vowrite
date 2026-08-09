@@ -7,6 +7,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Fixed
+
+- **F-084 Model request compatibility**: Corrected known-invalid catalog parameters and retired tier-agnostic model rows, added provider-scoped request fallbacks, and safely migrates provider-qualified saved selections without rewriting provider-less Mode overrides. Claude speculative polish now uses its native Messages API path.
+
 ## [0.2.2.0] — 2026-07-17
 
 ### Added

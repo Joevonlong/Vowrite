@@ -72,4 +72,44 @@ final class PolishRequestOverridesTests: XCTestCase {
         XCTAssertFalse(payload.keys.contains("temperature"))
         XCTAssertNotNil(payload["thinking"])
     }
+
+    func testKimiCatalogOverrideReplacesModeTemperatureOnRealPayloadShape() throws {
+        let overrides = try XCTUnwrap(
+            ProviderRegistry.shared.polishOverrides(providerID: "kimi", modelID: "kimi-k2.6")
+        )
+        var payload = basePayload()
+
+        applyPolishOverrides(to: &payload, overrides: overrides)
+
+        XCTAssertEqual(payload["temperature"] as? Double, 0.6)
+        let thinking = payload["thinking"] as? [String: Any]
+        XCTAssertEqual(thinking?["type"] as? String, "disabled")
+    }
+
+    func testSharedCompatiblePayloadBuilderKeepsOrdinaryAndSpeculativeOverridesInParity() throws {
+        let overrides = try XCTUnwrap(
+            ProviderRegistry.shared.polishOverrides(providerID: "kimi", modelID: "kimi-k2.6")
+        )
+        let ordinary = makeOpenAICompatiblePolishPayload(
+            model: "kimi-k2.6",
+            systemPrompt: "system",
+            userPrompt: "user",
+            temperature: 0.2,
+            stream: false,
+            overrides: overrides
+        )
+        let speculative = makeOpenAICompatiblePolishPayload(
+            model: "kimi-k2.6",
+            systemPrompt: "system",
+            userPrompt: "user",
+            temperature: 0.2,
+            stream: true,
+            overrides: overrides
+        )
+
+        XCTAssertEqual(ordinary["temperature"] as? Double, 0.6)
+        XCTAssertEqual(speculative["temperature"] as? Double, 0.6)
+        XCTAssertNil(ordinary["stream"])
+        XCTAssertEqual(speculative["stream"] as? Bool, true)
+    }
 }

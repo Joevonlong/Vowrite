@@ -13,10 +13,21 @@ public final class WhisperService {
 
     public init() {}
 
-    public func transcribe(audioURL: URL, language: String? = nil, prompt: String? = nil) async throws -> String {
+    public func transcribe(
+        audioURL: URL,
+        language: String? = nil,
+        prompt: String? = nil,
+        model modelOverride: String? = nil
+    ) async throws -> String {
         let configuration = APIConfig.stt
         let provider = configuration.provider
         let adapter = Self.adapter(for: provider)
+        let selectedModel = modelOverride ?? configuration.resolvedModel
+        let model = ProviderModelSafetyRules.safeModel(
+            providerID: provider.providerID,
+            capability: .stt,
+            storedModel: selectedModel
+        )
 
         // F-079: additively prepend a script/orthography exemplar hint to the
         // vocabulary prompt for region variants where it matters (e.g.
@@ -27,7 +38,7 @@ public final class WhisperService {
 
         return try await adapter.transcribe(
             audioURL: audioURL,
-            model: configuration.model,
+            model: model,
             language: language,
             prompt: effectivePrompt,
             apiKey: configuration.key,
