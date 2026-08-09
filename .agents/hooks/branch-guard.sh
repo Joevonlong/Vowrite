@@ -160,7 +160,95 @@ is_safe_control_command() {
     [[ "$command_text" =~ ^[[:space:]]*${root//./\.}/scripts/publish-release\.sh([[:space:]].*)?[[:space:]]*$ ]] && return 0
     [[ "$command_text" =~ ^[[:space:]]*(\./)?ops/scripts/release\.sh([[:space:]].*)?[[:space:]]*$ ]] && return 0
     [[ "$command_text" =~ ^[[:space:]]*${root//./\.}/ops/scripts/release\.sh([[:space:]].*)?[[:space:]]*$ ]] && return 0
+    agent_platform_sync_check_command "$command_text" "$root" && return 0
     return 1
+}
+
+parse_agent_platform_sync_invocation() {
+    local command_text="$1"
+    local root="$2"
+    local tokens=()
+    local binary
+    local token
+    local index
+
+    SYNC_MODE="apply"
+    SYNC_HAS_PRODUCT_ROOT=false
+    SYNC_HAS_SOURCE_COMMIT=false
+    has_shell_control_syntax "$command_text" && return 1
+    IFS=$' \t' read -r -a tokens <<< "$command_text"
+    (( ${#tokens[@]} > 0 )) || return 1
+    binary="${tokens[0]}"
+    binary="${binary#\"}"; binary="${binary#\'}"
+    binary="${binary%\"}"; binary="${binary%\'}"
+    case "$binary" in
+        scripts/sync-agent-platform.sh|./scripts/sync-agent-platform.sh|"$root/scripts/sync-agent-platform.sh") ;;
+        *) return 1 ;;
+    esac
+
+    index=1
+    while (( index < ${#tokens[@]} )); do
+        token="${tokens[$index]}"
+        token="${token#\"}"; token="${token#\'}"
+        token="${token%\"}"; token="${token%\'}"
+        case "$token" in
+            --check)
+                [[ "$SYNC_MODE" == "apply" ]] || return 1
+                SYNC_MODE="check"
+                index=$((index + 1))
+                ;;
+            --product-root)
+                (( index + 1 < ${#tokens[@]} )) || return 1
+                SYNC_HAS_PRODUCT_ROOT=true
+                index=$((index + 2))
+                ;;
+            --source-commit)
+                (( index + 1 < ${#tokens[@]} )) || return 1
+                SYNC_HAS_SOURCE_COMMIT=true
+                index=$((index + 2))
+                ;;
+            -h|--help)
+                SYNC_MODE="check"
+                index=$((index + 1))
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    done
+    return 0
+}
+
+agent_platform_sync_check_command() {
+    local command_text="$1"
+    local root="$2"
+    parse_agent_platform_sync_invocation "$command_text" "$root" || return 1
+    [[ "$SYNC_MODE" == "check" ]]
+}
+
+agent_platform_sync_apply_allowed() {
+    local command_text="$1"
+    local root="$2"
+    local target
+    local targets=(
+        ".agents/hooks/branch-guard.sh"
+        ".agents/skills/vowrite-feature-lifecycle/SKILL.md"
+        ".agents/skills/vowrite-provider-integration/SKILL.md"
+        ".agents/skills/vowrite-release/SKILL.md"
+        ".agents/skills/vowrite-review/SKILL.md"
+        ".agents/agent-platform.lock"
+        ".githooks/pre-push"
+        "scripts/agent-task.sh"
+        "scripts/bootstrap-agent-platform.sh"
+    )
+
+    [[ -d "$root/Vowrite-internal" && -x "$root/scripts/sync-agent-platform.sh" ]] || return 1
+    parse_agent_platform_sync_invocation "$command_text" "$root" || return 1
+    [[ "$SYNC_MODE" == "apply" && "$SYNC_HAS_PRODUCT_ROOT" == true && "$SYNC_HAS_SOURCE_COMMIT" == true ]] || return 1
+    for target in "${targets[@]}"; do
+        manifest_contains_path "$REGISTERED_MANIFEST" "$target" || return 1
+    done
+    return 0
 }
 
 parse_git_invocation() {
@@ -367,7 +455,7 @@ registered_worker_command_allowed() {
         esac
     fi
 
-    [[ "$command_text" =~ ^[[:space:]]*(\./)?(ops/scripts/test\.sh|ops/scripts/test-agent-platform\.sh|ops/scripts/website-check\.sh|scripts/check-[^[:space:]]+\.sh|scripts/check-parity\.sh|scripts/sync-agent-platform\.sh)([[:space:]]|$) ]] && return 0
+    [[ "$command_text" =~ ^[[:space:]]*(\./)?(ops/scripts/test\.sh|ops/scripts/test-agent-platform\.sh|ops/scripts/website-check\.sh|scripts/check-[^[:space:]]+\.sh|scripts/check-parity\.sh)([[:space:]]|$) ]] && return 0
     [[ "$command_text" =~ ^[[:space:]]*([^[:space:]]*/)?(swift[[:space:]]+(build|test)|xcodebuild|shellcheck)([[:space:]]|$) ]] && return 0
 
     IFS=$' \t' read -r -a tokens <<< "$command_text"
@@ -434,6 +522,9 @@ guard_command() {
         if [[ "$branch" == "DETACHED" ]] \
             && ! jq -e '.status == "refreshing"' "$REGISTERED_MANIFEST" >/dev/null 2>&1; then
             deny "detached Bash writes are allowed only during a registered refresh conflict"
+        fi
+        if agent_platform_sync_apply_allowed "$command_text" "$root"; then
+            return 0
         fi
         if command_targets_other_main_worktree "$command_text" "$root"; then
             deny "feature worktree command targets another/main worktree"

@@ -332,6 +332,51 @@ git -C "$WORKSPACE_RELEASE_REPO" add CHANGELOG.md
 expect_exit 2 "workspace main has no product release pre-commit exemption" bash -c "cd \"$WORKSPACE_RELEASE_REPO\" && VOWRITE_RELEASE=1 .agents/hooks/branch-guard.sh --pre-commit"
 expect_exit 2 "workspace main has no product release pre-push exemption" bash -c "cd \"$WORKSPACE_RELEASE_REPO\" && printf 'refs/heads/main %s refs/heads/main %s\n' \"$(git -C "$WORKSPACE_RELEASE_REPO" rev-parse HEAD)\" \"$(printf '0%.0s' {1..40})\" | VOWRITE_RELEASE=1 .agents/hooks/branch-guard.sh --pre-push"
 
+WORKSPACE_SYNC_REPO="$TEST_ROOT/workspace-sync-repo"
+WORKSPACE_SYNC_WORKER="$TEST_ROOT/workspace-sync-worker"
+git init -q -b main "$WORKSPACE_SYNC_REPO"
+git -C "$WORKSPACE_SYNC_REPO" config user.name "Agent Platform Test"
+git -C "$WORKSPACE_SYNC_REPO" config user.email "agent-platform@example.invalid"
+mkdir -p "$WORKSPACE_SYNC_REPO/.agents/hooks" "$WORKSPACE_SYNC_REPO/scripts" "$WORKSPACE_SYNC_REPO/Vowrite-internal"
+cp "$GUARD" "$WORKSPACE_SYNC_REPO/.agents/hooks/branch-guard.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$WORKSPACE_SYNC_REPO/scripts/sync-agent-platform.sh"
+chmod +x "$WORKSPACE_SYNC_REPO/.agents/hooks/branch-guard.sh" "$WORKSPACE_SYNC_REPO/scripts/sync-agent-platform.sh"
+printf 'fixture\n' > "$WORKSPACE_SYNC_REPO/AGENTS.md"
+printf 'tracking\n' > "$WORKSPACE_SYNC_REPO/Vowrite-internal/tracking.md"
+git -C "$WORKSPACE_SYNC_REPO" add AGENTS.md .agents/hooks/branch-guard.sh scripts/sync-agent-platform.sh Vowrite-internal/tracking.md
+git -C "$WORKSPACE_SYNC_REPO" commit -q -m "test: workspace sync base"
+SYNC_SOURCE_SHA="$(git -C "$MAIN_ROOT" rev-parse HEAD)"
+sync_check_command="scripts/sync-agent-platform.sh --check --product-root $MAIN_ROOT --source-commit $SYNC_SOURCE_SHA"
+sync_check_payload="$(jq -cn --arg cwd "$WORKSPACE_SYNC_REPO" --arg command "$sync_check_command" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
+expect_exit 0 "workspace main permits only the read-only mirror check" \
+    bash -c "printf '%s\n' '$sync_check_payload' | '$WORKSPACE_SYNC_REPO/.agents/hooks/branch-guard.sh'"
+git -C "$WORKSPACE_SYNC_REPO" worktree add -q -b feature/sync-scope "$WORKSPACE_SYNC_WORKER" main
+SYNC_COMMON="$(git -C "$WORKSPACE_SYNC_REPO" rev-parse --path-format=absolute --git-common-dir)"
+mkdir -p "$SYNC_COMMON/vowrite-agent-platform/tasks"
+jq -n \
+    --arg worktree "$(cd "$WORKSPACE_SYNC_WORKER" && pwd -P)" \
+    '{schema:1,task:"T-SYNC",owner:"codex",branch:"feature/sync-scope",worktree:$worktree,write_set:["Vowrite-internal/**"],status:"active"}' \
+    > "$SYNC_COMMON/vowrite-agent-platform/tasks/T-SYNC.json"
+sync_apply_command="scripts/sync-agent-platform.sh --product-root $MAIN_ROOT --source-commit $SYNC_SOURCE_SHA"
+sync_apply_payload="$(jq -cn --arg cwd "$WORKSPACE_SYNC_WORKER" --arg command "$sync_apply_command" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
+expect_exit 2 "workspace worker cannot apply mirrors outside its registered write-set" \
+    bash -c "printf '%s\n' '$sync_apply_payload' | '$WORKSPACE_SYNC_WORKER/.agents/hooks/branch-guard.sh'"
+jq '.write_set = [
+        ".agents/hooks/branch-guard.sh",
+        ".agents/skills/vowrite-feature-lifecycle/SKILL.md",
+        ".agents/skills/vowrite-provider-integration/SKILL.md",
+        ".agents/skills/vowrite-release/SKILL.md",
+        ".agents/skills/vowrite-review/SKILL.md",
+        ".agents/agent-platform.lock",
+        ".githooks/pre-push",
+        "scripts/agent-task.sh",
+        "scripts/bootstrap-agent-platform.sh"
+    ]' "$SYNC_COMMON/vowrite-agent-platform/tasks/T-SYNC.json" \
+    > "$SYNC_COMMON/vowrite-agent-platform/tasks/T-SYNC.expanded.json"
+mv "$SYNC_COMMON/vowrite-agent-platform/tasks/T-SYNC.expanded.json" "$SYNC_COMMON/vowrite-agent-platform/tasks/T-SYNC.json"
+expect_exit 0 "workspace mirror apply requires every generated target in the registered write-set" \
+    bash -c "printf '%s\n' '$sync_apply_payload' | '$WORKSPACE_SYNC_WORKER/.agents/hooks/branch-guard.sh'"
+
 TYPECHANGE_REPO="$TEST_ROOT/typechange-repo"
 git init -q -b main "$TYPECHANGE_REPO"
 git -C "$TYPECHANGE_REPO" config user.name "Agent Platform Test"
