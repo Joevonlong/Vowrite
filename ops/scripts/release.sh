@@ -27,6 +27,7 @@ CHANGELOG="$PROJECT_ROOT/CHANGELOG.md"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
 APPCAST_STABLE="$PROJECT_ROOT/docs/appcast.xml"
 APPCAST_BETA="$PROJECT_ROOT/docs/appcast-beta.xml"
+RELEASE_GIT_COMMIT="$PROJECT_ROOT/ops/scripts/release-git-commit.sh"
 
 # Sparkle EdDSA signing tools
 SPARKLE_BIN="$APP_DIR/.build/artifacts/sparkle/Sparkle/bin"
@@ -41,19 +42,21 @@ APP_BINARY_NAME="VowriteMac"
 
 # --- Rollback on failure ---
 # Steps 1-3 below mutate CHANGELOG.md, Info.plist, and Version.swift *before*
-# the build/sign/package steps run. If anything fails after that point (build
-# error, codesign failure, missing EdDSA tooling, etc.), restore those three
-# files so a failed release attempt never leaves a half-bumped working tree.
+# the build/sign/package steps run; the appcast is updated later. If anything
+# fails, restore every governed release metadata path so a failed attempt never
+# leaves a half-bumped index or working tree.
 # Uses `git -C "$PROJECT_ROOT"` (not a bare relative path) because the script
 # changes its own working directory partway through (see Step 4's `cd
 # "$APP_DIR"`), so a plain `git checkout -- <relative path>` would resolve
 # against the wrong directory depending on when the trap fires.
 rollback_mutated_files() {
-    if ! git -C "$PROJECT_ROOT" diff --quiet -- "$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT" 2>/dev/null; then
+    local rollback_paths=("$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT" "$APPCAST_STABLE" "$APPCAST_BETA")
+    if ! git -C "$PROJECT_ROOT" diff --quiet -- "${rollback_paths[@]}" 2>/dev/null \
+        || ! git -C "$PROJECT_ROOT" diff --cached --quiet -- "${rollback_paths[@]}" 2>/dev/null; then
         echo ""
         echo "  ❌ Release failed — rolling back mutated files..."
-        git -C "$PROJECT_ROOT" checkout -- "$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT" 2>/dev/null || true
-        echo "  ↩️  Reverted: CHANGELOG.md, Info.plist, Version.swift"
+        git -C "$PROJECT_ROOT" restore --source=HEAD --staged --worktree -- "${rollback_paths[@]}" 2>/dev/null || true
+        echo "  ↩️  Reverted release metadata and appcast files"
     fi
 }
 # Note: this ERR trap catches genuine command failures (build errors, codesign
@@ -127,6 +130,10 @@ for REQUIRED_COMMAND in jq shasum; do
         exit 1
     fi
 done
+if [[ ! -x "$RELEASE_GIT_COMMIT" ]]; then
+    echo "❌ Missing executable release commit gate: $RELEASE_GIT_COMMIT"
+    exit 1
+fi
 
 if ! git -C "$PROJECT_ROOT" remote get-url origin >/dev/null 2>&1; then
     echo "❌ origin remote is required for release preparation."
@@ -501,14 +508,21 @@ cd "$PROJECT_ROOT"
 # working-tree changes (e.g. build artifacts, other in-progress edits) into
 # the release commit.
 git add "$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT"
+RELEASE_COMMIT_PATHS=("$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT")
 if $IS_BETA; then
     git add "$APPCAST_BETA"
+    RELEASE_COMMIT_PATHS+=("$APPCAST_BETA")
 else
     git add "$APPCAST_STABLE"
+    RELEASE_COMMIT_PATHS+=("$APPCAST_STABLE")
 fi
 # VOWRITE_RELEASE=1 exempts this commit from the pre-commit branch guard
 # (release version bumps touch Version.swift directly on main by design).
-VOWRITE_RELEASE=1 git commit -m "$VERSION_NUM: $DESCRIPTION" || echo "  (nothing to commit)"
+RELEASE_COMMIT_ARGS=(--message "$VERSION_NUM: $DESCRIPTION")
+for RELEASE_COMMIT_PATH in "${RELEASE_COMMIT_PATHS[@]}"; do
+    RELEASE_COMMIT_ARGS+=(--path "$RELEASE_COMMIT_PATH")
+done
+"$RELEASE_GIT_COMMIT" "${RELEASE_COMMIT_ARGS[@]}"
 
 # Files are committed — the pre-build mutations are no longer "in flight",
 # so a later failure (duplicate-tag race or intent creation) should not trigger

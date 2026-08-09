@@ -8,6 +8,7 @@ GUARD="$PROJECT_ROOT/.agents/hooks/branch-guard.sh"
 BOOTSTRAP="$PROJECT_ROOT/scripts/bootstrap-agent-platform.sh"
 TASK_CLI="$PROJECT_ROOT/scripts/agent-task.sh"
 PUBLISH_RELEASE="$PROJECT_ROOT/scripts/publish-release.sh"
+RELEASE_GIT_COMMIT="$PROJECT_ROOT/ops/scripts/release-git-commit.sh"
 PRE_PUSH="$PROJECT_ROOT/.githooks/pre-push"
 PASS_COUNT=0
 FAIL_COUNT=0
@@ -81,6 +82,7 @@ expect_executable "$GUARD" "canonical branch guard exists"
 expect_executable "$BOOTSTRAP" "bootstrap command exists"
 expect_executable "$TASK_CLI" "agent task command exists"
 expect_executable "$PUBLISH_RELEASE" "governed release publisher exists"
+expect_executable "$RELEASE_GIT_COMMIT" "release commit gate exists"
 expect_executable "$PRE_PUSH" "repository pre-push gate exists"
 expect_file "$PROJECT_ROOT/.claude/settings.json" "standalone Claude hook config exists"
 expect_file "$PROJECT_ROOT/.codex/hooks.json" "standalone Codex hook config exists"
@@ -141,6 +143,10 @@ if [[ -x "$GUARD" && -n "$MAIN_ROOT" ]]; then
     EXTERNAL_DIFF_HELPER="$TEST_ROOT/external-diff-helper"
     printf '#!/usr/bin/env bash\nprintf "executed\\n" > %q\nexit 0\n' "$EXTERNAL_DIFF_MARKER" > "$EXTERNAL_DIFF_HELPER"
     chmod +x "$EXTERNAL_DIFF_HELPER"
+    EXTERNAL_PAGER_MARKER="$TEST_ROOT/external-pager-ran"
+    EXTERNAL_PAGER_HELPER="$TEST_ROOT/external-pager-helper"
+    printf '#!/usr/bin/env bash\nprintf "executed\\n" > %q\nexit 0\n' "$EXTERNAL_PAGER_MARKER" > "$EXTERNAL_PAGER_HELPER"
+    chmod +x "$EXTERNAL_PAGER_HELPER"
     main_edit_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg file "$MAIN_ROOT/AGENTS.md" '{cwd:$cwd,tool_name:"Edit",tool_input:{file_path:$file}}')"
     feature_edit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg file "$FEATURE_ROOT/AGENTS.md" '{cwd:$cwd,tool_name:"Edit",tool_input:{file_path:$file}}')"
     feature_outside_edit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg file "$FEATURE_ROOT/VowriteKit/outside.swift" '{cwd:$cwd,tool_name:"Edit",tool_input:{file_path:$file}}')"
@@ -172,6 +178,7 @@ if [[ -x "$GUARD" && -n "$MAIN_ROOT" ]]; then
     git_no_verify_commit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg command 'git commit --no-verify -m bypass' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     git_config_env_commit_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg command 'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null git commit -m bypass' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     external_diff_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg command "GIT_EXTERNAL_DIFF=$EXTERNAL_DIFF_HELPER git diff --ext-diff" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
+    external_pager_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg command "git grep -O$EXTERNAL_PAGER_HELPER fixture -- AGENTS.md" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     release_push_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg command 'VOWRITE_RELEASE=1 git push origin main --tags' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     release_wrapper_payload="$(jq -cn --arg cwd "$MAIN_ROOT" --arg command 'scripts/publish-release.sh --tag v0.0.0.1' '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
     cross_worktree_bash_payload="$(jq -cn --arg cwd "$FEATURE_ROOT" --arg command "touch $MAIN_ROOT/Probe.swift" '{cwd:$cwd,tool_name:"Bash",tool_input:{command:$command}}')"
@@ -211,6 +218,13 @@ if [[ -x "$GUARD" && -n "$MAIN_ROOT" ]]; then
         fail "blocked external diff helper never executes"
     fi
     git -C "$MAIN_ROOT" restore AGENTS.md
+    expect_exit 2 "Git grep short pager option cannot launch an external mutator" \
+        bash -c "printf '%s\n' '$external_pager_payload' | '$GUARD' && cd '$MAIN_ROOT' && git grep -O'$EXTERNAL_PAGER_HELPER' fixture -- AGENTS.md"
+    if [[ ! -e "$EXTERNAL_PAGER_MARKER" ]]; then
+        pass "blocked Git grep pager helper never executes"
+    else
+        fail "blocked Git grep pager helper never executes"
+    fi
     expect_exit 2 "git diff --output is not classified as read-only" run_hook "$git_output_payload"
     expect_exit 2 "sort -o is not classified as read-only" run_hook "$sort_output_payload"
     expect_exit 2 "sed --in-place is not classified as read-only" run_hook "$sed_in_place_payload"
@@ -333,7 +347,53 @@ if [[ -x "$BOOTSTRAP" ]]; then
         fail "fresh repo bootstrap activates core.hooksPath"
     fi
     expect_exit 0 "fresh repo bootstrap check succeeds" bash -c "cd \"$BOOTSTRAP_REPO\" && scripts/bootstrap-agent-platform.sh --check"
+    git -C "$BOOTSTRAP_REPO" config user.name "Agent Platform Test"
+    git -C "$BOOTSTRAP_REPO" config user.email "agent-platform@example.invalid"
+    git -C "$BOOTSTRAP_REPO" add .agents/hooks/branch-guard.sh .githooks scripts/bootstrap-agent-platform.sh
+    git -C "$BOOTSTRAP_REPO" commit -q --no-verify -m "test: bootstrap fixture"
+    BOOTSTRAP_WORKTREE="$TEST_ROOT/bootstrap-worktree"
+    git -C "$BOOTSTRAP_REPO" config extensions.worktreeConfig true
+    git -C "$BOOTSTRAP_REPO" worktree add -q -b feature/bootstrap-override "$BOOTSTRAP_WORKTREE" main
+    git -C "$BOOTSTRAP_WORKTREE" config --worktree core.hooksPath /dev/null
+    expect_exit 2 "bootstrap check detects a higher-priority linked-worktree hooks override" \
+        bash -c "cd \"$BOOTSTRAP_REPO\" && scripts/bootstrap-agent-platform.sh --check"
+    expect_exit 0 "bootstrap apply clears every linked-worktree hooks override" \
+        bash -c "cd \"$BOOTSTRAP_REPO\" && scripts/bootstrap-agent-platform.sh"
+    if [[ "$(git -C "$BOOTSTRAP_REPO" config --get core.hooksPath 2>/dev/null || true)" == ".githooks" ]] \
+        && [[ "$(git -C "$BOOTSTRAP_WORKTREE" config --get core.hooksPath 2>/dev/null || true)" == ".githooks" ]] \
+        && [[ -z "$(git -C "$BOOTSTRAP_WORKTREE" config --worktree --get-all core.hooksPath 2>/dev/null || true)" ]]; then
+        pass "bootstrap leaves the repository and every linked worktree fail-closed"
+    else
+        fail "bootstrap leaves the repository and every linked worktree fail-closed"
+    fi
 fi
+
+RELEASE_COMMIT_REPO="$TEST_ROOT/release-commit-repo"
+git init -q -b main "$RELEASE_COMMIT_REPO"
+git -C "$RELEASE_COMMIT_REPO" config user.name "Agent Platform Test"
+git -C "$RELEASE_COMMIT_REPO" config user.email "agent-platform@example.invalid"
+printf 'base\n' > "$RELEASE_COMMIT_REPO/release.txt"
+git -C "$RELEASE_COMMIT_REPO" add release.txt
+git -C "$RELEASE_COMMIT_REPO" commit -q -m "test: release commit base"
+RELEASE_COMMIT_HOOKS="$TEST_ROOT/release-commit-hooks"
+mkdir -p "$RELEASE_COMMIT_HOOKS"
+printf '#!/usr/bin/env bash\nexit 23\n' > "$RELEASE_COMMIT_HOOKS/pre-commit"
+chmod +x "$RELEASE_COMMIT_HOOKS/pre-commit"
+git -C "$RELEASE_COMMIT_REPO" config core.hooksPath "$RELEASE_COMMIT_HOOKS"
+printf 'candidate\n' > "$RELEASE_COMMIT_REPO/release.txt"
+git -C "$RELEASE_COMMIT_REPO" add release.txt
+release_before="$(git -C "$RELEASE_COMMIT_REPO" rev-parse HEAD)"
+expect_exit 1 "release commit gate propagates a failing pre-commit hook" \
+    bash -c "cd \"$RELEASE_COMMIT_REPO\" && \"$RELEASE_GIT_COMMIT\" --message 'test: must fail' --path \"$RELEASE_COMMIT_REPO/release.txt\""
+if [[ "$(git -C "$RELEASE_COMMIT_REPO" rev-parse HEAD)" == "$release_before" ]] \
+    && [[ -z "$(git -C "$RELEASE_COMMIT_REPO" status --porcelain)" ]] \
+    && [[ -z "$(git -C "$RELEASE_COMMIT_REPO" tag --list)" ]]; then
+    pass "failed release commit rolls back index and worktree without tagging old HEAD"
+else
+    fail "failed release commit rolls back index and worktree without tagging old HEAD"
+fi
+expect_exit 0 "release commit gate distinguishes a genuine no-op" \
+    bash -c "cd \"$RELEASE_COMMIT_REPO\" && \"$RELEASE_GIT_COMMIT\" --message 'test: no-op' --path \"$RELEASE_COMMIT_REPO/release.txt\""
 
 NO_MAIN_REPO="$TEST_ROOT/no-main-repo"
 NO_MAIN_INTEGRATION="$TEST_ROOT/no-main-integration"
