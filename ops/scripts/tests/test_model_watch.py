@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Offline behavioral regression tests for model-watch (F-085)."""
 
+import copy
+import hashlib
 import importlib.util
 import io
 import json
@@ -12,6 +14,7 @@ import urllib.error
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 from unittest import mock
 
 
@@ -907,6 +910,460 @@ class WorkflowContractTests(unittest.TestCase):
             r"(?m)^concurrency:\n  group: model-watch\n  cancel-in-progress: false$",
         )
         self.assertIn("if: steps.watch.outputs.exit_code == '10'", workflow)
+
+
+EXPECTED_F086_CANDIDATES = (
+    ("openai", "polish", "gpt-5.6-terra", "https://api.openai.com/v1", "target-account-region", "add_non_default_after_acceptance", "pending_external_validation", None),
+    ("claude", "polish", "claude-opus-5", "https://api.anthropic.com/v1", "target-account-region", "replace_after_acceptance", "pending_external_validation", "claude-opus-4-8"),
+    ("gemini", "polish", "gemini-3.6-flash", "https://generativelanguage.googleapis.com/v1beta/openai", "target-account-region", "replace_after_acceptance", "pending_external_validation", "gemini-3.5-flash"),
+    ("gemini", "polish", "gemini-3.5-flash-lite", "https://generativelanguage.googleapis.com/v1beta/openai", "target-account-region", "replace_after_acceptance", "pending_external_validation", "gemini-3.1-flash-lite"),
+    ("siliconflow", "polish", "deepseek-ai/DeepSeek-V4-Flash", "https://api.siliconflow.cn/v1", "cn-endpoint-target-account", "add_non_default_after_acceptance", "pending_external_validation", None),
+    ("siliconflow", "polish", "deepseek-ai/DeepSeek-V4-Pro", "https://api.siliconflow.cn/v1", "cn-endpoint-target-account", "replace_after_acceptance", "pending_external_validation", "deepseek-ai/DeepSeek-V3.1-Terminus"),
+    ("siliconflow", "polish", "zai-org/GLM-5.2", "https://api.siliconflow.cn/v1", "cn-endpoint-target-account", "add_non_default_after_acceptance", "pending_external_validation", None),
+    ("qianfan", "polish", "placeholder:ERNIE 5.1 exact direct ID pending", "https://qianfan.baidubce.com/v2", "cn-endpoint-target-account", "add_non_default_after_acceptance", "pending_external_validation", None),
+    ("openrouter", "stt", "openai/whisper-large-v3-turbo", "https://openrouter.ai/api/v1", "openrouter-routing-region", "add_non_default_after_acceptance", "pending_external_validation", None),
+    ("qwen", "polish", "qwen3.7-flash", "https://dashscope.aliyuncs.com/compatible-mode/v1", "target-dashscope-region", "replace_after_acceptance", "pending_external_validation", "qwen3.6-flash"),
+    ("minimax_intl", "polish", "MiniMax-M3", "https://api.minimax.io/v1", "international", "revalidate_existing", "pending_external_validation", None),
+    ("minimax_cn", "polish", "MiniMax-M3", "https://api.minimaxi.com/v1", "cn", "revalidate_existing", "pending_external_validation", None),
+)
+
+EXPECTED_F086_EXCLUSIONS = [
+    "claude-fable-5",
+    "claude-mythos-5",
+    "kimi-k3",
+    "kimi-k2.7-code",
+    "qwen3.8-max-preview",
+    "ollama:*:cloud",
+    "volcengine-seed-evolving",
+    "xai-stt-f088",
+]
+
+ALLOWED_F086_EVIDENCE_DOMAINS = {
+    "developers.openai.com",
+    "platform.claude.com",
+    "ai.google.dev",
+    "www.siliconflow.com",
+    "docs.siliconflow.com",
+    "cloud.baidu.com",
+    "openrouter.ai",
+    "help.aliyun.com",
+    "platform.minimax.io",
+    "platform.minimaxi.com",
+}
+
+F086_CANDIDATE_KEYS = {
+    "providerID",
+    "capability",
+    "modelID",
+    "modelPlaceholder",
+    "displayName",
+    "identityStatus",
+    "validationScope",
+    "action",
+    "replacesModelID",
+    "incumbentDefault",
+    "incumbentModelID",
+    "proposedRequestOverrides",
+    "firstPartyEvidence",
+    "target",
+    "liveRequests",
+    "evaluation",
+    "status",
+    "approval",
+}
+
+F086_ALLOWED_IDENTITY_STATUSES = {
+    "first_party_documented_pending_target_account",
+    "pending_exact_direct_id",
+    "pending_target_region_visibility",
+    "pending_target_account_revalidation",
+}
+
+F086_EXPECTED_OVERRIDES = {
+    ("openai", "gpt-5.6-terra"): {"reasoning_effort": "none"},
+    ("claude", "claude-opus-5"): {"thinking": {"type": "disabled"}, "temperature": None},
+    ("gemini", "gemini-3.6-flash"): {"reasoning_effort": "none", "temperature": None},
+    ("gemini", "gemini-3.5-flash-lite"): {"reasoning_effort": "none", "temperature": None},
+    ("siliconflow", "deepseek-ai/DeepSeek-V4-Flash"): {"thinking": {"type": "disabled"}},
+    ("siliconflow", "deepseek-ai/DeepSeek-V4-Pro"): {"thinking": {"type": "disabled"}},
+    ("siliconflow", "zai-org/GLM-5.2"): {"thinking": {"type": "disabled"}},
+    ("qianfan", "ERNIE 5.1 exact direct ID pending"): None,
+    ("openrouter", "openai/whisper-large-v3-turbo"): None,
+    ("qwen", "qwen3.7-flash"): {"enable_thinking": False},
+    ("minimax_intl", "MiniMax-M3"): {"thinking": {"type": "disabled"}},
+    ("minimax_cn", "MiniMax-M3"): {"thinking": {"type": "disabled"}},
+}
+
+F086_PRODUCTION_ROOTS = (
+    "VowriteKit/Sources",
+    "VowriteMac/Sources",
+    "VowriteIOS/Sources",
+    "VowriteKeyboard/Sources",
+)
+
+F086_ACTIVATION_TOKENS = (
+    "catalog-refresh-2026-08-v1",
+    "providerCatalogRefresh.migrationID",
+    "providerCatalogRefresh.rulesetHash",
+    "ProviderModelMigration202608",
+    "ProviderCatalogRefreshMigration202608",
+    "ProviderCatalogRefreshRules",
+    "ProviderModelRequestResolver",
+)
+
+F084_ALLOWED_SHARED_MIGRATION_SYMBOL_OCCURRENCES = {
+    "VowriteKit/Sources/VowriteKit/Config/ProviderModelMigration202608.swift": 1,
+    "VowriteKit/Sources/VowriteKit/Config/ProviderModelMigration202608+Execution.swift": 1,
+    "VowriteKit/Sources/VowriteKit/Config/ProviderModelMigration202608+Journal.swift": 1,
+    "VowriteKit/Sources/VowriteKit/Config/ProviderModelMigration202608+JournalValidation.swift": 1,
+    "VowriteMac/Sources/App/VowriteApp.swift": 1,
+    "VowriteIOS/Sources/App/VowriteApp.swift": 1,
+    "VowriteKeyboard/Sources/KeyboardViewController.swift": 1,
+}
+
+
+def find_f086_activation_violations(repo_root):
+    repo_root = Path(repo_root)
+    violations = []
+    excluded_parts = {"tests", "fixtures", "docs", "documentation", ".build", "build"}
+    pending_source_ids = {
+        row[2]
+        for row in EXPECTED_F086_CANDIDATES
+        if not row[2].startswith("placeholder:") and row[5] != "revalidate_existing"
+    }
+    pending_source_ids.add("ERNIE 5.1")
+    providers_path = (
+        repo_root / "VowriteKit/Sources/VowriteKit/Resources/providers.json"
+    )
+
+    for relative_root in F086_PRODUCTION_ROOTS:
+        source_root = repo_root / relative_root
+        if not source_root.exists():
+            continue
+        for path in source_root.rglob("*"):
+            if not path.is_file():
+                continue
+            relative = path.relative_to(repo_root)
+            if any(part.lower() in excluded_parts for part in relative.parts):
+                continue
+            if path.suffix.lower() == ".md":
+                continue
+            source = path.read_text(encoding="utf-8", errors="ignore")
+            for token in F086_ACTIVATION_TOKENS:
+                if token == "ProviderModelMigration202608":
+                    actual_count = source.count(token)
+                    expected_count = F084_ALLOWED_SHARED_MIGRATION_SYMBOL_OCCURRENCES.get(
+                        str(relative), 0
+                    )
+                    if actual_count != expected_count:
+                        violations.append(
+                            f"{relative}: shared migration symbol count "
+                            f"{actual_count}, expected F-084 count {expected_count}"
+                        )
+                    continue
+                if token in source:
+                    violations.append(f"{relative}: activation token {token}")
+            if path == providers_path:
+                continue
+            for model_id in pending_source_ids:
+                if model_id in source:
+                    violations.append(f"{relative}: pending candidate {model_id}")
+
+    if providers_path.exists():
+        providers = json.loads(providers_path.read_text(encoding="utf-8"))["providers"]
+        provider_by_id = {row["id"]: row for row in providers}
+        for provider_id, capability, identity, _, _, action, _, _ in EXPECTED_F086_CANDIDATES:
+            if action == "revalidate_existing":
+                continue
+            capability_data = provider_by_id[provider_id].get(capability, {})
+            capability_text = json.dumps(capability_data, sort_keys=True)
+            needle = "ERNIE 5.1" if identity.startswith("placeholder:") else identity
+            if needle.lower() in capability_text.lower():
+                violations.append(
+                    f"VowriteKit/Sources/VowriteKit/Resources/providers.json: "
+                    f"pending {provider_id}/{capability} candidate {needle}"
+                )
+
+    return sorted(violations)
+
+
+def f086_candidate_schema_violations(manifest):
+    violations = []
+    candidates = manifest.get("candidates")
+    if not isinstance(candidates, list):
+        return ["candidates must be a list"]
+
+    allowed_capabilities = {"polish", "stt"}
+    allowed_actions = {
+        "add_non_default_after_acceptance",
+        "replace_after_acceptance",
+        "revalidate_existing",
+    }
+    for index, candidate in enumerate(candidates):
+        prefix = f"candidate[{index}]"
+        if not isinstance(candidate, dict):
+            violations.append(f"{prefix} must be an object")
+            continue
+        if set(candidate) != F086_CANDIDATE_KEYS:
+            violations.append(f"{prefix} keys must exactly match the schema")
+
+        provider_id = candidate.get("providerID")
+        capability = candidate.get("capability")
+        model_id = candidate.get("modelID")
+        placeholder = candidate.get("modelPlaceholder")
+        action = candidate.get("action")
+
+        if not isinstance(provider_id, str) or not provider_id:
+            violations.append(f"{prefix}.providerID must be a non-empty string")
+        if capability not in allowed_capabilities:
+            violations.append(f"{prefix}.capability is invalid")
+        if not isinstance(candidate.get("displayName"), str) or not candidate.get("displayName", "").strip():
+            violations.append(f"{prefix}.displayName must be a non-empty string")
+        if candidate.get("identityStatus") not in F086_ALLOWED_IDENTITY_STATUSES:
+            violations.append(f"{prefix}.identityStatus is invalid")
+        if action not in allowed_actions:
+            violations.append(f"{prefix}.action is invalid")
+        if candidate.get("status") != "pending_external_validation":
+            violations.append(f"{prefix}.status must remain pending")
+
+        if model_id is None:
+            if provider_id != "qianfan" or not isinstance(placeholder, str) or not placeholder:
+                violations.append(f"{prefix} null modelID is allowed only for Qianfan with a placeholder")
+        elif not isinstance(model_id, str) or not model_id or placeholder is not None:
+            violations.append(f"{prefix} modelID/placeholder types are invalid")
+
+        if type(candidate.get("incumbentDefault")) is not bool:
+            violations.append(f"{prefix}.incumbentDefault must be boolean")
+        if not isinstance(candidate.get("incumbentModelID"), str) or not candidate.get("incumbentModelID", ""):
+            violations.append(f"{prefix}.incumbentModelID must be a non-empty string")
+
+        replacement = candidate.get("replacesModelID")
+        if action == "replace_after_acceptance":
+            if not isinstance(replacement, str) or not replacement:
+                violations.append(f"{prefix}.replacesModelID is required for replacement")
+        elif replacement is not None:
+            violations.append(f"{prefix}.replacesModelID must be null for non-replacements")
+
+        identity = model_id if model_id is not None else placeholder
+        expected_overrides = F086_EXPECTED_OVERRIDES.get((provider_id, identity), object())
+        if candidate.get("proposedRequestOverrides") != expected_overrides:
+            violations.append(f"{prefix}.proposedRequestOverrides does not match the exact contract")
+
+        scope = candidate.get("validationScope")
+        if not isinstance(scope, dict) or set(scope) != {"endpoint", "region"}:
+            violations.append(f"{prefix}.validationScope keys are invalid")
+        elif not all(isinstance(scope[key], str) and scope[key] for key in ("endpoint", "region")):
+            violations.append(f"{prefix}.validationScope values must be non-empty strings")
+
+        evidence = candidate.get("firstPartyEvidence")
+        if not isinstance(evidence, list) or not evidence or not all(isinstance(url, str) and url for url in evidence):
+            violations.append(f"{prefix}.firstPartyEvidence must be a non-empty string list")
+
+        target = candidate.get("target")
+        if not isinstance(target, dict) or set(target) != {"account", "tier", "region"}:
+            violations.append(f"{prefix}.target keys are invalid")
+        elif any(value is not None for value in target.values()):
+            violations.append(f"{prefix}.target must remain empty")
+
+        live = candidate.get("liveRequests")
+        if not isinstance(live, dict) or set(live) != {"required", "successful", "schemaOrParameter4xx"}:
+            violations.append(f"{prefix}.liveRequests keys are invalid")
+        else:
+            if type(live["required"]) is not int or live["required"] != 5:
+                violations.append(f"{prefix}.liveRequests.required must equal 5")
+            if live["successful"] is not None or live["schemaOrParameter4xx"] is not None:
+                violations.append(f"{prefix}.liveRequests results must remain empty")
+
+        evaluation = candidate.get("evaluation")
+        if not isinstance(evaluation, dict) or set(evaluation) != {"kind", "requiredSamples", "result"}:
+            violations.append(f"{prefix}.evaluation keys are invalid")
+        else:
+            expected_kind = "stt" if capability == "stt" else "polish"
+            expected_count = 30 if expected_kind == "stt" else 36
+            if evaluation["kind"] != expected_kind:
+                violations.append(f"{prefix}.evaluation.kind is invalid")
+            if type(evaluation["requiredSamples"]) is not int or evaluation["requiredSamples"] != expected_count:
+                violations.append(f"{prefix}.evaluation.requiredSamples is invalid")
+            if evaluation["result"] is not None:
+                violations.append(f"{prefix}.evaluation.result must remain empty")
+
+        if candidate.get("approval") is not None:
+            violations.append(f"{prefix}.approval must remain empty")
+
+    return violations
+
+
+class F086ActivationGuardTests(unittest.TestCase):
+    def setUp(self):
+        self.manifest = json.loads(
+            (FIXTURES / "f086-pending-candidates.json").read_text(encoding="utf-8")
+        )
+        self.providers = json.loads(
+            (
+                REPO_ROOT
+                / "VowriteKit/Sources/VowriteKit/Resources/providers.json"
+            ).read_text(encoding="utf-8")
+        )["providers"]
+
+    def test_pending_manifest_keeps_results_targets_and_approval_empty(self):
+        self.assertEqual(self.manifest["schema"], 1)
+        self.assertEqual(self.manifest["feature"], "F-086")
+        self.assertEqual(self.manifest["status"], "pending_external_validation")
+        self.assertFalse(self.manifest["activationPolicy"]["publicCatalog"])
+        self.assertFalse(self.manifest["activationPolicy"]["defaultsChanged"])
+        self.assertIsNone(self.manifest["activationPolicy"]["joeApproval"])
+
+        for candidate in self.manifest["candidates"]:
+            with self.subTest(provider=candidate["providerID"], model=candidate["modelID"]):
+                self.assertEqual(candidate["status"], "pending_external_validation")
+                self.assertEqual(candidate["liveRequests"]["required"], 5)
+                self.assertIsNone(candidate["liveRequests"]["successful"])
+                self.assertIsNone(candidate["liveRequests"]["schemaOrParameter4xx"])
+                self.assertIsNone(candidate["target"]["account"])
+                self.assertIsNone(candidate["target"]["tier"])
+                self.assertIsNone(candidate["target"]["region"])
+                self.assertIsNone(candidate["evaluation"]["result"])
+                self.assertIsNone(candidate["approval"])
+                self.assertTrue(candidate["firstPartyEvidence"])
+
+                expected_samples = 30 if candidate["capability"] == "stt" else 36
+                self.assertEqual(candidate["evaluation"]["requiredSamples"], expected_samples)
+
+    def test_manifest_matches_exact_candidate_tuples_and_enums(self):
+        actual = []
+        for candidate in self.manifest["candidates"]:
+            identity = candidate["modelID"]
+            if identity is None:
+                identity = f"placeholder:{candidate['modelPlaceholder']}"
+            actual.append((
+                candidate["providerID"],
+                candidate["capability"],
+                identity,
+                candidate["validationScope"]["endpoint"],
+                candidate["validationScope"]["region"],
+                candidate["action"],
+                candidate["status"],
+                candidate["replacesModelID"],
+            ))
+
+        self.assertEqual(tuple(actual), EXPECTED_F086_CANDIDATES)
+        self.assertEqual(len(actual), 12)
+        self.assertEqual(
+            len({row[:3] for row in actual}),
+            len(actual),
+            "provider/capability/model-or-placeholder tuples must be unique",
+        )
+        self.assertEqual({row["capability"] for row in self.manifest["candidates"]}, {"polish", "stt"})
+        self.assertEqual(
+            {row["action"] for row in self.manifest["candidates"]},
+            {"add_non_default_after_acceptance", "replace_after_acceptance", "revalidate_existing"},
+        )
+        self.assertEqual(
+            {row["status"] for row in self.manifest["candidates"]},
+            {"pending_external_validation"},
+        )
+
+    def test_manifest_null_identity_evidence_and_exclusions_are_strict(self):
+        null_identity_rows = [row for row in self.manifest["candidates"] if row["modelID"] is None]
+        self.assertEqual(len(null_identity_rows), 1)
+        qianfan = null_identity_rows[0]
+        self.assertEqual(qianfan["providerID"], "qianfan")
+        self.assertEqual(qianfan["modelPlaceholder"], "ERNIE 5.1 exact direct ID pending")
+        self.assertEqual(qianfan["identityStatus"], "pending_exact_direct_id")
+
+        for candidate in self.manifest["candidates"]:
+            if candidate["modelID"] is not None:
+                self.assertIsNone(candidate["modelPlaceholder"])
+            for raw_url in candidate["firstPartyEvidence"]:
+                parsed = urlparse(raw_url)
+                self.assertEqual(parsed.scheme, "https")
+                self.assertIn(parsed.hostname, ALLOWED_F086_EVIDENCE_DOMAINS)
+                self.assertNotIn("search", parsed.path.lower())
+                self.assertNotIn("q=", parsed.query.lower())
+
+        self.assertEqual(self.manifest["explicitExclusions"], EXPECTED_F086_EXCLUSIONS)
+
+    def test_candidate_schema_is_exact(self):
+        self.assertEqual(f086_candidate_schema_violations(self.manifest), [])
+
+    def test_candidate_schema_rejects_unknown_fields_and_type_mutations(self):
+        mutations = []
+
+        unknown = copy.deepcopy(self.manifest)
+        unknown["candidates"][0]["unexpected"] = True
+        mutations.append(("unknown candidate key", unknown))
+
+        empty_name = copy.deepcopy(self.manifest)
+        empty_name["candidates"][0]["displayName"] = ""
+        mutations.append(("empty display name", empty_name))
+
+        bad_default = copy.deepcopy(self.manifest)
+        bad_default["candidates"][0]["incumbentDefault"] = "false"
+        mutations.append(("non-boolean incumbent default", bad_default))
+
+        bad_override = copy.deepcopy(self.manifest)
+        bad_override["candidates"][0]["proposedRequestOverrides"]["unknown"] = True
+        mutations.append(("unknown override", bad_override))
+
+        bad_evaluation = copy.deepcopy(self.manifest)
+        bad_evaluation["candidates"][0]["evaluation"]["unknown"] = None
+        mutations.append(("unknown evaluation key", bad_evaluation))
+
+        bad_result = copy.deepcopy(self.manifest)
+        bad_result["candidates"][0]["evaluation"]["result"] = {}
+        mutations.append(("premature result", bad_result))
+
+        bad_target = copy.deepcopy(self.manifest)
+        bad_target["candidates"][0]["target"]["region"] = "us"
+        mutations.append(("premature target", bad_target))
+
+        bad_approval = copy.deepcopy(self.manifest)
+        bad_approval["candidates"][0]["approval"] = False
+        mutations.append(("typed approval", bad_approval))
+
+        for label, mutated in mutations:
+            with self.subTest(label=label):
+                self.assertTrue(f086_candidate_schema_violations(mutated))
+
+    def test_pending_public_candidates_are_absent_from_their_bundled_catalogs(self):
+        provider_by_id = {provider["id"]: provider for provider in self.providers}
+        for candidate in self.manifest["candidates"]:
+            if candidate["action"] == "revalidate_existing":
+                continue
+            model_id = candidate["modelID"]
+            if model_id is None:
+                continue
+            provider = provider_by_id[candidate["providerID"]]
+            capability = provider.get(candidate["capability"], {})
+            bundled_ids = {row["id"] for row in capability.get("models", [])}
+            with self.subTest(provider=candidate["providerID"], model=model_id):
+                self.assertNotIn(model_id, bundled_ids)
+
+    def test_complete_production_tree_has_no_f086_activation_touch(self):
+        self.assertEqual(find_f086_activation_violations(REPO_ROOT), [])
+
+    def test_recursive_guard_catches_real_activation_names_in_an_unlisted_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            injected = root / "VowriteMac/Sources/Deferred/UnexpectedRefresh.swift"
+            injected.parent.mkdir(parents=True)
+            injected.write_text(
+                'struct ProviderModelMigration202608 {}\n'
+                'let migrationID = "catalog-refresh-2026-08-v1"\n'
+                'let candidate = "claude-opus-5"\n',
+                encoding="utf-8",
+            )
+            violations = find_f086_activation_violations(root)
+            self.assertTrue(any("shared migration symbol count" in row for row in violations))
+            self.assertTrue(any("catalog-refresh-2026-08-v1" in row for row in violations))
+            self.assertTrue(any("claude-opus-5" in row for row in violations))
+
+    def test_watcher_state_remains_the_pre_f086_baseline(self):
+        state_bytes = (REPO_ROOT / "ops/model-watch/state.json").read_bytes()
+        self.assertEqual(
+            hashlib.sha256(state_bytes).hexdigest(),
+            "038d6c635f36e38c2970447109299babf3d9e5cf712ccbd2f0ca2b7ca94a0535",
+        )
 
 
 if __name__ == "__main__":

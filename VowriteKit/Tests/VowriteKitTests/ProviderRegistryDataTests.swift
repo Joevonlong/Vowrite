@@ -25,6 +25,24 @@ final class ProviderRegistryDataTests: XCTestCase {
         }
     }
 
+    func testModelIDsAreUniqueWithinEachProviderCapability() {
+        for provider in ProviderRegistry.shared.providers {
+            let sttIDs = provider.presetSTTModels
+            XCTAssertEqual(
+                sttIDs.count,
+                Set(sttIDs).count,
+                "\(provider.id) has duplicate STT model ids"
+            )
+
+            let polishIDs = provider.presetPolishModels
+            XCTAssertEqual(
+                polishIDs.count,
+                Set(polishIDs).count,
+                "\(provider.id) has duplicate polish model ids"
+            )
+        }
+    }
+
     func testNonEmptyBaseURLsAreValidURLs() {
         for p in ProviderRegistry.shared.providers where !p.baseURL.isEmpty {
             XCTAssertNotNil(
@@ -97,5 +115,115 @@ final class ProviderRegistryDataTests: XCTestCase {
         let xAI = try XCTUnwrap(ProviderRegistry.shared.provider(for: "xai"))
         XCTAssertFalse(xAI.hasSTTSupport)
         XCTAssertTrue(xAI.sttNote?.contains("F-088") == true)
+    }
+
+    func testF086PendingCandidatesStayOutAndIncumbentsRemainAvailable() throws {
+        let openAI = try XCTUnwrap(ProviderRegistry.shared.provider(for: "openai"))
+        XCTAssertEqual(openAI.defaultPolishModel, "gpt-5.4-mini")
+        XCTAssertFalse(openAI.presetPolishModels.contains("gpt-5.6-terra"))
+
+        let claude = try XCTUnwrap(ProviderRegistry.shared.provider(for: "claude"))
+        XCTAssertEqual(claude.defaultPolishModel, "claude-sonnet-5")
+        XCTAssertFalse(claude.presetPolishModels.contains("claude-opus-5"))
+        XCTAssertTrue(claude.presetPolishModels.contains("claude-opus-4-8"))
+
+        let gemini = try XCTUnwrap(ProviderRegistry.shared.provider(for: "gemini"))
+        XCTAssertEqual(gemini.defaultPolishModel, "gemini-2.5-flash")
+        XCTAssertFalse(gemini.presetPolishModels.contains("gemini-3.6-flash"))
+        XCTAssertFalse(gemini.presetPolishModels.contains("gemini-3.5-flash-lite"))
+        XCTAssertTrue(gemini.presetPolishModels.contains("gemini-3.5-flash"))
+        XCTAssertTrue(gemini.presetPolishModels.contains("gemini-3.1-flash-lite"))
+
+        let siliconFlow = try XCTUnwrap(ProviderRegistry.shared.provider(for: "siliconflow"))
+        XCTAssertEqual(siliconFlow.defaultPolishModel, "deepseek-ai/DeepSeek-V3")
+        for model in [
+            "deepseek-ai/DeepSeek-V4-Flash",
+            "deepseek-ai/DeepSeek-V4-Pro",
+            "zai-org/GLM-5.2",
+        ] {
+            XCTAssertFalse(siliconFlow.presetPolishModels.contains(model))
+        }
+        XCTAssertTrue(
+            siliconFlow.presetPolishModels.contains("deepseek-ai/DeepSeek-V3.1-Terminus")
+        )
+        XCTAssertTrue(
+            siliconFlow.presetPolishModels.contains("Qwen/Qwen2.5-72B-Instruct")
+        )
+
+        let openRouter = try XCTUnwrap(ProviderRegistry.shared.provider(for: "openrouter"))
+        XCTAssertEqual(openRouter.defaultSTTModel, "openai/whisper-large-v3")
+        XCTAssertFalse(
+            openRouter.presetSTTModels.contains("openai/whisper-large-v3-turbo")
+        )
+    }
+
+    func testF086CuratedCloudRowsStayWithinSixAndOllamaKeepsSeven() throws {
+        let curatedCloudProviderIDs = [
+            "openai",
+            "openrouter",
+            "siliconflow",
+            "gemini",
+            "claude",
+            "qianfan",
+            "qwen",
+            "minimax_intl",
+            "minimax_cn",
+        ]
+        for providerID in curatedCloudProviderIDs {
+            let provider = try XCTUnwrap(ProviderRegistry.shared.provider(for: providerID))
+            XCTAssertLessThanOrEqual(
+                provider.stt?.models.count ?? 0,
+                6,
+                "\(providerID) STT catalog exceeds the curated cloud limit"
+            )
+            XCTAssertLessThanOrEqual(
+                provider.polish?.models.count ?? 0,
+                6,
+                "\(providerID) polish catalog exceeds the curated cloud limit"
+            )
+        }
+
+        let ollama = try XCTUnwrap(ProviderRegistry.shared.provider(for: "ollama"))
+        XCTAssertEqual(ollama.presetPolishModels.count, 7)
+        XCTAssertFalse(ollama.presetPolishModels.contains { $0.contains(":cloud") })
+    }
+
+    func testF086UnprovenOrOutOfScopeModelsStayOutOfStableCatalog() throws {
+        let allModelIDs = ProviderRegistry.shared.providers.flatMap { provider in
+            provider.presetSTTModels + provider.presetPolishModels
+        }
+        let exactExclusions = [
+            "claude-fable-5",
+            "claude-mythos-5",
+            "kimi-k3",
+            "kimi-k2.7-code",
+            "qwen3.8-max-preview",
+            "qwen3.7-flash",
+        ]
+        for model in exactExclusions {
+            XCTAssertFalse(allModelIDs.contains(model), "unvalidated model leaked into catalog: \(model)")
+        }
+
+        let qianfan = try XCTUnwrap(ProviderRegistry.shared.provider(for: "qianfan"))
+        XCTAssertEqual(qianfan.defaultPolishModel, "ernie-4.5-turbo-128k")
+        XCTAssertEqual(qianfan.presetPolishModels, ["ernie-4.5-turbo-128k"])
+        XCTAssertFalse(qianfan.presetPolishModels.contains { $0.lowercased().contains("ernie-5") })
+
+        let qwen = try XCTUnwrap(ProviderRegistry.shared.provider(for: "qwen"))
+        XCTAssertEqual(qwen.defaultPolishModel, "qwen3.7-plus")
+        XCTAssertTrue(qwen.presetPolishModels.contains("qwen3.6-flash"))
+
+        for providerID in ["minimax_intl", "minimax_cn"] {
+            let provider = try XCTUnwrap(ProviderRegistry.shared.provider(for: providerID))
+            XCTAssertEqual(provider.defaultPolishModel, "MiniMax-M3")
+            XCTAssertEqual(
+                provider.presetPolishModels,
+                ["MiniMax-M3", "MiniMax-M2.7", "MiniMax-M2.7-highspeed"]
+            )
+        }
+
+        let xAI = try XCTUnwrap(ProviderRegistry.shared.provider(for: "xai"))
+        XCTAssertFalse(xAI.hasSTTSupport)
+        XCTAssertTrue(xAI.presetSTTModels.isEmpty)
     }
 }

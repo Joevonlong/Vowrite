@@ -34,4 +34,25 @@ final class APIConnectionTesterPayloadTests: XCTestCase {
         let openAIPayload = APIConnectionTester.chatCompletionProbePayload(configuration: openAI)
         XCTAssertEqual(openAIPayload["reasoning_effort"] as? String, "none")
     }
+
+    func testF086PendingSelectionsAreNotRewrittenAtTheRequestBoundary() {
+        let pendingSelections: [(APIProvider, String)] = [
+            (.claude, "claude-opus-4-8"),
+            (.gemini, "gemini-3.5-flash"),
+            (.gemini, "gemini-3.1-flash-lite"),
+            (.siliconflow, "deepseek-ai/DeepSeek-V3.1-Terminus"),
+        ]
+
+        for (provider, selectedModel) in pendingSelections {
+            let configuration = APIEndpointConfiguration(
+                provider: provider,
+                model: selectedModel
+            )
+            XCTAssertEqual(
+                APIConnectionTester.chatCompletionProbePayload(configuration: configuration)["model"] as? String,
+                selectedModel,
+                "F-086 candidates must not activate before external evidence is accepted"
+            )
+        }
+    }
 }

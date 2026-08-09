@@ -1,0 +1,513 @@
+{
+  "schema": 1,
+  "feature": "F-086",
+  "status": "pending_external_validation",
+  "activationPolicy": {
+    "publicCatalog": false,
+    "defaultsChanged": false,
+    "requiredSuccessfulRequestsPerCandidate": 5,
+    "requiredSchemaOrParameter4xx": 0,
+    "requiredPolishSamples": 36,
+    "requiredSTTClips": 30,
+    "joeApproval": null
+  },
+  "candidates": [
+    {
+      "providerID": "openai",
+      "capability": "polish",
+      "modelID": "gpt-5.6-terra",
+      "displayName": "GPT-5.6 Terra",
+      "identityStatus": "first_party_documented_pending_target_account",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://api.openai.com/v1",
+        "region": "target-account-region"
+      },
+      "action": "add_non_default_after_acceptance",
+      "replacesModelID": null,
+      "incumbentDefault": false,
+      "incumbentModelID": "gpt-5.4-mini",
+      "proposedRequestOverrides": {
+        "reasoning_effort": "none"
+      },
+      "firstPartyEvidence": [
+        "https://developers.openai.com/api/docs/models/gpt-5.6-terra"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "claude",
+      "capability": "polish",
+      "modelID": "claude-opus-5",
+      "displayName": "Claude Opus 5",
+      "identityStatus": "first_party_documented_pending_target_account",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://api.anthropic.com/v1",
+        "region": "target-account-region"
+      },
+      "action": "replace_after_acceptance",
+      "replacesModelID": "claude-opus-4-8",
+      "incumbentDefault": false,
+      "incumbentModelID": "claude-sonnet-5",
+      "proposedRequestOverrides": {
+        "thinking": {
+          "type": "disabled"
+        },
+        "temperature": null
+      },
+      "firstPartyEvidence": [
+        "https://platform.claude.com/docs/en/release-notes/overview",
+        "https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-8"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "gemini",
+      "capability": "polish",
+      "modelID": "gemini-3.6-flash",
+      "displayName": "Gemini 3.6 Flash",
+      "identityStatus": "first_party_documented_pending_target_account",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "region": "target-account-region"
+      },
+      "action": "replace_after_acceptance",
+      "replacesModelID": "gemini-3.5-flash",
+      "incumbentDefault": false,
+      "incumbentModelID": "gemini-2.5-flash",
+      "proposedRequestOverrides": {
+        "reasoning_effort": "none",
+        "temperature": null
+      },
+      "firstPartyEvidence": [
+        "https://ai.google.dev/gemini-api/docs/changelog",
+        "https://ai.google.dev/gemini-api/docs/latest-model"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "gemini",
+      "capability": "polish",
+      "modelID": "gemini-3.5-flash-lite",
+      "displayName": "Gemini 3.5 Flash-Lite",
+      "identityStatus": "first_party_documented_pending_target_account",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "region": "target-account-region"
+      },
+      "action": "replace_after_acceptance",
+      "replacesModelID": "gemini-3.1-flash-lite",
+      "incumbentDefault": false,
+      "incumbentModelID": "gemini-2.5-flash",
+      "proposedRequestOverrides": {
+        "reasoning_effort": "none",
+        "temperature": null
+      },
+      "firstPartyEvidence": [
+        "https://ai.google.dev/gemini-api/docs/changelog",
+        "https://ai.google.dev/gemini-api/docs/latest-model"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "siliconflow",
+      "capability": "polish",
+      "modelID": "deepseek-ai/DeepSeek-V4-Flash",
+      "displayName": "DeepSeek V4 Flash via SiliconFlow",
+      "identityStatus": "first_party_documented_pending_target_account",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://api.siliconflow.cn/v1",
+        "region": "cn-endpoint-target-account"
+      },
+      "action": "add_non_default_after_acceptance",
+      "replacesModelID": null,
+      "incumbentDefault": false,
+      "incumbentModelID": "deepseek-ai/DeepSeek-V3",
+      "proposedRequestOverrides": {
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "firstPartyEvidence": [
+        "https://www.siliconflow.com/models/deepseek-v4-flash",
+        "https://docs.siliconflow.com/en/api-reference/models/get-model-list"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "siliconflow",
+      "capability": "polish",
+      "modelID": "deepseek-ai/DeepSeek-V4-Pro",
+      "displayName": "DeepSeek V4 Pro via SiliconFlow",
+      "identityStatus": "first_party_documented_pending_target_account",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://api.siliconflow.cn/v1",
+        "region": "cn-endpoint-target-account"
+      },
+      "action": "replace_after_acceptance",
+      "replacesModelID": "deepseek-ai/DeepSeek-V3.1-Terminus",
+      "incumbentDefault": false,
+      "incumbentModelID": "deepseek-ai/DeepSeek-V3",
+      "proposedRequestOverrides": {
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "firstPartyEvidence": [
+        "https://www.siliconflow.com/models/deepseek-v4-pro",
+        "https://docs.siliconflow.com/en/api-reference/models/get-model-list"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "siliconflow",
+      "capability": "polish",
+      "modelID": "zai-org/GLM-5.2",
+      "displayName": "GLM-5.2 via SiliconFlow",
+      "identityStatus": "first_party_documented_pending_target_account",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://api.siliconflow.cn/v1",
+        "region": "cn-endpoint-target-account"
+      },
+      "action": "add_non_default_after_acceptance",
+      "replacesModelID": null,
+      "incumbentDefault": false,
+      "incumbentModelID": "deepseek-ai/DeepSeek-V3",
+      "proposedRequestOverrides": {
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "firstPartyEvidence": [
+        "https://www.siliconflow.com/models/glm-5-2",
+        "https://docs.siliconflow.com/en/api-reference/models/get-model-list"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "qianfan",
+      "capability": "polish",
+      "modelID": null,
+      "displayName": "ERNIE 5.1",
+      "identityStatus": "pending_exact_direct_id",
+      "modelPlaceholder": "ERNIE 5.1 exact direct ID pending",
+      "validationScope": {
+        "endpoint": "https://qianfan.baidubce.com/v2",
+        "region": "cn-endpoint-target-account"
+      },
+      "action": "add_non_default_after_acceptance",
+      "replacesModelID": null,
+      "incumbentDefault": false,
+      "incumbentModelID": "ernie-4.5-turbo-128k",
+      "proposedRequestOverrides": null,
+      "firstPartyEvidence": [
+        "https://cloud.baidu.com/doc/qianfan-docs/s/7m95lyy43"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "openrouter",
+      "capability": "stt",
+      "modelID": "openai/whisper-large-v3-turbo",
+      "displayName": "Whisper Large V3 Turbo via OpenRouter",
+      "identityStatus": "first_party_documented_pending_target_account",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://openrouter.ai/api/v1",
+        "region": "openrouter-routing-region"
+      },
+      "action": "add_non_default_after_acceptance",
+      "replacesModelID": null,
+      "incumbentDefault": false,
+      "incumbentModelID": "openai/whisper-large-v3",
+      "proposedRequestOverrides": null,
+      "firstPartyEvidence": [
+        "https://openrouter.ai/openai/whisper-large-v3-turbo/apps"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "stt",
+        "requiredSamples": 30,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "qwen",
+      "capability": "polish",
+      "modelID": "qwen3.7-flash",
+      "displayName": "Qwen 3.7 Flash",
+      "identityStatus": "pending_target_region_visibility",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "region": "target-dashscope-region"
+      },
+      "action": "replace_after_acceptance",
+      "replacesModelID": "qwen3.6-flash",
+      "incumbentDefault": false,
+      "incumbentModelID": "qwen3.7-plus",
+      "proposedRequestOverrides": {
+        "enable_thinking": false
+      },
+      "firstPartyEvidence": [
+        "https://help.aliyun.com/en/model-studio/models",
+        "https://help.aliyun.com/zh/model-studio/text-generation-model"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "minimax_intl",
+      "capability": "polish",
+      "modelID": "MiniMax-M3",
+      "displayName": "MiniMax M3 International",
+      "identityStatus": "pending_target_account_revalidation",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://api.minimax.io/v1",
+        "region": "international"
+      },
+      "action": "revalidate_existing",
+      "replacesModelID": null,
+      "incumbentDefault": true,
+      "incumbentModelID": "MiniMax-M3",
+      "proposedRequestOverrides": {
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "firstPartyEvidence": [
+        "https://platform.minimax.io/docs/guides/text-generation",
+        "https://platform.minimax.io/docs/release-notes/models"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    },
+    {
+      "providerID": "minimax_cn",
+      "capability": "polish",
+      "modelID": "MiniMax-M3",
+      "displayName": "MiniMax M3 China",
+      "identityStatus": "pending_target_account_revalidation",
+      "modelPlaceholder": null,
+      "validationScope": {
+        "endpoint": "https://api.minimaxi.com/v1",
+        "region": "cn"
+      },
+      "action": "revalidate_existing",
+      "replacesModelID": null,
+      "incumbentDefault": true,
+      "incumbentModelID": "MiniMax-M3",
+      "proposedRequestOverrides": {
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "firstPartyEvidence": [
+        "https://platform.minimaxi.com/docs/api-reference/models/openai/list-models"
+      ],
+      "target": {
+        "account": null,
+        "tier": null,
+        "region": null
+      },
+      "liveRequests": {
+        "required": 5,
+        "successful": null,
+        "schemaOrParameter4xx": null
+      },
+      "evaluation": {
+        "kind": "polish",
+        "requiredSamples": 36,
+        "result": null
+      },
+      "status": "pending_external_validation",
+      "approval": null
+    }
+  ],
+  "explicitExclusions": [
+    "claude-fable-5",
+    "claude-mythos-5",
+    "kimi-k3",
+    "kimi-k2.7-code",
+    "qwen3.8-max-preview",
+    "ollama:*:cloud",
+    "volcengine-seed-evolving",
+    "xai-stt-f088"
+  ]
+}
