@@ -173,22 +173,21 @@ Vowrite/
 
 ## 🤖 For AI Agents
 
-This section is for coding agents, including Claude Code and Codex, working on this codebase.
+This section is for AI/LLM agents working on this codebase.
 
 ### Quick Start
 
 ```bash
 git clone https://github.com/Joevonlong/Vowrite.git
-cd Vowrite
-scripts/bootstrap-agent-platform.sh
-cd VowriteMac && swift build
+cd Vowrite/VowriteMac
+swift build
 ```
 
 ### Read First
 
-- **`AGENTS.md`** — Authoritative product rules, worktree protocol, build commands, and handoff contract
-- **`CLAUDE.md`** — Thin Claude Code import of `AGENTS.md`
-- **`CONTRIBUTING.md`** — Contribution guidelines (if present)
+- **`CONTRIBUTING.md`** — Contribution workflow, commit format, and branch model
+- **`DEV_GUIDE.md`** — Build, deploy, and provider implementation details
+- **`docs/PROVIDER_GUIDE.md`** — Provider registry contract
 - **`CHANGELOG.md`** — Release history
 
 ### Running Tests
@@ -197,7 +196,7 @@ cd VowriteMac && swift build
 ops/scripts/test.sh
 ```
 
-`ops/scripts/test.sh` runs VowriteKit unit tests plus build, quality, security, bundle, parity, and agent-platform checks.
+`ops/scripts/test.sh` runs VowriteKit unit tests plus build, quality, security, bundle, and parity checks.
 
 ### Module Guide
 

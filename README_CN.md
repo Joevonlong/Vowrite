@@ -173,31 +173,30 @@ Vowrite/
 
 ## 🤖 AI Agent 指南
 
-本节面向在此代码库工作的 coding agent，包括 Claude Code 与 Codex。
+本节面向在此代码库工作的 AI/LLM agent。
 
 ### 快速开始
 
 ```bash
 git clone https://github.com/Joevonlong/Vowrite.git
-cd Vowrite
-scripts/bootstrap-agent-platform.sh
-cd VowriteMac && swift build
+cd Vowrite/VowriteMac
+swift build
 ```
 
 ### 优先阅读
 
-- **`AGENTS.md`** — 权威项目规范、worktree 协议、编译命令与 handoff 契约
-- **`CLAUDE.md`** — 仅用于导入 `AGENTS.md` 的 Claude Code 薄壳
-- **`CONTRIBUTING.md`** — 贡献指南（如存在）
-- **`Vowrite/CHANGELOG.md`** — 发布历史
+- **`CONTRIBUTING.md`** — 贡献流程、提交格式与分支模型
+- **`DEV_GUIDE.md`** — 编译、部署与服务商实现细节
+- **`docs/PROVIDER_GUIDE.md`** — 服务商注册表契约
+- **`CHANGELOG.md`** — 发布历史
 
 ### 运行测试
 
 ```bash
-cd Vowrite && ops/scripts/test.sh
+ops/scripts/test.sh
 ```
 
-`ops/scripts/test.sh` 会运行 VowriteKit 单元测试，以及编译、质量、安全、Bundle、parity 与 agent-platform 检查。
+`ops/scripts/test.sh` 会运行 VowriteKit 单元测试，以及编译、质量、安全、Bundle 与 parity 检查。
 
 ### 模块指南
 
@@ -230,7 +229,7 @@ cd Vowrite && ops/scripts/test.sh
 ### 发布流程
 
 ```bash
-cd Vowrite && ops/scripts/release.sh v0.2.1.0 "简短描述"
+ops/scripts/release.sh v0.2.1.0 "简短描述"
 scripts/publish-release.sh --tag v0.2.1.0
 ```
 

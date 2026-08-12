@@ -12,7 +12,7 @@
 #   5. EdDSA signing + appcast.xml update (Sparkle auto-updates)
 #   6. Git commit + annotated tag
 #   7. Pinned release-publication intent (no network mutation)
-#   8. Summary with governed publication and verification steps
+#   8. Summary with publication and verification steps
 #
 set -euo pipefail
 
@@ -43,7 +43,7 @@ APP_BINARY_NAME="VowriteMac"
 # --- Rollback on failure ---
 # Steps 1-3 below mutate CHANGELOG.md, Info.plist, and Version.swift *before*
 # the build/sign/package steps run; the appcast is updated later. If anything
-# fails, restore every governed release metadata path so a failed attempt never
+# fails, restore every mutated release metadata path so a failed attempt never
 # leaves a half-bumped index or working tree.
 # Uses `git -C "$PROJECT_ROOT"` (not a bare relative path) because the script
 # changes its own working directory partway through (see Step 4's `cd
@@ -516,8 +516,9 @@ else
     git add "$APPCAST_STABLE"
     RELEASE_COMMIT_PATHS+=("$APPCAST_STABLE")
 fi
-# VOWRITE_RELEASE=1 exempts this commit from the pre-commit branch guard
-# (release version bumps touch Version.swift directly on main by design).
+# release-git-commit.sh sets VOWRITE_RELEASE=1 so a maintainer-side commit gate
+# can tell this apart from an ordinary commit: release version bumps touch
+# Version.swift directly on main by design.
 RELEASE_COMMIT_ARGS=(--message "$VERSION_NUM: $DESCRIPTION")
 for RELEASE_COMMIT_PATH in "${RELEASE_COMMIT_PATHS[@]}"; do
     RELEASE_COMMIT_ARGS+=(--path "$RELEASE_COMMIT_PATH")
@@ -549,7 +550,7 @@ if [[ "$COMMON_RAW" != /* ]]; then
     COMMON_RAW="$PROJECT_ROOT/$COMMON_RAW"
 fi
 COMMON_DIR="$(cd "$COMMON_RAW" && pwd -P)"
-RELEASE_STATE_DIR="$COMMON_DIR/vowrite-agent-platform"
+RELEASE_STATE_DIR="$COMMON_DIR/vowrite-release"
 mkdir -p "$RELEASE_STATE_DIR"
 
 GH_NOTES="$DESCRIPTION"
@@ -581,13 +582,13 @@ jq -n \
 chmod 600 "$INTENT_TEMP"
 mv "$INTENT_TEMP" "$RELEASE_STATE_DIR/release-intent.json"
 
-# --- Step 10: Prepare governed publication ---
+# --- Step 10: Prepare publication ---
 echo ""
 echo "▶ Step 10: Release publication intent prepared"
 echo "  ✓ Commit: $RELEASE_COMMIT"
 echo "  ✓ Tag:    $VERSION"
 echo "  ✓ Asset:  $DMG_RELATIVE"
-echo "  No network mutation has occurred. The governed wrapper performs the"
+echo "  No network mutation has occurred. The publication wrapper performs the"
 echo "  atomic main+tag push and creates or resumes the GitHub Release."
 
 # --- Step 11: Summary ---

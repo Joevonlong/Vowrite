@@ -27,14 +27,6 @@ git remote add upstream git@github.com:Joevonlong/Vowrite.git
 git fetch upstream
 ```
 
-4. Choose the repository mode before writing. Maintainers and trusted Claude Code/Codex sessions in the canonical repository use canonical maintainer mode and must activate the repository-owned policy hook:
-
-```bash
-scripts/bootstrap-agent-platform.sh
-```
-
-**External fork mode:** contributors working in their own fork should skip this maintainer gate. Its pre-push policy deliberately reserves publication for a leased integration owner. Human-only contributors may follow the ordinary pull-request flow below; AI-assisted fork work follows the registered-worktree instructions under [AI-assisted changes](#ai-assisted-changes). GitHub CI still validates incoming pull requests, but this mode has weaker local Git enforcement than the canonical repository.
-
 ### Build from Source
 
 There are two ways to build the project:
@@ -85,28 +77,7 @@ The build script compiles via SPM, packages into `Vowrite.app`, code-signs with 
    ```
 7. **Open a Pull Request** against the `main` branch of the upstream repository. Include a description of what changed and why.
 
-### AI-assisted changes
-
-Claude Code and Codex share the same rules, skills, and branch policy. Read `AGENTS.md`; `CLAUDE.md` is only an import wrapper. In the canonical maintainer repository, bootstrap once, then create every agent write task from the clean `main` integration checkout as a registered sibling worktree:
-
-```bash
-scripts/bootstrap-agent-platform.sh
-scripts/agent-task.sh start \
-  --task F-XXX-example \
-  --owner codex \
-  --branch feature/F-XXX-example \
-  --worktree /absolute/path/to/Vowrite-F-XXX-example \
-  --write-set 'VowriteKit/**' \
-  --accept 'ops/scripts/test.sh' \
-  --accept 'git diff --check'
-cd /absolute/path/to/Vowrite-F-XXX-example
-```
-
-Replace the task ID, owner, branch, worktree, write-set, and acceptance commands with the reviewed scope. Commit only in that registered worktree, then run `scripts/agent-task.sh handoff` with the exact result SHA. A single lease owner integrates `main`; only that owner may perform an explicitly authorized publish. Do not switch the primary checkout to an unregistered feature branch and do not bypass hooks.
-
-In external fork mode, leave the maintainer Git gate disabled. Project-level Claude Code/Codex hooks still require the AI writer to create and use a registered worktree and produce a pinned handoff; the agent must never disable or bypass those hooks. After review, a human-controlled shell may push that task branch to the fork and open the PR. Do not run the canonical `integrate` or `publish` flow for a contributor-owned fork.
-
-Run `ops/scripts/test-agent-platform.sh` to verify the standalone agent contract.
+AI coding agents follow the same workflow: work on a branch, open a pull request, never push to `main` directly.
 
 ### Project Structure
 

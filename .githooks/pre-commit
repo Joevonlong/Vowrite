@@ -5,15 +5,12 @@
 # Install: git config core.hooksPath .githooks
 #
 # Behavior:
-#   ⓪ branch guard — delegates to the canonical .agents hook and blocks every
-#     staged product change on main unless a validated integration lease or
-#     VOWRITE_RELEASE=1 is present.
 #   ① gitleaks  — ALWAYS runs, cannot be skipped. Secret detection is a hard security gate.
 #   ② swiftlint — Only staged .swift files; only ERROR level blocks commit (warnings pass through).
 #   ③ swift-format — Lint report only, never blocks, never auto-rewrites.
 #
 # Skip ②③ (lint only): SKIP=lint git commit
-# SKIP cannot bypass ⓪ branch guard or ① gitleaks.
+# SKIP cannot bypass ① gitleaks.
 
 set -euo pipefail
 
@@ -22,19 +19,6 @@ SKIP_LINT=false
 
 if [[ "${SKIP:-}" == *lint* ]]; then
     SKIP_LINT=true
-fi
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ⓪ BRANCH GUARD — canonical policy shared with Claude Code and Codex
-# ─────────────────────────────────────────────────────────────────────────────
-BRANCH_GUARD="$REPO_ROOT/.agents/hooks/branch-guard.sh"
-if [[ ! -x "$BRANCH_GUARD" ]]; then
-    echo "❌ [pre-commit] Canonical branch guard missing or not executable: $BRANCH_GUARD"
-    exit 1
-fi
-if ! "$BRANCH_GUARD" --pre-commit; then
-    echo "   Start work with scripts/agent-task.sh; only the integration owner writes main."
-    exit 1
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -268,39 +268,6 @@ else
     pass "VowriteApp (legacy) removed ✓"
 fi
 
-# --- Agent Platform (standalone behavioral contract, F-083) ---
-AGENT_PLATFORM="$PROJECT_ROOT/ops/scripts/test-agent-platform.sh"
-if [ -x "$AGENT_PLATFORM" ]; then
-    echo ""
-    echo "▶ Agent Platform (standalone behavior)"
-    AGENT_PLATFORM_LOG="$(mktemp /tmp/vowrite-agent-platform-log.XXXXXX)"
-    if "$AGENT_PLATFORM" > "$AGENT_PLATFORM_LOG" 2>&1; then
-        pass "test-agent-platform.sh: all checks passed"
-        rm -f "$AGENT_PLATFORM_LOG"
-    else
-        grep 'FAIL:' "$AGENT_PLATFORM_LOG" || true
-        fail "test-agent-platform.sh failed (full output: $AGENT_PLATFORM_LOG)"
-    fi
-else
-    fail "test-agent-platform.sh missing or not executable"
-fi
-
-# --- Workspace Agent Parity (cross-repo wiring, F-083) ---
-# Only runs when the full workspace surrounds this repo; standalone clones skip it.
-AGENT_PARITY="$PROJECT_ROOT/../scripts/check-agent-parity.sh"
-if [ -x "$AGENT_PARITY" ]; then
-    echo ""
-    echo "▶ Agent Parity (SSOT lint)"
-    AGENT_PARITY_LOG="$(mktemp /tmp/vowrite-agent-parity-log.XXXXXX)"
-    if "$AGENT_PARITY" > "$AGENT_PARITY_LOG" 2>&1; then
-        pass "check-agent-parity.sh: all checks passed"
-        rm -f "$AGENT_PARITY_LOG"
-    else
-        grep '❌' "$AGENT_PARITY_LOG" || true
-        fail "check-agent-parity.sh failed (full output: $AGENT_PARITY_LOG)"
-    fi
-fi
-
 # --- Summary ---
 echo ""
 echo "═══════════════════════════════════════"

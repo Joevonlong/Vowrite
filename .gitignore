@@ -38,3 +38,7 @@ VowriteMac/Vowrite.app/Contents/MacOS/Vowrite
 VowriteMac/Vowrite.app/Contents/Frameworks/
 VowriteMac/Vowrite.app/Contents/_CodeSignature/
 releases/*.dmg
+
+# Local AI-tool wiring (maintainer machines drop untracked shims here)
+.claude/
+.codex/

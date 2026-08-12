@@ -17,7 +17,7 @@ scripts/publish-release.sh --tag v0.2.2.0
 
 ## What the script does (in order)
 
-1. **Preflight** — lists commits since last tag, classifies per platform (mac/ios/shared/mixed/meta), asks 3 confirmation gates (see CLAUDE.md "Multiplatform Release Policy")
+1. **Preflight** — lists commits since last tag, classifies per platform (mac/ios/shared/mixed/meta), asks 3 confirmation gates (see "Changelog routing" in `AGENTS.md`)
 2. **CHANGELOG** — promotes `[Unreleased]` to the new version section
 3. **Version bump** — `Resources/Info.plist` (CFBundleShortVersionString + CFBundleVersion) and `VowriteKit/Sources/VowriteKit/Version.swift`
 4. **Build** — `swift build -c release`, assemble `Vowrite.app`
@@ -25,14 +25,14 @@ scripts/publish-release.sh --tag v0.2.2.0
 6. **Package** — DMG with Applications symlink + install.sh
 7. **Sparkle** — EdDSA-sign the DMG, update `docs/appcast.xml` (or `appcast-beta.xml`)
 8. **Git** — commit, annotated tag
-9. **Publication intent** — pins the release commit, tag, DMG, and notes outside the worktree
-10. **Governed publication** — `scripts/publish-release.sh` atomically pushes exactly pinned `main` + tag, then creates or resumes the GitHub Release
+9. **Publication intent** — `release.sh` records the exact `main` + tag to publish, pinning the release commit, tag, DMG, and notes outside the worktree
+10. **Publication** — `scripts/publish-release.sh` pushes `main` + tag atomically and creates or resumes the GitHub Release
 
-Details on gates and CHANGELOG routing: `ops/CHECKLIST_RELEASE.md` and root `CLAUDE.md`.
+Details on gates: `ops/CHECKLIST_RELEASE.md`. CHANGELOG routing: `AGENTS.md`.
 
 ## Version format
 
-`MAJOR.MINOR.PATCH.BUILD` — see [VERSIONING.md](VERSIONING.md). BUILD bumps get no tag/changelog; PATCH+ gets tag + changelog entry.
+`MAJOR.MINOR.PATCH.BUILD` — see [VERSIONING.md](VERSIONING.md). Every release gets a tag and a changelog entry, including a BUILD-segment release.
 
 ## Code signing
 
