@@ -16,7 +16,7 @@ All contributors and automation scripts must follow these rules.
 | 3rd | PATCH | Accumulated batch of user-facing features | ✅ | ✅ |
 | 4th | BUILD | Bugfixes, infra improvements, provider additions, polish | ✅ | ✅ |
 
-> **Global standard:** See `~/Dev_Workspace/VERSIONING.md` for cross-project rules.
+> **Note:** This scheme follows the maintainer's cross-project versioning convention.
 
 ### Rules
 
