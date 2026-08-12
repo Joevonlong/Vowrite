@@ -140,13 +140,7 @@ iOS 键盘扩展（VowriteKeyboard）需要用户授予 **"完全访问"（Full 
 
 ## ⑦ 已知风险
 
-当前 deep review 正在进行中，完整发现列表见：
-
-```
-Vowrite-internal/reviews/2026-05-15-deep-review/40-findings.md
-```
-
-> （占位：review charter v1 制定后，首次 deep review 将填充此路径。）
+Detailed findings are maintained privately by the maintainer; public-facing issues land in `tracking/BUGS.md` or GitHub issues.
 
 已知 P0/P1 风险概要（待 review 后更新）：
 

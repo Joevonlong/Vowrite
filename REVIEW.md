@@ -17,14 +17,7 @@
 
 ### 首次深审（Deep Review）
 
-首次完整 deep review 在 review charter v1 制定后执行，报告存入：
-
-```
-Vowrite-internal/reviews/2026-05-15-deep-review/
-├── 40-findings.md     # 按 P0/P1/P2/P3 分级的所有发现
-├── report.md          # 执行摘要
-└── raw/               # 各工具原始输出
-```
+The first full deep review ran after review charter v1 was established. Detailed findings are maintained privately by the maintainer (P0/P1/P2/P3-graded findings, an executive summary, and raw tool output); public-facing findings land in `tracking/` or GitHub issues.
 
 ---
 
@@ -121,7 +114,7 @@ brew install swiftlint swift-format gitleaks
 git config core.hooksPath .githooks
 
 # 3. 运行完整扫描
-bash ops/scripts/review-scan.sh --report Vowrite-internal/reviews/$(date +%Y-%m-%d)-review/report.md
+bash ops/scripts/review-scan.sh --report review-report-$(date +%Y-%m-%d).md
 
 # 4. 手动检查 L3/L5/L6
 #    - 手工冒烟：见 TESTING.md
@@ -147,20 +140,7 @@ bash ops/scripts/review-scan.sh --rule L2 --rule L8 --soft
 
 ## 报告位置
 
-所有 review 报告存入 **workspace 仓**（不是产品仓）：
-
-```
-Vowrite-internal/reviews/
-├── 2026-05-15-deep-review/
-│   ├── report.md
-│   ├── 40-findings.md
-│   └── raw/
-├── 2026-06-01-monthly/
-│   └── report.md
-└── ...
-```
-
-> `Vowrite-internal/` 位于 workspace repo（`/Users/unclejoe/Dev_Workspace/Vowrite-Workspace/`），不在产品仓 `Vowrite/` 内。
+Detailed review records are maintained privately by the maintainer; public-facing findings land in `tracking/` or GitHub issues.
 
 ---
 

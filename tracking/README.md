@@ -9,4 +9,4 @@
 | [BUGS.md](BUGS.md) | 已知缺陷及修复状态 |
 | [TODO.md](TODO.md) | 待办事项及优先级 |
 
-> 详细 Feature spec 和完整列表见 `Vowrite-internal/tracking/`
+> Full feature specs and planning history are maintained in the maintainer's private tracking; this folder is the public snapshot (IDs, status, notes).
