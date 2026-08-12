@@ -229,44 +229,23 @@ v0.2.0.0-rc1      Release candidate
 
 ```
 main                    ← Integration and tagged releases only.
-  └─ feature/F-xxx-*   ← One registered task in one isolated worktree.
+  └─ feature/F-xxx-*   ← One branch per feature or fix.
 ```
 
 | Branch | Purpose | Push directly? |
 |--------|---------|---------------|
-| `main` | Validated integration + tagged releases | No. Only the integration owner may publish a pinned result or an explicitly authorized release. |
-| `feature/F-xxx-*` / `fix/*` | Registered implementation task with an exclusive write-set | No. Commit locally, then hand off the immutable result SHA. |
+| `main` | Validated integration + tagged releases | No. Changes land through a reviewed pull request or an authorized release. |
+| `feature/F-xxx-*` / `fix/*` | Feature or fix work | Yes, to your own branch. Merge into `main` via pull request. |
 
 Releases are identified by **git tags**, not by branches.
 
 ### Feature workflow
 
 ```bash
-# From a clean main integration checkout, create and register the task worktree.
-scripts/agent-task.sh start \
-  --task F-XXX \
-  --owner <worker-id> \
-  --branch feature/F-XXX-description \
-  --worktree /absolute/path/to/worktree \
-  --write-set 'path/**' \
-  --accept 'ops/scripts/test.sh'
-
-# Work and commit only in that worktree, then pin the clean result.
-scripts/agent-task.sh handoff --task F-XXX --owner <worker-id> --commit <full-result-sha>
-
-# A separate integration owner operates from main.
-scripts/agent-task.sh claim-integration --owner <integrator-id>
-scripts/agent-task.sh integrate --task F-XXX --owner <integrator-id> --message "feat: short description"
-
-# Remote publication is a separate, explicitly authorized action.
-scripts/agent-task.sh publish --task F-XXX --owner <integrator-id>
-scripts/agent-task.sh cleanup --task F-XXX --owner <integrator-id>
-scripts/agent-task.sh release-integration --owner <integrator-id>
+git switch -c feature/F-XXX-description
+# work, then verify before opening the pull request
+ops/scripts/test.sh
 ```
-
-If a trusted tool already created the non-main worktree, register it with
-`scripts/agent-task.sh adopt` before the first write or commit. See `AGENTS.md`
-and the `vowrite-feature-lifecycle` skill for the complete state machine.
 
 ### Release workflow
 
@@ -280,11 +259,8 @@ scripts/publish-release.sh --tag v0.1.6.0
 ## Quick Reference
 
 ```
-Daily work:     registered task branch + isolated worktree
-                → local commit → immutable handoff → integration owner
+Daily work:     feature/fix branch → commit → pull request into main
                 (add notable items to [Unreleased] in CHANGELOG.md)
-
-Any write:      scripts/agent-task.sh start/adopt → handoff → integrate
 
 Release:        ops/scripts/release.sh v0.1.6.0 "description"
                 → local: version bump + changelog + build + commit + tag + pinned intent

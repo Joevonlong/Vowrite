@@ -2,7 +2,7 @@
 
 > Operational steps for keeping `vowrite.com` (served from `docs/` via GitHub Pages) consistent and current. The website is **decoupled** from the app release process — `release.sh` only updates `appcast*.xml`.
 >
-> State and history live at `Vowrite-internal/tracking/website.md`. This file = executable steps.
+> This file = executable steps. Per-audit dates and history are maintained by the site owner.
 
 ---
 
@@ -24,7 +24,7 @@
 
 ### Inputs
 - `VowriteKit/Sources/VowriteKit/Resources/providers.json` — source of truth for which providers/models exist
-- Provider official pricing pages — see "Resources" in `Vowrite-internal/tracking/website.md`
+- Provider official pricing pages — each provider's own pricing page, never an aggregator (see "What NOT to do")
 
 ### Steps
 
@@ -51,18 +51,13 @@
    ops/scripts/website-check.sh
    ```
 
-6. **Commit in the registered website task worktree:**
+6. **Commit:**
    ```bash
-   git add docs/pricing.html
-   git commit -m "docs(website-A): refresh pricing for <reason>"
-   scripts/agent-task.sh handoff --task <task-id> --owner <worker-id> --commit "$(git rev-parse HEAD)"
+   git add docs/pricing.html && git commit -m "docs(website-A): refresh pricing for <reason>"
+   git push origin main
    ```
 
-   The integration owner lands the pinned result with `scripts/agent-task.sh
-   integrate`; any remote publication is a separate authorized
-   `scripts/agent-task.sh publish` action.
-
-7. **Update state:** edit `Vowrite-internal/tracking/website.md` — bump "上次 Track A" date and add a History row.
+7. **Update state:** record the new Track A audit date and a history entry in the site owner's maintenance notes.
 
 ### Style invariants
 - Each provider's default model in providers.json gets `⭐ Default` in the rightmost column.
@@ -95,17 +90,13 @@ Run immediately after `ops/scripts/release.sh` completes a stable release (the s
    ```
    Must be green before commit.
 
-5. **Commit in the registered website task worktree:**
+5. **Commit:**
    ```bash
-   git add docs/index.html docs/pricing.html
-   git commit -m "docs(website-B): sync to vX.Y.Z.B"
-   scripts/agent-task.sh handoff --task <task-id> --owner <worker-id> --commit "$(git rev-parse HEAD)"
+   git add docs/index.html docs/pricing.html && git commit -m "docs(website-B): sync to vX.Y.Z.B"
+   git push origin main
    ```
 
-   The integration owner lands and, when explicitly authorized, publishes the
-   pinned result through `scripts/agent-task.sh`.
-
-6. **Update state:** edit `Vowrite-internal/tracking/website.md` — bump "上次 Track B" date + version, add History row.
+6. **Update state:** record the new Track B sync date and version, plus a history entry, in the site owner's maintenance notes.
 
 > If you bundle Track A and B in one editing session (common scenario right after a release that also added providers), still split into two commits with their respective prefixes.
 
@@ -130,15 +121,11 @@ Run immediately after `ops/scripts/release.sh` completes a stable release (the s
    ```bash
    ops/scripts/website-check.sh
    ```
-5. **Commit in the registered website task worktree:**
+5. **Commit:**
    ```bash
-   git add docs/<assets>
-   git commit -m "docs(website-C): <what changed>"
-   scripts/agent-task.sh handoff --task <task-id> --owner <worker-id> --commit "$(git rev-parse HEAD)"
+   git add docs/<assets> && git commit -m "docs(website-C): <what changed>"
+   git push origin main
    ```
-
-   The integration owner lands and, when explicitly authorized, publishes the
-   pinned result through `scripts/agent-task.sh`.
 
 ---
 

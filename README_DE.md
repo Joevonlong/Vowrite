@@ -179,25 +179,24 @@ Dieser Abschnitt richtet sich an KI/LLM-Agenten (Claude Code, Cursor, Copilot, e
 
 ```bash
 git clone https://github.com/Joevonlong/Vowrite.git
-cd Vowrite
-scripts/bootstrap-agent-platform.sh
-cd VowriteMac && swift build
+cd Vowrite/VowriteMac
+swift build
 ```
 
 ### Zuerst lesen
 
-- **`AGENTS.md`** — Verbindliche Regeln, Worktree-Protokoll, Build-Befehle und Handoff-Vertrag
-- **`CLAUDE.md`** — Dünner Claude-Code-Import von `AGENTS.md`
-- **`CONTRIBUTING.md`** — Beitragsrichtlinien (falls vorhanden)
-- **`Vowrite/CHANGELOG.md`** — Release-Historie
+- **`CONTRIBUTING.md`** — Beitragsworkflow, Commit-Format und Branch-Modell
+- **`DEV_GUIDE.md`** — Build-, Deploy- und Anbieter-Implementierungsdetails
+- **`docs/PROVIDER_GUIDE.md`** — Vertrag der Anbieter-Registry
+- **`CHANGELOG.md`** — Release-Historie
 
 ### Tests ausführen
 
 ```bash
-cd Vowrite && ops/scripts/test.sh
+ops/scripts/test.sh
 ```
 
-`ops/scripts/test.sh` führt VowriteKit-Unit-Tests sowie Build-, Qualitäts-, Sicherheits-, Bundle-, Parity- und Agent-Platform-Prüfungen aus.
+`ops/scripts/test.sh` führt VowriteKit-Unit-Tests sowie Build-, Qualitäts-, Sicherheits-, Bundle- und Parity-Prüfungen aus.
 
 ### Modul-Übersicht
 
@@ -230,7 +229,7 @@ cd Vowrite && ops/scripts/test.sh
 ### Release-Prozess
 
 ```bash
-cd Vowrite && ops/scripts/release.sh v0.2.1.0 "Kurze Beschreibung"
+ops/scripts/release.sh v0.2.1.0 "Kurze Beschreibung"
 scripts/publish-release.sh --tag v0.2.1.0
 ```
 

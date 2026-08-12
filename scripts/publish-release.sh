@@ -36,7 +36,7 @@ if [[ "$COMMON_RAW" != /* ]]; then
     COMMON_RAW="$ROOT/$COMMON_RAW"
 fi
 COMMON_DIR="$(cd "$COMMON_RAW" && pwd -P)"
-INTENT="$COMMON_DIR/vowrite-agent-platform/release-intent.json"
+INTENT="$COMMON_DIR/vowrite-release/release-intent.json"
 [[ -f "$INTENT" ]] || die "no prepared release intent; run ops/scripts/release.sh first"
 [[ ! -L "$INTENT" ]] || die "release intent must be a regular file"
 
@@ -86,7 +86,7 @@ update_intent() {
     local filter="$1"
     local timestamp_key="$2"
     local temp
-    temp="$(mktemp "$COMMON_DIR/vowrite-agent-platform/.release-intent.XXXXXX")"
+    temp="$(mktemp "$COMMON_DIR/vowrite-release/.release-intent.XXXXXX")"
     jq --arg timestamp "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" --arg key "$timestamp_key" \
         "$filter | .[\$key] = \$timestamp" "$INTENT" > "$temp"
     chmod 600 "$temp"
@@ -107,7 +107,7 @@ if [[ "$STATUS" == "prepared" ]]; then
     update_intent '.status = "git_published" | .remote = "origin"' git_published_at
 fi
 
-NOTES_TEMP="$(mktemp "$COMMON_DIR/vowrite-agent-platform/.release-notes.XXXXXX")"
+NOTES_TEMP="$(mktemp "$COMMON_DIR/vowrite-release/.release-notes.XXXXXX")"
 trap 'rm -f "$NOTES_TEMP"' EXIT
 jq -j '.notes' "$INTENT" > "$NOTES_TEMP"
 
