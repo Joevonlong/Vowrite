@@ -2,8 +2,7 @@
 
 > 最后更新: 2026-08-10
 >
-> 详细 Feature spec 见 `Vowrite-internal/tracking/features/F-xxx-*.md`
-> 完整 Feature 列表和状态见 `Vowrite-internal/tracking/FEATURES.md`
+> Full feature specs and planning history are maintained in the maintainer's private tracking; this folder is the public snapshot (IDs, status, notes).
 
 ## Recently integrated to product `main`
 
