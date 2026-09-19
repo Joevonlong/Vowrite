@@ -1,3 +1,4 @@
+import VowriteKit
 import SwiftUI
 
 // MARK: - Icon Picker
@@ -22,7 +23,7 @@ struct IconPickerView: View {
             Text("Choose Icon")
                 .font(.headline)
 
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(40)), count: 6), spacing: 8) {
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(44)), count: 6), spacing: 8) {
                 ForEach(Self.icons, id: \.self) { icon in
                     let isSelected = selected == icon
                     Button {
@@ -31,24 +32,27 @@ struct IconPickerView: View {
                     } label: {
                         Image(systemName: icon)
                             .font(.title3)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 44, height: 44)
                             .background(isSelected
-                                ? Color.accentColor.opacity(0.15)
-                                : Color.secondary.opacity(0.06))
+                                ? VW.Colors.Action.soft
+                                : VW.Colors.Surface.secondary)
                             .cornerRadius(8)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(isSelected
-                                        ? Color.accentColor.opacity(0.5)
-                                        : Color.clear, lineWidth: 1.5)
+                                        ? VW.Colors.Action.primary
+                                        : VW.Colors.Border.standard, lineWidth: 1)
                             )
                     }
                     .buttonStyle(.plain)
-                    .foregroundColor(isSelected ? .accentColor : .primary)
+                    .foregroundColor(isSelected ? VW.Colors.Action.primary : VW.Colors.Text.primary)
+                    .accessibilityLabel(icon.replacingOccurrences(of: ".", with: " "))
+                    .accessibilityAddTraits(isSelected ? [.isSelected] : [])
                 }
             }
         }
         .padding(16)
-        .frame(width: 290)
+        .frame(width: 344)
+        .settingsPageStyle()
     }
 }

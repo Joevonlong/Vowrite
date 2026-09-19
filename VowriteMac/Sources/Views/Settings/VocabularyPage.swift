@@ -26,15 +26,15 @@ struct VocabularyPageView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                Text("Vocabulary")
-                    .font(.system(size: 24, weight: .bold))
+            VStack(alignment: .leading, spacing: VW.Spacing.pageLarge) {
+                SettingsPageHeader(title: "Vocabulary", subtitle: "Help Vowrite recognize names, terms, and everyday shortcuts.")
 
                 vocabularySection
                 correctionsSection
             }
-            .padding(32)
+            .padding(VW.Spacing.pageLarge)
         }
+        .settingsPageStyle()
     }
 
     // MARK: - Vocabulary Section
@@ -44,28 +44,49 @@ struct VocabularyPageView: View {
             VStack(alignment: .leading, spacing: VW.Spacing.xl) {
                 Text("Words listed here are sent as hints to the speech-to-text engine, improving recognition of names, jargon, and abbreviations.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
 
-                // Tag cloud
-                if !vocabManager.words.isEmpty {
-                    WrappingHStack(items: vocabManager.words, spacing: VW.Spacing.sm) { word in
-                        HStack(spacing: VW.Spacing.xs) {
-                            Text(word).font(.callout)
-                            Button {
-                                withAnimation(VW.Anim.easeQuick) {
-                                    vocabManager.remove(word)
+                if vocabManager.words.isEmpty {
+                    VStack(spacing: VW.Spacing.md) {
+                        Image(systemName: "text.book.closed")
+                            .font(.system(size: 28))
+                        Text("Your vocabulary starts here")
+                            .font(.system(size: 16, weight: .semibold))
+                        Text("Add a name, technical term, or abbreviation below.")
+                            .font(.system(size: 13))
+                    }
+                    .foregroundStyle(VW.Colors.Text.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, VW.Spacing.section)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(vocabManager.words, id: \.self) { word in
+                            HStack(spacing: VW.Spacing.xl) {
+                                VStack(alignment: .leading, spacing: VW.Spacing.xs) {
+                                    Text(word)
+                                        .font(.system(size: 14, weight: .medium))
+                                        .textSelection(.enabled)
+                                    Text("Recognition hint")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(VW.Colors.Text.secondary)
                                 }
-                            } label: {
-                                Image(systemName: "xmark")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Button {
+                                    withAnimation(VW.Anim.easeQuick) {
+                                        vocabManager.remove(word)
+                                    }
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 14))
+                                        .frame(width: 32, height: 32)
+                                }
+                                .buttonStyle(.borderless)
+                                .foregroundStyle(VW.Colors.Text.secondary)
+                                .accessibilityLabel("Delete \(word)")
                             }
-                            .buttonStyle(.plain)
+                            .padding(.vertical, VW.Spacing.xl)
+                            if word != vocabManager.words.last { Divider() }
                         }
-                        .padding(.horizontal, VW.Spacing.md)
-                        .padding(.vertical, VW.Spacing.xs)
-                        .background(VW.Colors.Background.elevated)
-                        .cornerRadius(VW.Radius.lg)
                     }
                 }
 
@@ -105,7 +126,7 @@ struct VocabularyPageView: View {
                     if let message = importStatusMessage {
                         Text(message)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(VW.Colors.Text.secondary)
                             .transition(.opacity)
                     }
                 }
@@ -192,18 +213,18 @@ struct VocabularyPageView: View {
             VStack(alignment: .leading, spacing: VW.Spacing.xl) {
                 Text("Auto-correct misrecognized words or expand voice shortcuts into full text. Applied after transcription and after AI polish.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
 
                 // Header row
                 if !replacementManager.rules.isEmpty {
                     HStack(spacing: 0) {
                         Text("When recognized as")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(VW.Colors.Text.secondary)
                             .frame(width: 180, alignment: .leading)
                         Text("Replace with")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(VW.Colors.Text.secondary)
                         Spacer()
                     }
                     .padding(.bottom, 2)
@@ -221,27 +242,27 @@ struct VocabularyPageView: View {
                 HStack(spacing: VW.Spacing.sm) {
                     TextField("Trigger word...", text: $newTrigger)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 12))
+                        .font(.system(size: 14))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
                         .frame(width: 172)
                         .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4]))
+                            RoundedRectangle(cornerRadius: VW.Radius.control)
+                                .stroke(VW.Colors.Border.standard, lineWidth: 1)
                         )
 
                     Image(systemName: "arrow.right")
                         .font(.system(size: 10))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
 
                     TextField("Replacement...", text: $newReplacement)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 12))
+                        .font(.system(size: 14))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
                         .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4]))
+                            RoundedRectangle(cornerRadius: VW.Radius.control)
+                                .stroke(VW.Colors.Border.standard, lineWidth: 1)
                         )
                         .onSubmit { addCorrection() }
 
@@ -250,16 +271,18 @@ struct VocabularyPageView: View {
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 16))
-                            .foregroundColor(.accentColor)
+                            .frame(width: 32, height: 32)
+                            .foregroundColor(VW.Colors.Action.primary)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Add correction")
                     .disabled(newTrigger.trimmingCharacters(in: .whitespaces).isEmpty ||
                               newReplacement.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
 
                 Text("Examples: \"伏莱特\" → \"Vowrite\"  ·  \"我的邮箱\" → \"hello@example.com\"")
                     .font(.caption2)
-                    .foregroundColor(.secondary.opacity(0.6))
+                    .foregroundColor(VW.Colors.Text.secondary)
             }
         }
     }
@@ -268,56 +291,60 @@ struct VocabularyPageView: View {
         HStack(spacing: VW.Spacing.sm) {
             if editingRuleId == rule.id {
                 // Editing state
-                TextField("", text: $editTrigger)
+                TextField("Recognized text", text: $editTrigger)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 14, weight: .medium))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 4)
                     .frame(width: 172)
-                    .background(RoundedRectangle(cornerRadius: 4).fill(VW.Colors.Background.elevated))
+                    .background(RoundedRectangle(cornerRadius: VW.Radius.control).fill(VW.Colors.Surface.secondary))
                     .onSubmit { commitCorrectionEdit() }
 
                 Image(systemName: "arrow.right")
                     .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
 
-                TextField("", text: $editReplacement)
+                TextField("Replacement text", text: $editReplacement)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 4)
-                    .background(RoundedRectangle(cornerRadius: 4).fill(VW.Colors.Background.elevated))
+                    .background(RoundedRectangle(cornerRadius: VW.Radius.control).fill(VW.Colors.Surface.secondary))
                     .onSubmit { commitCorrectionEdit() }
 
                 Spacer()
 
                 Button { commitCorrectionEdit() } label: {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.green)
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(width: 28, height: 28)
+                        .foregroundColor(VW.Colors.Status.success)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Save correction")
 
                 Button { editingRuleId = nil } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(width: 28, height: 28)
+                        .foregroundColor(VW.Colors.Text.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Cancel correction edit")
             } else {
                 // Display state
                 Text(rule.trigger)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 14, weight: .medium))
                     .frame(width: 172, alignment: .leading)
 
                 Image(systemName: "arrow.right")
                     .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
 
                 Text(rule.replacement)
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                    .font(.system(size: 14))
+                    .foregroundColor(VW.Colors.Text.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Spacer()
 
@@ -327,10 +354,12 @@ struct VocabularyPageView: View {
                     editingRuleId = rule.id
                 } label: {
                     Image(systemName: "pencil")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(width: 28, height: 28)
+                        .foregroundColor(VW.Colors.Text.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Edit correction for \(rule.trigger)")
 
                 Button {
                     withAnimation(VW.Anim.easeQuick) {
@@ -338,13 +367,15 @@ struct VocabularyPageView: View {
                     }
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(width: 28, height: 28)
+                        .foregroundColor(VW.Colors.Text.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Delete correction for \(rule.trigger)")
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, VW.Spacing.md)
     }
 
     private func addCorrection() {

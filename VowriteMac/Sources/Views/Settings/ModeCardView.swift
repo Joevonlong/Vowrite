@@ -12,97 +12,71 @@ struct ModeCardView: View {
     var onDelete: (() -> Void)? = nil   // nil for builtin
     var onReset: (() -> Void)? = nil    // non-nil for builtin
 
-    @State private var isHovered = false
-
     var body: some View {
-        VStack(spacing: 10) {
-            // Icon in rounded rectangle
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(isActive
-                        ? Color.accentColor.opacity(0.12)
-                        : Color.secondary.opacity(0.08))
-                    .frame(width: 48, height: 48)
-
-                Image(systemName: mode.icon)
-                    .font(.system(size: 22))
-                    .foregroundColor(isActive ? .accentColor : .secondary)
-            }
-
-            // Name
-            Text(mode.name)
-                .font(.callout.weight(.medium))
-                .foregroundColor(isActive ? .accentColor : .primary)
-                .lineLimit(1)
-
-            // Subtitle
-            Text(mode.polishEnabled ? "STT + Polish" : "STT Only")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-
-            // Active badge
-            if isActive {
-                Label("Active", systemImage: "checkmark")
-                    .font(.caption2.weight(.medium))
-                    .foregroundColor(.accentColor)
-                    .transition(.scale.combined(with: .opacity))
-            }
-        }
-        .frame(maxWidth: .infinity, minHeight: 120)
-        .padding(16)
-        .background(
-            isActive
-                ? Color.accentColor.opacity(0.08)
-                : Color.secondary.opacity(0.06)
-        )
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(
-                    isActive
-                        ? Color.accentColor.opacity(0.5)
-                        : Color.primary.opacity(0.06),
-                    lineWidth: isActive ? 2 : 1
-                )
-        )
-        .shadow(
-            color: isActive
-                ? Color.accentColor.opacity(0.15)
-                : (isHovered ? Color.black.opacity(0.08) : Color.clear),
-            radius: isActive ? 10 : (isHovered ? 8 : 0),
-            y: isHovered && !isActive ? 4 : 0
-        )
-        .scaleEffect(isHovered ? 1.02 : 1.0)
-        .animation(.smooth(duration: 0.2), value: isHovered)
-        .overlay(alignment: .topTrailing) {
-            // Gear button on hover
-            if isHovered {
-                Button {
-                    onEdit()
-                } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(6)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(6)
+        VStack(alignment: .leading, spacing: 0) {
+            Group {
+                VStack(alignment: .leading, spacing: VW.Spacing.xl) {
+                    HStack {
+                        Image(systemName: mode.icon)
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundStyle(VW.Colors.Action.primary)
+                        Spacer()
+                        if isActive {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(VW.Colors.Action.primary)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    Text(mode.name)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(isActive ? VW.Colors.Action.primary : VW.Colors.Text.primary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(mode.polishEnabled ? "STT + Polish" : "STT Only")
+                        .font(.system(size: 12))
+                        .foregroundStyle(VW.Colors.Text.secondary)
                 }
-                .buttonStyle(.plain)
-                .padding(8)
-                .transition(.opacity)
+                .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+                .padding(VW.Spacing.xxl)
+                .contentShape(Rectangle())
             }
-        }
-        .onHover { hovering in
-            withAnimation(.easeIn(duration: 0.15)) {
-                isHovered = hovering
+            .onTapGesture(count: 2) { onEdit() }
+            .onTapGesture(count: 1) { onSelect() }
+            .focusable()
+            .onKeyPress(.return) {
+                onSelect()
+                return .handled
             }
+            .onKeyPress(.space) {
+                onSelect()
+                return .handled
+            }
+            .accessibilityLabel(mode.name)
+            .accessibilityValue(isActive ? "Active scene" : "")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { onSelect() }
+            .accessibilityAddTraits(isActive ? [.isSelected] : [])
+
+            HStack {
+                Button(action: onEdit) {
+                    Label("Edit", systemImage: "pencil")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Edit \(mode.name)")
+                Spacer()
+                Text(isActive ? "Active" : (mode.isBuiltin ? "Built-in" : "Custom"))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(isActive ? VW.Colors.Action.primary : VW.Colors.Text.secondary)
+            }
+            .padding(.horizontal, VW.Spacing.xxl)
+            .padding(.bottom, VW.Spacing.xxl)
         }
-        .onTapGesture(count: 2) {
-            onEdit()
-        }
-        .onTapGesture(count: 1) {
-            onSelect()
-        }
+        .background(isActive ? VW.Colors.Action.soft : VW.Colors.Surface.panel)
+        .clipShape(RoundedRectangle(cornerRadius: VW.Radius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: VW.Radius.panel)
+                .stroke(isActive ? VW.Colors.Action.primary : VW.Colors.Border.standard, lineWidth: 1)
+        )
         .contextMenu {
             Button {
                 onEdit()
@@ -142,38 +116,27 @@ struct ModeCardView: View {
 struct NewSceneCardView: View {
     let onTap: () -> Void
 
-    @State private var isHovered = false
-
     var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "plus.circle")
-                .font(.system(size: 24))
-                .foregroundColor(isHovered ? .accentColor : .secondary.opacity(0.4))
-
-            Text("New Scene")
-                .font(.caption)
-                .foregroundColor(isHovered ? .accentColor : .secondary.opacity(0.5))
-        }
-        .frame(maxWidth: .infinity, minHeight: 120)
-        .padding(16)
-        .background(Color.clear)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
-                )
-                .foregroundColor(isHovered ? .secondary.opacity(0.4) : .secondary.opacity(0.2))
-        )
-        .scaleEffect(isHovered ? 1.02 : 1.0)
-        .animation(.smooth(duration: 0.2), value: isHovered)
-        .onHover { hovering in
-            withAnimation(.easeIn(duration: 0.15)) {
-                isHovered = hovering
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: VW.Spacing.xl) {
+                Image(systemName: "plus")
+                    .font(.system(size: 20, weight: .medium))
+                Text("New Scene")
+                    .font(.system(size: 14, weight: .semibold))
+                Text("Create your own way to write.")
+                    .font(.system(size: 12))
             }
+            .foregroundStyle(VW.Colors.Text.secondary)
+            .frame(maxWidth: .infinity, minHeight: 128, alignment: .leading)
+            .padding(VW.Spacing.xxl)
+            .contentShape(Rectangle())
+            .background(VW.Colors.Surface.panel)
+            .clipShape(RoundedRectangle(cornerRadius: VW.Radius.panel))
+            .overlay(
+                RoundedRectangle(cornerRadius: VW.Radius.panel)
+                    .stroke(VW.Colors.Border.standard, style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            )
         }
-        .onTapGesture {
-            onTap()
-        }
+        .buttonStyle(.plain)
     }
 }

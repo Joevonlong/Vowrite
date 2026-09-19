@@ -26,7 +26,7 @@ struct LanguageRegionPicker: View {
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 8) {
-            Picker("", selection: Binding(
+            Picker("Language", selection: Binding(
                 get: { family },
                 set: { selection = $0 }
             )) {
@@ -34,16 +34,20 @@ struct LanguageRegionPicker: View {
                     Text(lang.displayName).tag(lang)
                 }
             }
+            .labelsHidden()
             .frame(width: width)
+            .controlSize(.large)
 
             if !family.regionVariants.isEmpty {
-                Picker("", selection: $selection) {
+                Picker("Region", selection: $selection) {
                     Text("Auto / Default").tag(family)
                     ForEach(family.regionVariants) { variant in
                         Text(variant.regionLabel ?? variant.displayName).tag(variant)
                     }
                 }
+                .labelsHidden()
                 .frame(width: width)
+                .controlSize(.large)
             }
         }
     }

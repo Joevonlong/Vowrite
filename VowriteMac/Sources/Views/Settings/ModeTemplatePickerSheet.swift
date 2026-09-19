@@ -17,14 +17,14 @@ struct ModeTemplatePickerSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: VW.Spacing.xl) {
                     Text("Start from a preset — you can rename it and tweak anything before saving.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
+                        .font(.system(size: 13))
+                        .foregroundColor(VW.Colors.Text.secondary)
+                        .padding(.horizontal, VW.Spacing.section)
+                        .padding(.top, VW.Spacing.section)
 
-                    LazyVGrid(columns: columns, spacing: 10) {
+                    LazyVGrid(columns: columns, spacing: VW.Spacing.xl) {
                         ForEach(ModeTemplate.builtins) { template in
                             Button {
                                 onPick(template)
@@ -35,10 +35,11 @@ struct ModeTemplatePickerSheet: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
+                    .padding(.horizontal, VW.Spacing.section)
+                    .padding(.bottom, VW.Spacing.section)
                 }
             }
+            .settingsPageStyle()
             .navigationTitle("From Template")
             .frame(minWidth: 500, idealWidth: 540, minHeight: 480, idealHeight: 560)
             .toolbar {
@@ -50,31 +51,32 @@ struct ModeTemplatePickerSheet: View {
     }
 
     private func templateRow(_ template: ModeTemplate) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: VW.Spacing.xl) {
             ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.accentColor.opacity(0.1))
-                    .frame(width: 36, height: 36)
+                RoundedRectangle(cornerRadius: VW.Radius.panel)
+                    .fill(VW.Colors.Action.soft)
+                    .frame(width: 40, height: 40)
                 Image(systemName: template.icon)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(VW.Colors.Action.primary)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(template.name)
                     .font(.callout.weight(.medium))
-                    .foregroundColor(.primary)
+                    .foregroundColor(VW.Colors.Text.primary)
                 Text(template.summary)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+                    .font(.system(size: 13))
+                    .foregroundColor(VW.Colors.Text.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }
-        .padding(10)
-        .background(Color.secondary.opacity(0.06))
-        .cornerRadius(10)
+        .padding(VW.Spacing.xxl)
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+        .background(VW.Colors.Surface.panel)
+        .cornerRadius(VW.Radius.panel)
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+            RoundedRectangle(cornerRadius: VW.Radius.panel)
+                .stroke(VW.Colors.Border.standard, lineWidth: 1)
         )
     }
 }

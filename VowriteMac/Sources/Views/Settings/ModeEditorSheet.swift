@@ -10,6 +10,7 @@ struct ModeEditorSheet: View {
     let onDelete: ((Mode) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var styleManager = OutputStyleManager.shared
 
     @State private var draft: Mode
@@ -86,85 +87,94 @@ struct ModeEditorSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                // ── Basic ──
-                Section("Basic") {
-                    HStack(spacing: 16) {
-                        // Icon preview + picker
-                        Button { showIconPicker = true } label: {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.accentColor.opacity(0.1))
-                                    .frame(width: 48, height: 48)
-                                Image(systemName: draft.icon)
-                                    .font(.title2)
-                                    .foregroundColor(.accentColor)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .popover(isPresented: $showIconPicker) {
-                            IconPickerView(selected: $draft.icon)
-                        }
-
-                        TextField("Scene Name", text: $draft.name)
-                            .textFieldStyle(.roundedBorder)
-                    }
-                }
-
-                // ── F-063: Mode Type ──
-                Section("Mode Type") {
-                    Toggle("Translation Mode", isOn: Binding(
-                        get: { draft.isTranslation },
-                        set: { newVal in
-                            draft.isTranslation = newVal
-                            // Sensible defaults when flipping the switch on
-                            if newVal {
-                                if draft.targetLanguage == nil || draft.targetLanguage?.isEmpty == true {
-                                    draft.targetLanguage = SupportedLanguage.en.rawValue
+            ScrollView {
+                VStack(alignment: .leading, spacing: VW.Spacing.section) {
+                    // ── Basic ──
+                    SettingsSection(icon: "square.and.pencil", title: "Basic") {
+                        HStack(spacing: 16) {
+                            // Icon preview + picker
+                            Button { showIconPicker = true } label: {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: VW.Radius.control)
+                                        .fill(VW.Colors.Action.soft)
+                                        .frame(width: 48, height: 48)
+                                    Image(systemName: draft.icon)
+                                        .font(.title2)
+                                        .foregroundColor(VW.Colors.Action.primary)
                                 }
-                                // Translation always requires the LLM step
-                                draft.polishEnabled = true
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Choose scene icon")
+                            .popover(isPresented: $showIconPicker) {
+                                IconPickerView(selected: $draft.icon)
+                            }
+
+                            VStack(alignment: .leading, spacing: VW.Spacing.xs) {
+                                Text("Scene Name")
+                                    .font(.system(size: 13, weight: .medium))
+                                TextField("Scene Name", text: $draft.name)
+                                    .textFieldStyle(.roundedBorder)
+                                    .labelsHidden()
                             }
                         }
-                    ))
-                    .animation(.easeInOut(duration: 0.2), value: draft.isTranslation)
-                    .disabled(draft.isBuiltin && draft.isTranslation)   // can't disable on builtin Translate
+                    }
+
+                    // ── F-063: Mode Type ──
+                    SettingsSection(icon: "arrow.triangle.branch", title: "Mode Type") {
+                        Toggle("Translation Mode", isOn: Binding(
+                            get: { draft.isTranslation },
+                            set: { newVal in
+                                draft.isTranslation = newVal
+                                // Sensible defaults when flipping the switch on
+                                if newVal {
+                                    if draft.targetLanguage == nil || draft.targetLanguage?.isEmpty == true {
+                                        draft.targetLanguage = SupportedLanguage.en.rawValue
+                                    }
+                                    // Translation always requires the LLM step
+                                    draft.polishEnabled = true
+                                }
+                            }
+                        ))
+                        .animation(reduceMotion ? nil : VW.Anim.easeStandard, value: draft.isTranslation)
+                        .disabled(draft.isBuiltin && draft.isTranslation)   // can't disable on builtin Translate
+
+                        if draft.isTranslation {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "info.circle")
+                                    .foregroundColor(VW.Colors.Action.primary)
+                                Text("Speech is translated into your target language. Output Style and User Prompt are not used in this mode.")
+                                    .font(.caption)
+                                    .foregroundColor(VW.Colors.Text.secondary)
+                            }
+                        }
+                    }
 
                     if draft.isTranslation {
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "info.circle")
-                                .foregroundColor(.accentColor)
-                            Text("Speech is translated into your target language. Output Style and User Prompt are not used in this mode.")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        translationSections
+                    } else {
+                        polishSections
+                    }
+
+                    // ── Danger zone ──
+                    if !isNew {
+                        SettingsSection(icon: "arrow.counterclockwise", title: "Scene Options") {
+                            if draft.isBuiltin {
+                                Button("Reset to Default") {
+                                    resetToDefault()
+                                }
+                                .foregroundColor(VW.Colors.Status.warning)
+                            } else {
+                                Button("Delete This Scene") {
+                                    showDeleteConfirm = true
+                                }
+                                .foregroundColor(VW.Colors.Status.error)
+                            }
                         }
                     }
                 }
-
-                if draft.isTranslation {
-                    translationSections
-                } else {
-                    polishSections
-                }
-
-                // ── Danger zone ──
-                if !isNew {
-                    Section {
-                        if draft.isBuiltin {
-                            Button("Reset to Default") {
-                                resetToDefault()
-                            }
-                            .foregroundColor(.orange)
-                        } else {
-                            Button("Delete This Scene") {
-                                showDeleteConfirm = true
-                            }
-                            .foregroundColor(.red)
-                        }
-                    }
-                }
+                .padding(VW.Spacing.section)
             }
-            .formStyle(.grouped)
+            .settingsPageStyle()
             .navigationTitle(isNew ? "New Scene" : "Edit Scene")
             .frame(minWidth: 500, idealWidth: 540, minHeight: 560, idealHeight: 660)
             .toolbar {
@@ -218,7 +228,7 @@ struct ModeEditorSheet: View {
 
     @ViewBuilder
     private var translationSections: some View {
-        Section("Languages") {
+        SettingsSection(icon: "globe", title: "Languages") {
             HStack {
                 Text("Source Language")
                 Spacer()
@@ -241,28 +251,28 @@ struct ModeEditorSheet: View {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.right")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
                 Text("\(SupportedLanguage(rawValue: draft.language ?? "auto")?.displayName ?? "Auto-detect") → \(SupportedLanguage(rawValue: draft.targetLanguage ?? "")?.displayName ?? "—")")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
             }
         }
 
-        Section("AI Polish") {
+        SettingsSection(icon: "sparkles", title: "AI Polish") {
             HStack {
                 Text("Temperature")
                 Slider(value: $draft.temperature, in: 0...1, step: 0.1)
                 Text(String(format: "%.1f", draft.temperature))
                     .font(.caption.monospaced())
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
                     .frame(width: 28)
             }
             Text("Lower values produce more literal translations. The translation step always runs through the AI provider configured for Polish.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(VW.Colors.Text.secondary)
         }
 
-        Section("Advanced") {
+        SettingsSection(icon: "slider.horizontal.3", title: "Advanced") {
             DisclosureGroup("Additional translate instructions (optional)") {
                 VStack(alignment: .leading, spacing: 4) {
                     TextEditor(text: $draft.systemPrompt)
@@ -270,15 +280,15 @@ struct ModeEditorSheet: View {
                         .frame(height: 80)
                         .scrollContentBackground(.hidden)
                         .padding(8)
-                        .background(Color.secondary.opacity(0.04))
-                        .cornerRadius(6)
+                        .background(VW.Colors.Surface.secondary)
+                        .cornerRadius(VW.Radius.control)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: VW.Radius.control)
+                                .stroke(VW.Colors.Border.standard, lineWidth: 1)
                         )
                     Text("Appended to the built-in translation prompt. Example: \"Translate into British English\" or \"Use formal register only\".")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
                 }
             }
 
@@ -291,9 +301,9 @@ struct ModeEditorSheet: View {
     @ViewBuilder
     private var polishSections: some View {
         // ── AI Polish ──
-        Section("AI Polish") {
+        SettingsSection(icon: "sparkles", title: "AI Polish") {
             Toggle("Enable Polish", isOn: $draft.polishEnabled)
-                .animation(.easeInOut(duration: 0.2), value: draft.polishEnabled)
+                .animation(reduceMotion ? nil : VW.Anim.easeStandard, value: draft.polishEnabled)
 
             if draft.polishEnabled {
                 HStack {
@@ -301,7 +311,7 @@ struct ModeEditorSheet: View {
                     Slider(value: $draft.temperature, in: 0...1, step: 0.1)
                     Text(String(format: "%.1f", draft.temperature))
                         .font(.caption.monospaced())
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
                         .frame(width: 28)
                 }
 
@@ -317,45 +327,45 @@ struct ModeEditorSheet: View {
 
         // ── Prompts ──
         if draft.polishEnabled {
-            Section("Prompts") {
+            SettingsSection(icon: "text.alignleft", title: "Prompts") {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("System Prompt")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
                     TextEditor(text: $draft.systemPrompt)
                         .font(.system(.body, design: .monospaced))
                         .frame(height: 80)
                         .scrollContentBackground(.hidden)
                         .padding(8)
-                        .background(Color.secondary.opacity(0.04))
-                        .cornerRadius(6)
+                        .background(VW.Colors.Surface.secondary)
+                        .cornerRadius(VW.Radius.control)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: VW.Radius.control)
+                                .stroke(VW.Colors.Border.standard, lineWidth: 1)
                         )
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("User Prompt (optional)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
                     TextEditor(text: $draft.userPrompt)
                         .font(.system(.body, design: .monospaced))
                         .frame(height: 60)
                         .scrollContentBackground(.hidden)
                         .padding(8)
-                        .background(Color.secondary.opacity(0.04))
-                        .cornerRadius(6)
+                        .background(VW.Colors.Surface.secondary)
+                        .cornerRadius(VW.Radius.control)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: VW.Radius.control)
+                                .stroke(VW.Colors.Border.standard, lineWidth: 1)
                         )
                 }
             }
         }
 
         // ── Advanced ──
-        Section("Advanced") {
+        SettingsSection(icon: "slider.horizontal.3", title: "Advanced") {
             Toggle("Auto-paste after processing", isOn: $draft.autoPaste)
         }
     }

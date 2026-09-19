@@ -40,18 +40,18 @@ struct PersonalizationPageView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                Text("Personalization")
-                    .font(.system(size: 24, weight: .bold))
+            VStack(alignment: .leading, spacing: VW.Spacing.pageLarge) {
+                SettingsPageHeader(title: "Personalization", subtitle: "Make every sentence sound more like you.")
 
                 scenesSection
-                PerAppModesSectionView()
                 globalPreferencesSection
+                PerAppModesSectionView()
                 learningSection
                 howItWorksSection
             }
-            .padding(32)
+            .padding(VW.Spacing.pageLarge)
         }
+        .settingsPageStyle()
         // Edit sheet
         .sheet(item: $editingMode) { mode in
             ModeEditorSheet(
@@ -133,13 +133,13 @@ struct PersonalizationPageView: View {
     // MARK: - Scenes Section
 
     private var scenesSection: some View {
-        SettingsSection(icon: "theatermasks", title: "Scenes") {
+        VStack(alignment: .leading, spacing: VW.Spacing.xxl) {
             VStack(alignment: .leading, spacing: 14) {
                 // Header
                 HStack {
-                    Text("Tap to activate · Double-click or ⚙ to edit")
+                    Text("Choose a scene, then make it yours.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
                     Spacer()
                     Button {
                         isPickingTemplate = true
@@ -153,18 +153,16 @@ struct PersonalizationPageView: View {
                     } label: {
                         Label("New Scene", systemImage: "plus")
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.borderedProminent)
                     .controlSize(.small)
                 }
 
                 // Cards grid
                 LazyVGrid(
                     columns: [
-                        GridItem(.flexible()),
-                        GridItem(.flexible()),
-                        GridItem(.flexible()),
+                        GridItem(.adaptive(minimum: 168)),
                     ],
-                    spacing: 14
+                    spacing: VW.Spacing.xl
                 ) {
                     ForEach(modeManager.modes) { mode in
                         ModeCardView(
@@ -191,7 +189,7 @@ struct PersonalizationPageView: View {
                                 modeManager.resetBuiltinMode(mode)
                             } : nil
                         )
-                        .transition(.scale.combined(with: .opacity))
+                        .transition(.opacity)
                     }
 
                     // + New Scene placeholder card
@@ -203,7 +201,7 @@ struct PersonalizationPageView: View {
                 // Tip
                 Text("Tip: Use ⌃1–⌃9 to quickly switch scenes.")
                     .font(.caption)
-                    .foregroundColor(.secondary.opacity(0.6))
+                    .foregroundColor(VW.Colors.Text.secondary)
             }
         }
     }
@@ -215,27 +213,36 @@ struct PersonalizationPageView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Applied to all scenes. Complements each scene's own prompt.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
 
-                TextEditor(text: $userPrompt)
-                    .font(.system(.body, design: .monospaced))
-                    .frame(height: 120)
-                    .scrollContentBackground(.hidden)
-                    .padding(10)
-                    .background(Color.secondary.opacity(0.04))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(
-                                Color.primary.opacity(isEditing ? 0.2 : 0.06),
-                                lineWidth: 1
-                            )
-                    )
-                    // Hard gate: nothing the user types reaches the editor unless
-                    // they explicitly entered edit mode. Stray clicks / focus
-                    // changes cannot mutate the committed prompt.
-                    .disabled(!isEditing)
-                    .opacity(isEditing ? 1.0 : 0.7)
+                if isEditing {
+                    TextEditor(text: $userPrompt)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(height: 160)
+                        .scrollContentBackground(.hidden)
+                        .padding(10)
+                        .background(VW.Colors.Surface.secondary)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(
+                                    VW.Colors.Border.standard,
+                                    lineWidth: 1
+                                )
+                        )
+                        // Hard gate: nothing the user types reaches the editor unless
+                        // they explicitly entered edit mode. Stray clicks / focus
+                        // changes cannot mutate the committed prompt.
+                        .disabled(!isEditing)
+                        .accessibilityLabel("Global preferences")
+                } else {
+                    Text(userPrompt.isEmpty ? "No preferences yet. Tell Vowrite how you like to write." : userPrompt)
+                        .font(.system(size: 14))
+                        .foregroundStyle(userPrompt.isEmpty ? VW.Colors.Text.secondary : VW.Colors.Text.primary)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 // Action buttons — explicit Edit/Save/Cancel only.
                 HStack(spacing: 8) {
@@ -325,17 +332,17 @@ struct PersonalizationPageView: View {
                     VStack(alignment: .leading, spacing: VW.Spacing.sm) {
                         Text("Recently learned")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(VW.Colors.Text.secondary)
                         ForEach(recent) { rule in
                             HStack(spacing: VW.Spacing.sm) {
                                 Text(rule.trigger)
                                     .font(.system(size: 12, weight: .medium))
                                 Image(systemName: "arrow.right")
                                     .font(.system(size: 9))
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(VW.Colors.Text.secondary)
                                 Text(rule.replacement)
                                     .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(VW.Colors.Text.secondary)
                             }
                         }
                     }
@@ -350,7 +357,7 @@ struct PersonalizationPageView: View {
                 .font(.body.weight(.semibold))
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(VW.Colors.Text.secondary)
         }
     }
 
@@ -380,12 +387,12 @@ struct PersonalizationPageView: View {
             if italic {
                 Text(text)
                     .font(.callout)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
                     .italic()
             } else {
                 Text(text)
                     .font(.callout)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
             }
         }
     }

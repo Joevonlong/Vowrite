@@ -27,31 +27,78 @@ enum AppearanceMode: String, CaseIterable {
 
 // MARK: - Settings Section
 
+struct SettingsPageHeader: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: VW.Spacing.md) {
+            Text(title)
+                .font(.system(size: 32, weight: .semibold))
+                .foregroundStyle(VW.Colors.Text.primary)
+                .accessibilityAddTraits(.isHeader)
+            Text(subtitle)
+                .font(.system(size: 14))
+                .foregroundStyle(VW.Colors.Text.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+extension View {
+    /// Presentation only: settings continue to own their existing state and actions.
+    func settingsPageStyle() -> some View {
+        modifier(SettingsPagePresentation())
+    }
+}
+
+private struct SettingsPagePresentation: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .background(VW.Colors.Surface.canvas)
+            .foregroundStyle(VW.Colors.Text.primary)
+            .tint(VW.Colors.Action.primary)
+            .font(.system(size: 14))
+            .controlSize(.large)
+            .transaction { transaction in
+                if reduceMotion {
+                    transaction.animation = nil
+                    transaction.disablesAnimations = true
+                }
+            }
+    }
+}
+
 struct SettingsSection<Content: View>: View {
     let icon: String
     let title: String
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: VW.Spacing.xl) {
+        VStack(alignment: .leading, spacing: VW.Spacing.xxl) {
             HStack(spacing: VW.Spacing.md) {
                 Image(systemName: icon)
-                    .foregroundColor(.accentColor)
-                    .font(.body.weight(.semibold))
+                    .foregroundStyle(VW.Colors.Action.primary)
+                    .font(.system(size: 18, weight: .medium))
                 Text(title)
-                    .font(.headline)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(VW.Colors.Text.primary)
+                    .accessibilityAddTraits(.isHeader)
             }
-            .padding(.horizontal, VW.Spacing.xs)
 
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: VW.Spacing.xxl) {
                 content
-                    .padding(VW.Spacing.xxl)
             }
-            .background(Color(.controlBackgroundColor))
-            .cornerRadius(VW.Radius.xxl)
+            .padding(VW.Spacing.section)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(VW.Colors.Surface.panel)
+            .cornerRadius(VW.Radius.panel)
             .overlay(
-                RoundedRectangle(cornerRadius: VW.Radius.xxl)
-                    .stroke(VW.Colors.Stroke.light, lineWidth: 1)
+                RoundedRectangle(cornerRadius: VW.Radius.panel)
+                    .stroke(VW.Colors.Border.standard, lineWidth: 1)
             )
         }
     }
@@ -77,7 +124,7 @@ struct SettingsRow<Trailing: View>: View {
         Group {
             switch layout {
             case .horizontal:
-                HStack(alignment: .top, spacing: 24) {
+                HStack(alignment: .center, spacing: VW.Spacing.xxl) {
                     labelView
                         .frame(maxWidth: .infinity, alignment: .leading)
                     trailing
@@ -91,14 +138,18 @@ struct SettingsRow<Trailing: View>: View {
                 }
             }
         }
-        .padding(.vertical, 4)
+        .frame(minHeight: 44)
+        .padding(.vertical, VW.Spacing.xs)
     }
 
     private var labelView: some View {
-        VStack(alignment: .leading, spacing: VW.Spacing.xxs) {
-            Text(title).font(.body).fontWeight(.semibold)
+        VStack(alignment: .leading, spacing: VW.Spacing.xs) {
+            Text(title).font(.system(size: 14, weight: .semibold))
             if !description.isEmpty {
-                Text(description).font(.caption).foregroundColor(.secondary)
+                Text(description)
+                    .font(.system(size: 13))
+                    .foregroundStyle(VW.Colors.Text.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -108,36 +159,43 @@ struct SettingsRow<Trailing: View>: View {
 
 struct AppearancePicker: View {
     @Binding var selection: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: VW.Spacing.xs) {
             ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in
                 Button {
-                    withAnimation(VW.Anim.easeQuick) {
+                    withAnimation(reduceMotion ? nil : VW.Anim.easeQuick) {
                         selection = mode.rawValue
                     }
                 } label: {
-                    Image(systemName: mode.icon)
-                        .font(.caption)
-                        .frame(width: 28, height: 24)
+                    VStack(spacing: VW.Spacing.xs) {
+                        Image(systemName: mode.icon)
+                            .font(.system(size: 16))
+                        Text(mode.rawValue)
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                        .frame(width: 58, height: 48)
                         .background(
                             selection == mode.rawValue
-                                ? VW.Colors.Accent.strong
+                                ? VW.Colors.Action.soft
                                 : Color.clear
                         )
                         .foregroundColor(
                             selection == mode.rawValue
-                                ? .accentColor
-                                : .secondary
+                                ? VW.Colors.Action.primary
+                                : VW.Colors.Text.secondary
                         )
-                        .cornerRadius(VW.Radius.lg)
+                        .cornerRadius(VW.Radius.control)
                 }
                 .buttonStyle(.plain)
                 .help(mode.rawValue)
+                .accessibilityLabel("\(mode.rawValue) appearance")
+                .accessibilityAddTraits(selection == mode.rawValue ? [.isSelected] : [])
             }
         }
-        .padding(3)
-        .background(VW.Colors.Background.elevated)
+        .padding(VW.Spacing.xs)
+        .background(VW.Colors.Surface.secondary)
         .cornerRadius(VW.Radius.xl)
     }
 }
@@ -160,7 +218,8 @@ struct QuickActionCard: View {
             Spacer()
         }
         .padding(VW.Spacing.xxl).frame(maxWidth: .infinity)
-        .background(VW.Colors.Background.tertiary).cornerRadius(VW.Radius.xxxl)
+        .background(VW.Colors.Surface.panel).cornerRadius(VW.Radius.panel)
+        .overlay(RoundedRectangle(cornerRadius: VW.Radius.panel).stroke(VW.Colors.Border.standard))
     }
 }
 
@@ -173,11 +232,11 @@ struct ProviderKeyStatusBadge: View {
     var body: some View {
         Group {
             if KeyVault.hasKey(for: provider) {
-                badge("Saved", color: .green)
+                badge("Saved", color: VW.Colors.Status.success)
             } else if isRequired {
-                badge("Required", color: .orange)
+                badge("Required", color: VW.Colors.Status.warning)
             } else {
-                badge("Missing", color: .secondary)
+                badge("Missing", color: VW.Colors.Text.secondary)
             }
         }
     }
@@ -201,13 +260,13 @@ struct PipelineKeyStatusBadge: View {
 
     var body: some View {
         if isSpeechToText && !configuration.provider.hasSTTSupport {
-            statusIcon("xmark.circle.fill", color: .orange, tooltip: "STT not supported")
+            statusIcon("xmark.circle.fill", color: VW.Colors.Status.warning, tooltip: "STT not supported")
         } else if !configuration.provider.requiresAPIKey {
-            statusIcon("minus.circle", color: .secondary, tooltip: "No key needed")
+            statusIcon("minus.circle", color: VW.Colors.Text.secondary, tooltip: "No key needed")
         } else if configuration.hasKey {
-            statusIcon("checkmark.circle.fill", color: .green, tooltip: "Key ready")
+            statusIcon("checkmark.circle.fill", color: VW.Colors.Status.success, tooltip: "Key ready")
         } else {
-            statusIcon("exclamationmark.circle.fill", color: .orange, tooltip: "Key missing")
+            statusIcon("exclamationmark.circle.fill", color: VW.Colors.Status.warning, tooltip: "Key missing")
         }
     }
 
@@ -238,7 +297,8 @@ struct PipelineConfigurationEditor: View {
         VStack(alignment: .leading, spacing: 12) {
             SettingsRow(
                 title: "Provider",
-                description: providerRowDescription
+                description: providerRowDescription,
+                layout: .vertical
             ) {
                 HStack(spacing: 8) {
                     PipelineKeyStatusBadge(configuration: configuration, isSpeechToText: isSpeechToText)
@@ -248,7 +308,7 @@ struct PipelineConfigurationEditor: View {
                             Text(provider.rawValue).tag(provider)
                         }
                     }
-                    .frame(width: 220)
+                    .frame(maxWidth: .infinity)
                     .labelsHidden()
                 }
             }
@@ -307,8 +367,8 @@ struct PipelineConfigurationEditor: View {
                 } else {
                     Text(configuration.resolvedBaseURL)
                         .font(.caption.monospaced())
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                        .foregroundColor(VW.Colors.Text.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                         .textSelection(.enabled)
                 }
             }
@@ -432,8 +492,8 @@ struct PipelineConfigurationEditor: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.secondary.opacity(0.1))
-                    .cornerRadius(6)
+                    .background(VW.Colors.Surface.secondary)
+                    .cornerRadius(VW.Radius.control)
 
                 Button("Edit") {
                     customModelDraft = configuration.model
