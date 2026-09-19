@@ -18,7 +18,7 @@ struct OrbPulseIndicator: View {
                     .frame(width: 44 + CGFloat(appState.audioLevel) * 20, height: 44 + CGFloat(appState.audioLevel) * 20)
                 Image(systemName: "mic.fill").font(.system(size: 24)).foregroundStyle(.white)
             } else if appState.state == .processing {
-                ProgressView().controlSize(.small).colorScheme(.dark)
+                ProgressView().progressViewStyle(OverlayProcessingProgressStyle())
             }
         }
         .frame(width: 100, height: 100)

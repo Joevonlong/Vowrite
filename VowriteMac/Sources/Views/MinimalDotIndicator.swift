@@ -13,7 +13,7 @@ struct MinimalDotIndicator: View {
                 let size: CGFloat = 10 + CGFloat(appState.audioLevel) * 16
                 Circle().fill(Color.white).frame(width: size, height: size)
             } else if appState.state == .processing {
-                ProgressView().controlSize(.mini).colorScheme(.dark)
+                ProgressView().progressViewStyle(OverlayProcessingProgressStyle(diameter: 12))
             }
         }
         .frame(width: 60, height: 60)
