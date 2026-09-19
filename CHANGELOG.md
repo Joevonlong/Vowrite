@@ -18,6 +18,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ### Fixed
 
+- **Scene editor no longer renames the main window**: Closing New Scene or Edit Scene now restores the main window title instead of leaving it as the sheet title.
 - **Reliable provider configuration**: Expired OAuth falls back to the configured provider endpoint, and unavailable provider selections stay visible with an explanation instead of silently changing.
 - **F-084 Model request compatibility**: Corrected invalid catalog parameters and retired tier-agnostic rows, added provider-scoped fallbacks, and safely migrates provider-qualified saved selections without rewriting provider-less Mode overrides. Claude speculative polish uses its native Messages API path.
 

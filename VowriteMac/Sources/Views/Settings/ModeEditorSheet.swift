@@ -89,6 +89,10 @@ struct ModeEditorSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: VW.Spacing.section) {
+                    Text(isNew ? "New Scene" : "Edit Scene")
+                        .font(.title2.weight(.semibold))
+                        .accessibilityAddTraits(.isHeader)
+
                     // ── Basic ──
                     SettingsSection(icon: "square.and.pencil", title: "Basic") {
                         HStack(spacing: 16) {
@@ -175,7 +179,6 @@ struct ModeEditorSheet: View {
                 .padding(VW.Spacing.section)
             }
             .settingsPageStyle()
-            .navigationTitle(isNew ? "New Scene" : "Edit Scene")
             .frame(minWidth: 500, idealWidth: 540, minHeight: 560, idealHeight: 660)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
