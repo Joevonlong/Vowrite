@@ -102,6 +102,8 @@ final class ProviderRegistryDataTests: XCTestCase {
                 .string("none")
             )
         }
+        XCTAssertEqual(openAI.polishOverrides(for: "gpt-6-astra")?["reasoning_effort"], .string("low"))
+        XCTAssertEqual(openAI.polishOverrides(for: "gpt-6-astra")?["temperature"], .null)
 
         let together = try XCTUnwrap(ProviderRegistry.shared.provider(for: "together"))
         XCTAssertEqual(together.defaultSTTModel, "openai/whisper-large-v3")
