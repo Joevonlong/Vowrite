@@ -15,6 +15,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Reliability
+
+- Pending keyboard history remains available until import/save completes and duplicate imports are deduplicated. Expired OAuth falls back to the regular provider endpoint, and unavailable Sherpa download controls stay hidden until runtime support is ready.
+
+### Changed
+
+- **F-092 Provider model maintenance**: Shared provider metadata now keeps saved legacy model choices recoverable while showing only documented curated model choices. OpenRouter and Sherpa STT are unavailable until their runtime contracts are validated, and DeepSeek's fresh default is `deepseek-flash`.
+
 ### Added
 
 - **F-082 Model catalog refresh + new providers**: The iOS Settings provider/model pickers gain the same 2026-07 refresh as macOS — Claude Sonnet 5, GPT-5.6, Gemini 3.x, Qwen 3.7, GLM-5.2, MiniMax M3, Doubao Seed 2.1 — plus new providers xAI (Grok), Cerebras (free tier), and Baidu Qianfan, and OpenRouter speech-to-text. All shared-catalog changes (thinking pre-disabled, retired IDs removed) apply identically to the keyboard's dictation pipeline.

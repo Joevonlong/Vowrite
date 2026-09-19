@@ -17,20 +17,22 @@
       "capabilities": { "stt": true, "polish": true },
       "sttAdapter": "openai-compatible",
       "stt": {
-        "defaultModel": "gpt-4o-mini-transcribe",
+        "defaultModel": "gpt-transcribe",
         "models": [
-          { "id": "gpt-4o-mini-transcribe", "description": "Fast and low-cost" },
-          { "id": "gpt-4o-transcribe", "description": "Highest OpenAI quality" },
-          { "id": "gpt-4o-transcribe-diarize", "description": "Transcription with speaker diarization" },
+          { "id": "gpt-transcribe", "description": "Recommended high-accuracy transcription" },
+          { "id": "gpt-4o-mini-transcribe", "description": "Economical transcription; JSON response" },
+          { "id": "gpt-4o-transcribe", "description": "High-accuracy transcription; JSON response" },
+          { "id": "gpt-4o-transcribe-diarize", "description": "Legacy saved model; speaker labels require a dedicated request", "isVisible": false },
           { "id": "whisper-1", "description": "Classic Whisper endpoint" }
         ]
       },
       "polish": {
         "defaultModel": "gpt-5.4-mini",
         "models": [
+          { "id": "gpt-6-astra", "description": "Latest capable flagship", "polishOverrides": { "reasoning_effort": "low" } },
           { "id": "gpt-5.4-mini", "description": "Balanced default — fast and capable" },
-          { "id": "gpt-5.6-luna", "description": "New gen — fast, 1M context", "polishOverrides": { "reasoning_effort": "none" } },
-          { "id": "gpt-5.6-sol", "description": "Frontier flagship", "polishOverrides": { "reasoning_effort": "none" } },
+          { "id": "gpt-5.6-luna", "description": "Legacy saved model", "isVisible": false, "polishOverrides": { "reasoning_effort": "none" } },
+          { "id": "gpt-5.6-sol", "description": "Legacy saved model", "isVisible": false, "polishOverrides": { "reasoning_effort": "none" } },
           { "id": "gpt-5.4-nano", "description": "Cheapest, high-volume" }
         ]
       }
@@ -46,18 +48,18 @@
         "keyURL": "https://openrouter.ai/keys",
         "requiresKey": true
       },
-      "capabilities": { "stt": true, "polish": true },
+      "capabilities": { "stt": false, "polish": true },
       "sttAdapter": "openai-compatible",
-      "sttNote": "OpenRouter transcription endpoint (OpenAI-compatible multipart, ≤25MB, m4a OK). Whisper + Qwen ASR at aggregator prices.",
+      "sttNote": "OpenRouter has no verified Vowrite-compatible multipart transcription route; existing IDs remain hidden for saved configurations.",
       "headers": {
         "HTTP-Referer": "https://vowrite.com",
         "X-Title": "Vowrite"
       },
       "stt": {
-        "defaultModel": "openai/whisper-large-v3",
+        "defaultModel": "",
         "models": [
-          { "id": "openai/whisper-large-v3", "description": "Whisper large v3 — cheapest hosted" },
-          { "id": "qwen/qwen3-asr-flash-2026-02-10", "description": "Qwen3 ASR — strong Chinese, 11 languages" }
+          { "id": "openai/whisper-large-v3", "description": "Retained for saved configurations", "isVisible": false },
+          { "id": "qwen/qwen3-asr-flash-2026-02-10", "description": "Retained for saved configurations", "isVisible": false }
         ]
       },
       "polish": {
@@ -111,7 +113,7 @@
         "defaultModel": "nova-3",
         "models": [
           { "id": "nova-3", "description": "Best accuracy, 36+ languages" },
-          { "id": "nova-3-medical", "description": "Nova-3 medical domain" },
+          { "id": "nova-3-medical", "description": "Deferred account-scoped model; retained for saved configurations", "isVisible": false },
           { "id": "nova-2", "description": "Previous gen, wider language support" }
         ]
       }
@@ -133,17 +135,17 @@
         "defaultModel": "openai/whisper-large-v3",
         "models": [
           { "id": "openai/whisper-large-v3", "description": "Higher accuracy" },
-          { "id": "nvidia/parakeet-tdt-0.6b-v3", "description": "NVIDIA Parakeet — EN/EU languages only (no Chinese)" }
+          { "id": "nvidia/parakeet-tdt-0.6b-v3", "description": "Deferred: Together endpoint support not reconfirmed", "isVisible": false }
         ]
       },
       "polish": {
         "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
         "models": [
           { "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo", "description": "Balanced flagship" },
-          { "id": "Qwen/Qwen3.7-Plus", "description": "New Qwen gen — 1M context", "polishOverrides": { "reasoning": { "enabled": false } } },
-          { "id": "Qwen/Qwen3.5-9B", "description": "Cheap and fast", "polishOverrides": { "reasoning": { "enabled": false } } },
-          { "id": "LiquidAI/LFM2.5-8B-A1B", "description": "Cheapest — high-volume" },
-          { "id": "deepseek-ai/DeepSeek-V4-Pro", "description": "Reasoning flagship — 512K context", "polishOverrides": { "reasoning": { "enabled": false } } }
+          { "id": "Qwen/Qwen3.7-Plus", "description": "Deferred: serverless availability not reconfirmed", "isVisible": false, "polishOverrides": { "reasoning": { "enabled": false } } },
+          { "id": "Qwen/Qwen3.5-9B", "description": "Economical documented option", "polishOverrides": { "reasoning": { "enabled": false } } },
+          { "id": "LiquidAI/LFM2.5-8B-A1B", "description": "Deferred: serverless availability not reconfirmed", "isVisible": false },
+          { "id": "deepseek-ai/DeepSeek-V4-Pro", "description": "Deferred: serverless availability not reconfirmed", "isVisible": false, "polishOverrides": { "reasoning": { "enabled": false } } }
         ]
       }
     },
@@ -165,10 +167,11 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "deepseek-v4-flash",
+        "defaultModel": "deepseek-flash",
         "models": [
-          { "id": "deepseek-v4-flash", "description": "Fast and cheap default", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "deepseek-v4-pro", "description": "Flagship V4 Pro — reasoning", "polishOverrides": { "thinking": { "type": "disabled" } } }
+          { "id": "deepseek-flash", "description": "Fast and economical default", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "deepseek-v4-flash", "description": "Legacy saved model", "isVisible": false, "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "deepseek-v4-pro", "description": "Capable reasoning option", "polishOverrides": { "thinking": { "type": "disabled" } } }
         ]
       }
     },
@@ -194,13 +197,14 @@
         ]
       },
       "polish": {
-        "defaultModel": "deepseek-ai/DeepSeek-V3",
+        "defaultModel": "deepseek-ai/DeepSeek-V4-Flash",
         "models": [
-          { "id": "deepseek-ai/DeepSeek-V3", "description": "DeepSeek flagship via SiliconFlow" },
-          { "id": "deepseek-ai/DeepSeek-V3.1-Terminus", "description": "DeepSeek V3.1 Terminus", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "Qwen/Qwen3.5-4B", "description": "Newest small — free, 256K", "polishOverrides": { "enable_thinking": false } },
-          { "id": "Qwen/Qwen3-8B", "description": "Fast, lightweight (free)", "polishOverrides": { "enable_thinking": false } },
-          { "id": "Qwen/Qwen2.5-72B-Instruct", "description": "Qwen2.5 72B — high quality CN+EN" }
+          { "id": "deepseek-ai/DeepSeek-V4-Flash", "description": "Current capable fast model", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "deepseek-ai/DeepSeek-V3", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "deepseek-ai/DeepSeek-V3.1-Terminus", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "Qwen/Qwen3.5-4B", "description": "Newest small model", "polishOverrides": { "enable_thinking": false } },
+          { "id": "Qwen/Qwen3-8B", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "enable_thinking": false } },
+          { "id": "Qwen/Qwen2.5-72B-Instruct", "description": "Retained compatibility model", "isVisible": false }
         ]
       }
     },
@@ -227,8 +231,9 @@
       "polish": {
         "defaultModel": "kimi-k2.6",
         "models": [
+          { "id": "kimi-k3", "description": "Latest capable; always-on thinking", "polishOverrides": { "reasoning_effort": "low", "temperature": null } },
           { "id": "kimi-k2.6", "description": "Recommended — top Kimi with thinking disabled", "polishOverrides": { "thinking": { "type": "disabled" }, "temperature": 0.6 } },
-          { "id": "kimi-k2.5", "description": "Cheaper K2 generation", "polishOverrides": { "thinking": { "type": "disabled" }, "temperature": 0.6 } }
+          { "id": "kimi-k2.5", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "thinking": { "type": "disabled" }, "temperature": 0.6 } }
         ]
       }
     },
@@ -256,15 +261,15 @@
         "defaultModel": "MiniMax-M3",
         "models": [
           { "id": "MiniMax-M3", "description": "New default — only MiniMax with thinking-off", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "MiniMax-M2.7", "description": "Prev flagship (thinking on, slower)" },
-          { "id": "MiniMax-M2.7-highspeed", "description": "Faster M2.7 (thinking on, slower)" }
+          { "id": "MiniMax-M2.7", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "MiniMax-M2.7-highspeed", "description": "Economical faster fallback (thinking on)" }
         ]
       }
     },
     {
       "id": "minimax_cn",
       "name": "MiniMax (CN)",
-      "baseURL": "https://api.minimaxi.com/v1",
+      "baseURL": "https://api.minimax.cn/v1",
       "isOpenAICompatible": true,
       "auth": {
         "style": "bearer",
@@ -285,8 +290,8 @@
         "defaultModel": "MiniMax-M3",
         "models": [
           { "id": "MiniMax-M3", "description": "New default — only MiniMax with thinking-off", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "MiniMax-M2.7", "description": "Prev flagship (thinking on, slower)" },
-          { "id": "MiniMax-M2.7-highspeed", "description": "Faster M2.7 (thinking on, slower)" }
+          { "id": "MiniMax-M2.7", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "MiniMax-M2.7-highspeed", "description": "Economical faster fallback (thinking on)" }
         ]
       }
     },
@@ -309,10 +314,10 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "doubao-seed-1-8-251228",
+        "defaultModel": "doubao-seed-2-1-turbo-260628",
         "models": [
-          { "id": "doubao-seed-1-8-251228", "description": "Doubao Seed 1.8 — balanced default", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "doubao-seed-1-6-flash-250828", "description": "Cheapest, fastest", "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "doubao-seed-1-8-251228", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "doubao-seed-1-6-flash-250828", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "thinking": { "type": "disabled" } } },
           { "id": "doubao-seed-2-1-turbo-260628", "description": "New gen — balanced", "polishOverrides": { "thinking": { "type": "disabled" } } },
           { "id": "doubao-seed-2-1-pro-260628", "description": "Newest flagship", "polishOverrides": { "thinking": { "type": "disabled" } } }
         ]
@@ -336,17 +341,19 @@
         "defaultModel": "qwen3-asr-flash",
         "models": [
           { "id": "qwen3-asr-flash", "description": "Fast Qwen ASR — 30+ languages" },
-          { "id": "qwen3-asr-flash-realtime", "description": "Streaming variant with auto language detection" },
-          { "id": "paraformer-realtime-v2", "description": "Paraformer streaming — legacy (Alibaba recommends fun-asr)" },
-          { "id": "fun-asr", "description": "Alibaba Fun-ASR — multilingual" }
+          { "id": "qwen3-asr-flash-realtime", "description": "Unsupported realtime mode; retained for saved configurations", "isVisible": false },
+          { "id": "paraformer-realtime-v2", "description": "Unsupported file/async mode; retained for saved configurations", "isVisible": false },
+          { "id": "fun-asr", "description": "Unsupported file/async mode; retained for saved configurations", "isVisible": false }
         ]
       },
       "polish": {
-        "defaultModel": "qwen3.7-plus",
+        "defaultModel": "qwen3.8-flash",
         "models": [
-          { "id": "qwen3.7-plus", "description": "Balanced flagship — 1M context", "polishOverrides": { "enable_thinking": false } },
-          { "id": "qwen3.7-max", "description": "Frontier — replaces 3.6-max-preview", "polishOverrides": { "enable_thinking": false } },
-          { "id": "qwen3.6-flash", "description": "Cheapest, fastest", "polishOverrides": { "enable_thinking": false } }
+          { "id": "qwen3.8-flash", "description": "Economical current model" },
+          { "id": "qwen3.8-max", "description": "Latest capable model" },
+          { "id": "qwen3.7-plus", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "enable_thinking": false } },
+          { "id": "qwen3.7-max", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "enable_thinking": false } },
+          { "id": "qwen3.6-flash", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "enable_thinking": false } }
         ]
       }
     },
@@ -368,13 +375,15 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "gemini-2.5-flash",
+        "defaultModel": "gemini-3.8-flash",
         "models": [
-          { "id": "gemini-2.5-flash", "description": "Balanced default — fast and capable", "polishOverrides": { "reasoning_effort": "none" } },
-          { "id": "gemini-3.5-flash", "description": "New gen — fast frontier", "polishOverrides": { "reasoning_effort": "minimal" } },
-          { "id": "gemini-3.1-flash-lite", "description": "New gen — cheapest", "polishOverrides": { "reasoning_effort": "minimal" } },
-          { "id": "gemini-2.5-pro", "description": "Stable flagship — large context", "polishOverrides": { "reasoning_effort": "minimal" } },
-          { "id": "gemini-2.5-flash-lite", "description": "Cheapest, fastest", "polishOverrides": { "reasoning_effort": "none" } }
+          { "id": "gemini-3.8-flash", "description": "Latest capable fast model" },
+          { "id": "gemini-3.5-flash-lite", "description": "Economical current model" },
+          { "id": "gemini-2.5-flash", "description": "Stable compatibility fallback", "polishOverrides": { "reasoning_effort": "none" } },
+          { "id": "gemini-3.5-flash", "description": "Retained documented model", "isVisible": false, "polishOverrides": { "reasoning_effort": "minimal" } },
+          { "id": "gemini-3.1-flash-lite", "description": "Retained documented model", "isVisible": false, "polishOverrides": { "reasoning_effort": "minimal" } },
+          { "id": "gemini-2.5-pro", "description": "Retained stable flagship", "isVisible": false, "polishOverrides": { "reasoning_effort": "minimal" } },
+          { "id": "gemini-2.5-flash-lite", "description": "Retained economical model", "isVisible": false, "polishOverrides": { "reasoning_effort": "none" } }
         ]
       }
     },
@@ -400,8 +409,8 @@
         "models": [
           { "id": "glm-4.7-flash", "description": "Free, fastest", "polishOverrides": { "thinking": { "type": "disabled" } } },
           { "id": "glm-5.2", "description": "Newest flagship — 1M context", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "glm-5.1", "description": "Prev flagship", "polishOverrides": { "thinking": { "type": "disabled" } } },
-          { "id": "glm-4.6", "description": "Strong general purpose", "polishOverrides": { "thinking": { "type": "disabled" } } }
+          { "id": "glm-5.1", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "thinking": { "type": "disabled" } } },
+          { "id": "glm-4.6", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "thinking": { "type": "disabled" } } }
         ]
       }
     },
@@ -451,7 +460,9 @@
         "models": [
           { "id": "claude-sonnet-5", "description": "New default — fast, 1M context", "polishOverrides": { "thinking": { "type": "disabled" }, "temperature": null } },
           { "id": "claude-haiku-4-5", "description": "Fastest, low cost" },
-          { "id": "claude-opus-4-8", "description": "Most capable (adaptive thinking, slower)", "polishOverrides": { "temperature": null } }
+          { "id": "claude-opus-5", "description": "Current Opus model — low-effort polish", "polishOverrides": { "thinking": { "type": "disabled" }, "output_config": { "effort": "low" }, "temperature": null } },
+          { "id": "claude-fable-5-1", "description": "Deferred: always-on thinking and slower profile", "isVisible": false },
+          { "id": "claude-opus-4-8", "description": "Retained compatibility model", "isVisible": false, "polishOverrides": { "temperature": null } }
         ]
       }
     },
@@ -473,10 +484,11 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "grok-4.3",
+        "defaultModel": "grok-4.6",
         "models": [
+          { "id": "grok-4.6", "description": "Latest capable model" },
           { "id": "grok-4.3", "description": "Balanced — 1M context", "polishOverrides": { "reasoning_effort": "none" } },
-          { "id": "grok-4.5", "description": "Flagship (thinking on, slower)" }
+          { "id": "grok-4.5", "description": "Retained current model", "isVisible": false }
         ]
       }
     },
@@ -500,9 +512,10 @@
       "polish": {
         "defaultModel": "gpt-oss-120b",
         "models": [
-          { "id": "gpt-oss-120b", "description": "Free tier — ~3000 tok/s, fastest polish" },
-          { "id": "zai-glm-4.7", "description": "GLM 4.7 355B (preview)" },
-          { "id": "gemma-4-31b", "description": "Gemma 4 (preview)" }
+          { "id": "gpt-oss-120b", "description": "High-throughput public model; terms apply" },
+          { "id": "qwen-3.8-27b", "description": "Current public Qwen model" },
+          { "id": "zai-glm-4.7", "description": "Retained saved model; no longer in public catalog", "isVisible": false },
+          { "id": "gemma-4-31b", "description": "Retained saved model; no longer in public catalog", "isVisible": false }
         ]
       }
     },
@@ -525,15 +538,16 @@
         "models": []
       },
       "polish": {
-        "defaultModel": "qwen3:8b",
+        "defaultModel": "gemma3:4b",
         "models": [
-          { "id": "qwen3:8b", "description": "Local default" },
-          { "id": "qwen3.5:9b", "description": "Latest Qwen3.5" },
-          { "id": "llama3.1:8b", "description": "Local general-purpose" },
-          { "id": "llama4:16x17b", "description": "Llama 4 MoE" },
-          { "id": "deepseek-r1:8b", "description": "DeepSeek-R1 distilled" },
+          { "id": "qwen3.5:9b", "description": "Latest economical local model" },
+          { "id": "qwen3.5:4b", "description": "Smallest economical local model" },
           { "id": "gemma3:4b", "description": "Lightweight local option" },
-          { "id": "mistral:7b", "description": "Multilingual local option" }
+          { "id": "qwen3:8b", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "llama3.1:8b", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "llama4:16x17b", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "deepseek-r1:8b", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "mistral:7b", "description": "Retained compatibility model", "isVisible": false }
         ]
       }
     },
@@ -559,10 +573,11 @@
         "defaultModel": "mlx-community/Qwen3.5-9B-MLX-4bit",
         "models": [
           { "id": "mlx-community/Qwen3.5-9B-MLX-4bit", "description": "New default — Qwen3.5 9B (~5GB)" },
-          { "id": "mlx-community/Qwen3-4B-Instruct-2507-4bit", "description": "Lightweight (~2GB)" },
-          { "id": "mlx-community/Llama-3.3-70B-Instruct-4bit", "description": "Top quality, needs 40GB+ RAM" },
-          { "id": "mlx-community/Mistral-Small-24B-Instruct-2501-4bit", "description": "Near GPT-4 quality (~13GB)" },
-          { "id": "mlx-community/gemma-3-4b-it-4bit", "description": "Lightweight, fast (~2.5GB)" }
+          { "id": "mlx-community/Qwen3.5-4B-MLX-4bit", "description": "Lightweight Qwen3.5 4B (~3GB)" },
+          { "id": "mlx-community/Qwen3-4B-Instruct-2507-4bit", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "mlx-community/Llama-3.3-70B-Instruct-4bit", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "mlx-community/Mistral-Small-24B-Instruct-2501-4bit", "description": "Retained compatibility model", "isVisible": false },
+          { "id": "mlx-community/gemma-3-4b-it-4bit", "description": "Retained compatibility model", "isVisible": false }
         ]
       }
     },
@@ -578,9 +593,9 @@
         "keyURL": "https://github.com/k2-fsa/sherpa-onnx",
         "requiresKey": false
       },
-      "capabilities": { "stt": true, "polish": false },
+      "capabilities": { "stt": false, "polish": false },
       "sttAdapter": "sherpa",
-      "sttNote": "Fully offline speech recognition powered by SherpaOnnx. No API key, no internet required. Your voice never leaves your device.",
+      "sttNote": "Sherpa is retained for saved configurations but unavailable until its model download/runtime path is validated.",
       "stt": {
         "defaultModel": "sensevoice-small",
         "models": [
@@ -603,7 +618,7 @@
       },
       "capabilities": { "stt": true, "polish": false },
       "sttAdapter": "iflytek",
-      "sttNote": "讯飞语音听写 — 中文头部 STT，支持 23 种方言免切换。WebSocket 协议。每日 500 次免费。",
+      "sttNote": "讯飞语音听写 — 中文头部 STT，支持 23 种方言免切换。WebSocket 协议；provider terms apply.",
       "stt": {
         "defaultModel": "iat",
         "models": [

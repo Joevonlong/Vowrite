@@ -100,6 +100,9 @@ public struct ProviderDefinition: Codable, Identifiable {
     public struct ModelDef: Codable, Identifiable {
         public let id: String
         public let description: String?
+        /// Hidden compatibility row retained for saved configurations. Hidden
+        /// rows keep their request overrides but are omitted from pickers.
+        public let isVisible: Bool?
         /// F-073: Optional request body overrides merged into the polish payload
         /// before the HTTP call. Prevents server-side thinking latency on
         /// reasoning models that default thinking ON.
@@ -121,11 +124,11 @@ public struct ProviderDefinition: Codable, Identifiable {
     }
 
     public var presetSTTModels: [String] {
-        stt?.models.map(\.id) ?? []
+        stt?.models.filter { $0.isVisible ?? true }.map(\.id) ?? []
     }
 
     public var presetPolishModels: [String] {
-        polish?.models.map(\.id) ?? []
+        polish?.models.filter { $0.isVisible ?? true }.map(\.id) ?? []
     }
 
     public var hasSTTSupport: Bool {

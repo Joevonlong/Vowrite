@@ -79,7 +79,7 @@ public struct SplitAPIConfiguration: Codable, Equatable {
 
     public static let recommended = SplitAPIConfiguration(
         stt: APIEndpointConfiguration(provider: .groq, model: "whisper-large-v3-turbo"),
-        polish: APIEndpointConfiguration(provider: .deepseek, model: "deepseek-v4-flash")
+        polish: APIEndpointConfiguration(provider: .deepseek, model: "deepseek-flash")
     )
 }
 
@@ -165,9 +165,9 @@ public enum APIConfig {
     }
 
     public static var polishModel: String {
-        // Fallback tracks DeepSeek's current chat tier — the legacy
-        // `deepseek-chat` alias retires upstream on 2026-07-24.
-        get { ProviderModelConfigurationLock.readSnapshot { VowriteStorage.defaults.string(forKey: polishModelKey) ?? "deepseek-v4-flash" } }
+        // Fallback tracks DeepSeek's current economical chat tier. Existing
+        // saved values are preserved verbatim by the defaults-backed store.
+        get { ProviderModelConfigurationLock.readSnapshot { VowriteStorage.defaults.string(forKey: polishModelKey) ?? "deepseek-flash" } }
         set { ProviderModelConfigurationLock.performMutation { VowriteStorage.defaults.set(newValue, forKey: polishModelKey) } }
     }
 
@@ -313,7 +313,7 @@ public enum APIConfig {
             ),
             polish: APIEndpointConfiguration(
                 provider: polishProvider,
-                model: defaults.string(forKey: polishModelKey) ?? "deepseek-v4-flash",
+                model: defaults.string(forKey: polishModelKey) ?? "deepseek-flash",
                 baseURL: defaults.string(forKey: polishBaseURLKey) ?? polishProvider.defaultBaseURL
             )
         )

@@ -4,6 +4,12 @@ import Foundation
 /// Covers: OpenAI, Groq, SiliconFlow, Together, Ollama, Custom.
 struct OpenAISTTAdapter: STTAdapter {
 
+    private let session: URLSession
+
+    init(session: URLSession = .shared) {
+        self.session = session
+    }
+
     func transcribe(
         audioURL: URL,
         model: String,
@@ -37,13 +43,25 @@ struct OpenAISTTAdapter: STTAdapter {
 
         var body = Data()
         body.appendMultipart(boundary: boundary, name: "model", value: model)
-        body.appendMultipart(boundary: boundary, name: "response_format", value: "text")
+        let jsonResponseModel =
+            (model.hasPrefix("gpt-4o-transcribe") || model.hasPrefix("gpt-4o-mini-transcribe")) &&
+            !model.contains("diarize")
+        body.appendMultipart(
+            boundary: boundary,
+            name: "response_format",
+            value: jsonResponseModel ? "json" : "text"
+        )
 
         if let language = language, !language.isEmpty {
             // F-079: Whisper's `language` field only accepts ISO-639-1 main
             // codes — downgrade a region variant tag (e.g. "zh-TW") before
             // sending. Plain codes pass through unchanged.
-            body.appendMultipart(boundary: boundary, name: "language", value: LanguageConfig.whisperMainCode(from: language))
+            let languageCode = transcriptionLanguageCode(language, model: model)
+            if provider == .openai && model == "gpt-transcribe" {
+                body.appendMultipart(boundary: boundary, name: "languages[]", value: languageCode)
+            } else {
+                body.appendMultipart(boundary: boundary, name: "language", value: languageCode)
+            }
         }
         if let prompt = prompt, !prompt.isEmpty {
             body.appendMultipart(boundary: boundary, name: "prompt", value: prompt)
@@ -58,7 +76,7 @@ struct OpenAISTTAdapter: STTAdapter {
 
         request.httpBody = body
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw VowriteError.networkError("Invalid response")
@@ -70,10 +88,33 @@ struct OpenAISTTAdapter: STTAdapter {
                 discardingResponseBody: data
             )
         }
+        if jsonResponseModel {
+            struct TranscriptionResponse: Decodable { let text: String }
+            guard let decoded = try? JSONDecoder().decode(TranscriptionResponse.self, from: data) else {
+                throw VowriteError.apiError("Failed to decode STT JSON response")
+            }
+            return decoded.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         guard let text = String(data: data, encoding: .utf8) else {
             throw VowriteError.apiError("Failed to decode STT response")
         }
-
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func transcriptionLanguageCode(_ language: String, model: String) -> String {
+        let normalized = language.lowercased().replacingOccurrences(of: "_", with: "-")
+        if providerSupportsRegionHints(model: model) {
+            switch normalized {
+            case "zh-cn", "zh-sg": return "zh-cn"
+            case "zh-tw": return "zh-tw"
+            case "zh-hk": return "zh-hk"
+            default: break
+            }
+        }
+        return LanguageConfig.whisperMainCode(from: language)
+    }
+
+    private func providerSupportsRegionHints(model: String) -> Bool {
+        model == "gpt-transcribe"
     }
 }
