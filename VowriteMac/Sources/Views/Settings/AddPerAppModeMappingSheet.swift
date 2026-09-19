@@ -54,7 +54,7 @@ struct AddPerAppModeMappingSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: VW.Spacing.xxl) {
                 Picker("", selection: $source) {
                     ForEach(Source.allCases) { s in
                         Text(s.rawValue).tag(s)
@@ -62,8 +62,8 @@ struct AddPerAppModeMappingSheet: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.horizontal, VW.Spacing.section)
+                .padding(.top, VW.Spacing.section)
 
                 Group {
                     switch source {
@@ -73,10 +73,10 @@ struct AddPerAppModeMappingSheet: View {
                         manualEntryForm
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, VW.Spacing.section)
 
                 Divider()
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, VW.Spacing.section)
 
                 HStack {
                     Text("Scene")
@@ -90,9 +90,10 @@ struct AddPerAppModeMappingSheet: View {
                     .labelsHidden()
                     .frame(width: 180)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 16)
+                .padding(.horizontal, VW.Spacing.section)
+                .padding(.bottom, VW.Spacing.section)
             }
+            .settingsPageStyle()
             .navigationTitle("Add App Mapping")
             .frame(minWidth: 460, idealWidth: 480, minHeight: 420, idealHeight: 460)
             .toolbar {
@@ -116,7 +117,7 @@ struct AddPerAppModeMappingSheet: View {
             if runningApps.isEmpty {
                 Text("No running apps found.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
             } else {
                 ScrollView {
                     VStack(spacing: 4) {
@@ -140,26 +141,26 @@ struct AddPerAppModeMappingSheet: View {
                 if let icon = app.icon {
                     Image(nsImage: icon)
                         .resizable()
-                        .frame(width: 22, height: 22)
+                        .frame(width: 32, height: 32)
                 }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(app.localizedName ?? bundleID)
                         .font(.callout)
-                        .foregroundColor(.primary)
+                        .foregroundColor(VW.Colors.Text.primary)
                     Text(bundleID)
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
                         .lineLimit(1)
                 }
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(VW.Colors.Action.primary)
                 }
             }
-            .padding(8)
-            .background(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
-            .cornerRadius(8)
+            .padding(VW.Spacing.xl)
+            .background(isSelected ? VW.Colors.Action.soft : VW.Colors.Surface.panel)
+            .cornerRadius(VW.Radius.control)
         }
         .buttonStyle(.plain)
     }
@@ -173,7 +174,7 @@ struct AddPerAppModeMappingSheet: View {
                 .autocorrectionDisabled()
             Text("Find it via \"osascript -e 'id of app \\\"AppName\\\"'\" in Terminal, or About This App in the app's menu.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(VW.Colors.Text.secondary)
         }
     }
 }

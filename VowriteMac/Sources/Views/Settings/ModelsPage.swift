@@ -17,21 +17,20 @@ struct ModelsPageView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                // Header
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Models")
-                        .font(.system(size: 24, weight: .bold))
-                    Text(configurationSummaryLine)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundColor(.secondary)
-                }
+            VStack(alignment: .leading, spacing: VW.Spacing.pageLarge) {
+                SettingsPageHeader(
+                    title: "Models",
+                    subtitle: "Speech recognition and text polish, configured your way."
+                )
+                Text(configurationSummaryLine)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(VW.Colors.Text.secondary)
 
-                SettingsSection(icon: "square.stack.3d.up", title: "Presets") {
+                SettingsSection(icon: "square.stack.3d.up", title: "Quick Configuration") {
                     presetsContent
                 }
 
-                SettingsSection(icon: "waveform", title: "STT") {
+                SettingsSection(icon: "waveform", title: "Speech Recognition") {
                     PipelineConfigurationEditor(
                         title: "Speech-to-text",
                         description: "Choose the provider and model used for transcription.",
@@ -40,7 +39,7 @@ struct ModelsPageView: View {
                     )
                 }
 
-                SettingsSection(icon: "sparkles", title: "Polish") {
+                SettingsSection(icon: "sparkles", title: "Text Polish") {
                     PipelineConfigurationEditor(
                         title: "Cleanup and rewrite",
                         description: "Choose the provider and model used for text polish.",
@@ -49,7 +48,7 @@ struct ModelsPageView: View {
                     )
                 }
 
-                SettingsSection(icon: "cpu.fill", title: "Local Models") {
+                SettingsSection(icon: "cpu", title: "Offline Models") {
                     SherpaLocalModelsSection()
                 }
 
@@ -57,8 +56,9 @@ struct ModelsPageView: View {
                     testAndSaveContent
                 }
             }
-            .padding(32)
+            .padding(VW.Spacing.pageLarge)
         }
+        .settingsPageStyle()
         .onAppear(perform: loadState)
         .onChange(of: workingConfig) { _, newValue in
             if let matchingPreset = APIPresetStore.matchingPreset(for: newValue) {
@@ -184,6 +184,12 @@ struct ModelsPageView: View {
 
                 EndpointTestBadge(state: sttTestState)
 
+                Spacer()
+            }
+
+            Divider()
+
+            HStack(spacing: VW.Spacing.md) {
                 Button {
                     testEndpoint(.polish)
                 } label: {
@@ -200,12 +206,18 @@ struct ModelsPageView: View {
                 EndpointTestBadge(state: polishTestState)
 
                 Spacer()
+            }
 
+            Divider()
+
+            HStack(spacing: VW.Spacing.md) {
                 if configSaved {
                     Label("Saved", systemImage: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(VW.Colors.Status.success)
                         .font(.caption)
                 }
+
+                Spacer()
 
                 Button("Save Configuration") {
                     saveConfiguration()

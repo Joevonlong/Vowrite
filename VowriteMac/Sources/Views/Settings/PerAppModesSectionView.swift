@@ -21,7 +21,7 @@ struct PerAppModesSectionView: View {
     }
 
     var body: some View {
-        SettingsSection(icon: "square.stack.3d.up", title: "Per-App Modes") {
+        SettingsSection(icon: "square.stack.3d.up", title: "Scenes by App") {
             VStack(alignment: .leading, spacing: VW.Spacing.xl) {
                 SettingsRow(title: "Auto-switch by app", description: autoSwitchDescription) {
                     Toggle("", isOn: Binding(
@@ -73,7 +73,7 @@ struct PerAppModesSectionView: View {
         if sortedMappingEntries.isEmpty {
             Text("No apps mapped yet.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(VW.Colors.Text.secondary)
         } else {
             VStack(spacing: 10) {
                 ForEach(sortedMappingEntries, id: \.bundleID) { entry in
@@ -90,15 +90,16 @@ struct PerAppModesSectionView: View {
         HStack(spacing: VW.Spacing.md) {
             appIconImage(for: entry.bundleID)
                 .resizable()
-                .frame(width: 24, height: 24)
+                .frame(width: 32, height: 32)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(displayName(for: entry.bundleID))
                     .font(.body)
                 Text(entry.bundleID)
                     .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                    .foregroundColor(VW.Colors.Text.secondary)
+                    .textSelection(.enabled)
+                    .lineLimit(2)
             }
 
             Spacer()
@@ -111,10 +112,12 @@ struct PerAppModesSectionView: View {
                 }
             } label: {
                 Image(systemName: "trash")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
+                    .frame(width: 32, height: 32)
             }
             .buttonStyle(.plain)
             .help("Remove mapping")
+            .accessibilityLabel("Remove mapping for \(displayName(for: entry.bundleID))")
         }
     }
 
@@ -129,7 +132,7 @@ struct PerAppModesSectionView: View {
         HStack(spacing: 6) {
             if target == nil {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.orange)
+                    .foregroundColor(VW.Colors.Status.warning)
                     .font(.caption2)
                     .help("The scene this app was mapped to was deleted.")
             }

@@ -11,9 +11,8 @@ struct GeneralPageView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                Text("General")
-                    .font(.system(size: 24, weight: .bold))
+            VStack(alignment: .leading, spacing: VW.Spacing.pageLarge) {
+                SettingsPageHeader(title: "General", subtitle: "Make Vowrite fit the way you work.")
 
                 SettingsSection(icon: "keyboard", title: "Keyboard Shortcuts") {
                     VStack(spacing: 12) {
@@ -52,23 +51,23 @@ struct GeneralPageView: View {
                         SettingsRow(title: "Mode Shortcuts", description: "⌃1 through ⌃9 to switch modes.") {
                             Text("Built-in")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(VW.Colors.Text.secondary)
                         }
                     }
                 }
 
-                SettingsSection(icon: "globe.badge.chevron.backward", title: "Translation") {
-                    TranslationLanguagesContent()
+                SettingsSection(icon: "globe", title: "Language & Translation") {
+                    VStack(spacing: VW.Spacing.xxl) {
+                        LanguageContent()
+                        Divider()
+                        TranslationLanguagesContent()
+                    }
                 }
 
                 SettingsSection(icon: "paintpalette", title: "Appearance") {
                     SettingsRow(title: "Theme", description: "Choose between light, dark, or system appearance.") {
                         AppearancePicker(selection: $appearanceMode)
                     }
-                }
-
-                SettingsSection(icon: "globe", title: "Language") {
-                    LanguageContent()
                 }
 
                 SettingsSection(icon: "lock.shield", title: "Permissions") {
@@ -83,8 +82,9 @@ struct GeneralPageView: View {
                     GeneralOptionsContent()
                 }
             }
-            .padding(32)
+            .padding(VW.Spacing.pageLarge)
         }
+        .settingsPageStyle()
     }
 }
 
@@ -119,11 +119,11 @@ struct LanguageContent: View {
             if selectedLanguage != .auto {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
+                        .foregroundColor(VW.Colors.Status.warning)
                         .font(.caption)
                     Text("Setting a specific language forces the speech engine to that language. If you speak multiple languages or mix languages, use \"Auto-detect\".")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundColor(VW.Colors.Status.warning)
                     Spacer()
                 }
             }
@@ -167,11 +167,11 @@ struct TranslationLanguagesContent: View {
 
             HStack(spacing: 6) {
                 Image(systemName: "info.circle")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
                     .font(.caption)
                 Text("Applies to the built-in Translate mode (⇧⌥Space). Custom translation modes keep their own settings.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(VW.Colors.Text.secondary)
                 Spacer()
             }
         }
@@ -203,7 +203,7 @@ struct PermissionsContent: View {
         VStack(spacing: 12) {
             SettingsRow(title: "Microphone", description: "Required for voice recording") {
                 if hasMic {
-                    Label("Granted", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption)
+                    Label("Granted", systemImage: "checkmark.circle.fill").foregroundColor(VW.Colors.Status.success).font(.caption)
                 } else {
                     Button("Grant") {
                         MacPermissionManager.requestMicrophoneAccess { g in Task { @MainActor in hasMic = g } }
@@ -212,7 +212,7 @@ struct PermissionsContent: View {
             }
             SettingsRow(title: "Accessibility", description: "Required to paste text into apps") {
                 if hasAcc {
-                    Label("Granted", systemImage: "checkmark.circle.fill").foregroundColor(.green).font(.caption)
+                    Label("Granted", systemImage: "checkmark.circle.fill").foregroundColor(VW.Colors.Status.success).font(.caption)
                 } else {
                     Button("Open Settings") {
                         DispatchQueue.global().async { MacPermissionManager.requestAccessibilityAccess() }
@@ -233,17 +233,18 @@ struct PermissionsContent: View {
 
 struct RecordingIndicatorPicker: View {
     @State private var selectedPreset = IndicatorPreset.current
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Choose the visual style shown while recording.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(VW.Colors.Text.secondary)
 
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 110))], spacing: VW.Spacing.xl) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 144))], spacing: VW.Spacing.xl) {
                 ForEach(IndicatorPreset.allCases, id: \.rawValue) { preset in
                     Button {
-                        withAnimation(VW.Anim.springQuick) {
+                        withAnimation(reduceMotion ? nil : VW.Anim.easeQuick) {
                             selectedPreset = preset
                             IndicatorPreset.current = preset
                         }
@@ -255,27 +256,29 @@ struct RecordingIndicatorPicker: View {
                             Text(preset.displayName)
                                 .font(.caption)
                                 .fontWeight(selectedPreset == preset ? .semibold : .regular)
-                                .foregroundColor(selectedPreset == preset ? .accentColor : .secondary)
+                                .foregroundColor(selectedPreset == preset ? VW.Colors.Action.primary : VW.Colors.Text.secondary)
                         }
                         .padding(VW.Spacing.xl)
-                        .frame(width: 120)
+                        .frame(maxWidth: .infinity, minHeight: 84)
                         .background(
                             selectedPreset == preset
-                                ? VW.Colors.Accent.light
-                                : VW.Colors.Background.subtle
+                                ? VW.Colors.Action.soft
+                                : VW.Colors.Surface.panel
                         )
                         .cornerRadius(VW.Radius.xxxl)
                         .overlay(
                             RoundedRectangle(cornerRadius: VW.Radius.xxxl)
                                 .stroke(
                                     selectedPreset == preset
-                                        ? Color.accentColor.opacity(0.4)
-                                        : VW.Colors.Stroke.light,
-                                    lineWidth: selectedPreset == preset ? 1.5 : 1
+                                        ? VW.Colors.Action.primary
+                                        : VW.Colors.Border.standard,
+                                    lineWidth: 1
                                 )
                         )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(preset.displayName)
+                    .accessibilityAddTraits(selectedPreset == preset ? [.isSelected] : [])
                 }
             }
         }
@@ -379,11 +382,11 @@ struct GeneralOptionsContent: View {
             if let launchAtLoginError {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.red)
+                        .foregroundColor(VW.Colors.Status.error)
                         .font(.caption)
                     Text(launchAtLoginError)
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundColor(VW.Colors.Status.error)
                     Spacer()
                 }
             }

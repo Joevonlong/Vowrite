@@ -16,34 +16,37 @@ struct OpenAICodexOAuthSection: View {
     private var isExpired: Bool { storedToken?.isExpired ?? false }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: VW.Spacing.xl) {
+            Text("Connect with your ChatGPT Plus or Pro subscription.")
+                .font(.system(size: 13))
+                .foregroundStyle(VW.Colors.Text.secondary)
             if isOAuthMode && hasOAuth {
                 // Active OAuth session
                 HStack(spacing: 8) {
-                    Image(systemName: "person.circle.fill").foregroundColor(.green)
+                    Image(systemName: "person.circle.fill").foregroundColor(VW.Colors.Status.success)
                     if let email = storedToken?.email {
                         Text(email).font(.caption)
                     }
-                    Text("ChatGPT 订阅登录").font(.caption).foregroundColor(.secondary)
+                    Text("ChatGPT connected").font(.caption).foregroundColor(VW.Colors.Text.secondary)
                     Spacer()
-                    Button("切换到 API Key") {
+                    Button("Use API Key") {
                         KeyVault.setPreferredAuthMethod("apiKey", for: .openai)
                     }
                     .font(.caption).buttonStyle(.borderless)
-                    Button("退出") {
+                    Button("Sign Out") {
                         OpenAICodexOAuthService.signOut()
                     }
-                    .font(.caption).buttonStyle(.borderless).foregroundColor(.red)
+                    .font(.caption).buttonStyle(.borderless).foregroundColor(VW.Colors.Status.error)
                 }
             } else if isOAuthMode && isExpired {
                 // Expired OAuth session
                 HStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
-                    Text("ChatGPT 会话已过期").font(.caption).foregroundColor(.secondary)
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundColor(VW.Colors.Status.warning)
+                    Text("ChatGPT session expired").font(.caption).foregroundColor(VW.Colors.Text.secondary)
                     Spacer()
-                    Button("重新登录") { startOAuthFlow() }
+                    Button("Sign In Again") { startOAuthFlow() }
                         .font(.caption).buttonStyle(.borderless)
-                    Button("切换到 API Key") {
+                    Button("Use API Key") {
                         KeyVault.setPreferredAuthMethod("apiKey", for: .openai)
                     }
                     .font(.caption).buttonStyle(.borderless)
@@ -51,23 +54,32 @@ struct OpenAICodexOAuthSection: View {
             } else {
                 // Default: show sign-in option
                 HStack(spacing: 8) {
-                    Text("没有 API Key？").font(.caption).foregroundColor(.secondary)
                     Button {
                         startOAuthFlow()
                     } label: {
-                        Label("使用 ChatGPT Plus/Pro 订阅登录", systemImage: "person.circle")
-                            .font(.caption)
+                        Label("Sign In with ChatGPT", systemImage: "person.circle")
+                            .font(.system(size: 14, weight: .medium))
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.bordered)
                     .disabled(isAuthenticating)
                 }
             }
 
+            if isAuthenticating {
+                HStack(spacing: VW.Spacing.md) {
+                    ProgressView().controlSize(.small)
+                    Text("Waiting for sign-in…")
+                        .font(.system(size: 13))
+                        .foregroundStyle(VW.Colors.Text.secondary)
+                }
+            }
+
             if let error = authError {
-                Text(error).font(.caption2).foregroundColor(.red)
+                Label(error, systemImage: "exclamationmark.circle")
+                    .font(.system(size: 13))
+                    .foregroundColor(VW.Colors.Status.error)
             }
         }
-        .padding(.leading, 152) // align with key input area
     }
 
     private func startOAuthFlow() {

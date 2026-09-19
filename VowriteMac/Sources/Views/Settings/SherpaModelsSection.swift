@@ -8,10 +8,13 @@ struct SherpaLocalModelsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Download models for fully offline speech recognition. No API key or internet connection required during recording.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(VW.Colors.Text.secondary)
 
             ForEach(SherpaModelManager.availableModels) { model in
                 SherpaModelRow(model: model, modelManager: modelManager)
+                if model.id != SherpaModelManager.availableModels.last?.id {
+                    Divider()
+                }
             }
         }
     }
@@ -25,12 +28,21 @@ private struct SherpaModelRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .center, spacing: 12) {
+                Image(systemName: "cpu")
+                    .font(.system(size: 18))
+                    .foregroundStyle(VW.Colors.Text.secondary)
+                    .frame(width: 40, height: 40)
+                    .background(VW.Colors.Surface.secondary)
+                    .clipShape(RoundedRectangle(cornerRadius: VW.Radius.control))
+                    .overlay(RoundedRectangle(cornerRadius: VW.Radius.control).stroke(VW.Colors.Border.standard))
+                    .accessibilityHidden(true)
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.name)
                         .font(.body.weight(.medium))
                     Text("\(model.size) · \(model.languages)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
                 }
 
                 Spacer()
@@ -38,13 +50,14 @@ private struct SherpaModelRow: View {
                 if let progress = modelManager.downloadProgress[model.id] {
                     ProgressView(value: progress)
                         .frame(width: 100)
+                        .accessibilityLabel("Downloading \(model.name)")
                     Text("\(Int(progress * 100))%")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(VW.Colors.Text.secondary)
                         .frame(width: 36, alignment: .trailing)
                 } else if modelManager.downloadedModels.contains(model.id) {
                     Label("Downloaded", systemImage: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(VW.Colors.Status.success)
                         .font(.caption.weight(.medium))
                     Button("Delete") {
                         do {
@@ -57,7 +70,7 @@ private struct SherpaModelRow: View {
                     }
                     .buttonStyle(.link)
                     .font(.caption)
-                    .foregroundColor(.red)
+                    .foregroundColor(VW.Colors.Status.error)
                 } else {
                     Button("Download") {
                         Task {
@@ -76,11 +89,11 @@ private struct SherpaModelRow: View {
             }
 
             if let errorMessage {
-                Text(errorMessage)
-                    .font(.caption2)
-                    .foregroundColor(.red)
+                Label(errorMessage, systemImage: "exclamationmark.circle")
+                    .font(.system(size: 13))
+                    .foregroundColor(VW.Colors.Status.error)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, VW.Spacing.xl)
     }
 }

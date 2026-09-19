@@ -14,24 +14,32 @@ struct AboutPageView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                // App identity (centered)
-                VStack(spacing: 12) {
-                    Image(nsImage: NSApp.applicationIconImage)
-                        .resizable()
-                        .interpolation(.high)
-                        .frame(width: 96, height: 96)
-                    Text("Vowrite")
-                        .font(.system(size: 32, weight: .bold))
-                    Text("AI Voice Keyboard")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: VW.Spacing.pageLarge) {
+                SettingsPageHeader(title: "About Vowrite", subtitle: "Say it once. Mean it perfectly.")
+
+                VStack(alignment: .leading, spacing: VW.Spacing.xxl) {
+                    HStack(spacing: VW.Spacing.xxl) {
+                        Image(nsImage: NSApp.applicationIconImage)
+                            .resizable()
+                            .interpolation(.high)
+                            .frame(width: 64, height: 64)
+                        VStack(alignment: .leading, spacing: VW.Spacing.xs) {
+                            Text("Vowrite")
+                                .font(.system(size: 32, weight: .semibold))
+                            Text("AI Voice Keyboard")
+                                .font(.system(size: 14))
+                                .foregroundColor(VW.Colors.Text.secondary)
+                        }
+                    }
                     Text("Say it once. Mean it perfectly.")
-                        .font(.body).italic()
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 14))
+                        .foregroundColor(VW.Colors.Text.secondary)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(VW.Spacing.section)
+                .background(VW.Colors.Surface.panel)
+                .clipShape(RoundedRectangle(cornerRadius: VW.Radius.panel))
+                .overlay(RoundedRectangle(cornerRadius: VW.Radius.panel).stroke(VW.Colors.Border.standard))
 
                 // Version & Updates
                 SettingsSection(icon: "arrow.triangle.2.circlepath", title: "Updates") {
@@ -39,7 +47,7 @@ struct AboutPageView: View {
                         SettingsRow(title: "Version", description: "Current installed version") {
                             Text("v\(AppVersion.current)")
                                 .font(.body.monospaced())
-                                .foregroundColor(.secondary)
+                                .foregroundColor(VW.Colors.Text.secondary)
                         }
                         Divider()
                         SettingsRow(title: "Check for Updates", description: "Download the latest version if available") {
@@ -99,14 +107,15 @@ struct AboutPageView: View {
                 SettingsSection(icon: "heart", title: "Acknowledgments") {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Vowrite is built with the help of these open-source projects:")
-                            .font(.caption).foregroundColor(.secondary)
+                            .font(.caption).foregroundColor(VW.Colors.Text.secondary)
 
                         acknowledgmentRow("Sparkle", description: "Software update framework for macOS", url: "https://sparkle-project.org")
                     }
                 }
             }
-            .padding(32)
+            .padding(VW.Spacing.pageLarge)
         }
+        .settingsPageStyle()
     }
 
     // MARK: - Private
@@ -115,7 +124,7 @@ struct AboutPageView: View {
         HStack {
             Text(label).font(.body).fontWeight(.medium)
             Spacer()
-            Text(value).font(.caption.monospaced()).foregroundColor(.secondary)
+            Text(value).font(.caption.monospaced()).foregroundColor(VW.Colors.Text.secondary)
         }
     }
 
@@ -123,7 +132,7 @@ struct AboutPageView: View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(name).font(.body).fontWeight(.medium)
-                Text(description).font(.caption).foregroundColor(.secondary)
+                Text(description).font(.caption).foregroundColor(VW.Colors.Text.secondary)
             }
             Spacer()
             Link("Visit →", destination: URL(string: url)!)
