@@ -20,6 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 - Pending keyboard history remains available until import/save completes and duplicate imports are deduplicated. Expired OAuth falls back to the regular provider endpoint, and unavailable Sherpa download controls stay hidden until runtime support is ready.
 - Switching an iOS provider now resets its endpoint to that provider's registry URL, so a new provider key cannot be sent to a previous provider's custom host. Saved unavailable and legacy model choices remain visible as saved selections until changed.
 
+### Added
+
+- **F-093 Doubao Speech transcription**: iOS and the keyboard can select Doubao Speech BigASR Flash with its separate Speech console APP Key. Shared transcription converts recordings to bounded 16 kHz mono WAV and uses the native Flash request contract; asynchronous standard, idle, and streaming APIs remain unavailable.
+
 ### Changed
 
 - **F-092 Provider model maintenance**: Shared provider metadata now keeps saved legacy model choices recoverable while showing only documented curated model choices. OpenRouter and Sherpa STT are unavailable until their runtime contracts are validated, and DeepSeek's fresh default is `deepseek-flash`.

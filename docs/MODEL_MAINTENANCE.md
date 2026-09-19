@@ -1,6 +1,6 @@
 # Model maintenance ledger
 
-Audit date: 2026-09-19. This ledger records catalog decisions for the F-092 refresh. “Verified” means the model ID and request contract are documented by the provider; no paid or credentialed runtime calls were made. Hidden rows remain decodable for saved configurations and retain their request overrides.
+Audit date: 2026-09-19. This ledger records catalog decisions for the F-092 refresh and the F-093 Doubao Speech addition. “Verified” means the model ID and request contract are documented by the provider; no paid or credentialed runtime calls were made. Hidden rows remain decodable for saved configurations and retain their request overrides.
 
 F-092 supersedes the older F-086 catalog-freeze fixture for the documented current and local choices below. The historical fixture remains useful for regression context; it is not a live availability result or an approval of provider runtime access.
 
@@ -44,6 +44,9 @@ F-092 supersedes the older F-086 catalog-freeze fixture for the documented curre
 | MiniMax International / CN | `MiniMax-M2.7` | Polish | hidden compatibility | [international API](https://platform.minimax.io/docs/api-reference/text-openai-api), [CN API](https://platform.minimax.cn/docs/api-reference/text-openai-api) | Existing saved ID retained but omitted from the picker. |
 | Volcengine | `doubao-seed-2-1-turbo-260628`, `doubao-seed-2-1-pro-260628` | Polish | visible shortlist/default | [Ark docs](https://www.volcengine.com/docs/82379/1099455) | Current balanced and capable CN options; STT remains outside the current contract. |
 | Volcengine | `doubao-seed-1-8-251228`, `doubao-seed-1-6-flash-250828` | Polish | hidden compatibility | [Ark docs](https://www.volcengine.com/docs/82379/1099455) | Existing saved IDs retained but omitted from the picker. |
+| Doubao Speech | `volc.bigasr.auc_turbo` | STT | visible/default | [Flash recording-file recognition](https://docs.volcengine.com/docs/DoubaoVoice/recording-file-recognition-lite-http?lang=zh) | Dedicated synchronous Flash adapter with a Speech console API Key and `X-Api-Key`; static request-contract tests cover encoding, but no credentialed runtime call was made. |
+| Doubao Speech | `volc.seedasr.auc` | STT | deferred | [standard task submission](https://docs.volcengine.com/docs/DoubaoVoice/task-submission-http-1?lang=zh) | Standard 2.0 is documented as asynchronous `submit`/query with required `audio.url`; it does not fit immediate local recording without additional upload storage. |
+| Doubao Speech | idle and streaming resources | STT | deferred | [access requirements](https://docs.volcengine.com/docs/DoubaoVoice/Accessmust-read?lang=zh) | Different session contracts are outside the one-shot recording pipeline and are intentionally not selectable. |
 | Zhipu | `glm-4.7-flash`, `glm-5.2` | Polish | visible shortlist | [GLM-5.2 docs](https://docs.bigmodel.cn/cn/guide/models/text/glm-5.2) | Current economical and capable CN options. |
 | Zhipu | `glm-5.1`, `glm-4.6` | Polish | hidden compatibility | [GLM-5.2 docs](https://docs.bigmodel.cn/cn/guide/models/text/glm-5.2) | Existing saved IDs retained but omitted from the picker. |
 | Qianfan | `ernie-4.5-turbo-128k` | Polish | maintain | [Qianfan docs](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/jlil56u11) | Existing documented chat model retained; STT uses a separate non-compatible surface. |
@@ -81,6 +84,7 @@ Baseline: `8d3b50a8eb7ccde2ece6e136555b65b41b3c5828`; audit date: 2026-09-19. Ev
 | deepseek | polish | `deepseek-flash` | Added recommendation | Current documented ID selected for the curated shortlist. |
 | deepseek | polish | `deepseek-v4-flash` | Hidden compatibility | Superseded shortlist or unsupported specialized path; preserve saved ID/overrides. |
 | deepseek | polish | `deepseek-v4-pro` | Maintained recommendation | Retained capable, economical or compatible fallback choice. |
+| doubaoSpeech | stt | `volc.bigasr.auc_turbo` | Added recommendation | Dedicated synchronous Flash path with a separate Speech console API Key. |
 | gemini | polish | `gemini-2.5-flash` | Maintained recommendation | Retained capable, economical or compatible fallback choice. |
 | gemini | polish | `gemini-2.5-flash-lite` | Hidden compatibility | Superseded shortlist or unsupported specialized path; preserve saved ID/overrides. |
 | gemini | polish | `gemini-2.5-pro` | Hidden compatibility | Superseded shortlist or unsupported specialized path; preserve saved ID/overrides. |

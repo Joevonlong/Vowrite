@@ -590,6 +590,14 @@ enum SettingsConnectionTester {
         configuration: APIEndpointConfiguration,
         apiKeyOverride: String? = nil
     ) async throws {
+        if configuration.provider == .doubaoSpeech {
+            try await APIConnectionTester.testSTTConnection(
+                configuration: configuration,
+                apiKeyOverride: apiKeyOverride
+            )
+            return
+        }
+
         let endpoint = "\(configuration.resolvedBaseURL)/audio/transcriptions"
         guard let url = URL(string: endpoint) else {
             throw VowriteError.apiError("Invalid base URL")

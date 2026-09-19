@@ -12,6 +12,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Resource-backed provider and prompt lookups now prefer the shipped app resource bundle, so packaged macOS builds do not depend on the source checkout path. OAuth-expiry handling keeps the regular provider endpoint available for API-key configuration.
 - Pipeline provider pickers now show only providers supported by that pipeline while retaining any existing unsupported selection as a clearly marked, disabled option.
 
+### Added
+
+- **F-093 Doubao Speech transcription**: macOS can use the dedicated Doubao Speech BigASR Flash recording-file service with its separate Speech console APP Key. The adapter converts recordings to bounded 16 kHz mono WAV, uses the provider's native request headers, and keeps standard asynchronous, idle, and streaming speech APIs unavailable because they use different contracts.
+
 ### Changed
 
 - **F-092 Provider model maintenance**: Refreshed the supported model catalog around documented request contracts. OpenAI now defaults to `gpt-transcribe` with region-aware language hints, Qwen exposes only its validated synchronous ASR path, OpenRouter and Sherpa STT remain retained but unavailable until their runtime contracts are validated, DeepSeek defaults to `deepseek-flash`, and legacy saved models keep their polish overrides without appearing in pickers.

@@ -6,6 +6,7 @@ public final class WhisperService {
     private static let adapterMap: [String: STTAdapter] = [
         "openai-compatible": OpenAISTTAdapter(),
         "deepgram": DeepgramSTTAdapter(),
+        "doubao-speech": DoubaoSTTAdapter(),
         "qwen": QwenSTTAdapter(),
         "iflytek": IflytekSTTAdapter(),
         "sherpa": SherpaSTTAdapter(),
