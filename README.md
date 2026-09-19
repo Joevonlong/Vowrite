@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Joevonlong/Vowrite/releases"><img src="https://img.shields.io/badge/release-v0.2.0.0-blue?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/Joevonlong/Vowrite/releases"><img src="https://img.shields.io/badge/release-v0.2.3.0-blue?style=flat-square" alt="Release"></a>
   <a href="https://github.com/Joevonlong/Vowrite/releases"><img src="https://img.shields.io/github/downloads/Joevonlong/Vowrite/total?style=flat-square" alt="Downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Joevonlong/Vowrite?style=flat-square" alt="License"></a>
   <a href="https://github.com/Joevonlong/Vowrite/stargazers"><img src="https://img.shields.io/github/stars/Joevonlong/Vowrite?style=flat-square" alt="Stars"></a>
@@ -229,8 +229,8 @@ ops/scripts/test.sh
 ### Release Process
 
 ```bash
-ops/scripts/release.sh v0.2.1.0 "Short description"
-scripts/publish-release.sh --tag v0.2.1.0
+ops/scripts/release.sh v0.2.3.0 "Short description"
+scripts/publish-release.sh --tag v0.2.3.0
 ```
 
 The release script performs local preparation only: macOS changelog promotion → version bump (`Info.plist` + `Version.swift`) → release build → DMG packaging/signing → appcast → git commit/tag → pinned publication intent. After explicit authorization, `publish-release.sh` atomically publishes the pinned `main` and tag and creates or resumes the matching GitHub Release. The pipeline does not create an iOS version.

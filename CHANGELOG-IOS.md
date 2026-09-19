@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
-- **F-093 Doubao Speech transcription**: iOS and the keyboard can select Doubao Speech BigASR Flash with its separate Speech console APP Key. Shared transcription converts recordings to bounded 16 kHz mono WAV and uses the native Flash request contract; asynchronous standard, idle, and streaming APIs remain unavailable.
+- **F-093 Doubao Speech transcription**: iOS and the keyboard can select Doubao Speech BigASR Flash with its separate Speech console API Key. Shared transcription converts recordings to bounded 16 kHz mono WAV and uses the native Flash request contract; asynchronous standard, idle, and streaming APIs remain unavailable.
 
 ### Changed
 

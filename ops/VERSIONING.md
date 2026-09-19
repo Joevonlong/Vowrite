@@ -34,7 +34,7 @@ All contributors and automation scripts must follow these rules.
 ### Current Version
 
 ```
-v0.2.2.0
+v0.2.3.0
 ```
 
 ### Version Line

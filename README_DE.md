@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Joevonlong/Vowrite/releases"><img src="https://img.shields.io/badge/release-v0.2.0.0-blue?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/Joevonlong/Vowrite/releases"><img src="https://img.shields.io/badge/release-v0.2.3.0-blue?style=flat-square" alt="Release"></a>
   <a href="https://github.com/Joevonlong/Vowrite/releases"><img src="https://img.shields.io/github/downloads/Joevonlong/Vowrite/total?style=flat-square" alt="Downloads"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Joevonlong/Vowrite?style=flat-square" alt="License"></a>
   <a href="https://github.com/Joevonlong/Vowrite/stargazers"><img src="https://img.shields.io/github/stars/Joevonlong/Vowrite?style=flat-square" alt="Stars"></a>
@@ -229,8 +229,8 @@ ops/scripts/test.sh
 ### Release-Prozess
 
 ```bash
-ops/scripts/release.sh v0.2.1.0 "Kurze Beschreibung"
-scripts/publish-release.sh --tag v0.2.1.0
+ops/scripts/release.sh v0.2.3.0 "Kurze Beschreibung"
+scripts/publish-release.sh --tag v0.2.3.0
 ```
 
 Das Release-Skript erledigt: macOS-Changelog → `Info.plist` + `Version.swift` → Release-Build → DMG-Signierung/Paketierung → Appcast → Git-Commit/Tag → optionale GitHub-Release. Es pusht nicht und erstellt keine iOS-Version.
