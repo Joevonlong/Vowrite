@@ -7,6 +7,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+## [0.2.3.0] — 2026-09-19
+
 ### Changed
 
 - **F-091 Unified interface refresh**: The main window, overview, history, settings, onboarding, and status menu now use adaptive light and dark surfaces with clearer navigation. Five recording indicators and the compact voice capsule make recording state easier to read while voice controls, scenes, history, and API settings remain easier to scan.
@@ -451,7 +453,8 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - Microphone selection and Launch at Login
 - API key storage via Keychain
 
-[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.2.0...HEAD
+[Unreleased]: https://github.com/Joevonlong/Vowrite/compare/v0.2.3.0...HEAD
+[0.2.3.0]: https://github.com/Joevonlong/Vowrite/compare/v0.2.2.0...v0.2.3.0
 [0.2.2.0]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.2...v0.2.2.0
 [0.2.1.2]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.1...v0.2.1.2
 [0.2.1.1]: https://github.com/Joevonlong/Vowrite/compare/v0.2.1.0...v0.2.1.1
