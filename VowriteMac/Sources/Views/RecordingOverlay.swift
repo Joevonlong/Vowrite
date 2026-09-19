@@ -2,260 +2,139 @@ import VowriteKit
 import SwiftUI
 import AppKit
 
-// MARK: - Indicator Wrapper (switches between presets)
-
 struct RecordingIndicatorView: View {
     @ObservedObject var appState: AppState
 
     var body: some View {
-        switch IndicatorPreset.current {
-        case .classicBar:
-            RecordingBarView(appState: appState)
-        case .orbPulse:
-            OrbPulseIndicator(appState: appState)
-        case .rippleRing:
-            RippleRingIndicator(appState: appState)
-        case .spectrumArc:
-            SpectrumArcIndicator(appState: appState)
-        case .minimalDot:
-            MinimalDotIndicator(appState: appState)
+        Group {
+            switch IndicatorPreset.current {
+            case .classicBar: RecordingBarView(appState: appState).padding(.top, 12)
+            case .orbPulse: OrbPulseIndicator(appState: appState)
+            case .rippleRing: RippleRingIndicator(appState: appState)
+            case .spectrumArc: SpectrumArcIndicator(appState: appState)
+            case .minimalDot: MinimalDotIndicator(appState: appState)
+            }
         }
+        .accessibilityElement(children: .contain)
     }
 }
 
-// MARK: - Recording Bar SwiftUI View (Classic Bar preset)
-
+/// The compact capsule exposes only the existing recording actions. Processing
+/// remains non-interactive because the engine has no processing-cancel contract.
 struct RecordingBarView: View {
     @ObservedObject var appState: AppState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var isCompact: Bool { OverlayStyle.current == .compact }
+    private var width: CGFloat { isCompact ? 232 : 296 }
+    private var height: CGFloat { isCompact ? 60 : 64 }
+    private var durationText: String {
+        let total = Int(appState.recordingDuration)
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+
+    private var sessionBadge: (icon: String, label: String)? {
+        if appState.engine.isInTranslateSession, let raw = appState.engine.sessionTranslationTarget {
+            return ("globe", "→ \(SupportedLanguage(rawValue: raw)?.shortLabel ?? raw.uppercased())")
+        }
+        if appState.engine.isInPerAppModeSession, let name = appState.engine.sessionModeOverrideName {
+            return ("theatermasks", name)
+        }
+        return nil
+    }
 
     var body: some View {
         Group {
             switch appState.state {
-            case .recording:
-                recordingBar
-            case .processing:
-                processingBar
-            default:
-                EmptyView()
+            case .recording: recordingBar
+            case .processing: processingBar
+            default: EmptyView()
             }
         }
-        .animation(VW.Anim.easeStandard, value: appState.state)
+        .animation(reduceMotion ? nil : VW.Anim.easeStandard, value: appState.state)
     }
-
-    private var durationText: String {
-        let total = Int(appState.recordingDuration)
-        let mins = total / 60
-        let secs = total % 60
-        return String(format: "%d:%02d", mins, secs)
-    }
-
-    // MARK: Recording state
 
     private var recordingBar: some View {
-        let isCompact = OverlayStyle.current == .compact
-        let isTranslate = appState.engine.isInTranslateSession
-        let translateLabel: String? = {
-            guard isTranslate, let raw = appState.engine.sessionTranslationTarget else { return nil }
-            return SupportedLanguage(rawValue: raw)?.shortLabel ?? raw.uppercased()
-        }()
-        // F-081: per-app mapped Mode badge — mutually exclusive with the
-        // translate badge (isInPerAppModeSession is false during a translate
-        // session; see DictationEngine.isInPerAppModeSession).
-        let perAppModeLabel: String? = appState.engine.isInPerAppModeSession
-            ? appState.engine.sessionModeOverrideName
-            : nil
-
-        return ZStack(alignment: .topTrailing) {
-            HStack(spacing: 0) {
-                // Cancel button
-                Button { appState.cancelRecording() } label: {
-                    ZStack {
-                        Circle()
-                            .fill(VW.Colors.Overlay.buttonFill)
-                            .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
-                        Image(systemName: "xmark")
-                            .font(.system(size: isCompact ? 13 : 15, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                }
-                .buttonStyle(.plain)
-                .padding(.leading, 5)
-
-                // Duration
-                Text(durationText)
-                    .font(.system(size: isCompact ? 11 : 13, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.7))
-                    .frame(width: isCompact ? 32 : 40)
-
-                // Waveform
+        HStack(spacing: 12) {
+            capsuleButton("Cancel recording", icon: "xmark", primary: false) { appState.cancelRecording() }
+            VStack(spacing: 2) {
                 WaveformView(level: appState.audioLevel)
-                    .frame(width: isCompact ? 56 : 80, height: isCompact ? 22 : 28)
-
-                // Recording dot
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: 6, height: 6)
-                    .opacity(appState.audioLevel > 0.1 ? 1 : 0.5)
-                    .padding(.trailing, 4)
-
-                // Confirm button
-                Button { appState.stopRecording() } label: {
-                    ZStack {
-                        Circle()
-                            .fill(VW.Colors.Overlay.buttonFill)
-                            .frame(width: isCompact ? 32 : 38, height: isCompact ? 32 : 38)
-                        Image(systemName: "checkmark")
-                            .font(.system(size: isCompact ? 13 : 15, weight: .bold))
-                            .foregroundColor(.white)
-                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 30)
+                    .accessibilityLabel("Recording")
+                if !isCompact {
+                    Text(durationText).font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.75))
                 }
-                .buttonStyle(.plain)
-                .padding(.trailing, 5)
             }
-            .frame(
-                width: isCompact ? 200 : 260,
-                height: isCompact ? 42 : 52
-            )
-            .background(
-                Capsule()
-                    .fill(VW.Colors.Overlay.recording)
-            )
-            .overlay(
-                Capsule()
-                    .stroke(VW.Colors.Overlay.buttonStroke, lineWidth: 1)
-            )
-
-            // F-063: Translation target badge — small floating chip on top-right
-            if let label = translateLabel {
-                HStack(spacing: 3) {
-                    Image(systemName: "globe")
-                        .font(.system(size: 9, weight: .semibold))
-                    Text("→ \(label)")
-                        .font(.system(size: 10, weight: .semibold))
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(Color.accentColor.opacity(0.95)))
-                .overlay(Capsule().stroke(Color.white.opacity(0.6), lineWidth: 0.5))
-                .offset(x: -6, y: -8)
-            } else if let label = perAppModeLabel {
-                // F-081: same chip styling as the F-063 translate badge —
-                // follows precedent rather than inventing a new treatment.
-                HStack(spacing: 3) {
-                    Image(systemName: "theatermasks")
-                        .font(.system(size: 9, weight: .semibold))
-                    Text(label)
-                        .font(.system(size: 10, weight: .semibold))
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(Color.accentColor.opacity(0.95)))
-                .overlay(Capsule().stroke(Color.white.opacity(0.6), lineWidth: 0.5))
-                .offset(x: -6, y: -8)
+            .help("Recording · \(durationText)")
+            capsuleButton("Finish recording", icon: "checkmark", primary: true) { appState.stopRecording() }
+        }
+        .padding(.horizontal, 8)
+        .frame(width: width, height: height)
+        .background(Color(white: 0.035), in: Capsule())
+        .overlay(Capsule().stroke(Color(white: 0.38), lineWidth: 1))
+        .overlay(alignment: .topTrailing) {
+            if let badge = sessionBadge {
+                Label(badge.label, systemImage: badge.icon)
+                    .font(.system(size: 10, weight: .semibold))
+                    .lineLimit(1)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .foregroundStyle(VW.Colors.Text.primary)
+                    .background(VW.Colors.Action.soft, in: Capsule())
+                    .overlay(Capsule().stroke(VW.Colors.Border.standard))
+                    .frame(maxWidth: 156)
+                    .help(badge.label)
+                    .offset(x: -8, y: -10)
             }
         }
     }
 
-    // MARK: Processing state
+    private func capsuleButton(_ label: String, icon: String, primary: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 20, weight: .semibold))
+                .frame(width: 44, height: 44)
+                .foregroundStyle(primary ? Color.black : Color.white)
+                .background(primary ? Color.white : Color(white: 0.26), in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .help(label)
+    }
 
     private var processingBar: some View {
-        HStack(spacing: 8) {
-            ProgressView()
-                .controlSize(.small)
-                .colorScheme(.dark)
-            Text("Thinking")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.white.opacity(0.8))
+        HStack(spacing: 12) {
+            ProgressView().controlSize(.small).colorScheme(.dark)
+            Text("Processing").font(.system(size: 14, weight: .medium))
         }
-        .frame(width: 140, height: 36)
-        .background(
-            Capsule()
-                .fill(VW.Colors.Overlay.processing)
-        )
-        .overlay(
-            Capsule()
-                .stroke(VW.Colors.Overlay.buttonStroke, lineWidth: 1)
-        )
+        .foregroundStyle(.white)
+        .frame(width: width, height: height)
+        .background(Color(white: 0.035), in: Capsule())
+        .overlay(Capsule().stroke(Color(white: 0.38), lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Processing your recording")
     }
 }
 
-// MARK: - Waveform Visualization
-
+/// Visual amplitude is driven by the engine's measured audio level. No random
+/// samples or autonomous animation imply speech when the microphone is quiet.
 struct WaveformView: View {
     let level: Float
-    let barCount = 13
-
-    @State private var animatedLevels: [Float] = Array(repeating: 0, count: 13)
-    @State private var timer: Timer?
-    @State private var targetLevels: [Float] = Array(repeating: 0, count: 13)
-    @State private var ticksSinceTargetRefresh = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 2.5) {
-            ForEach(0..<barCount, id: \.self) { index in
-                RoundedRectangle(cornerRadius: 1.5)
-                    .fill(Color.white.opacity(barOpacity(for: index)))
-                    .frame(width: 3, height: barHeight(for: index))
+        HStack(spacing: 3) {
+            ForEach(0..<13, id: \.self) { index in
+                let distance = abs(CGFloat(index) - 6) / 6
+                let amplitude = CGFloat(min(1, max(0, level))) * (1 - distance * 0.65)
+                Capsule()
+                    .fill(Color.white)
+                    .frame(width: 3, height: 3 + amplitude * 25)
             }
         }
-        .onAppear { startAnimation() }
-        .onDisappear { timer?.invalidate() }
-        .onChange(of: level) { _, _ in updateTargets() }
-    }
-
-    private func barHeight(for index: Int) -> CGFloat {
-        let minHeight: CGFloat = 3
-        let maxHeight: CGFloat = 18
-        let level = CGFloat(animatedLevels[index])
-        return minHeight + (maxHeight - minHeight) * level
-    }
-
-    private func barOpacity(for index: Int) -> Double {
-        let center = Double(barCount) / 2.0
-        let dist = abs(Double(index) - center) / center
-        return 1.0 - dist * 0.3
-    }
-
-    // V-4 perf fix: this used to be two independent Timers (60 Hz interpolation +
-    // a 0.25s target refresh). Merged into one 60 Hz Timer/Task dispatch; the
-    // ~0.25s target refresh now runs off a tick counter inside the same callback
-    // instead of registering its own Timer with the RunLoop. Both operations keep
-    // their original cadence (~60 Hz, ~0.25s) and exact math — only the scheduling
-    // (one Timer object instead of two) changed.
-    private func startAnimation() {
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { _ in
-            Task { @MainActor in
-                interpolateLevels()
-                ticksSinceTargetRefresh += 1
-                if ticksSinceTargetRefresh >= 15 {
-                    ticksSinceTargetRefresh = 0
-                    updateTargets()
-                }
-            }
-        }
-    }
-
-    private func updateTargets() {
-        let speaking = level > 0.5
-        for i in 0..<barCount {
-            let center = Float(barCount) / 2.0
-            let centerDistance = abs(Float(i) - center) / center
-            if speaking {
-                let bellCurve: Float = 1.0 - centerDistance * 0.6
-                targetLevels[i] = bellCurve * Float.random(in: 0.6...1.0)
-            } else {
-                targetLevels[i] = 0.05
-            }
-        }
-    }
-
-    private func interpolateLevels() {
-        withAnimation(.easeInOut(duration: 0.016)) {
-            for i in 0..<barCount {
-                animatedLevels[i] += (targetLevels[i] - animatedLevels[i]) * 0.15
-            }
-        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: level)
+        .accessibilityHidden(true)
     }
 }

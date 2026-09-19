@@ -4,6 +4,7 @@ import SwiftData
 
 struct HistoryView: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject private var navigation = MainWindowNavigation.shared
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \DictationRecord.createdAt, order: .reverse) private var records: [DictationRecord]
     @State private var searchText = ""
@@ -51,164 +52,152 @@ struct HistoryView: View {
     private var isSelecting: Bool { !selectedRecords.isEmpty }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                if appState.historyUnavailable {
-                    historyUnavailableBanner
-                }
-                // Header
-                HStack {
-                    Text("History")
-                        .font(.largeTitle.bold())
-                    Spacer()
-                    if !records.isEmpty {
-                        Text("\(filteredRecords.count) record(s)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(.horizontal, 28)
-                .padding(.top, 24)
-                .padding(.bottom, 8)
-
-                // Privacy note card
-                HStack(spacing: 10) {
-                    Image(systemName: "lock.shield")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Your data stays private")
-                            .font(.subheadline.weight(.medium))
-                        Text("All data is stored locally on your device only.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.primary.opacity(0.03))
-                .cornerRadius(8)
-                .padding(.horizontal, 28)
-                .padding(.bottom, 16)
-
-                // Search + batch actions
-                HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    TextField("Search history...", text: $searchText)
-                        .textFieldStyle(.plain)
-                    if !searchText.isEmpty {
-                        Button { searchText = "" } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
+        ScrollViewReader { scroll in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("History").font(.system(size: 32, weight: .semibold))
+                            Text("Find the words you want to keep.")
+                                .foregroundStyle(VW.Colors.Text.secondary)
                         }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(8)
-                .background(Color.secondary.opacity(0.08))
-                .cornerRadius(8)
-                .padding(.horizontal, 28)
-                .padding(.bottom, 8)
-
-                // Batch action bar
-                if isSelecting {
-                    HStack(spacing: 12) {
-                        Text("\(selectedRecords.count) selected")
-                            .font(.caption).fontWeight(.medium)
                         Spacer()
-                        Button("Deselect All") { selectedRecords.removeAll() }
-                            .font(.caption)
-                        Button(role: .destructive) { showDeleteConfirm = true } label: {
-                            Label("Delete Selected", systemImage: "trash")
-                                .font(.caption)
-                        }
+                        Text("\(filteredRecords.count) records")
+                            .font(.callout).foregroundStyle(VW.Colors.Text.secondary)
+                            .padding(.top, 8)
                     }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 8)
-                    .background(Color.red.opacity(0.06))
-                } else if !records.isEmpty {
-                    HStack {
-                        Spacer()
-                        Button("Select All") {
-                            selectedRecords = Set(filteredRecords.map(\.id))
-                        }
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 4)
-                }
 
-                // Records
-                if filteredRecords.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "mic.badge.plus")
-                            .font(.system(size: 32))
-                            .foregroundColor(.secondary)
-                        Text(searchText.isEmpty ? "No dictation records yet" : "No results for \"\(searchText)\"")
-                            .foregroundColor(.secondary)
+                    if appState.historyUnavailable { historyUnavailableBanner }
+
+                    Label("Your history stays on this device.", systemImage: "lock.shield")
+                        .font(.callout)
+                        .foregroundStyle(VW.Colors.Text.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .background(VW.Colors.Surface.secondary, in: RoundedRectangle(cornerRadius: VW.Radius.control))
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Search history").font(.callout.weight(.medium))
+                        HStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass").foregroundStyle(VW.Colors.Text.secondary)
+                            TextField("Search original and polished text", text: $searchText)
+                                .textFieldStyle(.plain)
+                                .accessibilityLabel("Search history")
+                                .accessibilityIdentifier("history.search")
+                            if !searchText.isEmpty {
+                                Button { searchText = "" } label: { Image(systemName: "xmark.circle.fill") }
+                                    .buttonStyle(.plain).accessibilityLabel("Clear search")
+                            }
+                        }
+                        .padding(12)
+                        .background(VW.Colors.Surface.panel, in: RoundedRectangle(cornerRadius: VW.Radius.control))
+                        .overlay(RoundedRectangle(cornerRadius: VW.Radius.control).stroke(VW.Colors.Border.standard))
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 60)
-                } else {
-                    LazyVStack(alignment: .leading, spacing: 0, pinnedViews: .sectionHeaders) {
-                        ForEach(groupedRecords, id: \.0) { section, sectionRecords in
-                            Section {
-                                ForEach(sectionRecords) { record in
-                                    HistoryRow(
-                                        record: record,
-                                        isSelected: selectedRecords.contains(record.id),
-                                        isExpanded: expandedRecord == record.id,
-                                        onToggleSelect: { toggleSelection(record) },
-                                        onToggleExpand: { toggleExpand(record) },
-                                        onCopy: { copyRecord(record) },
-                                        onDelete: { deleteRecord(record) }
-                                    )
-                                    if record.id != sectionRecords.last?.id {
-                                        Divider()
-                                            .padding(.leading, 100)
-                                            .padding(.trailing, 28)
+
+                    if isSelecting {
+                        HStack(spacing: 12) {
+                            Text("\(selectedRecords.count) selected").fontWeight(.medium)
+                            Spacer()
+                            Button("Deselect All") { selectedRecords.removeAll() }
+                            Button(role: .destructive) { showDeleteConfirm = true } label: {
+                                Label("Delete Selected", systemImage: "trash")
+                            }
+                        }
+                        .font(.callout)
+                        .padding(16)
+                        .background(VW.Colors.Action.soft, in: RoundedRectangle(cornerRadius: VW.Radius.control))
+                    } else if !records.isEmpty {
+                        HStack {
+                            Spacer()
+                            Button("Select All") { selectedRecords = Set(filteredRecords.map(\.id)) }
+                                .font(.callout).buttonStyle(.borderless)
+                        }
+                    }
+
+                    if filteredRecords.isEmpty {
+                        VStack(spacing: 16) {
+                            Image(systemName: searchText.isEmpty ? "text.bubble" : "magnifyingglass")
+                                .font(.system(size: 32)).foregroundStyle(VW.Colors.Text.secondary)
+                            Text(searchText.isEmpty ? "Your words will appear here" : "No matching dictations")
+                                .font(.headline)
+                            Text(searchText.isEmpty ? "Complete your first voice input to build your history." : "Try a different search or clear the filter.")
+                                .foregroundStyle(VW.Colors.Text.secondary)
+                            if !searchText.isEmpty {
+                                Button("Clear search") { searchText = "" }
+                            } else {
+                                Button("Go to overview") { WindowHelper.openMainWindow(destination: .overview) }
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 56)
+                    } else {
+                        LazyVStack(alignment: .leading, spacing: 24) {
+                            ForEach(groupedRecords, id: \.0) { section, sectionRecords in
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text(section).font(.callout.weight(.semibold))
+                                        .foregroundStyle(VW.Colors.Text.secondary)
+                                    VStack(spacing: 0) {
+                                        ForEach(sectionRecords) { record in
+                                            HistoryRow(
+                                                record: record,
+                                                isSelected: selectedRecords.contains(record.id),
+                                                isExpanded: expandedRecord == record.id,
+                                                onToggleSelect: { toggleSelection(record) },
+                                                onToggleExpand: { toggleExpand(record) },
+                                                onCopy: { copyRecord(record) },
+                                                onDelete: { deleteRecord(record) }
+                                            )
+                                            .id(record.id)
+                                            if record.id != sectionRecords.last?.id {
+                                                Divider().padding(.horizontal, 24)
+                                            }
+                                        }
                                     }
+                                    .background(VW.Colors.Surface.panel, in: RoundedRectangle(cornerRadius: VW.Radius.panel))
+                                    .overlay(RoundedRectangle(cornerRadius: VW.Radius.panel).stroke(VW.Colors.Border.standard))
                                 }
-                            } header: {
-                                Text(section)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundColor(.secondary)
-                                    .padding(.horizontal, 28)
-                                    .padding(.vertical, 10)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(.background)
                             }
                         }
                     }
                 }
+                .frame(maxWidth: 1040, alignment: .leading)
+                .padding(32)
+                .frame(maxWidth: .infinity)
+            }
+            .onAppear { revealRecord(navigation.historyRecordID, scroll: scroll) }
+            .onChange(of: navigation.historyRecordID) { _, recordID in revealRecord(recordID, scroll: scroll) }
+            .background(VW.Colors.Surface.canvas)
+            .frame(minWidth: 500, minHeight: 400)
+            .alert("Delete \(selectedRecords.count) record(s)?", isPresented: $showDeleteConfirm) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) { batchDelete() }
+            } message: {
+                Text("This action cannot be undone.")
             }
         }
-        .frame(minWidth: 500, minHeight: 400)
-        .alert("Delete \(selectedRecords.count) record(s)?", isPresented: $showDeleteConfirm) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) { batchDelete() }
-        } message: {
-            Text("This action cannot be undone.")
-        }
+
+    }
+
+    private func revealRecord(_ recordID: UUID?, scroll: ScrollViewProxy) {
+        guard let recordID else { return }
+        searchText = ""
+        expandedRecord = recordID
+        DispatchQueue.main.async { scroll.scrollTo(recordID, anchor: .center) }
     }
 
     private var historyUnavailableBanner: some View {
         VStack(alignment: .leading, spacing: 4) {
             Label("History temporarily unavailable", systemImage: "exclamationmark.triangle.fill")
                 .font(.headline)
-                .foregroundColor(.orange)
+                .foregroundStyle(VW.Colors.Status.warning)
             Text("This session won't be saved to history. Restart the app or check disk space.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.12))
+        .background(VW.Colors.Surface.secondary)
         .cornerRadius(8)
-        .padding(.horizontal, 28)
-        .padding(.top, 24)
     }
 
     private func toggleSelection(_ record: DictationRecord) {
@@ -293,97 +282,82 @@ struct HistoryRow: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // Selection checkbox
+        HStack(alignment: .top, spacing: 16) {
             Button(action: onToggleSelect) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .accentColor : .secondary.opacity(0.4))
-                    .font(.body)
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? VW.Colors.Action.primary : VW.Colors.Text.secondary)
+                    .frame(width: 28, height: 28)
             }
             .buttonStyle(.plain)
-            .padding(.top, 2)
+            .accessibilityLabel(isSelected ? "Deselect dictation" : "Select dictation")
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
 
-            // Time + duration
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(timeString)
-                    .font(.system(.callout, design: .monospaced))
-                    .foregroundColor(.secondary)
-                Text(durationString)
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundColor(.secondary.opacity(0.7))
-            }
-            .frame(width: 65, alignment: .trailing)
-            .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Text(timeString)
+                    Text("·")
+                    Text(durationString)
+                    if record.wasTranslation == true {
+                        Label("Translation", systemImage: "globe")
+                    }
+                }
+                .font(.caption).monospacedDigit()
+                .foregroundStyle(VW.Colors.Text.secondary)
 
-            // Content
-            VStack(alignment: .leading, spacing: 6) {
-                // Polished text
                 Text(record.polishedText)
                     .font(.body)
+                    .lineSpacing(4)
                     .textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
                     .lineLimit(isExpanded ? nil : 3)
 
-                // Expanded: show raw vs polished comparison
                 if isExpanded && hasPolishDiff {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Raw transcript")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .fontWeight(.semibold)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Original transcript").font(.caption.weight(.semibold))
                         Text(record.rawTranscript)
-                            .font(.callout)
-                            .foregroundColor(.secondary)
+                            .font(.callout).lineSpacing(4)
                             .textSelection(.enabled)
                             .fixedSize(horizontal: false, vertical: true)
-                            .padding(8)
-                            .background(Color.secondary.opacity(0.06))
-                            .cornerRadius(6)
                     }
-                    .padding(.top, 4)
+                    .foregroundStyle(VW.Colors.Text.secondary)
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(VW.Colors.Surface.secondary, in: RoundedRectangle(cornerRadius: VW.Radius.control))
                 }
 
-                // Action buttons
-                HStack(spacing: 12) {
-                    if hasPolishDiff {
-                        Button(action: onToggleExpand) {
-                            Label(isExpanded ? "Collapse" : "Compare", systemImage: isExpanded ? "chevron.up" : "arrow.left.arrow.right")
-                                .font(.caption2)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundColor(.accentColor)
+                HStack(spacing: 16) {
+                    Button(action: onToggleExpand) {
+                        Label(isExpanded ? "Collapse" : hasPolishDiff ? "View & compare" : "View full text", systemImage: isExpanded ? "chevron.up" : "text.alignleft")
                     }
-
+                    .foregroundStyle(VW.Colors.Action.primary)
                     Button {
                         onCopy()
                         copied = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { copied = false }
                     } label: {
-                        Label(copied ? "Copied!" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
-                            .font(.caption2)
+                        Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
                     }
-                    .buttonStyle(.plain)
-                    .foregroundColor(copied ? .green : .secondary)
-
-                    Spacer()
-
+                    .foregroundStyle(copied ? VW.Colors.Status.success : VW.Colors.Text.secondary)
+                    Spacer(minLength: 0)
                     Button(role: .destructive) { showDeleteConfirm = true } label: {
-                        Image(systemName: "trash")
-                            .font(.caption2)
+                        Image(systemName: "trash").frame(width: 28, height: 28)
                     }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary.opacity(0.5))
+                    .foregroundStyle(VW.Colors.Text.secondary)
+                    .accessibilityLabel("Delete dictation")
                 }
-                .padding(.top, 2)
+                .font(.callout)
+                .buttonStyle(.plain)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 28)
-        .padding(.vertical, 12)
-        .background(isSelected ? Color.accentColor.opacity(0.04) : Color.clear)
+        .padding(24)
+        .background(isSelected ? VW.Colors.Action.soft : .clear, in: RoundedRectangle(cornerRadius: VW.Radius.panel))
         .alert("Delete this record?", isPresented: $showDeleteConfirm) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) { onDelete() }
+        } message: {
+            Text("This action cannot be undone.")
         }
     }
 }

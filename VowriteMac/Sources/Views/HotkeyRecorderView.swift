@@ -19,16 +19,18 @@ struct HotkeyRecorderButton: View {
             Text(HotkeyDisplay.string(keyCode: currentKeyCode, modifiers: currentModifiers))
                 .font(.system(.body, design: .monospaced, weight: .medium))
                 .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .padding(.vertical, 10)
                 .frame(minWidth: 120)
-                .background(Color.secondary.opacity(0.12))
-                .cornerRadius(6)
+                .background(VW.Colors.Surface.secondary)
+                .cornerRadius(VW.Radius.control)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: VW.Radius.control)
+                        .stroke(VW.Colors.Border.standard, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Record shortcut")
+        .accessibilityValue(HotkeyDisplay.string(keyCode: currentKeyCode, modifiers: currentModifiers))
     }
 
     private func showCapturePanel() {
@@ -48,7 +50,7 @@ final class HotkeyCapturePanel: NSPanel {
     init(currentKeyCode: UInt32, currentModifiers: UInt32, onComplete: @escaping (UInt32, UInt32) -> Void) {
         self.onComplete = onComplete
 
-        let viewFrame = NSRect(x: 0, y: 0, width: 340, height: 160)
+        let viewFrame = NSRect(x: 0, y: 0, width: 400, height: 190)
         self.captureView = HotkeyCaptureView(frame: viewFrame)
 
         super.init(
@@ -59,6 +61,12 @@ final class HotkeyCapturePanel: NSPanel {
         )
 
         self.title = "Record Shortcut"
+        let appearanceMode = AppearanceMode(rawValue: UserDefaults.standard.string(forKey: "appearanceMode") ?? "System") ?? .system
+        switch appearanceMode {
+        case .system: self.appearance = nil
+        case .light: self.appearance = NSAppearance(named: .aqua)
+        case .dark: self.appearance = NSAppearance(named: .darkAqua)
+        }
         self.isFloatingPanel = true
         self.level = .modalPanel
         self.contentView = captureView
@@ -113,7 +121,7 @@ final class HotkeyCaptureView: NSView {
 
         // Main instruction
         label.stringValue = "Press your shortcut now"
-        label.font = .systemFont(ofSize: 18, weight: .semibold)
+        label.font = .systemFont(ofSize: 20, weight: .semibold)
         label.alignment = .center
         label.isEditable = false
         label.isBezeled = false
@@ -123,7 +131,7 @@ final class HotkeyCaptureView: NSView {
 
         // Sub instruction
         sublabel.stringValue = "Use a modifier key (⌘⌥⌃⇧) + another key\nPress Esc to cancel"
-        sublabel.font = .systemFont(ofSize: 12)
+        sublabel.font = .systemFont(ofSize: 14)
         sublabel.textColor = .secondaryLabelColor
         sublabel.alignment = .center
         sublabel.maximumNumberOfLines = 2
@@ -134,9 +142,9 @@ final class HotkeyCaptureView: NSView {
         addSubview(sublabel)
 
         // Waiting indicator
-        currentLabel.stringValue = "⌨️ Waiting for input..."
+        currentLabel.stringValue = "Waiting for your shortcut…"
         currentLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        currentLabel.textColor = .systemOrange
+        currentLabel.textColor = .secondaryLabelColor
         currentLabel.alignment = .center
         currentLabel.isEditable = false
         currentLabel.isBezeled = false
@@ -179,11 +187,11 @@ final class HotkeyCaptureView: NSView {
         // Must have at least one modifier
         guard flags.contains(.command) || flags.contains(.option) ||
               flags.contains(.control) || flags.contains(.shift) else {
-            currentLabel.stringValue = "⚠️ Need a modifier key!"
+            currentLabel.stringValue = "Include a modifier key"
             currentLabel.textColor = .systemRed
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-                self?.currentLabel.stringValue = "⌨️ Waiting for input..."
-                self?.currentLabel.textColor = .systemOrange
+                self?.currentLabel.stringValue = "Waiting for your shortcut…"
+                self?.currentLabel.textColor = .secondaryLabelColor
             }
             return
         }
@@ -196,7 +204,7 @@ final class HotkeyCaptureView: NSView {
 
         // Show what was captured briefly
         let display = HotkeyDisplay.string(keyCode: code, modifiers: carbonMods)
-        currentLabel.stringValue = "✅ \(display)"
+        currentLabel.stringValue = "Shortcut: \(display)"
         currentLabel.textColor = .systemGreen
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in

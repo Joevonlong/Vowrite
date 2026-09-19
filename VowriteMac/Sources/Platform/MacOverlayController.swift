@@ -101,7 +101,7 @@ final class MacOverlayController: OverlayProvider {
             let visibleFrame = screen.visibleFrame
             let dockHeight = visibleFrame.minY - screenFrame.minY
             let x = screenFrame.midX - size.width / 2
-            let y = screenFrame.minY + dockHeight + 12
+            let y = screenFrame.minY + dockHeight + 24
             win.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
@@ -128,8 +128,8 @@ final class MacOverlayController: OverlayProvider {
             return NSSize(width: 60, height: 60)
         case .classicBar:
             switch OverlayStyle.current {
-            case .compact: return NSSize(width: 200, height: 42)
-            case .normal: return NSSize(width: 260, height: 52)
+            case .compact: return NSSize(width: 232, height: 72)
+            case .normal: return NSSize(width: 296, height: 76)
             }
         }
     }
