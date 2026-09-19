@@ -121,6 +121,7 @@ struct PersonalizationView: View {
                                 .font(.body)
                                 .frame(width: 44, height: 44)
                         }
+                        .accessibilityLabel("Choose a scene template")
                         Button {
                             isCreatingNew = true
                         } label: {

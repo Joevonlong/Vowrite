@@ -30,14 +30,15 @@ struct ModeTemplatePickerSheet: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(template.name)
                                         .font(.body)
-                                        .foregroundStyle(.primary)
+                                        .foregroundStyle(VW.Colors.Text.primary)
                                     Text(template.summary)
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(VW.Colors.Text.secondary)
                                 }
                             }
                             .padding(.vertical, 8)
                         }
+                        .buttonStyle(.plain)
                         .listRowBackground(VW.Colors.Surface.panel)
                     }
                 } footer: {

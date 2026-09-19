@@ -140,10 +140,10 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(preset.name)
                                     .font(.body)
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(VW.Colors.Text.primary)
                                 Text(preset.summary)
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(VW.Colors.Text.secondary)
                             }
                             Spacer()
                             if APIConfig.selectedPresetID == preset.id {
@@ -152,6 +152,7 @@ struct SettingsView: View {
                             }
                         }
                     }
+                    .buttonStyle(.plain)
                 }
             }
 
