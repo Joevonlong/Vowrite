@@ -22,6 +22,11 @@ mkdir -p Vowrite.app/Contents/MacOS
 # VowriteMac produces a binary named "VowriteMac" — rename to "Vowrite" for the app bundle
 cp .build/arm64-apple-macosx/debug/VowriteMac Vowrite.app/Contents/MacOS/Vowrite
 
+echo "Embedding VowriteKit resources..."
+../ops/scripts/embed-kit-resources.sh \
+  ".build/arm64-apple-macosx/debug/VowriteKit_VowriteKit.bundle" \
+  "Vowrite.app"
+
 echo "Embedding Sparkle.framework..."
 mkdir -p Vowrite.app/Contents/Frameworks
 SPARKLE_SRC=".build/arm64-apple-macosx/debug/Sparkle.framework"

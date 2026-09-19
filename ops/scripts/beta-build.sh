@@ -38,6 +38,10 @@ cp .build/arm64-apple-macosx/release/VowriteMac "$APP_BUNDLE/Contents/MacOS/Vowr
 cp Resources/Info.plist "$APP_BUNDLE/Contents/Info.plist"
 echo "  ✓ Binary and Info.plist copied"
 
+"$PROJECT_ROOT/ops/scripts/embed-kit-resources.sh" \
+    "$MAC_DIR/.build/arm64-apple-macosx/release/VowriteKit_VowriteKit.bundle" \
+    "$APP_BUNDLE"
+
 # --- Step 3: Embed Sparkle ---
 echo ""
 echo "▶ Step 3: Embedding Sparkle.framework..."
