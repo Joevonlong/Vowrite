@@ -29,7 +29,7 @@
       "polish": {
         "defaultModel": "gpt-5.4-mini",
         "models": [
-          { "id": "gpt-6-astra", "description": "Latest capable flagship", "polishOverrides": { "reasoning_effort": "low" } },
+          { "id": "gpt-6-astra", "description": "Latest capable flagship", "polishOverrides": { "reasoning_effort": "low", "temperature": null } },
           { "id": "gpt-5.4-mini", "description": "Balanced default — fast and capable" },
           { "id": "gpt-5.6-luna", "description": "Legacy saved model", "isVisible": false, "polishOverrides": { "reasoning_effort": "none" } },
           { "id": "gpt-5.6-sol", "description": "Legacy saved model", "isVisible": false, "polishOverrides": { "reasoning_effort": "none" } },

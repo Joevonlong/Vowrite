@@ -86,6 +86,20 @@ final class PolishRequestOverridesTests: XCTestCase {
         XCTAssertEqual(thinking?["type"] as? String, "disabled")
     }
 
+    func testAstraCatalogOverrideRemovesUnsupportedTemperature() throws {
+        let overrides = try XCTUnwrap(
+            ProviderRegistry.shared.polishOverrides(providerID: "openai", modelID: "gpt-6-astra")
+        )
+        var payload = basePayload()
+        applyPolishOverrides(to: &payload, overrides: overrides)
+
+        XCTAssertEqual(payload["reasoning_effort"] as? String, "low")
+        XCTAssertNil(payload["temperature"])
+        XCTAssertFalse(payload.keys.contains("top_p"))
+        XCTAssertFalse(payload.keys.contains("top_logprobs"))
+        XCTAssertFalse(payload.keys.contains("logprobs"))
+    }
+
     func testSharedCompatiblePayloadBuilderKeepsOrdinaryAndSpeculativeOverridesInParity() throws {
         let overrides = try XCTUnwrap(
             ProviderRegistry.shared.polishOverrides(providerID: "kimi", modelID: "kimi-k2.6")
