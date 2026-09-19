@@ -58,6 +58,8 @@ F-092 supersedes the older F-086 catalog-freeze fixture for the documented curre
 | Custom | user model IDs | STT/Polish | editable defaults | [provider guide](PROVIDER_GUIDE.md) | User-owned endpoint; defaults remain editable and are not upstream claims. |
 
 A successful build or catalog decode does not prove a live provider call; credentialed smoke tests remain a release gate.
+
+The model-watch F-086 freeze tests retain the pending manifest and empty evaluation/approval contract. Their only F-092 exception is the exact provider/capability/model tuple for the three documented public rows added by this refresh; the negative guard test confirms the exception cannot release the same IDs from unrelated source files or broaden to other candidates.
 ## Complete model-ID accounting
 
 Baseline: `8d3b50a8eb7ccde2ece6e136555b65b41b3c5828`; audit date: 2026-09-19. Every baseline and new static model row is accounted for below. Provider-specific rationale and first-party references are in the decision table above. Hidden means excluded from Vowrite recommendations, not proof of upstream shutdown. Account availability and measured value remain unverified.

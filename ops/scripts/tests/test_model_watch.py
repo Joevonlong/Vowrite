@@ -994,6 +994,15 @@ F086_EXPECTED_OVERRIDES = {
     ("minimax_cn", "MiniMax-M3"): {"thinking": {"type": "disabled"}},
 }
 
+# F-092 explicitly authorized these three public catalog rows after first-party
+# documentation review. The allow-list is scoped to the exact provider,
+# capability, and model tuple; pending F-086 manifest rows remain pending.
+F092_AUTHORIZED_CATALOG_CANDIDATES = {
+    ("claude", "polish", "claude-opus-5"),
+    ("gemini", "polish", "gemini-3.5-flash-lite"),
+    ("siliconflow", "polish", "deepseek-ai/DeepSeek-V4-Flash"),
+}
+
 F086_PRODUCTION_ROOTS = (
     "VowriteKit/Sources",
     "VowriteMac/Sources",
@@ -1074,6 +1083,8 @@ def find_f086_activation_violations(repo_root):
         provider_by_id = {row["id"]: row for row in providers}
         for provider_id, capability, identity, _, _, action, _, _ in EXPECTED_F086_CANDIDATES:
             if action == "revalidate_existing":
+                continue
+            if (provider_id, capability, identity) in F092_AUTHORIZED_CATALOG_CANDIDATES:
                 continue
             capability_data = provider_by_id[provider_id].get(capability, {})
             capability_text = json.dumps(capability_data, sort_keys=True)
@@ -1333,6 +1344,8 @@ class F086ActivationGuardTests(unittest.TestCase):
             model_id = candidate["modelID"]
             if model_id is None:
                 continue
+            if (candidate["providerID"], candidate["capability"], model_id) in F092_AUTHORIZED_CATALOG_CANDIDATES:
+                continue
             provider = provider_by_id[candidate["providerID"]]
             capability = provider.get(candidate["capability"], {})
             bundled_ids = {row["id"] for row in capability.get("models", [])}
@@ -1357,6 +1370,15 @@ class F086ActivationGuardTests(unittest.TestCase):
             self.assertTrue(any("shared migration symbol count" in row for row in violations))
             self.assertTrue(any("catalog-refresh-2026-08-v1" in row for row in violations))
             self.assertTrue(any("claude-opus-5" in row for row in violations))
+
+    def test_f092_catalog_allowlist_does_not_release_same_id_in_other_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            injected = root / "VowriteMac/Sources/Deferred/UnexpectedRefresh.swift"
+            injected.parent.mkdir(parents=True)
+            injected.write_text('let candidate = "gemini-3.5-flash-lite"\n', encoding="utf-8")
+            violations = find_f086_activation_violations(root)
+            self.assertTrue(any("gemini-3.5-flash-lite" in row for row in violations))
 
     def test_watcher_state_remains_the_pre_f086_baseline(self):
         state_bytes = (REPO_ROOT / "ops/model-watch/state.json").read_bytes()
