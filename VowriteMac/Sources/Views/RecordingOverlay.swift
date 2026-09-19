@@ -106,7 +106,7 @@ struct RecordingBarView: View {
 
     private var processingBar: some View {
         HStack(spacing: 12) {
-            ProgressView().controlSize(.small).colorScheme(.dark)
+            ProgressView().progressViewStyle(OverlayProcessingProgressStyle())
             Text("Processing").font(.system(size: 14, weight: .medium))
         }
         .foregroundStyle(.white)
@@ -136,5 +136,35 @@ struct WaveformView: View {
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: level)
         .accessibilityHidden(true)
+    }
+}
+
+/// High-contrast progress for a dark, non-activating recording overlay.
+/// A custom style avoids AppKit dimming an inactive native spinner.
+struct OverlayProcessingProgressStyle: ProgressViewStyle {
+    var diameter: CGFloat = 16
+
+    func makeBody(configuration: Configuration) -> some View {
+        OverlayProcessingRing(diameter: diameter)
+    }
+}
+
+private struct OverlayProcessingRing: View {
+    let diameter: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion)) { context in
+            let phase = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1)
+            ZStack {
+                Circle().stroke(Color.white.opacity(0.3), lineWidth: 2)
+                Circle().trim(from: 0, to: 0.72)
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .rotationEffect(.degrees(reduceMotion ? -90 : phase * 360 - 90))
+            }
+            .frame(width: diameter, height: diameter)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Processing")
     }
 }

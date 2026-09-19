@@ -18,7 +18,7 @@ struct RippleRingIndicator: View {
             if appState.isRecording {
                 Image(systemName: "mic.fill").font(.system(size: 22)).foregroundStyle(.white)
             } else if appState.state == .processing {
-                ProgressView().controlSize(.small).colorScheme(.dark)
+                ProgressView().progressViewStyle(OverlayProcessingProgressStyle())
             }
         }
         .frame(width: 100, height: 100)

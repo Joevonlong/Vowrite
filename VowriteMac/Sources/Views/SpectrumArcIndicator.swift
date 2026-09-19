@@ -22,7 +22,7 @@ struct SpectrumArcIndicator: View {
                 Circle().trim(from: 0.1, to: 0.9)
                     .stroke(Color.white.opacity(0.3), style: StrokeStyle(lineWidth: 2, lineCap: .round))
                     .frame(width: 76, height: 76)
-                ProgressView().controlSize(.small).colorScheme(.dark)
+                ProgressView().progressViewStyle(OverlayProcessingProgressStyle())
             }
         }
         .frame(width: 120, height: 120)
