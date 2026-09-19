@@ -85,12 +85,12 @@ struct ModeEditorSheet: View {
         NavigationStack {
             Form {
                 // Basic
-                Section("Basic") {
+                Section("Scene Identity") {
                     HStack(spacing: 12) {
                         Button { showIconPicker = true } label: {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.accentColor.opacity(0.1))
+                                    .fill(VW.Colors.Action.soft)
                                     .frame(width: 44, height: 44)
                                 Image(systemName: draft.icon)
                                     .font(.title3)
@@ -154,6 +154,7 @@ struct ModeEditorSheet: View {
                     }
                 }
             }
+            .vwIOSForm()
             .navigationTitle(isNew ? "New Scene" : "Edit Scene")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -344,7 +345,7 @@ private struct iOSIconPickerView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVGrid(columns: Array(repeating: GridItem(.fixed(56)), count: 5), spacing: 12) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 56))], spacing: 12) {
                     ForEach(Self.icons, id: \.self) { icon in
                         let isSelected = selected == icon
                         Button {
@@ -365,10 +366,14 @@ private struct iOSIconPickerView: View {
                         }
                         .buttonStyle(.plain)
                         .foregroundColor(isSelected ? .accentColor : .primary)
+                        .accessibilityLabel(icon.replacingOccurrences(of: ".", with: " "))
+                        .accessibilityAddTraits(isSelected ? .isSelected : [])
                     }
                 }
                 .padding()
             }
+            .background(VW.Colors.Surface.canvas)
+            .tint(VW.Colors.Action.primary)
             .navigationTitle("Choose Icon")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

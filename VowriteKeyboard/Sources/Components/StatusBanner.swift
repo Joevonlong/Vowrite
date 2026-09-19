@@ -1,4 +1,5 @@
 import SwiftUI
+import VowriteKit
 
 struct StatusBanner: View {
     let icon: String
@@ -10,23 +11,23 @@ struct StatusBanner: View {
         VStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundStyle(.orange)
+                .foregroundStyle(VW.Colors.Status.warning)
 
             Text(message)
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
 
             Button(action: action) {
                 Text(actionLabel)
-                    .font(.caption)
+                    .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color(UIColor.label))
+                    .foregroundStyle(KeyboardTheme.accentText)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .frame(minHeight: 44)
                     .background(
-                        KeyboardTheme.buttonFill,
+                        KeyboardTheme.accentFill,
                         in: RoundedRectangle(cornerRadius: 8)
                     )
             }

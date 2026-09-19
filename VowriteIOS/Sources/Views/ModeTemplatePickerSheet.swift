@@ -23,8 +23,10 @@ struct ModeTemplatePickerSheet: View {
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: template.icon)
-                                    .foregroundColor(.accentColor)
-                                    .frame(width: 24)
+                                    .font(.title3)
+                                    .foregroundStyle(VW.Colors.Action.primary)
+                                    .frame(width: 40, height: 40)
+                                    .background(VW.Colors.Action.soft, in: RoundedRectangle(cornerRadius: VW.Radius.control))
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(template.name)
                                         .font(.body)
@@ -34,13 +36,16 @@ struct ModeTemplatePickerSheet: View {
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                            .padding(.vertical, 8)
                         }
+                        .listRowBackground(VW.Colors.Surface.panel)
                     }
                 } footer: {
                     Text("Start from a preset — you can rename it and tweak anything before saving.")
                 }
             }
-            .navigationTitle("From Template")
+            .vwIOSForm()
+            .navigationTitle("Choose a Starting Point")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

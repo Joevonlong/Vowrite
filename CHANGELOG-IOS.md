@@ -32,6 +32,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Changed
 
+- **F-091 Open Design interface refresh**: A new Home layout brings voice service controls, existing usage statistics, scene selection, and recent expressions together. Settings separates models, API keys, and language/feedback; Personalization groups vocabulary and corrections in a dedicated page. History, result details, onboarding, and editors share adaptive surfaces, clearer hierarchy, and readable native controls.
+- **F-091 Voice keyboard presentation**: The keyboard keeps its transparent system background while adopting an adaptive inverted recording control, a visible scene picker, recording duration, and an `Aa` letter-keyboard switch. Backspace moves beside the scene controls with its existing hold/slide deletion gestures intact; the centered Return row also exposes text editing actions. Existing recording, translation, cancellation, provider configuration, storage, and cross-app output behavior are retained.
+
 - **F-072 Polish output style is more assertive (Typeless-inspired)**: The shared polish prompt now treats your dictation as a rough draft. Output is more concise and structured — short paragraphs by default, bullets when you enumerate two or more items, the main point surfaced first when you buried it. Mixed-language preservation (中英混合) is unchanged. If you want a near-passthrough record, the iOS keyboard's Dictation mode disables polish entirely.
 
 ### Performance

@@ -5,6 +5,7 @@ import VowriteKit
 
 struct RecordArea: View {
     @ObservedObject var state: KeyboardState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Drag-to-cancel state (used during recording)
     @State private var dragOffset: CGFloat = 0
@@ -38,8 +39,8 @@ struct RecordArea: View {
     /// per F-070 spec § 2.6 and joe's "暂时不显示任何东西" requirement.
     private var enabledChips: [KeyboardChipDescriptor] {
         [
-            .init(position: .topLeft,  label: "口述", action: .dictate),
-            .init(position: .topRight, label: "翻译", action: .translate),
+            .init(position: .topLeft,  label: "Dictate", action: .dictate),
+            .init(position: .topRight, label: "Translate", action: .translate),
         ]
     }
 
@@ -91,6 +92,9 @@ struct RecordArea: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .transaction { transaction in
+            if reduceMotion { transaction.animation = nil; transaction.disablesAnimations = true }
+        }
     }
 
     // MARK: - Idle
@@ -108,7 +112,7 @@ struct RecordArea: View {
 
     private var activationIdleContent: some View {
         VStack(spacing: 16) {
-            Text("点击激活")
+            Text("Tap to activate voice service")
                 .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
             Link(destination: URL(string: "vowrite://activate")!) {
@@ -154,8 +158,8 @@ struct RecordArea: View {
                 }
 
                 micShape(
-                    width: state.isModeSelectionExpanded ? 56 : 170,
-                    height: state.isModeSelectionExpanded ? 56 : 60,
+                    width: state.isModeSelectionExpanded ? 64 : KeyboardTheme.micPillWidth,
+                    height: state.isModeSelectionExpanded ? 64 : KeyboardTheme.micPillHeight,
                     shadowOpacity: state.isModeSelectionExpanded ? 0.18 : 0.10
                 )
                 .scaleEffect(isPressing && !state.isModeSelectionExpanded ? 0.96 : 1.0)
@@ -163,6 +167,10 @@ struct RecordArea: View {
                 .position(x: size.width / 2, y: micCenterY(in: size))
                 .contentShape(Capsule())
                 .gesture(modeSelectionGesture(in: size))
+                .accessibilityLabel("Start dictation")
+                .accessibilityHint("Hold and slide up to choose dictation or translation.")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { state.startRecording() }
 
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -176,7 +184,7 @@ struct RecordArea: View {
     private func micCenterY(in size: CGSize) -> CGFloat {
         state.isModeSelectionExpanded
             ? size.height - 28 - 28
-            : 56 + 30
+            : min(74, size.height / 2 + 8)
     }
 
     /// Top hint sits at a fixed Y; the "松开以取消" mid-hint, when expanded,
@@ -188,17 +196,17 @@ struct RecordArea: View {
     @ViewBuilder
     private func hintsLayer(in size: CGSize) -> some View {
         VStack(spacing: 0) {
-            Text(state.isModeSelectionExpanded ? "向上滑动以选择" : "点击说话")
+            Text(state.isModeSelectionExpanded ? "Slide up to choose" : "Tap to speak")
                 .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
-                .padding(.top, state.isModeSelectionExpanded ? 14 : 28)
+                .padding(.top, state.isModeSelectionExpanded ? 14 : 10)
                 .animation(.easeInOut(duration: 0.18), value: state.isModeSelectionExpanded)
             Spacer()
         }
         .frame(maxWidth: .infinity)
 
         if state.isModeSelectionExpanded {
-            Text("松开以取消")
+            Text("Release to cancel")
                 .font(.subheadline)
                 .foregroundStyle(
                     hoveredPosition == nil
@@ -409,14 +417,19 @@ struct RecordArea: View {
     /// Original dictation layout — hint above circle, full-size 150pt
     /// circle with 50pt glow ring, centered with bottom padding.
     private var dictateRecordingLayout: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 12) {
+            recordingTime
+            interactiveCircle(diameter: KeyboardTheme.recordingCircleDiameter, glowExtra: 16)
             dismissHint
-            interactiveCircle(
-                diameter: KeyboardTheme.recordingCircleDiameter,
-                glowExtra: 50
-            )
         }
-        .padding(.bottom, 20)
+    }
+
+    private var recordingTime: some View {
+        let seconds = max(0, Int(state.recordingDuration))
+        return Text(String(format: "%02d:%02d", seconds / 60, seconds % 60))
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(KeyboardTheme.subtitleColor)
+            .accessibilityLabel("Recording, \(seconds) seconds")
     }
 
     /// Translation layout — banner top, circle center (smaller so banner
@@ -478,9 +491,9 @@ struct RecordArea: View {
                 )
                 .frame(width: diameter + glowExtra, height: diameter + glowExtra)
 
-            // White circle
+            // Inverted primary surface follows both system appearances.
             Circle()
-                .fill(.white)
+                .fill(isInDeleteZone ? VW.Colors.Status.error : KeyboardTheme.accentFill)
                 .frame(width: diameter, height: diameter)
                 .shadow(color: .black.opacity(0.1), radius: 8, y: 2)
 
@@ -493,6 +506,10 @@ struct RecordArea: View {
         .onTapGesture {
             state.stopRecording()
         }
+        .accessibilityLabel("Finish recording")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { state.stopRecording() }
+        .accessibilityAction(named: "Cancel recording") { state.cancelRecording() }
         .simultaneousGesture(
             DragGesture(minimumDistance: 10)
                 .onChanged { value in
@@ -523,7 +540,7 @@ struct RecordArea: View {
         HStack(spacing: 6) {
             Image(systemName: "trash.fill")
                 .font(.caption)
-            Text("松手取消")
+            Text("Release to cancel")
                 .font(.caption)
         }
         .foregroundStyle(isInDeleteZone ? .white : Color(UIColor.secondaryLabel))
@@ -539,7 +556,7 @@ struct RecordArea: View {
     // MARK: - Processing
 
     private var processingContent: some View {
-        ThinkingPill()
+        ThinkingPill(label: state.isInTranslateSession ? "Translating" : "Refining your words")
     }
 
     // MARK: - F-064 Translation Banner
@@ -551,11 +568,12 @@ struct RecordArea: View {
             Text(localizedTranslateBannerText)
                 .font(.footnote)
                 .fontWeight(.medium)
+            recordingTime
         }
-        .foregroundColor(.white)
+        .foregroundStyle(KeyboardTheme.chipActiveText)
         .padding(.horizontal, 14)
         .padding(.vertical, 7)
-        .background(Capsule().fill(Color.black.opacity(0.85)))
+        .background(Capsule().fill(VW.Colors.Action.soft))
     }
 
     /// The banner is read by the *speaker*, not by the recipient of the
@@ -579,7 +597,7 @@ struct RecordArea: View {
     }
 
     private var dismissHint: some View {
-        Text("再次点击以完成")
+        Text("Tap to finish · Slide down to cancel")
             .font(.subheadline)
             .foregroundStyle(KeyboardTheme.subtitleColor)
     }
@@ -592,7 +610,7 @@ struct RecordArea: View {
                 .font(.title2)
                 .foregroundStyle(.red)
             Text(message)
-                .font(.caption2)
+                .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
@@ -618,7 +636,7 @@ struct RecordArea: View {
                 .font(.title2)
                 .foregroundStyle(.orange)
             Text(message)
-                .font(.caption2)
+                .font(.subheadline)
                 .foregroundStyle(KeyboardTheme.subtitleColor)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
@@ -646,6 +664,7 @@ struct RecordArea: View {
 /// runs at 60fps to keep wobble smooth independent of the data cadence.
 private struct BarWaveformView: View {
     let level: Float
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let barCount = 7
     private let baseHeights: [CGFloat] = [0.4, 0.6, 0.8, 1.0, 0.8, 0.6, 0.4]
@@ -664,18 +683,18 @@ private struct BarWaveformView: View {
 
     var body: some View {
         GeometryReader { geo in
-            TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { timeline in
+            TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: reduceMotion)) { timeline in
                 let time = timeline.date.timeIntervalSinceReferenceDate
 
                 HStack(alignment: .center, spacing: 3) {
                     ForEach(0..<barCount, id: \.self) { i in
-                        let wobble = CGFloat(
+                        let wobble = reduceMotion ? 1 : CGFloat(
                             sin(time * 4.5 + Double(i) * 0.85) * 0.22 + 1.0
                         )
                         let barH = baseHeights[i] * amplitude * wobble * geo.size.height
 
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.black.opacity(0.85))
+                            .fill(KeyboardTheme.accentText)
                             .frame(width: 4, height: max(4, barH))
                     }
                 }
@@ -701,47 +720,18 @@ private struct BarWaveformView: View {
 
 /// Capsule with a sliding shimmer highlight, shown during processing.
 private struct ThinkingPill: View {
-    @State private var shimmerPhase: CGFloat = 0
+    let label: String
 
     var body: some View {
-        Capsule()
-            .fill(Color(white: 0.90))
-            .frame(width: KeyboardTheme.thinkingPillWidth,
-                   height: KeyboardTheme.thinkingPillHeight)
-            .overlay {
-                // Sliding highlight
-                GeometryReader { geo in
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    .clear,
-                                    Color.white.opacity(0.45),
-                                    .clear
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: geo.size.width * 0.5)
-                        .offset(x: (shimmerPhase - 0.25) * geo.size.width)
-                }
-                .clipShape(Capsule())
-            }
-            .overlay {
-                Text("Thinking")
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(Color(UIColor.systemGray))
-            }
-            .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
-            .onAppear {
-                withAnimation(
-                    .easeInOut(duration: 1.8)
-                    .repeatForever(autoreverses: true)
-                ) {
-                    shimmerPhase = 1.0
-                }
-            }
+        HStack(spacing: 12) {
+            ProgressView().tint(KeyboardTheme.titleColor)
+            Text(label).font(.subheadline.weight(.semibold))
+        }
+        .foregroundStyle(KeyboardTheme.titleColor)
+        .padding(.horizontal, 24)
+        .frame(minHeight: KeyboardTheme.thinkingPillHeight)
+        .background(KeyboardTheme.keyFill, in: Capsule())
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -785,69 +775,8 @@ private struct KeyboardChipBackground: ViewModifier {
     let isActive: Bool
 
     func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
-            modernGlass(content: content)
-        } else {
-            legacyFallback(content: content)
-        }
-    }
-
-    @available(iOS 26.0, *)
-    private func modernGlass(content: Content) -> some View {
         content
-            .background {
-                if isActive {
-                    Capsule().fill(activeGradient)
-                }
-            }
-            .glassEffect(.regular.interactive(), in: .capsule)
-            .shadow(
-                color: isActive
-                    ? KeyboardTheme.chipActiveText.opacity(0.32)
-                    : .black.opacity(0.10),
-                radius: isActive ? 8 : 6,
-                y: isActive ? 8 : 6
-            )
-    }
-
-    private func legacyFallback(content: Content) -> some View {
-        content
-            .background {
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .overlay {
-                        if isActive {
-                            Capsule().fill(activeGradient)
-                        } else {
-                            Capsule().fill(idleGradient)
-                        }
-                    }
-                    .overlay {
-                        Capsule().strokeBorder(.white.opacity(0.55), lineWidth: 0.5)
-                    }
-            }
-            .shadow(
-                color: isActive
-                    ? KeyboardTheme.chipActiveText.opacity(0.32)
-                    : .black.opacity(0.10),
-                radius: isActive ? 8 : 6,
-                y: isActive ? 8 : 6
-            )
-    }
-
-    private var activeGradient: LinearGradient {
-        LinearGradient(
-            colors: [KeyboardTheme.chipActiveTop, KeyboardTheme.chipActiveBottom],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-
-    private var idleGradient: LinearGradient {
-        LinearGradient(
-            colors: [Color.white.opacity(0.95), Color.white.opacity(0.72)],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+            .background(isActive ? VW.Colors.Action.soft : Color(UIColor.systemBackground), in: Capsule())
+            .overlay(Capsule().stroke(isActive ? VW.Colors.Action.primary : VW.Colors.Border.standard, lineWidth: 1))
     }
 }

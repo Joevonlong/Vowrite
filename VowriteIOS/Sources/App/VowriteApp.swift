@@ -113,28 +113,30 @@ struct VowriteApp: App {
         TabView(selection: $selectedTab) {
             DashboardView()
                 .tabItem {
-                    Label("Dashboard", systemImage: "gauge.open.with.lines.needle.33percent")
+                    Label("Home", systemImage: "house")
                 }
                 .tag(Tab.dashboard)
 
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
-                }
-                .tag(Tab.settings)
-
             PersonalizationView()
                 .tabItem {
-                    Label("Style", systemImage: "paintbrush.fill")
+                    Label("Personalization", systemImage: "sparkles")
                 }
                 .tag(Tab.personalization)
 
             HistoryView()
                 .tabItem {
-                    Label("History", systemImage: "clock.fill")
+                    Label("History", systemImage: "clock")
                 }
                 .tag(Tab.history)
+
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
+                .tag(Tab.settings)
         }
+        .tint(VW.Colors.Action.primary)
+        .accentColor(VW.Colors.Action.primary)
     }
 
     /// Auto-activate background service if enabled, respecting saved duration and checking for expiry.
@@ -279,6 +281,7 @@ struct VowriteApp: App {
 /// Full-screen overlay shown briefly after the keyboard extension activates the background service.
 /// Instructs the user to tap iOS's "Back to" button to return to the previous app.
 private struct ActivationOverlay: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var checkmarkScale: CGFloat = 0.3
     @State private var checkmarkOpacity: CGFloat = 0
 
@@ -325,7 +328,7 @@ private struct ActivationOverlay: View {
             }
         }
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.6)) {
                 checkmarkScale = 1.0
                 checkmarkOpacity = 1.0
             }

@@ -8,11 +8,11 @@ struct TopBar: View {
     var body: some View {
         HStack {
             HStack(spacing: 6) {
-                Image(systemName: "dot.radiowaves.right")
+                Image(systemName: "waveform")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(KeyboardTheme.titleColor)
                 Text("Vowrite")
-                    .font(.title2)
+                    .font(.title3)
                     .fontWeight(.bold)
                     .foregroundStyle(KeyboardTheme.titleColor)
             }
@@ -39,11 +39,13 @@ private struct ModeToggleButton: View {
                 label: { Image(systemName: "waveform").font(.system(size: 14, weight: .medium)) },
                 onTap: { state.toggleInputMode() }
             )
+            .accessibilityLabel("Voice input")
             segment(
                 isActive: state.inputMode == .keyboard,
-                label: { Text("拼").font(.system(size: 15, weight: .medium)) },
+                label: { Text("Aa").font(.system(size: 15, weight: .medium)) },
                 onTap: { state.toggleInputMode() }
             )
+            .accessibilityLabel("Letter keyboard")
         }
         .padding(3)
         .background(Capsule().fill(Color(UIColor.systemGray4)))
@@ -58,19 +60,20 @@ private struct ModeToggleButton: View {
         @ViewBuilder label: () -> Label,
         onTap: @escaping () -> Void
     ) -> some View {
-        Button(action: onTap) {
+        Button { if !isActive { onTap() } } label: {
             label()
                 .foregroundStyle(isActive ? KeyboardTheme.titleColor : KeyboardTheme.subtitleColor)
-                .frame(width: 36, height: 28)
+                .frame(width: 44, height: 38)
                 .background(
                     Group {
                         if isActive {
                             Capsule()
-                                .fill(Color.white)
+                                .fill(Color(UIColor.systemBackground))
                                 .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
                         }
                     }
                 )
         }
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }

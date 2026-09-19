@@ -12,6 +12,8 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                VWIOSPageHeader(title: "Every thought, kept.", subtitle: "Find the words you want to return to.")
+                    .padding(24)
                 if appState.historyUnavailable {
                     historyUnavailableBanner
                 }
@@ -21,7 +23,10 @@ struct HistoryView: View {
                     recordList
                 }
             }
+            .background(VW.Colors.Surface.canvas)
+            .tint(VW.Colors.Action.primary)
             .navigationTitle("History")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
@@ -36,7 +41,7 @@ struct HistoryView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.12))
+        .background(VW.Colors.Status.warning.opacity(0.10))
         .cornerRadius(8)
         .padding(.horizontal, 16)
         .padding(.top, 8)
@@ -63,10 +68,12 @@ struct HistoryView: View {
                 } label: {
                     HistoryRow(record: record)
                 }
+                .listRowBackground(VW.Colors.Surface.panel)
             }
             .onDelete(perform: deleteRecords)
         }
-        .listStyle(.plain)
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
     }
 
     private func deleteRecords(at offsets: IndexSet) {
@@ -83,13 +90,16 @@ struct HistoryRow: View {
     let record: DictationRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(record.createdAt.formatted(date: .abbreviated, time: .shortened), systemImage: "waveform")
+                .font(.caption)
+                .foregroundStyle(VW.Colors.Text.secondary)
             Text(record.polishedText)
                 .font(.body)
                 .lineLimit(2)
 
             HStack {
-                Text(record.createdAt.formatted(date: .abbreviated, time: .shortened))
+                Text(record.wasTranslation == true ? "Translation" : "Dictation")
 
                 Spacer()
 
@@ -99,6 +109,6 @@ struct HistoryRow: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 12)
     }
 }

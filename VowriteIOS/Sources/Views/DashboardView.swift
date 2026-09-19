@@ -1,8 +1,11 @@
 import SwiftUI
+import SwiftData
 import VowriteKit
 
 struct DashboardView: View {
     @EnvironmentObject private var appState: AppState
+    @ObservedObject private var modeManager = ModeManager.shared
+    @Query(sort: \DictationRecord.createdAt, order: .reverse) private var records: [DictationRecord]
 
     @State private var sttTestResult: TestResult?
     @State private var polishTestResult: TestResult?
@@ -31,23 +34,82 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: VW.Spacing.xxxl) {
-                    // Background Recording Service
+                VStack(alignment: .leading, spacing: VW.Spacing.section) {
+                    VWIOSPageHeader(title: "Let your thoughts flow.", subtitle: "Your voice is the best place to start.")
+                    VStack(alignment: .leading, spacing: 16) {
+                        Label("YOUR VOICE, CLEARER", systemImage: "waveform")
+                            .font(.caption.weight(.semibold))
+                            .tracking(1.2)
+                            .foregroundStyle(VW.Colors.Text.secondary)
+                        Text("Say it.\nMake it yours.")
+                            .font(.largeTitle.weight(.semibold))
+                            .tracking(-1)
+                        Text("Enable voice service, then use the Vowrite keyboard in any app.")
+                            .foregroundStyle(VW.Colors.Text.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .vwIOSCard()
                     backgroundRecordingCard
-
-                    // Keyboard Status Card
-                    statusCard
-
-                    // Usage Stats
                     statsCard
-
-                    // Quick Test
+                    scenesCard
+                    recentRecordsCard
+                    statusCard
                     testCard
                 }
-                .padding()
+                .padding(24)
             }
-            .navigationTitle("Dashboard")
+            .background(VW.Colors.Surface.canvas)
+            .navigationTitle("Home")
+            .navigationBarTitleDisplayMode(.inline)
+            .tint(VW.Colors.Action.primary)
         }
+    }
+
+    private var scenesCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Express it your way").font(.title3.weight(.semibold))
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), alignment: .top)], spacing: 12) {
+                ForEach(modeManager.modes) { mode in
+                    Button { modeManager.select(mode) } label: {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Image(systemName: mode.icon).font(.title3)
+                            Text(mode.name).font(.subheadline.weight(.semibold))
+                            Text(mode.isTranslation ? "Translate your voice" : mode.polishEnabled ? "Clear, natural expression" : "Keep your original words")
+                                .font(.caption)
+                                .foregroundStyle(VW.Colors.Text.secondary)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
+                        .padding(16)
+                        .background(mode.id == modeManager.currentModeId ? VW.Colors.Action.soft : VW.Colors.Surface.panel, in: RoundedRectangle(cornerRadius: VW.Radius.panel))
+                        .overlay(RoundedRectangle(cornerRadius: VW.Radius.panel).stroke(mode.id == modeManager.currentModeId ? VW.Colors.Action.primary : VW.Colors.Border.standard, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(VW.Colors.Action.primary)
+                    .accessibilityAddTraits(mode.id == modeManager.currentModeId ? .isSelected : [])
+                }
+            }
+        }
+    }
+
+    private var recentRecordsCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Recent expressions").font(.title3.weight(.semibold))
+            if records.isEmpty {
+                Text("Your words will appear here after your first dictation.")
+                    .foregroundStyle(VW.Colors.Text.secondary)
+            } else {
+                ForEach(Array(records.prefix(2))) { record in
+                    NavigationLink {
+                        ResultView(rawTranscript: record.rawTranscript, polishedText: record.polishedText, duration: record.duration, createdAt: record.createdAt)
+                    } label: {
+                        HistoryRow(record: record)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .vwIOSCard()
     }
 
     // MARK: - Background Recording Card
@@ -56,7 +118,7 @@ struct DashboardView: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Label("Background Recording", systemImage: "waveform.circle.fill")
+                    Label("Voice Service", systemImage: "waveform")
                         .font(.headline)
                     Text("Keep Vowrite running in background for keyboard recording")
                         .font(.caption)
@@ -81,7 +143,7 @@ struct DashboardView: View {
             )) {
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(appState.bgServiceActive ? Color.green : Color.gray.opacity(0.4))
+                        .fill(appState.bgServiceActive ? VW.Colors.Status.success : VW.Colors.Text.secondary.opacity(0.4))
                         .frame(width: 10, height: 10)
                     Text(appState.bgServiceActive ? "Active" : "Inactive")
                         .font(.subheadline)
@@ -137,8 +199,7 @@ struct DashboardView: View {
                 }
             }
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+        .vwIOSCard()
     }
 
     // MARK: - Status Card
@@ -181,15 +242,14 @@ struct DashboardView: View {
                 fixAction: nil
             )
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+        .vwIOSCard()
     }
 
     // MARK: - Stats Card
 
     private var statsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Usage Statistics", systemImage: "chart.bar.fill")
+            Label("Your voice, in numbers", systemImage: "chart.bar")
                 .font(.headline)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: VW.Spacing.xl) {
@@ -199,15 +259,14 @@ struct DashboardView: View {
                 StatCard(icon: "bolt", value: formatWPM(words: appState.totalWords, seconds: appState.totalDictationTime), label: "Avg Speed")
             }
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+        .vwIOSCard()
     }
 
     // MARK: - Test Card
 
     private var testCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Quick Test", systemImage: "checkmark.seal.fill")
+            Label("Try your keyboard", systemImage: "keyboard")
                 .font(.headline)
 
             TextField("Switch to Vowrite keyboard and try here...", text: .constant(""))
@@ -235,8 +294,7 @@ struct DashboardView: View {
                 testResultRow("Polish (\(APIConfig.polishProvider.rawValue))", result: polishResult)
             }
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+        .vwIOSCard()
     }
 
     private func testResultRow(_ label: String, result: TestResult) -> some View {
@@ -368,7 +426,7 @@ private struct StatCard: View {
                 .foregroundColor(.accentColor)
                 .font(.body)
             Text(value)
-                .font(.system(size: 20, weight: .bold))
+                .font(.title2.weight(.bold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(label)
@@ -377,6 +435,55 @@ private struct StatCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(VW.Spacing.xl)
-        .background(VW.Colors.Background.tertiary, in: RoundedRectangle(cornerRadius: VW.Radius.xl))
+        .background(VW.Colors.Surface.secondary, in: RoundedRectangle(cornerRadius: VW.Radius.xl))
     }
+}
+
+// MARK: - Shared iOS presentation
+
+/// Native counterparts of the Open Design panel and page heading.
+/// These helpers only style content; their callers retain all state and actions.
+struct VWIOSPageHeader: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.title.weight(.semibold)).tracking(-0.6)
+                .foregroundStyle(VW.Colors.Text.primary)
+                .accessibilityAddTraits(.isHeader)
+            Text(subtitle).font(.subheadline)
+                .foregroundStyle(VW.Colors.Text.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct VWIOSCard: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(20)
+            .background(VW.Colors.Surface.panel, in: RoundedRectangle(cornerRadius: VW.Radius.panel))
+            .overlay(RoundedRectangle(cornerRadius: VW.Radius.panel).stroke(VW.Colors.Border.standard, lineWidth: 1))
+    }
+}
+
+private struct VWIOSForm: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .scrollContentBackground(.hidden)
+            .background(VW.Colors.Surface.canvas)
+            .tint(VW.Colors.Action.primary)
+            .accentColor(VW.Colors.Action.primary)
+            .transaction { transaction in
+                if reduceMotion { transaction.animation = nil; transaction.disablesAnimations = true }
+            }
+    }
+}
+
+extension View {
+    func vwIOSCard() -> some View { modifier(VWIOSCard()) }
+    func vwIOSForm() -> some View { modifier(VWIOSForm()) }
 }

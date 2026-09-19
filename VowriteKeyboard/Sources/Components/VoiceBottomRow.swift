@@ -5,37 +5,36 @@ struct VoiceBottomRow: View {
     @ObservedObject var state: KeyboardState
 
     var body: some View {
-        // 换行 is centered on screen so it lines up with the mic pill
-        // directly above it; the delete key is pinned independently to the
-        // right and must NOT shift 换行 off-center. (A grouped HStack would
-        // push 换行 left-of-center — that is the layout we explicitly do
-        // not want; see the Typeless reference.)
-        ZStack {
+        HStack(spacing: 12) {
+            Menu {
+                Button("Space") { state.insertText(" ") }
+                Button("Delete Word", role: .destructive) { state.bulkDelete(tier: .word) }
+                Button("Delete Line", role: .destructive) { state.bulkDelete(tier: .line) }
+                Button("Delete Paragraph", role: .destructive) { state.bulkDelete(tier: .paragraph) }
+                Button("Delete All", role: .destructive) { state.bulkDelete(tier: .all) }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.title3)
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Text editing actions")
             Button { state.insertReturn() } label: {
-                Text("换行")
+                Text("Return")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(KeyboardTheme.titleColor)
                     .frame(width: 168, height: 48)
-                    .background(
-                        Capsule()
-                            .fill(KeyboardTheme.keyFill)
-                            .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
-                    )
+                    .background(Capsule().fill(KeyboardTheme.keyFill))
             }
-            .frame(maxWidth: .infinity, alignment: .center)
-
-            DeleteButton(state: state)
-                .frame(width: 56, height: 48)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.trailing, 28)
+            Color.clear.frame(width: 44, height: 44)
         }
+        .frame(maxWidth: .infinity)
         .frame(height: 56)
     }
 }
 
 // MARK: - F-067 Delete Button (relocated from TopBar)
 
-private struct DeleteButton: View {
+struct VoiceDeleteButton: View {
     @ObservedObject var state: KeyboardState
 
     @State private var pressActive = false
@@ -51,11 +50,11 @@ private struct DeleteButton: View {
 
     private let coordSpace = "voicebottomrow.delete"
     private let longPressThreshold: TimeInterval = 0.4
-    private let popupOffsetAboveButton: CGFloat = 60
+    private let popupOffsetAboveButton: CGFloat = 48
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
                 .fill(KeyboardTheme.specialKeyFill)
                 .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
             Image(systemName: "delete.left")
@@ -64,7 +63,7 @@ private struct DeleteButton: View {
         }
         .scaleEffect(pressActive && !popupVisible ? 0.94 : 1.0)
         .animation(.easeOut(duration: 0.12), value: pressActive)
-        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous))
         .overlay(alignment: .topTrailing) {
             if popupVisible {
                 BulkDeletePopupView(
@@ -211,7 +210,14 @@ private struct BulkDeletePopupView: View {
 
     @ViewBuilder
     private func content(tier: KeyboardState.BulkDeleteTier?) -> some View {
-        let label = tier?.label ?? "删除全部"
+        let label = tier.map { tier in
+            switch tier {
+            case .word: return "Delete word"
+            case .line: return "Delete line"
+            case .paragraph: return "Delete paragraph"
+            case .all: return "Delete all"
+            }
+        } ?? "Slide up to delete"
         HStack(spacing: 8) {
             Image(systemName: "trash.fill").font(.system(size: 17, weight: .semibold))
             Text(label)

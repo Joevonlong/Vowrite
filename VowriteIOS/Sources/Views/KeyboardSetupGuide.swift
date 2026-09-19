@@ -1,4 +1,5 @@
 import SwiftUI
+import VowriteKit
 
 struct KeyboardSetupGuide: View {
     enum Step {
@@ -9,7 +10,7 @@ struct KeyboardSetupGuide: View {
     let step: Step
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 16) {
             switch step {
             case .addKeyboard:
                 guideRow(number: 1, text: "Open Settings")
@@ -23,7 +24,8 @@ struct KeyboardSetupGuide: View {
                 guideRow(number: 3, text: "Enable \"Allow Full Access\"")
             }
         }
-        .padding(.horizontal, 40)
+        .vwIOSCard()
+        .padding(.horizontal, 24)
     }
 
     private func guideRow(number: Int, text: String) -> some View {
@@ -31,9 +33,9 @@ struct KeyboardSetupGuide: View {
             Text("\(number)")
                 .font(.caption)
                 .fontWeight(.bold)
-                .foregroundStyle(.white)
-                .frame(width: 22, height: 22)
-                .background(Color.accentColor, in: Circle())
+                .foregroundStyle(VW.Colors.Action.primary)
+                .frame(width: 28, height: 28)
+                .background(VW.Colors.Action.soft, in: Circle())
 
             Text(text)
                 .font(.subheadline)
