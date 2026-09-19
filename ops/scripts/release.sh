@@ -17,11 +17,13 @@
 set -euo pipefail
 
 # --- Config ---
-PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+RELEASE_SCRIPT_PATH="${BASH_SOURCE[0]}"
+PROJECT_ROOT="${VOWRITE_RELEASE_PROJECT_ROOT:-$(cd "$(dirname "$RELEASE_SCRIPT_PATH")/../.." && pwd)}"
 APP_DIR="$PROJECT_ROOT/VowriteMac"
 APP_BUNDLE="$APP_DIR/Vowrite.app"
 ENTITLEMENTS="$APP_DIR/Resources/Vowrite.entitlements"
 INFO_PLIST="$APP_DIR/Resources/Info.plist"
+BUNDLED_INFO_PLIST="$APP_BUNDLE/Contents/Info.plist"
 VERSION_SWIFT="$PROJECT_ROOT/VowriteKit/Sources/VowriteKit/Version.swift"
 CHANGELOG="$PROJECT_ROOT/CHANGELOG.md"
 DMG_OUTPUT_DIR="$PROJECT_ROOT/releases"
@@ -40,17 +42,39 @@ GITHUB_DOWNLOAD_BASE="https://github.com/$GITHUB_REPO/releases/download"
 # Binary name produced by VowriteMac package
 APP_BINARY_NAME="VowriteMac"
 
+# Return the newest reachable stable tag. `git describe` is intentionally not
+# used here: a beta tag can be the nearest tag, but stable-release preflight
+# must compare the candidate with the previous stable release instead.
+last_stable_tag() {
+    local repository="${1:-$PROJECT_ROOT}"
+    git -C "$repository" tag --merged HEAD --list 'v[0-9]*' --sort=-v:refname \
+        | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' \
+        | head -n 1 || true
+}
+
+# Every tracked release metadata file that may be changed before the release
+# commit. The built bundle plist is tracked and is overwritten in Step 5, so
+# it must be restored with the source plist on any failed transaction.
+release_transaction_paths() {
+    printf '%s\n' "$CHANGELOG" "$INFO_PLIST" "$BUNDLED_INFO_PLIST" \
+        "$VERSION_SWIFT" "$APPCAST_STABLE" "$APPCAST_BETA"
+}
+
 # --- Rollback on failure ---
-# Steps 1-3 below mutate CHANGELOG.md, Info.plist, and Version.swift *before*
-# the build/sign/package steps run; the appcast is updated later. If anything
-# fails, restore every mutated release metadata path so a failed attempt never
-# leaves a half-bumped index or working tree.
+# Steps 1-3 mutate CHANGELOG.md, the source plist, and Version.swift *before*
+# build/sign/package work; Step 5 overwrites the tracked bundle plist; the
+# appcast is updated later. If anything fails, restore every mutated release
+# metadata path so a failed attempt never leaves a half-bumped index or tree.
 # Uses `git -C "$PROJECT_ROOT"` (not a bare relative path) because the script
 # changes its own working directory partway through (see Step 4's `cd
 # "$APP_DIR"`), so a plain `git checkout -- <relative path>` would resolve
 # against the wrong directory depending on when the trap fires.
 rollback_mutated_files() {
-    local rollback_paths=("$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT" "$APPCAST_STABLE" "$APPCAST_BETA")
+    local rollback_paths=()
+    local release_path
+    while IFS= read -r release_path; do
+        rollback_paths+=("$release_path")
+    done < <(release_transaction_paths)
     if ! git -C "$PROJECT_ROOT" diff --quiet -- "${rollback_paths[@]}" 2>/dev/null \
         || ! git -C "$PROJECT_ROOT" diff --cached --quiet -- "${rollback_paths[@]}" 2>/dev/null; then
         echo ""
@@ -59,6 +83,12 @@ rollback_mutated_files() {
         echo "  ↩️  Reverted release metadata and appcast files"
     fi
 }
+# Allows the focused shell regression test to source the pure helpers without
+# parsing arguments, fetching, signing, or changing a release checkout.
+if [[ "${VOWRITE_RELEASE_TEST_MODE:-}" == "1" ]]; then
+    return 0 2>/dev/null || exit 0
+fi
+
 # Note: this ERR trap catches genuine command failures (build errors, codesign
 # failures, etc.) under `set -e`, but bash does NOT fire the ERR trap for an
 # explicit `exit N` call (verified: `trap ... ERR; false || exit 1` does not
@@ -156,6 +186,10 @@ if [ ! -f "$INFO_PLIST" ]; then
     echo "❌ Info.plist not found: $INFO_PLIST"
     exit 1
 fi
+if ! git -C "$PROJECT_ROOT" ls-files --error-unmatch -- "$BUNDLED_INFO_PLIST" >/dev/null 2>&1; then
+    echo "❌ Tracked bundled Info.plist not found: $BUNDLED_INFO_PLIST"
+    exit 1
+fi
 
 # Check that release checklist has been reviewed
 echo ""
@@ -171,7 +205,11 @@ echo
 echo ""
 echo "▶ Preflight: commits since last release tag..."
 
-LAST_TAG=$(git -C "$PROJECT_ROOT" describe --tags --abbrev=0 --match='v[0-9]*' 2>/dev/null || echo "")
+if $IS_BETA; then
+    LAST_TAG=$(git -C "$PROJECT_ROOT" describe --tags --abbrev=0 --match='v[0-9]*' 2>/dev/null || echo "")
+else
+    LAST_TAG=$(last_stable_tag)
+fi
 if [ -z "$LAST_TAG" ]; then
     echo "  ℹ️  No previous v* tag found — skipping preflight (initial release?)"
 else
@@ -511,8 +549,8 @@ cd "$PROJECT_ROOT"
 # Explicit paths only — never `git add -A`, which would sweep up unrelated
 # working-tree changes (e.g. build artifacts, other in-progress edits) into
 # the release commit.
-git add "$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT"
-RELEASE_COMMIT_PATHS=("$CHANGELOG" "$INFO_PLIST" "$VERSION_SWIFT")
+git add "$CHANGELOG" "$INFO_PLIST" "$BUNDLED_INFO_PLIST" "$VERSION_SWIFT"
+RELEASE_COMMIT_PATHS=("$CHANGELOG" "$INFO_PLIST" "$BUNDLED_INFO_PLIST" "$VERSION_SWIFT")
 if $IS_BETA; then
     git add "$APPCAST_BETA"
     RELEASE_COMMIT_PATHS+=("$APPCAST_BETA")

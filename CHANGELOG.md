@@ -7,24 +7,19 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
-### Reliability
+### Changed
 
-- Resource-backed provider and prompt lookups now prefer the shipped app resource bundle, so packaged macOS builds do not depend on the source checkout path. OAuth-expiry handling keeps the regular provider endpoint available for API-key configuration.
-- Pipeline provider pickers now show only providers supported by that pipeline while retaining any existing unsupported selection as a clearly marked, disabled option.
+- **F-091 Unified interface refresh**: The main window, overview, history, settings, onboarding, and status menu now use adaptive light and dark surfaces with clearer navigation. Five recording indicators and the compact voice capsule make recording state easier to read while voice controls, scenes, history, and API settings remain easier to scan.
+- **F-092 Provider and resource maintenance**: Settings now present curated, capability-appropriate provider and model choices while retaining saved legacy choices for recovery. Packaged builds use their bundled provider and prompt resources, and OpenAI, Qwen, and other shared request paths follow their documented contracts. OpenRouter and Sherpa speech-to-text remain unavailable until their runtime contracts are validated.
 
 ### Added
 
-- **F-093 Doubao Speech transcription**: macOS can use the dedicated Doubao Speech BigASR Flash recording-file service with its separate Speech console APP Key. The adapter converts recordings to bounded 16 kHz mono WAV, uses the provider's native request headers, and keeps standard asynchronous, idle, and streaming speech APIs unavailable because they use different contracts.
-
-### Changed
-
-- **F-092 Provider model maintenance**: Refreshed the supported model catalog around documented request contracts. OpenAI now defaults to `gpt-transcribe` with region-aware language hints, Qwen exposes only its validated synchronous ASR path, OpenRouter and Sherpa STT remain retained but unavailable until their runtime contracts are validated, DeepSeek defaults to `deepseek-flash`, and legacy saved models keep their polish overrides without appearing in pickers.
-
-- **F-091 Unified macOS interface**: Refreshed the main window, overview, history, settings, onboarding, status menu, and all five recording indicators with adaptive light and dark surfaces, clearer navigation, and a compact voice capsule. Existing dictation, provider configuration, personalization, history management, and update behavior are preserved. The status menu now provides shortcuts to existing scene and auto-paste settings, and history entries can always reveal their full text.
+- **F-093 Doubao Speech transcription**: You can select the dedicated BigASR Flash recording-file service with a separate Doubao Speech console API Key. Vowrite converts recordings to bounded 16 kHz mono WAV and uses the native request contract. Standard asynchronous, idle, and streaming services stay unavailable because they require different workflows. Local contract tests do not validate account access, quota, or live recognition quality.
 
 ### Fixed
 
-- **F-084 Model request compatibility**: Corrected known-invalid catalog parameters and retired tier-agnostic model rows, added provider-scoped request fallbacks, and safely migrates provider-qualified saved selections without rewriting provider-less Mode overrides. Claude speculative polish now uses its native Messages API path.
+- **Reliable provider configuration**: Expired OAuth falls back to the configured provider endpoint, and unavailable provider selections stay visible with an explanation instead of silently changing.
+- **F-084 Model request compatibility**: Corrected invalid catalog parameters and retired tier-agnostic rows, added provider-scoped fallbacks, and safely migrates provider-qualified saved selections without rewriting provider-less Mode overrides. Claude speculative polish uses its native Messages API path.
 
 ## [0.2.2.0] — 2026-07-17
 
