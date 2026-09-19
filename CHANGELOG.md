@@ -7,6 +7,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Changed
+
+- **F-091 Unified macOS interface**: Refreshed the main window, overview, history, settings, onboarding, status menu, and all five recording indicators with adaptive light and dark surfaces, clearer navigation, and a compact voice capsule. Existing dictation, provider configuration, personalization, history management, and update behavior are preserved. The status menu now provides shortcuts to existing scene and auto-paste settings, and history entries can always reveal their full text.
+
 ### Fixed
 
 - **F-084 Model request compatibility**: Corrected known-invalid catalog parameters and retired tier-agnostic model rows, added provider-scoped request fallbacks, and safely migrates provider-qualified saved selections without rewriting provider-less Mode overrides. Claude speculative polish now uses its native Messages API path.

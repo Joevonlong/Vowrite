@@ -2,83 +2,94 @@ import VowriteKit
 import SwiftUI
 import AVFoundation
 
+/// Native status menu keeps macOS focus, submenu, and keyboard behavior.
 struct VowriteMenuView: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject private var modeManager = ModeManager.shared
+
+    private var sessionActive: Bool { appState.isRecording || appState.state == .processing }
+
+    private var autoPaste: Binding<Bool> {
+        Binding(
+            get: { modeManager.currentMode.autoPaste },
+            set: { enabled in
+                var mode = modeManager.currentMode
+                mode.autoPaste = enabled
+                modeManager.updateMode(mode)
+            }
+        )
+    }
 
     var body: some View {
-        // Record toggle
-        Button {
-            appState.toggleRecording()
-        } label: {
+        Text("Vowrite").font(.headline)
+        if !appState.hasAPIKey {
+            Text("Provider setup required")
+        }
+        if case .error(let message) = appState.state {
+            Text(message)
+        }
+
+        Button { appState.toggleRecording() } label: {
             if appState.isRecording {
-                Text("✓ Finish Recording")
+                Label("Finish Recording", systemImage: "checkmark")
             } else if case .processing = appState.state {
-                Text("Processing...")
+                Label("Processing…", systemImage: "ellipsis")
             } else {
-                let shortcut = HotkeyDisplay.string(
-                    keyCode: appState.hotkeyManager.keyCode,
-                    modifiers: appState.hotkeyManager.modifiers
-                )
-                Text("Start Recording  \(shortcut)")
+                let shortcut = HotkeyDisplay.string(keyCode: appState.hotkeyManager.keyCode, modifiers: appState.hotkeyManager.modifiers)
+                Label("Start Speaking  \(shortcut)", systemImage: "mic")
             }
         }
         .disabled(!appState.hasAPIKey || appState.state == .processing)
 
         if appState.isRecording {
-            Button("✕ Cancel Recording") {
-                appState.cancelRecording()
+            Button { appState.cancelRecording() } label: { Label("Cancel Recording", systemImage: "xmark") }
+        }
+
+        Divider()
+
+        Menu {
+            ForEach(modeManager.modes) { mode in
+                Button {
+                    modeManager.select(mode)
+                    PerAppModeManager.shared.noteManualModeSwitch()
+                } label: {
+                    if mode.id == modeManager.currentModeId {
+                        Label(mode.name, systemImage: "checkmark")
+                    } else {
+                        Label(mode.name, systemImage: mode.icon)
+                    }
+                }
+                .disabled(sessionActive)
             }
+            Divider()
+            Button("Manage Scenes…") { WindowHelper.openMainWindow(destination: .personalization) }
+        } label: {
+            Label(modeManager.currentMode.name, systemImage: modeManager.currentMode.icon)
         }
+
+        Toggle("Auto-paste for This Scene", isOn: autoPaste)
+            .disabled(sessionActive)
+
+        Menu { MicrophoneListView() } label: { Label("Microphone", systemImage: "mic") }
 
         Divider()
 
-        // Status info
-        if !appState.hasAPIKey {
-            Text("⚠️ Set provider keys in Settings")
-                .foregroundColor(.secondary)
-        }
+        Button {
+            guard let result = appState.lastResult else { return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(result, forType: .string)
+        } label: { Label("Copy Last Result", systemImage: "doc.on.doc") }
+        .disabled(appState.lastResult == nil)
 
-        if case .error(let msg) = appState.state {
-            Text("⚠️ \(msg)")
-                .foregroundColor(.secondary)
-        }
-
-        if let result = appState.lastResult {
-            Button("Copy Last Result") {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(result, forType: .string)
-            }
-        }
+        Button { WindowHelper.openMainWindow(destination: .models) } label: { Label("Models…", systemImage: "cpu") }
+        Button { WindowHelper.openMainWindow(destination: .general) } label: { Label("Settings…", systemImage: "slider.horizontal.3") }
+            .keyboardShortcut(",", modifiers: .command)
+        Button { WindowHelper.openMainWindow(destination: .history) } label: { Label("History", systemImage: "clock.arrow.circlepath") }
 
         Divider()
-
-        // Settings
-        Button("Settings...") {
-            WindowHelper.openMainWindow()
-        }
-        .keyboardShortcut(",", modifiers: .command)
-
-        // Select microphone submenu
-        Menu("Select Microphone") {
-            MicrophoneListView()
-        }
-
-        Button("History") {
-            WindowHelper.openMainWindow()
-        }
-
-        Divider()
-
-        // Version
         Text("Version \(AppVersion.current)")
-            .foregroundColor(.secondary)
-
-        Divider()
-
-        Button("Quit Vowrite") {
-            NSApplication.shared.terminate(nil)
-        }
-        .keyboardShortcut("q", modifiers: .command)
+        Button("Quit Vowrite") { NSApplication.shared.terminate(nil) }
+            .keyboardShortcut("q", modifiers: .command)
     }
 }
 
@@ -104,7 +115,7 @@ struct MicrophoneListView: View {
             }
 
             if devices.isEmpty {
-                Text("No microphones found")
+                Text("No microphones found — check your device connection")
                     .foregroundColor(.secondary)
             }
         }

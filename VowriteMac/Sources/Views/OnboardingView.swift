@@ -3,6 +3,8 @@ import SwiftUI
 
 /// F-017: First-launch onboarding wizard
 struct OnboardingView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage("appearanceMode") private var appearanceMode = AppearanceMode.system.rawValue
     @State private var currentStep = 0
     @State private var selectedLanguage: SupportedLanguage = .auto
     @State private var selectedPresetID = BuiltInAPIPreset.recommended.id
@@ -22,7 +24,16 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Progress bar
+            HStack(spacing: 12) {
+                Image(systemName: "waveform").foregroundStyle(VW.Colors.Action.primary)
+                Text("Vowrite").font(.title3.weight(.semibold))
+                Spacer()
+                Text("Step \(currentStep + 1) of \(totalSteps)")
+                    .font(.callout).foregroundStyle(VW.Colors.Text.secondary)
+            }
+            .padding(.horizontal, 40)
+            .padding(.top, 24)
+
             progressBar
                 .padding(.horizontal, 40)
                 .padding(.top, 24)
@@ -50,10 +61,15 @@ struct OnboardingView: View {
 
             // Navigation buttons — always visible at bottom
             navigationBar
+                .controlSize(.large)
                 .padding(.horizontal, 40)
                 .padding(.vertical, 16)
         }
-        .frame(width: 600, height: 520)
+        .frame(width: 640, height: 600)
+        .background(VW.Colors.Surface.canvas)
+        .foregroundStyle(VW.Colors.Text.primary)
+        .tint(VW.Colors.Action.primary)
+        .preferredColorScheme((AppearanceMode(rawValue: appearanceMode) ?? .system).colorScheme)
         .onAppear {
             selectedLanguage = LanguageConfig.globalLanguage
             hasMicrophone = MacPermissionManager.hasMicrophoneAccess()
@@ -77,17 +93,17 @@ struct OnboardingView: View {
     private var navigationBar: some View {
         HStack {
             if currentStep > 0 && currentStep < 5 {
-                Button("Back") { withAnimation(.easeInOut(duration: 0.25)) { currentStep -= 1 } }
+                Button("Back") { withAnimation(reduceMotion ? nil : VW.Anim.easeNavigation) { currentStep -= 1 } }
                     .buttonStyle(.bordered)
             }
             Spacer()
             if currentStep == 3 {
                 // Allow skipping API setup
                 Button("Skip for now") {
-                    withAnimation(.easeInOut(duration: 0.25)) { currentStep += 1 }
+                    withAnimation(reduceMotion ? nil : VW.Anim.easeNavigation) { currentStep += 1 }
                 }
                 .buttonStyle(.bordered)
-                .foregroundColor(.secondary)
+                .foregroundStyle(VW.Colors.Text.secondary)
             }
             if currentStep < 5 {
                 Button(nextButtonLabel) {
@@ -117,7 +133,7 @@ struct OnboardingView: View {
         default:
             break
         }
-        withAnimation(.easeInOut(duration: 0.25)) { currentStep += 1 }
+        withAnimation(reduceMotion ? nil : VW.Anim.easeNavigation) { currentStep += 1 }
     }
 
     // MARK: - Progress Bar
@@ -126,7 +142,7 @@ struct OnboardingView: View {
         HStack(spacing: 4) {
             ForEach(0..<totalSteps, id: \.self) { i in
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(i <= currentStep ? Color.accentColor : Color.secondary.opacity(0.2))
+                    .fill(i <= currentStep ? VW.Colors.Action.primary : VW.Colors.Border.standard)
                     .frame(height: 4)
             }
         }
@@ -137,16 +153,16 @@ struct OnboardingView: View {
     private var welcomeStep: some View {
         VStack(spacing: 20) {
             Spacer().frame(height: 40)
-            Image(systemName: "mic.circle.fill")
+            Image(systemName: "waveform")
                 .font(.system(size: 64))
-                .foregroundColor(.accentColor)
-            Text("Welcome to Vowrite")
-                .font(.system(size: 28, weight: .bold))
-            Text("Say it once. Mean it perfectly.")
+                .foregroundStyle(VW.Colors.Action.primary)
+            Text("Your voice. Your words.")
+                .font(.system(size: 32, weight: .semibold))
+            Text("Speak naturally. Write beautifully.")
                 .font(.title3)
-                .foregroundColor(.secondary)
+                .foregroundStyle(VW.Colors.Text.secondary)
             Text("Let's get you set up in just a few steps.")
-                .foregroundColor(.secondary)
+                .foregroundStyle(VW.Colors.Text.secondary)
             Spacer().frame(height: 40)
         }
     }
@@ -158,7 +174,7 @@ struct OnboardingView: View {
             Text("Choose your language")
                 .font(.title2.bold())
             Text("This sets the default language for speech recognition. You can always change it later.")
-                .foregroundColor(.secondary)
+                .foregroundStyle(VW.Colors.Text.secondary)
 
             // Grouped popular + all languages for compact display
             VStack(alignment: .leading, spacing: 12) {
@@ -179,32 +195,35 @@ struct OnboardingView: View {
                         languageRow(lang)
                     }
                 }
-                .foregroundColor(.secondary)
+                .foregroundStyle(VW.Colors.Text.secondary)
             }
         }
     }
 
     private func languageRow(_ lang: SupportedLanguage) -> some View {
-        HStack {
-            Text(lang.displayName)
-                .foregroundColor(.primary)
-            Spacer()
-            if selectedLanguage == lang {
-                Image(systemName: "checkmark")
-                    .foregroundColor(.accentColor)
-                    .fontWeight(.semibold)
-            }
-        }
-        .contentShape(Rectangle())
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(selectedLanguage == lang ? Color.accentColor.opacity(0.1) : Color.clear)
-        )
-        .onTapGesture {
+        Button {
             selectedLanguage = lang
+        } label: {
+            HStack {
+                Text(lang.displayName)
+                    .foregroundColor(.primary)
+                Spacer()
+                if selectedLanguage == lang {
+                    Image(systemName: "checkmark")
+                        .foregroundStyle(VW.Colors.Action.primary)
+                        .fontWeight(.semibold)
+                }
+            }
+            .contentShape(Rectangle())
+            .padding(.vertical, 12)
+            .padding(.horizontal, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(selectedLanguage == lang ? VW.Colors.Action.soft : Color.clear)
+            )
         }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selectedLanguage == lang ? .isSelected : [])
     }
 
     // MARK: - Step 2: Permissions
@@ -214,7 +233,7 @@ struct OnboardingView: View {
             Text("Grant permissions")
                 .font(.title2.bold())
             Text("Vowrite needs these to work properly. You can grant them now or later in System Settings.")
-                .foregroundColor(.secondary)
+                .foregroundStyle(VW.Colors.Text.secondary)
 
             VStack(spacing: 16) {
                 permissionRow(
@@ -248,9 +267,9 @@ struct OnboardingView: View {
             }
 
             if !hasMicrophone {
-                Text("⚠️ Microphone access is required for voice input to work.")
+                Label("Microphone access is required for voice input.", systemImage: "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundStyle(VW.Colors.Status.warning)
             }
         }
     }
@@ -260,15 +279,15 @@ struct OnboardingView: View {
             Image(systemName: icon)
                 .font(.title2)
                 .frame(width: 36)
-                .foregroundColor(granted ? .green : .orange)
+                .foregroundStyle(granted ? VW.Colors.Status.success : VW.Colors.Status.warning)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.body).fontWeight(.medium)
-                Text(description).font(.caption).foregroundColor(.secondary)
+                Text(description).font(.caption).foregroundStyle(VW.Colors.Text.secondary)
             }
             Spacer()
             if granted {
                 Label("Granted", systemImage: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                    .foregroundStyle(VW.Colors.Status.success)
                     .font(.caption)
             } else {
                 Button("Grant") { action() }
@@ -276,8 +295,8 @@ struct OnboardingView: View {
             }
         }
         .padding(12)
-        .background(Color.secondary.opacity(0.06))
-        .cornerRadius(8)
+        .background(VW.Colors.Surface.panel)
+        .cornerRadius(VW.Radius.panel)
     }
 
     // MARK: - Step 3: API Setup
@@ -287,7 +306,7 @@ struct OnboardingView: View {
             Text("Connect to AI")
                 .font(.title2.bold())
             Text("Choose a preset, then save the provider keys it needs in macOS Keychain.")
-                .foregroundColor(.secondary)
+                .foregroundStyle(VW.Colors.Text.secondary)
 
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(APIPresetStore.builtInPresets) { preset in
@@ -304,14 +323,14 @@ struct OnboardingView: View {
                                     .foregroundColor(.primary)
                                 Text(preset.summary)
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(VW.Colors.Text.secondary)
                             }
                             Spacer()
                         }
                         .padding(10)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(selectedPresetID == preset.id ? Color.accentColor.opacity(0.08) : Color.secondary.opacity(0.06))
+                                .fill(selectedPresetID == preset.id ? VW.Colors.Action.soft : VW.Colors.Surface.panel)
                         )
                     }
                     .buttonStyle(.plain)
@@ -322,11 +341,11 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     LabeledContent("STT") {
                         Text("\(onboardingConfig.stt.provider.rawValue) · \(onboardingConfig.stt.model)")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(VW.Colors.Text.secondary)
                     }
                     LabeledContent("Polish") {
                         Text("\(onboardingConfig.polish.provider.rawValue) · \(onboardingConfig.polish.model)")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(VW.Colors.Text.secondary)
                     }
                 }
                 .padding(8)
@@ -335,7 +354,7 @@ struct OnboardingView: View {
             if requiredProviders.isEmpty {
                 Text("This preset does not need API keys. Make sure the local service is running before you continue.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(VW.Colors.Text.secondary)
             } else {
                 ForEach(requiredProviders) { provider in
                     VStack(alignment: .leading, spacing: 8) {
@@ -347,14 +366,14 @@ struct OnboardingView: View {
                             Spacer()
 
                             if hasSavedKey {
-                                Text("✅ Configured")
+                                Label("Configured", systemImage: "checkmark.circle")
                                     .font(.caption)
-                                    .foregroundColor(.green)
+                                    .foregroundStyle(VW.Colors.Status.success)
 
                                 if let maskedKey = KeyVault.maskedKey(for: provider) {
                                     Text(maskedKey)
                                         .font(.caption.monospaced())
-                                        .foregroundColor(.secondary)
+                                        .foregroundStyle(VW.Colors.Text.secondary)
                                 }
 
                                 Button("Edit") {
@@ -373,9 +392,9 @@ struct OnboardingView: View {
                                 }
                                 .buttonStyle(.borderless)
                             } else {
-                                Text("⚠️ Required")
+                                Label("Required", systemImage: "key")
                                     .font(.caption)
-                                    .foregroundColor(.orange)
+                                    .foregroundStyle(VW.Colors.Status.warning)
                             }
                         }
 
@@ -393,18 +412,18 @@ struct OnboardingView: View {
 
                 Text("Keys are stored securely in macOS Keychain and reused anywhere this provider is selected.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(VW.Colors.Text.secondary)
             }
 
             // Test button
             HStack {
                 if keychainSaveFailed {
                     Label("Couldn't save to Keychain", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundColor(.red)
+                        .foregroundStyle(VW.Colors.Status.error)
                         .font(.caption)
                 } else if let result = testResult {
                     Label(result.message, systemImage: result.success ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundColor(result.success ? .green : .red)
+                        .foregroundStyle(result.success ? VW.Colors.Status.success : VW.Colors.Status.error)
                         .font(.caption)
                 }
                 Spacer()
@@ -422,7 +441,91 @@ struct OnboardingView: View {
         }
     }
 
-    private func saveAPIConfig() {
+    // MARK: - Step 4: Test Recording
+
+    enum TestRecordingState {
+        case idle, recording, processing, done(String)
+    }
+
+    private var testStep: some View {
+        VStack(spacing: 20) {
+            Spacer().frame(height: 20)
+            Text("Try it out!")
+                .font(.title2.bold())
+            Text("Test your setup by recording a short phrase.")
+                .foregroundStyle(VW.Colors.Text.secondary)
+
+            VStack(spacing: 12) {
+                Image(systemName: "waveform")
+                    .font(.system(size: 48))
+                    .foregroundStyle(VW.Colors.Action.primary)
+
+                switch testRecordingState {
+                case .idle:
+                    Text("Press ⌥ Space (Option + Space) to record")
+                        .foregroundStyle(VW.Colors.Text.secondary)
+
+                case .recording:
+                    VStack(spacing: 8) {
+                        ProgressView()
+                        Text("Recording…")
+                    }
+
+                case .processing:
+                    VStack(spacing: 8) {
+                        ProgressView()
+                        Text("Processing…")
+                    }
+
+                case .done(let text):
+                    VStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 36))
+                            .foregroundStyle(VW.Colors.Status.success)
+                        Text(text)
+                            .padding(12)
+                            .background(VW.Colors.Surface.panel)
+                            .cornerRadius(VW.Radius.panel)
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+            .padding(.vertical, 16)
+
+            Text("This step is optional — you can always test later.")
+                .font(.caption)
+                .foregroundStyle(VW.Colors.Text.secondary)
+            Spacer().frame(height: 20)
+        }
+    }
+
+    // MARK: - Step 5: Done
+
+    private var doneStep: some View {
+        VStack(spacing: 20) {
+            Spacer().frame(height: 40)
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 64))
+                .foregroundStyle(VW.Colors.Status.success)
+            Text("You're all set!")
+                .font(.system(size: 28, weight: .bold))
+            Text("Press ⌥ Space anywhere to start dictating.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(VW.Colors.Text.secondary)
+
+            Button("Get Started") {
+                OnboardingManager.markComplete()
+                onComplete()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            Spacer().frame(height: 40)
+        }
+    }
+}
+
+private extension OnboardingView {
+    func saveAPIConfig() {
         APIConfig.apply(onboardingConfig, presetID: selectedPresetID)
         var allSucceeded = true
         for provider in requiredProviders {
@@ -441,7 +544,7 @@ struct OnboardingView: View {
         Task { @MainActor in AuthManager.shared.setAuthMode(.apiKey) }
     }
 
-    private func saveAndTest() {
+    func saveAndTest() {
         saveAPIConfig()
 
         // Test connection
@@ -464,11 +567,11 @@ struct OnboardingView: View {
         }
     }
 
-    private var requiredProviders: [APIProvider] {
+    var requiredProviders: [APIProvider] {
         KeyVault.requiredProviders(for: onboardingConfig)
     }
 
-    private var missingProviders: [APIProvider] {
+    var missingProviders: [APIProvider] {
         requiredProviders.filter { provider in
             if KeyVault.hasKey(for: provider) { return false }
             let input = (keyInputs[provider] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -476,102 +579,21 @@ struct OnboardingView: View {
         }
     }
 
-    private func keyBinding(for provider: APIProvider) -> Binding<String> {
+    func keyBinding(for provider: APIProvider) -> Binding<String> {
         Binding(
             get: { keyInputs[provider] ?? "" },
             set: { keyInputs[provider] = $0 }
         )
     }
 
-    private func presetDisplayName(for preset: APIPresetOption) -> String {
+    func presetDisplayName(for preset: APIPresetOption) -> String {
         preset.id == BuiltInAPIPreset.recommended.id ? "⭐ \(preset.name)" : preset.name
     }
 
-    private func isKeyEditorExpanded(for provider: APIProvider) -> Bool {
+    func isKeyEditorExpanded(for provider: APIProvider) -> Bool {
         !KeyVault.hasKey(for: provider) || (keyEditorExpanded[provider] ?? false)
     }
 
-    // MARK: - Step 4: Test Recording
-
-    enum TestRecordingState {
-        case idle, recording, processing, done(String)
-    }
-
-    private var testStep: some View {
-        VStack(spacing: 20) {
-            Spacer().frame(height: 20)
-            Text("Try it out!")
-                .font(.title2.bold())
-            Text("Test your setup by recording a short phrase.")
-                .foregroundColor(.secondary)
-
-            VStack(spacing: 12) {
-                Image(systemName: "mic.circle.fill")
-                    .font(.system(size: 48))
-                    .foregroundColor(.accentColor)
-
-                switch testRecordingState {
-                case .idle:
-                    Text("Press ⌥ Space (Option + Space) to record")
-                        .foregroundColor(.secondary)
-
-                case .recording:
-                    VStack(spacing: 8) {
-                        ProgressView()
-                        Text("Recording…")
-                    }
-
-                case .processing:
-                    VStack(spacing: 8) {
-                        ProgressView()
-                        Text("Processing…")
-                    }
-
-                case .done(let text):
-                    VStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 36))
-                            .foregroundColor(.green)
-                        Text(text)
-                            .padding(12)
-                            .background(Color.secondary.opacity(0.06))
-                            .cornerRadius(8)
-                            .textSelection(.enabled)
-                    }
-                }
-            }
-            .padding(.vertical, 16)
-
-            Text("This step is optional — you can always test later.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            Spacer().frame(height: 20)
-        }
-    }
-
-    // MARK: - Step 5: Done
-
-    private var doneStep: some View {
-        VStack(spacing: 20) {
-            Spacer().frame(height: 40)
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
-                .foregroundColor(.green)
-            Text("You're all set!")
-                .font(.system(size: 28, weight: .bold))
-            Text("Press ⌥ Space anywhere to start dictating.")
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-
-            Button("Get Started") {
-                OnboardingManager.markComplete()
-                onComplete()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            Spacer().frame(height: 40)
-        }
-    }
 }
 
 // MARK: - Onboarding State Manager

@@ -5,12 +5,12 @@ import SwiftUI
 
 enum SidebarItem: String, CaseIterable, Identifiable {
     case overview = "Overview"
-    case general = "General"
     case history = "History"
-    case apiKeys = "API Keys"
-    case models = "Models"
     case personalization = "Personalization"
     case vocabulary = "Vocabulary"
+    case general = "General"
+    case models = "Models"
+    case apiKeys = "API Keys"
     case about = "About"
 
     var id: String { rawValue }
@@ -18,22 +18,29 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .overview: return "house"
-        case .general: return "gearshape"
+        case .general: return "slider.horizontal.3"
         case .history: return "clock.arrow.circlepath"
         case .apiKeys: return "key"
         case .models: return "cpu"
-        case .personalization: return "paintbrush"
+        case .personalization: return "sparkles"
         case .vocabulary: return "text.book.closed"
         case .about: return "info.circle"
         }
     }
 }
 
-// MARK: - Main Window
+/// Presentation-only selection shared with menu commands and window shortcuts.
+/// It never changes a recording, mode, or persisted application preference.
+final class MainWindowNavigation: ObservableObject {
+    static let shared = MainWindowNavigation()
+    @Published var selectedItem: SidebarItem = .overview
+    @Published var historyRecordID: UUID?
+}
 
 struct MainWindowView: View {
     @EnvironmentObject var appState: AppState
-    @State private var selectedItem: SidebarItem = .overview
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var navigation = MainWindowNavigation.shared
     @AppStorage("appearanceMode") private var appearanceMode: String = AppearanceMode.system.rawValue
 
     private var currentAppearance: AppearanceMode {
@@ -43,120 +50,144 @@ struct MainWindowView: View {
     var body: some View {
         NavigationSplitView {
             sidebar
+                .navigationSplitViewColumnWidth(min: 200, ideal: 232, max: 260)
         } detail: {
-            detailView
+            VStack(spacing: 0) {
+                HStack(spacing: 8) {
+                    Text("Vowrite")
+                    Image(systemName: "chevron.right").font(.caption2)
+                    Text(navigation.selectedItem.rawValue)
+                        .foregroundStyle(VW.Colors.Text.primary)
+                    Spacer()
+                }
+                .font(.callout)
+                .foregroundStyle(VW.Colors.Text.secondary)
+                .padding(.horizontal, 32)
+                .frame(height: 48)
+                .background(VW.Colors.Surface.panel)
+                Divider().overlay(VW.Colors.Border.standard)
+                detailView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .background(VW.Colors.Surface.canvas)
         }
-        .frame(minWidth: 780, minHeight: 520)
+        .navigationSplitViewStyle(.balanced)
+        .frame(minWidth: 860, minHeight: 560)
+        .tint(VW.Colors.Action.primary)
+        .foregroundStyle(VW.Colors.Text.primary)
         .preferredColorScheme(currentAppearance.colorScheme)
+        .transaction { transaction in
+            if reduceMotion {
+                transaction.animation = nil
+                transaction.disablesAnimations = true
+            }
+        }
     }
-
-    // MARK: Sidebar
 
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Logo
-            HStack(spacing: 8) {
-                Image(systemName: "mic.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(.accentColor)
+        VStack(alignment: .leading, spacing: 24) {
+            HStack(spacing: 12) {
+                Image(systemName: "waveform")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(VW.Colors.Action.primary)
                 Text("Vowrite")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    .font(.system(size: 23, weight: .semibold))
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 20)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
 
-            // Nav items
-            ForEach(SidebarItem.allCases) { item in
-                SidebarButton(
-                    title: item.rawValue,
-                    icon: item.icon,
-                    isSelected: selectedItem == item
-                ) {
-                    selectedItem = item
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    sidebarCaption("Workspace")
+                    ForEach([SidebarItem.overview, .history, .personalization, .vocabulary]) { item in
+                        navigationButton(item)
+                    }
+                    sidebarCaption("Configuration").padding(.top, 20)
+                    ForEach([SidebarItem.general, .models, .apiKeys, .about]) { item in
+                        navigationButton(item)
+                    }
                 }
             }
+            .scrollIndicators(.hidden)
 
-            Spacer()
-
-            // Version
-            Text("Version \(AppVersion.current)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+            VStack(alignment: .leading, spacing: 12) {
+                Divider().overlay(VW.Colors.Border.standard)
+                Label("Stored on this Mac", systemImage: "lock.shield")
+                    .font(.caption)
+                Text("Version \(AppVersion.current)")
+                    .font(.caption)
+            }
+            .foregroundStyle(VW.Colors.Text.secondary)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
         }
-        .frame(width: 180)
+        .padding(16)
+        .background(VW.Colors.Surface.panel)
     }
 
-    // MARK: Detail
+    private func sidebarCaption(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(.system(size: 11, weight: .medium))
+            .tracking(1)
+            .foregroundStyle(VW.Colors.Text.secondary)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+    }
+
+    private func navigationButton(_ item: SidebarItem) -> some View {
+        SidebarButton(title: item.rawValue, icon: item.icon, isSelected: navigation.selectedItem == item) {
+            navigation.selectedItem = item
+        }
+        .accessibilityIdentifier("navigation.\(item.id)")
+    }
 
     @ViewBuilder
     private var detailView: some View {
-        switch selectedItem {
-        case .overview:
-            OverviewPageView()
-                .environmentObject(appState)
-        case .general:
-            GeneralPageView()
-                .environmentObject(appState)
-        case .history:
-            HistoryPageView()
-                .environmentObject(appState)
-        case .apiKeys:
-            APIKeysPageView()
-        case .models:
-            ModelsPageView()
-                .environmentObject(appState)
-        case .personalization:
-            PersonalizationPageView()
-        case .vocabulary:
-            VocabularyPageView()
-        case .about:
-            AboutPageView()
+        switch navigation.selectedItem {
+        case .overview: OverviewPageView()
+        case .general: GeneralPageView()
+        case .history: HistoryPageView()
+        case .apiKeys: APIKeysPageView()
+        case .models: ModelsPageView()
+        case .personalization: PersonalizationPageView()
+        case .vocabulary: VocabularyPageView()
+        case .about: AboutPageView()
         }
     }
 }
-
-// MARK: - Sidebar Button
 
 struct SidebarButton: View {
     let title: String
     let icon: String
     let isSelected: Bool
     let action: () -> Void
+    @State private var isHovered = false
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.body)
-                    .frame(width: 20)
-                Text(title)
-                    .font(.body)
-                Spacer()
+            HStack(spacing: 12) {
+                Image(systemName: icon).font(.body).frame(width: 20)
+                Text(title).font(.system(size: 14, weight: .medium))
+                Spacer(minLength: 0)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
-            .background(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
-            .foregroundColor(isSelected ? .accentColor : .primary)
-            .cornerRadius(8)
+            .background(isSelected ? VW.Colors.Action.soft : isHovered ? VW.Colors.Surface.secondary : .clear)
+            .foregroundStyle(isSelected ? VW.Colors.Action.primary : VW.Colors.Text.secondary)
+            .clipShape(RoundedRectangle(cornerRadius: VW.Radius.control))
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 8)
+        .onHover { isHovered = $0 }
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
-
-// MARK: - History Page
 
 struct HistoryPageView: View {
     @EnvironmentObject var appState: AppState
 
     var body: some View {
         HistoryView()
-            .environmentObject(appState)
             .modelContainer(appState.modelContainer)
     }
 }

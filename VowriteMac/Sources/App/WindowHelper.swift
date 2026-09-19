@@ -7,7 +7,9 @@ enum WindowHelper {
     /// When true, `updateActivationPolicy` should not switch back to .accessory.
     static var isOpeningWindow = false
 
-    static func openMainWindow() {
+    static func openMainWindow(destination: SidebarItem? = nil, recordID: UUID? = nil) {
+        if let destination { MainWindowNavigation.shared.selectedItem = destination }
+        if destination == .history { MainWindowNavigation.shared.historyRecordID = recordID }
         // If window already exists and is visible, just bring it to front
         if let window = mainWindow, window.isVisible {
             NSApp.setActivationPolicy(.regular)
@@ -33,8 +35,8 @@ enum WindowHelper {
         let window = NSWindow(contentViewController: hosting)
         window.isReleasedWhenClosed = false
         window.title = "Vowrite"
-        window.setContentSize(NSSize(width: 860, height: 580))
-        window.minSize = NSSize(width: 780, height: 520)
+        window.setContentSize(NSSize(width: 1120, height: 760))
+        window.minSize = NSSize(width: 860, height: 560)
         window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
         window.center()
         window.makeKeyAndOrderFront(nil)

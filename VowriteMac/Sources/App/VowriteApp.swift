@@ -44,7 +44,7 @@ struct VowriteApp: App {
             // Vowrite menu: About
             CommandGroup(replacing: .appInfo) {
                 Button("About Vowrite") {
-                    WindowHelper.openMainWindow()
+                    WindowHelper.openMainWindow(destination: .about)
                 }
             }
             // Vowrite menu: Check for Updates
@@ -56,7 +56,7 @@ struct VowriteApp: App {
             // ⌘, opens our custom settings window
             CommandGroup(replacing: .appSettings) {
                 Button("Settings...") {
-                    WindowHelper.openMainWindow()
+                    WindowHelper.openMainWindow(destination: .general)
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }
@@ -75,7 +75,7 @@ struct VowriteApp: App {
         let window = NSWindow(contentViewController: hosting)
         window.isReleasedWhenClosed = false
         window.title = "Welcome to Vowrite"
-        window.setContentSize(NSSize(width: 600, height: 500))
+        window.setContentSize(NSSize(width: 640, height: 600))
         window.styleMask = [.titled, .closable]
         window.center()
         window.makeKeyAndOrderFront(nil)
