@@ -93,6 +93,10 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
         definition?.hasSTTSupport ?? false
     }
 
+    public var hasPolishSupport: Bool {
+        definition?.hasPolishSupport ?? false
+    }
+
     public var sttSupportNote: String? {
         definition?.sttNote
     }
@@ -131,6 +135,11 @@ public enum APIProvider: String, CaseIterable, Identifiable, Codable {
     /// Providers that support STT on the current platform
     public static var availableSTTCases: [APIProvider] {
         availableCases.filter(\.hasSTTSupport)
+    }
+
+    /// Providers that support AI polish on the current platform.
+    public static var availablePolishCases: [APIProvider] {
+        availableCases.filter(\.hasPolishSupport)
     }
 
     // MARK: - Headers

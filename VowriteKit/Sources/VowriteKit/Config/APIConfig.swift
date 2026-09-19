@@ -11,6 +11,21 @@ public struct APIEndpointConfiguration: Codable, Equatable {
         self.baseURL = APIEndpointConfiguration.normalizeBaseURL(baseURL, provider: provider)
     }
 
+    /// Builds a user selection while retaining a custom endpoint only when the
+    /// selection stays with the same provider. A provider change must use the
+    /// new provider's registered URL so its key is never sent to the old host.
+    public static func selecting(
+        provider: APIProvider,
+        model: String,
+        preservingBaseURLFrom existing: APIEndpointConfiguration
+    ) -> APIEndpointConfiguration {
+        APIEndpointConfiguration(
+            provider: provider,
+            model: model,
+            baseURL: provider == existing.provider ? existing.baseURL : nil
+        )
+    }
+
     /// Effective base URL for HTTP requests. When the user has an active OAuth
     /// session whose token carries a base URL override (e.g. Kimi Code Coding
     /// Plan re-routes to api.kimi.com/coding/v1), that takes precedence over

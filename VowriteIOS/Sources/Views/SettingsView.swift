@@ -159,42 +159,78 @@ struct SettingsView: View {
             // STT Configuration
             Section("Speech-to-Text") {
                 Picker("Provider", selection: $sttProvider) {
-                    ForEach(APIProvider.availableSTTCases, id: \.self) { provider in
-                        Text(provider.rawValue).tag(provider)
+                    ForEach(sttProviderChoices, id: \.self) { provider in
+                        Text(provider == sttProvider && !provider.hasSTTSupport ? "\(provider.rawValue) (Unavailable)" : provider.rawValue)
+                            .tag(provider)
+                            .disabled(!provider.hasSTTSupport)
                     }
                 }
                 .onChange(of: sttProvider) { _, newValue in
+                    sttAPIKey = ""
+                    guard APIConfig.current.stt.provider != newValue else { return }
                     sttModel = newValue.defaultSTTModel
                     applyConfig()
                 }
 
-                Picker("Model", selection: $sttModel) {
-                    ForEach(sttProvider.presetSTTModels, id: \.self) { model in
-                        Text(model).tag(model)
+                if !sttProvider.hasSTTSupport {
+                    Text(sttProvider.sttSupportNote ?? "This saved provider is unavailable on iOS. Choose another provider to change it.")
+                        .font(.caption)
+                        .foregroundStyle(VW.Colors.Text.secondary)
+                } else if sttProvider.presetSTTModels.isEmpty {
+                    TextField("Custom model", text: $sttModel)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .onChange(of: sttModel) { _, _ in applyConfig() }
+                } else {
+                    Picker("Model", selection: $sttModel) {
+                        ForEach(sttProvider.presetSTTModels, id: \.self) { model in
+                            Text(model).tag(model)
+                        }
+                        if !sttModel.isEmpty && !sttProvider.presetSTTModels.contains(sttModel) {
+                            Text("\(sttModel) (Saved)").tag(sttModel)
+                        }
                     }
+                    .onChange(of: sttModel) { _, _ in applyConfig() }
                 }
-                .onChange(of: sttModel) { _, _ in applyConfig() }
 
             }
 
             // Polish Configuration
             Section("AI Polish") {
                 Picker("Provider", selection: $polishProvider) {
-                    ForEach(APIProvider.availableCases, id: \.self) { provider in
-                        Text(provider.rawValue).tag(provider)
+                    ForEach(polishProviderChoices, id: \.self) { provider in
+                        Text(provider == polishProvider && !provider.hasPolishSupport ? "\(provider.rawValue) (Unavailable)" : provider.rawValue)
+                            .tag(provider)
+                            .disabled(!provider.hasPolishSupport)
                     }
                 }
                 .onChange(of: polishProvider) { _, newValue in
+                    polishAPIKey = ""
+                    guard APIConfig.current.polish.provider != newValue else { return }
                     polishModel = newValue.defaultPolishModel
                     applyConfig()
                 }
 
-                Picker("Model", selection: $polishModel) {
-                    ForEach(polishProvider.presetPolishModels, id: \.self) { model in
-                        Text(model).tag(model)
+                if !polishProvider.hasPolishSupport {
+                    Text("This saved provider does not support AI polish. Choose another provider to change it.")
+                        .font(.caption)
+                        .foregroundStyle(VW.Colors.Text.secondary)
+                } else if polishProvider.presetPolishModels.isEmpty {
+                    TextField("Custom model", text: $polishModel)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .onChange(of: polishModel) { _, _ in applyConfig() }
+                } else {
+                    Picker("Model", selection: $polishModel) {
+                        ForEach(polishProvider.presetPolishModels, id: \.self) { model in
+                            Text(model).tag(model)
+                        }
+                        if !polishModel.isEmpty && !polishProvider.presetPolishModels.contains(polishModel) {
+                            Text("\(polishModel) (Saved)").tag(polishModel)
+                        }
                     }
+                    .onChange(of: polishModel) { _, _ in applyConfig() }
                 }
-                .onChange(of: polishModel) { _, _ in applyConfig() }
 
             }
 
@@ -315,18 +351,34 @@ struct SettingsView: View {
     private func applyConfig() {
         let existing = APIConfig.current
         let configuration = SplitAPIConfiguration(
-            stt: APIEndpointConfiguration(
+            stt: APIEndpointConfiguration.selecting(
                 provider: sttProvider,
                 model: sttModel,
-                baseURL: existing.stt.baseURL
+                preservingBaseURLFrom: existing.stt
             ),
-            polish: APIEndpointConfiguration(
+            polish: APIEndpointConfiguration.selecting(
                 provider: polishProvider,
                 model: polishModel,
-                baseURL: existing.polish.baseURL
+                preservingBaseURLFrom: existing.polish
             )
         )
         APIConfig.apply(configuration)
+    }
+
+    private var sttProviderChoices: [APIProvider] {
+        var providers = APIProvider.availableSTTCases
+        if !providers.contains(sttProvider) {
+            providers.append(sttProvider)
+        }
+        return providers
+    }
+
+    private var polishProviderChoices: [APIProvider] {
+        var providers = APIProvider.availablePolishCases
+        if !providers.contains(polishProvider) {
+            providers.append(polishProvider)
+        }
+        return providers
     }
 
     private func saveKey(_ key: String, for provider: APIProvider) {
