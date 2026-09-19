@@ -176,6 +176,24 @@ class ProviderSourceTests(unittest.TestCase):
             [("https://api.cerebras.ai/public/v1/models", {})],
         )
 
+    def test_doubao_speech_is_manual_even_when_an_unrelated_fake_key_exists(self):
+        requests = []
+
+        def fetch(url, headers=None, timeout=25):
+            requests.append((url, headers or {}))
+            self.fail("doubaoSpeech must not probe a /models endpoint")
+
+        result = model_watch.reconcile_providers(
+            [{"id": "doubaoSpeech", "baseURL": "https://openspeech.bytedance.com/api/v3"}],
+            timeout=1,
+            fetch_json=fetch,
+            environ={"DOUBAO_SPEECH_API_KEY": "fake-test-only"},
+        )[0]
+
+        self.assertEqual(result["status"], "SKIPPED_MANUAL")
+        self.assertEqual(result["detail"], model_watch.SKIP_REASONS["doubaoSpeech"])
+        self.assertEqual(requests, [])
+
     def test_unknown_provider_payload_schema_fails_safe(self):
         def fetch(url, headers=None, timeout=25):
             return {"unexpected": []}, None
