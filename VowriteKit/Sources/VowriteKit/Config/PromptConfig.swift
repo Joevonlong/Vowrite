@@ -62,11 +62,11 @@ private enum PromptResources {
     static let translateSystem: String = load("translate.system", ext: "md")
 
     private static func load(_ name: String, ext: String) -> String {
-        guard let url = Bundle.module.url(
+        guard let url = VowriteResources.bundle.url(
             forResource: name,
             withExtension: ext,
             subdirectory: "Prompts"
-        ) ?? Bundle.module.url(forResource: name, withExtension: ext) else {
+        ) ?? VowriteResources.bundle.url(forResource: name, withExtension: ext) else {
             fatalError("VowriteKit bundle is missing required prompt resource: Prompts/\(name).\(ext). Verify Package.swift includes 'Resources' and the file ships in the built bundle.")
         }
         do {

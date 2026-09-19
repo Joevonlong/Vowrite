@@ -332,6 +332,10 @@ cp ".build/arm64-apple-macosx/release/${APP_BINARY_NAME}" "$APP_BUNDLE/Contents/
 cp "$INFO_PLIST" "$APP_BUNDLE/Contents/Info.plist"
 echo "  ✓ Binary and Info.plist copied"
 
+"$PROJECT_ROOT/ops/scripts/embed-kit-resources.sh" \
+    ".build/arm64-apple-macosx/release/VowriteKit_VowriteKit.bundle" \
+    "$APP_BUNDLE"
+
 # Embed Sparkle.framework into app bundle
 SPARKLE_FW=".build/arm64-apple-macosx/release/Sparkle.framework"
 if [ -d "$SPARKLE_FW" ]; then
