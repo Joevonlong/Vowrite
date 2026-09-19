@@ -37,6 +37,7 @@ Secrets.swift
 VowriteMac/Vowrite.app/Contents/MacOS/Vowrite
 VowriteMac/Vowrite.app/Contents/Frameworks/
 VowriteMac/Vowrite.app/Contents/_CodeSignature/
+VowriteMac/Vowrite.app/Contents/Resources/VowriteKit_VowriteKit.bundle/
 releases/*.dmg
 
 # Local AI-tool wiring (maintainer machines drop untracked shims here)
