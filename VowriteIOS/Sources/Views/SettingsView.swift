@@ -260,6 +260,17 @@ struct SettingsView: View {
                                 .font(.caption)
                                 .foregroundStyle(.green)
                         }
+
+                        if sttProvider == .doubaoSpeech {
+                            Text("Use a Doubao Speech console API Key, not a Volcengine Ark key. Grant the BigASR Flash resource before testing.")
+                                .font(.caption)
+                                .foregroundStyle(VW.Colors.Text.secondary)
+                            Link(
+                                "Open Doubao Speech API Key setup →",
+                                destination: URL(string: "https://console.volcengine.com/speech/new/setting/apikeys?projectName=default")!
+                            )
+                            .font(.caption)
+                        }
                     }
                 if !sttProvider.requiresAPIKey {
                     Label("No API key required", systemImage: "checkmark.circle")

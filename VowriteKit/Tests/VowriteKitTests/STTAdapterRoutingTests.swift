@@ -10,7 +10,7 @@ final class STTAdapterRoutingTests: XCTestCase {
     /// Adapter ids WhisperService has implementations for (its `adapterMap` keys).
     /// If a new adapter is added there, add it here too.
     private let implementedAdapterIDs: Set<String> = [
-        "openai-compatible", "deepgram", "qwen", "iflytek", "sherpa",
+        "openai-compatible", "deepgram", "qwen", "iflytek", "sherpa", "doubao-speech",
     ]
 
     /// Only providers with STT capability enabled can ever reach `WhisperService`'s
@@ -39,5 +39,11 @@ final class STTAdapterRoutingTests: XCTestCase {
     func testDeepgramRoutesToItsOwnAdapter() {
         // Deepgram has a non-OpenAI API, so it must route to the dedicated adapter.
         XCTAssertEqual(ProviderRegistry.shared.sttAdapterID(for: "deepgram"), "deepgram")
+    }
+
+    func testDoubaoSpeechRoutesOnlyToItsDedicatedAdapter() throws {
+        let provider = try XCTUnwrap(ProviderRegistry.shared.provider(for: "doubaoSpeech"))
+        XCTAssertEqual(provider.defaultSTTModel, "volc.bigasr.auc_turbo")
+        XCTAssertEqual(ProviderRegistry.shared.sttAdapterID(for: "doubaoSpeech"), "doubao-speech")
     }
 }

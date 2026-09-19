@@ -308,7 +308,7 @@
       },
       "capabilities": { "stt": false, "polish": true },
       "sttAdapter": "volcengine",
-      "sttNote": "Volcengine 录音文件识别 requires a TOS bucket + URL submission (no inline upload). Ark OpenAI-compat audio support unconfirmed — STT integration on hold (see BUGS.md).",
+      "sttNote": "This Ark entry is for text polish. Select Doubao Speech for Flash recording transcription with a separate Speech API Key; the standard asynchronous service uses its own URL/task contract.",
       "stt": {
         "defaultModel": "",
         "models": []
@@ -321,6 +321,31 @@
           { "id": "doubao-seed-2-1-turbo-260628", "description": "New gen — balanced", "polishOverrides": { "thinking": { "type": "disabled" } } },
           { "id": "doubao-seed-2-1-pro-260628", "description": "Newest flagship", "polishOverrides": { "thinking": { "type": "disabled" } } }
         ]
+      }
+    },
+    {
+      "id": "doubaoSpeech",
+      "name": "Doubao Speech (豆包语音)",
+      "baseURL": "https://openspeech.bytedance.com/api/v3/auc/bigmodel",
+      "isOpenAICompatible": false,
+      "auth": {
+        "style": "custom",
+        "keyPlaceholder": "Doubao Speech console API Key",
+        "keyURL": "https://console.volcengine.com/speech/new/setting/apikeys?projectName=default",
+        "requiresKey": true
+      },
+      "capabilities": { "stt": true, "polish": false },
+      "sttAdapter": "doubao-speech",
+      "sttNote": "Use a separate Doubao Speech console API Key (not an Ark key), grant the BigASR Flash resource, then Test & Save. Only synchronous BigASR Flash is available; standard, idle, and streaming APIs use different contracts.",
+      "stt": {
+        "defaultModel": "volc.bigasr.auc_turbo",
+        "models": [
+          { "id": "volc.bigasr.auc_turbo", "description": "Official BigASR Flash — synchronous recording-file transcription" }
+        ]
+      },
+      "polish": {
+        "defaultModel": "",
+        "models": []
       }
     },
     {
