@@ -1,10 +1,13 @@
-import SwiftUI
-import SwiftData
 import Combine
+import os
+import SwiftData
+import SwiftUI
 import VowriteKit
 
 @MainActor
 final class AppState: ObservableObject {
+    private static let logger = Logger(subsystem: "com.vowrite.app", category: "history")
+
     @Published var state: VowriteState = .idle
     @Published var audioLevel: Float = 0
     @Published var recordingDuration: TimeInterval = 0
@@ -99,19 +102,22 @@ final class AppState: ObservableObject {
 
     /// Import pending records written by keyboard extension
     func importPendingRecords() {
-        let pending = PendingRecordStore.consumeAll()
-        guard !pending.isEmpty else { return }
-
-        let context = modelContainer.mainContext
-        for pending in pending {
-            let record = DictationRecord(
-                rawTranscript: pending.rawTranscript,
-                polishedText: pending.polishedText,
-                duration: pending.duration,
-                detectedLanguage: nil
+        let context = ModelContext(modelContainer)
+        do {
+            let result = try PendingRecordStore.importPendingRecords(into: context)
+            if !result.malformedFiles.isEmpty {
+                historyUnavailable = true
+                Self.logger.error(
+                    "Found \(result.malformedFiles.count, privacy: .public) malformed pending keyboard record(s); retaining them for recovery"
+                )
+            }
+        } catch {
+            // Do not roll back: it could discard unrelated context changes. Pending
+            // files remain for a later retry, and original IDs make retry de-dup safe.
+            historyUnavailable = true
+            Self.logger.error(
+                "Failed to import pending keyboard records; retaining files for retry"
             )
-            context.insert(record)
         }
-        try? context.save()
     }
 }

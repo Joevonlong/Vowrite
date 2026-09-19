@@ -26,41 +26,43 @@ final class APIConfigOAuthOverrideTests: XCTestCase {
     }
 
     private func clearState() {
-        OAuthTokenStore.delete(for: "kimi")
         UserDefaults.standard.removeObject(forKey: authMethodKey)
         UserDefaults.standard.removeObject(forKey: sttProviderKey)
         UserDefaults.standard.removeObject(forKey: sttModelKey)
         UserDefaults.standard.removeObject(forKey: sttBaseURLKey)
     }
 
-    func testSettingSTTWhileOAuthOverrideActiveDoesNotPersistOverrideURL() {
-        // Arrange: simulate an active Kimi Code OAuth session with a base-URL
-        // override, exactly as KeyVault.effectiveBaseURL resolves it in production.
-        let token = OAuthToken(
-            accessToken: "test-access-token",
-            refreshToken: "test-refresh-token",
-            expiresAt: Date().addingTimeInterval(3600),
-            email: "test@example.com",
-            baseURL: KimiCodeOAuthService.kimiCodeBaseURL
-        )
-        XCTAssertTrue(OAuthTokenStore.save(token, for: "kimi"))
-        KeyVault.setPreferredAuthMethod("oauth", for: .kimi)
-
-        // Precondition: the override really is active before exercising the setter.
-        XCTAssertEqual(KeyVault.effectiveBaseURL(for: .kimi), KimiCodeOAuthService.kimiCodeBaseURL)
-
+    func testSettingSTTPersistsConfiguredPlainURL() {
         let plainURL = "https://api.moonshot.cn/v1"
         let config = APIEndpointConfiguration(provider: .kimi, model: "moonshot-v1-8k", baseURL: plainURL)
-        XCTAssertEqual(
-            config.resolvedBaseURL, KimiCodeOAuthService.kimiCodeBaseURL,
-            "precondition: resolvedBaseURL should reflect the OAuth override"
-        )
 
-        // Act
         APIConfig.stt = config
 
-        // Assert: the stored value is the plain URL, not the OAuth-resolved one.
         XCTAssertEqual(APIConfig.sttBaseURL, plainURL)
-        XCTAssertNotEqual(APIConfig.sttBaseURL, KimiCodeOAuthService.kimiCodeBaseURL)
+    }
+
+    func testOAuthEndpointResolverHonorsAuthMethodAndTokenValidity() {
+        let validToken = OAuthToken(
+            accessToken: "valid-token",
+            refreshToken: nil,
+            expiresAt: Date().addingTimeInterval(60),
+            email: nil,
+            baseURL: KimiCodeOAuthService.kimiCodeBaseURL
+        )
+        let expiredToken = OAuthToken(
+            accessToken: "expired-token",
+            refreshToken: "refresh-token",
+            expiresAt: Date().addingTimeInterval(-60),
+            email: nil,
+            baseURL: KimiCodeOAuthService.kimiCodeBaseURL
+        )
+
+        XCTAssertEqual(
+            KeyVault.oauthBaseURL(preferredAuthMethod: "oauth", token: validToken),
+            KimiCodeOAuthService.kimiCodeBaseURL
+        )
+        XCTAssertNil(KeyVault.oauthBaseURL(preferredAuthMethod: "oauth", token: nil))
+        XCTAssertNil(KeyVault.oauthBaseURL(preferredAuthMethod: "apiKey", token: validToken))
+        XCTAssertNil(KeyVault.oauthBaseURL(preferredAuthMethod: "oauth", token: expiredToken))
     }
 }

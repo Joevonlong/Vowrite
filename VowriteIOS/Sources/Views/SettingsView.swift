@@ -198,11 +198,6 @@ struct SettingsView: View {
 
             }
 
-            // Local Models (Sherpa offline ASR)
-            Section("Local Models") {
-                SherpaLocalModelsList()
-            }
-
         }
         .vwIOSForm()
         .navigationTitle("Models")
