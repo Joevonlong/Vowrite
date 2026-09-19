@@ -19,7 +19,7 @@ public final class ProviderRegistry: @unchecked Sendable {
     // MARK: - Loading
 
     private func loadBuiltIn() {
-        guard let url = Bundle.module.url(forResource: "providers", withExtension: "json") else {
+        guard let url = VowriteResources.bundle.url(forResource: "providers", withExtension: "json") else {
             Self.logger.fault("providers.json not found in VowriteKit bundle — all provider queries will return nil")
             assertionFailure("providers.json not found in VowriteKit bundle")
             return

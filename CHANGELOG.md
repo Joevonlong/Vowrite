@@ -7,7 +7,13 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Reliability
+
+- Resource-backed provider and prompt lookups now prefer the shipped app resource bundle, so packaged macOS builds do not depend on the source checkout path. OAuth-expiry handling keeps the regular provider endpoint available for API-key configuration.
+
 ### Changed
+
+- **F-092 Provider model maintenance**: Refreshed the supported model catalog around documented request contracts. OpenAI now defaults to `gpt-transcribe` with region-aware language hints, Qwen exposes only its validated synchronous ASR path, OpenRouter and Sherpa STT remain retained but unavailable until their runtime contracts are validated, DeepSeek defaults to `deepseek-flash`, and legacy saved models keep their polish overrides without appearing in pickers.
 
 - **F-091 Unified macOS interface**: Refreshed the main window, overview, history, settings, onboarding, status menu, and all five recording indicators with adaptive light and dark surfaces, clearer navigation, and a compact voice capsule. Existing dictation, provider configuration, personalization, history management, and update behavior are preserved. The status menu now provides shortcuts to existing scene and auto-paste settings, and history entries can always reveal their full text.
 

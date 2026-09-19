@@ -117,47 +117,69 @@ final class ProviderRegistryDataTests: XCTestCase {
         XCTAssertTrue(xAI.sttNote?.contains("F-088") == true)
     }
 
-    func testF086PendingCandidatesStayOutAndIncumbentsRemainAvailable() throws {
+    func testF092CurrentShortlistsAndCompatibilityRows() throws {
         let openAI = try XCTUnwrap(ProviderRegistry.shared.provider(for: "openai"))
         XCTAssertEqual(openAI.defaultPolishModel, "gpt-5.4-mini")
         XCTAssertFalse(openAI.presetPolishModels.contains("gpt-5.6-terra"))
 
         let claude = try XCTUnwrap(ProviderRegistry.shared.provider(for: "claude"))
         XCTAssertEqual(claude.defaultPolishModel, "claude-sonnet-5")
-        XCTAssertFalse(claude.presetPolishModels.contains("claude-opus-5"))
-        XCTAssertTrue(claude.presetPolishModels.contains("claude-opus-4-8"))
+        XCTAssertTrue(claude.presetPolishModels.contains("claude-opus-5"))
+        XCTAssertTrue(claude.presetPolishModels.contains("claude-opus-5"))
+        XCTAssertEqual(claude.polishOverrides(for: "claude-opus-5")?["temperature"], .null)
+        XCTAssertEqual(claude.polishOverrides(for: "claude-opus-5")?["output_config"], .object(["effort": .string("low")]))
+        XCTAssertFalse(claude.presetPolishModels.contains("claude-opus-4-8"))
 
         let gemini = try XCTUnwrap(ProviderRegistry.shared.provider(for: "gemini"))
-        XCTAssertEqual(gemini.defaultPolishModel, "gemini-2.5-flash")
+        XCTAssertEqual(gemini.defaultPolishModel, "gemini-3.8-flash")
         XCTAssertFalse(gemini.presetPolishModels.contains("gemini-3.6-flash"))
-        XCTAssertFalse(gemini.presetPolishModels.contains("gemini-3.5-flash-lite"))
-        XCTAssertTrue(gemini.presetPolishModels.contains("gemini-3.5-flash"))
-        XCTAssertTrue(gemini.presetPolishModels.contains("gemini-3.1-flash-lite"))
+        XCTAssertTrue(gemini.presetPolishModels.contains("gemini-3.5-flash-lite"))
+        XCTAssertFalse(gemini.presetPolishModels.contains("gemini-3.5-flash"))
+        XCTAssertFalse(gemini.presetPolishModels.contains("gemini-3.1-flash-lite"))
 
         let siliconFlow = try XCTUnwrap(ProviderRegistry.shared.provider(for: "siliconflow"))
-        XCTAssertEqual(siliconFlow.defaultPolishModel, "deepseek-ai/DeepSeek-V3")
+        XCTAssertEqual(siliconFlow.defaultPolishModel, "deepseek-ai/DeepSeek-V4-Flash")
+        XCTAssertTrue(siliconFlow.presetPolishModels.contains("deepseek-ai/DeepSeek-V4-Flash"))
+        XCTAssertTrue(siliconFlow.presetPolishModels.contains("Qwen/Qwen3.5-4B"))
         for model in [
-            "deepseek-ai/DeepSeek-V4-Flash",
             "deepseek-ai/DeepSeek-V4-Pro",
             "zai-org/GLM-5.2",
         ] {
             XCTAssertFalse(siliconFlow.presetPolishModels.contains(model))
         }
-        XCTAssertTrue(
+        XCTAssertFalse(
             siliconFlow.presetPolishModels.contains("deepseek-ai/DeepSeek-V3.1-Terminus")
         )
-        XCTAssertTrue(
+        XCTAssertFalse(
             siliconFlow.presetPolishModels.contains("Qwen/Qwen2.5-72B-Instruct")
         )
 
         let openRouter = try XCTUnwrap(ProviderRegistry.shared.provider(for: "openrouter"))
-        XCTAssertEqual(openRouter.defaultSTTModel, "openai/whisper-large-v3")
-        XCTAssertFalse(
-            openRouter.presetSTTModels.contains("openai/whisper-large-v3-turbo")
-        )
+        XCTAssertFalse(openRouter.hasSTTSupport)
+        XCTAssertTrue(openRouter.presetSTTModels.isEmpty)
+
+        let openAIForSTT = try XCTUnwrap(ProviderRegistry.shared.provider(for: "openai"))
+        XCTAssertEqual(openAIForSTT.defaultSTTModel, "gpt-transcribe")
+        XCTAssertTrue(openAIForSTT.presetSTTModels.contains("gpt-transcribe"))
+        XCTAssertTrue(openAIForSTT.presetSTTModels.contains("gpt-4o-mini-transcribe"))
+        XCTAssertTrue(openAIForSTT.presetSTTModels.contains("whisper-1"))
+        XCTAssertFalse(openAIForSTT.presetSTTModels.contains("gpt-4o-transcribe-diarize"))
+
+        let qwen = try XCTUnwrap(ProviderRegistry.shared.provider(for: "qwen"))
+        XCTAssertEqual(qwen.presetSTTModels, ["qwen3-asr-flash"])
+
+        let sherpa = try XCTUnwrap(ProviderRegistry.shared.provider(for: "sherpa"))
+        XCTAssertFalse(sherpa.hasSTTSupport)
+
+        let siliconFlowSTT = try XCTUnwrap(ProviderRegistry.shared.provider(for: "siliconflow"))
+        XCTAssertTrue(siliconFlowSTT.hasSTTSupport)
+
+        let deepSeek = try XCTUnwrap(ProviderRegistry.shared.provider(for: "deepseek"))
+        XCTAssertEqual(deepSeek.defaultPolishModel, "deepseek-flash")
+        XCTAssertTrue(deepSeek.presetPolishModels.contains("deepseek-v4-pro"))
     }
 
-    func testF086CuratedCloudRowsStayWithinSixAndOllamaKeepsSeven() throws {
+    func testF092VisibleCuratedRowsStayWithinSixAndOllamaShortlist() throws {
         let curatedCloudProviderIDs = [
             "openai",
             "openrouter",
@@ -172,19 +194,19 @@ final class ProviderRegistryDataTests: XCTestCase {
         for providerID in curatedCloudProviderIDs {
             let provider = try XCTUnwrap(ProviderRegistry.shared.provider(for: providerID))
             XCTAssertLessThanOrEqual(
-                provider.stt?.models.count ?? 0,
+                provider.presetSTTModels.count,
                 6,
                 "\(providerID) STT catalog exceeds the curated cloud limit"
             )
             XCTAssertLessThanOrEqual(
-                provider.polish?.models.count ?? 0,
+                provider.presetPolishModels.count,
                 6,
                 "\(providerID) polish catalog exceeds the curated cloud limit"
             )
         }
 
         let ollama = try XCTUnwrap(ProviderRegistry.shared.provider(for: "ollama"))
-        XCTAssertEqual(ollama.presetPolishModels.count, 7)
+        XCTAssertEqual(ollama.presetPolishModels.count, 3)
         XCTAssertFalse(ollama.presetPolishModels.contains { $0.contains(":cloud") })
     }
 
@@ -195,7 +217,6 @@ final class ProviderRegistryDataTests: XCTestCase {
         let exactExclusions = [
             "claude-fable-5",
             "claude-mythos-5",
-            "kimi-k3",
             "kimi-k2.7-code",
             "qwen3.8-max-preview",
             "qwen3.7-flash",
@@ -210,15 +231,15 @@ final class ProviderRegistryDataTests: XCTestCase {
         XCTAssertFalse(qianfan.presetPolishModels.contains { $0.lowercased().contains("ernie-5") })
 
         let qwen = try XCTUnwrap(ProviderRegistry.shared.provider(for: "qwen"))
-        XCTAssertEqual(qwen.defaultPolishModel, "qwen3.7-plus")
-        XCTAssertTrue(qwen.presetPolishModels.contains("qwen3.6-flash"))
+        XCTAssertEqual(qwen.defaultPolishModel, "qwen3.8-flash")
+        XCTAssertTrue(qwen.presetPolishModels.contains("qwen3.8-max"))
 
         for providerID in ["minimax_intl", "minimax_cn"] {
             let provider = try XCTUnwrap(ProviderRegistry.shared.provider(for: providerID))
             XCTAssertEqual(provider.defaultPolishModel, "MiniMax-M3")
             XCTAssertEqual(
                 provider.presetPolishModels,
-                ["MiniMax-M3", "MiniMax-M2.7", "MiniMax-M2.7-highspeed"]
+                ["MiniMax-M3", "MiniMax-M2.7-highspeed"]
             )
         }
 

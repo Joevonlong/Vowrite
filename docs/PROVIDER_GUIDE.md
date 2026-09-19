@@ -69,6 +69,7 @@ Core fields:
 | `sttAdapter` | Router key; defaults to `openai-compatible` when absent. |
 | `headers` | Static provider headers added by `APIProvider.applyHeaders`. |
 | `stt` / `polish` | Default model and selectable model definitions. Omit an unsupported pipeline. |
+| `isVisible` | Optional model-row visibility. Set `false` for legacy saved IDs that remain decodable but should not appear in pickers. Their `polishOverrides` remain active. |
 | `polishOverrides` | Typed request-body patch for one polish model; JSON `null` removes a default field. |
 
 The Codable source in `Config/ProviderDefinition.swift` is authoritative when this guide and code differ.
@@ -107,3 +108,9 @@ ops/scripts/test.sh
 ```
 
 `ProviderRegistryDataTests` protects catalog integrity; add focused adapter, URL, request, override, migration, and error tests for changed behavior. A successful build is not a live provider connection test.
+
+## Request-contract notes
+
+OpenAI's `gpt-transcribe` accepts the file transcription multipart route and uses `languages[]` for language hints. The adapter sends plain text for that model. OpenAI `gpt-4o-transcribe` and `gpt-4o-mini-transcribe` require JSON responses; the adapter selects JSON and decodes the returned `.text`. Diarization requires `diarized_json` and `chunking_strategy=auto`; it is not a generic text-only option and is therefore omitted from the picker.
+
+Qwen's integrated path is deliberately limited to `qwen3-asr-flash`, the synchronous multimodal endpoint. Realtime and async file-task models are not interchangeable with that path; unsupported IDs fail before any network request, and async task submission must never receive a `data:` URI in a file URL field.

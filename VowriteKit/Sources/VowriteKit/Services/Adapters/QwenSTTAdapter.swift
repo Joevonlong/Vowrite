@@ -1,12 +1,16 @@
 import Foundation
+import AVFoundation
 
 /// STT adapter for Qwen (通义千问) ASR models via DashScope API.
-/// Supports Qwen3-ASR-Flash (sync, chat/completions variant with audio input)
-/// and Paraformer/Fun-ASR (async task submission).
+/// Supports only Qwen3-ASR-Flash's synchronous multimodal file path. Realtime
+/// and async task models require a different contract and fail before upload.
 struct QwenSTTAdapter: STTAdapter {
 
-    private let pollInterval: TimeInterval = 1.5
-    private let maxPollTime: TimeInterval = 300
+    private let session: URLSession
+
+    init(session: URLSession = .shared) {
+        self.session = session
+    }
 
     func transcribe(
         audioURL: URL,
@@ -24,25 +28,33 @@ struct QwenSTTAdapter: STTAdapter {
             throw VowriteError.apiError("Qwen API key is required for STT.")
         }
 
-        let audioData = try Data(contentsOf: audioURL)
-        let base64Audio = audioData.base64EncodedString()
-
-        let result: String
-        if model.contains("qwen") || model.contains("asr-flash") {
-            // Qwen3-ASR-Flash: sync via multimodal generation endpoint
-            result = try await transcribeSync(base64Audio: base64Audio, model: model, language: language, apiKey: apiKey, baseURL: baseURL)
-        } else {
-            // Paraformer/Fun-ASR: async task API
-            result = try await transcribeAsync(base64Audio: base64Audio, model: model, language: language, apiKey: apiKey, baseURL: baseURL)
+        guard model == "qwen3-asr-flash" else {
+            throw VowriteError.apiError(
+                "Qwen STT model '\(model)' is unavailable in Vowrite's synchronous file path. Use qwen3-asr-flash."
+            )
         }
 
-        return result
+        let audioData = try Data(contentsOf: audioURL)
+        guard audioData.count <= 10 * 1024 * 1024 else {
+            throw VowriteError.apiError("Qwen ASR supports files up to 10 MB in the synchronous path.")
+        }
+        guard let audioFile = try? AVAudioFile(forReading: audioURL), audioFile.fileFormat.sampleRate > 0 else {
+            throw VowriteError.apiError("Qwen ASR requires a readable audio file.")
+        }
+        let duration = Double(audioFile.length) / audioFile.fileFormat.sampleRate
+        guard duration <= 5 * 60 else {
+            throw VowriteError.apiError("Qwen ASR supports recordings up to 5 minutes in the synchronous path.")
+        }
+        let base64Audio = audioData.base64EncodedString()
+        let mimeType = audioURL.pathExtension.lowercased() == "wav" ? "audio/wav" : "audio/m4a"
+        return try await transcribeSync(base64Audio: base64Audio, mimeType: mimeType, model: model, language: language, apiKey: apiKey, baseURL: baseURL)
     }
 
     // MARK: - Sync mode (Qwen3-ASR-Flash via chat/completions variant)
 
     private func transcribeSync(
         base64Audio: String,
+        mimeType: String,
         model: String,
         language: String?,
         apiKey: String,
@@ -63,7 +75,7 @@ struct QwenSTTAdapter: STTAdapter {
                     [
                         "role": "user",
                         "content": [
-                            ["audio": "data:audio/m4a;base64,\(base64Audio)"]
+                            ["audio": "data:\(mimeType);base64,\(base64Audio)"]
                         ]
                     ]
                 ]
@@ -72,7 +84,7 @@ struct QwenSTTAdapter: STTAdapter {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw VowriteError.networkError("Invalid response from Qwen ASR API")
         }
@@ -98,106 +110,4 @@ struct QwenSTTAdapter: STTAdapter {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    // MARK: - Async mode (Paraformer/Fun-ASR via task API)
-
-    private func transcribeAsync(
-        base64Audio: String,
-        model: String,
-        language: String?,
-        apiKey: String,
-        baseURL: String
-    ) async throws -> String {
-        let endpoint = baseURL.replacingOccurrences(of: "/compatible-mode/v1", with: "/api/v1/services/audio/asr/transcription")
-        var request = URLRequest(url: try URL.validated(endpoint, label: "Qwen ASR submit endpoint"))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 30
-
-        var input: [String: Any] = ["file_urls": ["data:audio/m4a;base64,\(base64Audio)"]]
-        if let language = language, !language.isEmpty {
-            // F-079: DashScope's language_hints expects ISO-639-1 main codes,
-            // not full BCP-47 region tags — downgrade (e.g. "zh-TW" -> "zh").
-            input["language_hints"] = [LanguageConfig.whisperMainCode(from: language)]
-        }
-        let payload: [String: Any] = [
-            "model": model,
-            "input": input,
-        ]
-
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw VowriteError.networkError("Invalid response from Qwen ASR submit API")
-        }
-        guard httpResponse.statusCode == 200 else {
-            throw ProviderHTTPErrorPolicy.publicError(
-                context: .qwenASRSubmitRequest,
-                response: httpResponse,
-                discardingResponseBody: data
-            )
-        }
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let output = json["output"] as? [String: Any],
-              let taskId = output["task_id"] as? String else {
-            throw VowriteError.apiError("Qwen ASR: no task_id in response")
-        }
-
-        // Poll for result
-        return try await pollAsyncResult(taskId: taskId, apiKey: apiKey, baseURL: baseURL)
-    }
-
-    private func pollAsyncResult(taskId: String, apiKey: String, baseURL: String) async throws -> String {
-        let statusEndpoint = baseURL.replacingOccurrences(of: "/compatible-mode/v1", with: "/api/v1/tasks/\(taskId)")
-        let startTime = Date()
-
-        while Date().timeIntervalSince(startTime) < maxPollTime {
-            try Task.checkCancellation()
-            try await Task.sleep(nanoseconds: UInt64(pollInterval * 1_000_000_000))
-
-            var request = URLRequest(url: try URL.validated(statusEndpoint, label: "Qwen ASR status endpoint"))
-            request.httpMethod = "GET"
-            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-            request.timeoutInterval = 15
-
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw VowriteError.networkError("Invalid response from Qwen ASR status API")
-            }
-            guard httpResponse.statusCode == 200 else {
-                throw ProviderHTTPErrorPolicy.publicError(
-                    context: .qwenASRStatusRequest,
-                    response: httpResponse,
-                    discardingResponseBody: data
-                )
-            }
-
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let output = json["output"] as? [String: Any],
-                  let status = output["task_status"] as? String else {
-                continue
-            }
-
-            if status == "SUCCEEDED" {
-                if let results = output["results"] as? [[String: Any]],
-                   let first = results.first,
-                   let text = first["text"] as? String {
-                    return text.trimmingCharacters(in: .whitespacesAndNewlines)
-                }
-                throw VowriteError.apiError("Qwen ASR: task succeeded but no text in results")
-            }
-
-            if status == "FAILED" {
-                throw ProviderHTTPErrorPolicy.publicError(
-                    context: .qwenASRTask,
-                    responseMetadata: httpResponse
-                )
-            }
-        }
-
-        throw VowriteError.apiError("Qwen ASR: transcription timed out after \(Int(maxPollTime))s")
-    }
 }
