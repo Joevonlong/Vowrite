@@ -96,7 +96,17 @@ public enum KeyVault {
     /// Returns nil otherwise (caller uses provider's default from providers.json).
     public static func effectiveBaseURL(for provider: APIProvider) -> String? {
         guard preferredAuthMethod(for: provider) == "oauth" else { return nil }
-        return OAuthTokenStore.load(for: provider.providerID)?.baseURL
+        return oauthBaseURL(
+            preferredAuthMethod: "oauth",
+            token: OAuthTokenStore.load(for: provider.providerID)
+        )
+    }
+
+    /// Pure credential-resolution step used by the Keychain-backed public API.
+    /// Keeping it internal allows focused tests without reading or replacing keys.
+    static func oauthBaseURL(preferredAuthMethod: String, token: OAuthToken?) -> String? {
+        guard preferredAuthMethod == "oauth", let token, !token.isExpired else { return nil }
+        return token.baseURL
     }
 
     /// True if an OAuth token exists and is not expired.
