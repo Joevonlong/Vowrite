@@ -304,8 +304,10 @@ struct PipelineConfigurationEditor: View {
                     PipelineKeyStatusBadge(configuration: configuration, isSpeechToText: isSpeechToText)
 
                     Picker("Provider", selection: providerBinding) {
-                        ForEach(APIProvider.allCases) { provider in
-                            Text(provider.rawValue).tag(provider)
+                        ForEach(providerChoices) { provider in
+                            Text(providerTitle(for: provider))
+                                .tag(provider)
+                                .disabled(!supportsCurrentPipeline(provider))
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -383,6 +385,21 @@ struct PipelineConfigurationEditor: View {
         isSpeechToText ? configuration.provider.presetSTTModels : configuration.provider.presetPolishModels
     }
 
+    private var providerChoices: [APIProvider] {
+        let available = isSpeechToText ? APIProvider.availableSTTCases : APIProvider.availablePolishCases
+        guard !available.contains(configuration.provider) else { return available }
+        return [configuration.provider] + available
+    }
+
+    private func supportsCurrentPipeline(_ provider: APIProvider) -> Bool {
+        if provider == .custom { return true }
+        return isSpeechToText ? provider.hasSTTSupport : provider.hasPolishSupport
+    }
+
+    private func providerTitle(for provider: APIProvider) -> String {
+        supportsCurrentPipeline(provider) ? provider.rawValue : "\(provider.rawValue) (Unavailable)"
+    }
+
     private var isCustomModel: Bool {
         !modelSuggestions.isEmpty && !modelSuggestions.contains(configuration.model)
     }
@@ -438,6 +455,10 @@ struct PipelineConfigurationEditor: View {
 
     private var providerRowDescription: String {
         var parts = [description]
+
+        if !supportsCurrentPipeline(configuration.provider) {
+            parts.append("The current provider is unavailable for this pipeline. Choose another provider to change it; the existing setting is retained until you save.")
+        }
 
         if isSpeechToText, let note = configuration.provider.sttSupportNote {
             parts.append(note)

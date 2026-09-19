@@ -10,6 +10,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 ### Reliability
 
 - Resource-backed provider and prompt lookups now prefer the shipped app resource bundle, so packaged macOS builds do not depend on the source checkout path. OAuth-expiry handling keeps the regular provider endpoint available for API-key configuration.
+- Pipeline provider pickers now show only providers supported by that pipeline while retaining any existing unsupported selection as a clearly marked, disabled option.
 
 ### Changed
 
