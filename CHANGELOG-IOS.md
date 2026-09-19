@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Reliability
 
 - Pending keyboard history remains available until import/save completes and duplicate imports are deduplicated. Expired OAuth falls back to the regular provider endpoint, and unavailable Sherpa download controls stay hidden until runtime support is ready.
+- Switching an iOS provider now resets its endpoint to that provider's registry URL, so a new provider key cannot be sent to a previous provider's custom host. Saved unavailable and legacy model choices remain visible as saved selections until changed.
 
 ### Changed
 
