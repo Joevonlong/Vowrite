@@ -30,7 +30,7 @@ struct KeyboardInputView: View {
 
     struct KeyLayout {
         let availableWidth: CGFloat
-        let gap: CGFloat = 6
+        let gap: CGFloat = 4
 
         var standardWidth: CGFloat { (availableWidth - 9 * gap) / 10 }
 
@@ -142,11 +142,10 @@ struct KeyboardInputView: View {
                 state.keyboardLayout = state.keyboardLayout == .letters ? .numbers : .letters
             }
             Button { state.insertText(" ") } label: {
-                Text("拼")
+                Text("Space")
                     .font(.system(size: 14, weight: .regular))
                     .foregroundStyle(KeyboardTheme.subtitleColor)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.trailing, 16)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .frame(height: layout.keyHeight)
                     .background(
                         RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
@@ -185,12 +184,12 @@ struct KeyboardInputView: View {
             state.typeLetter(char)
         } label: {
             Text(state.keyboardShift == .off ? char : char.uppercased())
-                .font(.system(size: 17, weight: .regular))
+                .font(.system(size: 20, weight: .regular))
                 .foregroundStyle(KeyboardTheme.titleColor)
                 .frame(width: width, height: height)
                 .background(
                     RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
-                        .fill(Color(UIColor.systemGray5))
+                        .fill(KeyboardTheme.keyFill)
                         .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
                 )
         }
@@ -202,12 +201,12 @@ struct KeyboardInputView: View {
             state.insertText(char)
         } label: {
             Text(char)
-                .font(.system(size: 17, weight: .regular))
+                .font(.system(size: 20, weight: .regular))
                 .foregroundStyle(KeyboardTheme.titleColor)
                 .frame(width: width, height: height)
                 .background(
                     RoundedRectangle(cornerRadius: KeyboardTheme.keyCornerRadius, style: .continuous)
-                        .fill(Color(UIColor.systemGray5))
+                        .fill(KeyboardTheme.keyFill)
                         .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 1)
                 )
         }
@@ -240,7 +239,7 @@ struct KeyboardInputView: View {
         let bg: Color = {
             switch state.keyboardShift {
             case .off: return Color(UIColor.systemGray4)
-            case .shift, .capsLock: return Color(UIColor.systemGray2)
+            case .shift, .capsLock: return KeyboardTheme.chipActiveTop
             }
         }()
         return Button {
@@ -263,6 +262,7 @@ struct KeyboardInputView: View {
             .frame(width: width, height: height)
         }
         .animation(.easeOut(duration: 0.1), value: state.keyboardShift)
+        .accessibilityLabel(state.keyboardShift == .capsLock ? "Caps Lock" : "Shift")
     }
 
     // MARK: - Keyboard delete (continuous, no F-067 popup)
@@ -277,6 +277,9 @@ struct KeyboardInputView: View {
                 .foregroundStyle(KeyboardTheme.titleColor)
         }
         .frame(width: width, height: height)
+        .accessibilityLabel("Delete")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { state.deleteBackward() }
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in

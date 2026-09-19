@@ -6,6 +6,7 @@ struct OnboardingView: View {
     let onComplete: () -> Void
 
     @EnvironmentObject private var appState: AppState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var currentStep = 0
     @State private var micGranted = false
     @State private var selectedPreset: APIPresetOption?
@@ -28,154 +29,181 @@ struct OnboardingView: View {
                 doneStep.tag(5)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.easeInOut, value: currentStep)
+            .animation(reduceMotion ? nil : .easeInOut, value: currentStep)
+        }
+        .background(VW.Colors.Surface.canvas)
+        .tint(VW.Colors.Action.primary)
+        .accentColor(VW.Colors.Action.primary)
+        .transaction { transaction in
+            if reduceMotion { transaction.animation = nil; transaction.disablesAnimations = true }
         }
     }
 
     // MARK: - Progress Dots
 
     private var progressDots: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<totalSteps, id: \.self) { step in
-                Circle()
-                    .fill(step <= currentStep ? Color.accentColor : Color.secondary.opacity(0.3))
-                    .frame(width: 8, height: 8)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                ForEach(0..<totalSteps, id: \.self) { step in
+                    Capsule()
+                        .fill(step <= currentStep ? VW.Colors.Action.primary : VW.Colors.Border.standard)
+                        .frame(height: 4)
+                }
             }
+            Text("STEP \(currentStep + 1) OF \(totalSteps)")
+                .font(.caption.weight(.semibold))
+                .tracking(1.2)
+                .foregroundStyle(VW.Colors.Text.secondary)
         }
+        .padding(.horizontal, 24)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Setup step \(currentStep + 1) of \(totalSteps)")
     }
 
     // MARK: - Step 1: Welcome
 
     private var welcomeStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer()
 
-            Image(systemName: "keyboard.badge.ellipsis")
-                .font(.system(size: 72))
-                .foregroundColor(.accentColor)
-                .symbolRenderingMode(.hierarchical)
+                Image(systemName: "waveform")
+                    .font(.system(size: 72))
+                    .foregroundColor(.accentColor)
+                    .symbolRenderingMode(.hierarchical)
 
-            Text("Vowrite")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                Text("Vowrite")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
 
-            Text("Your intelligent voice keyboard.\nSpeak in any app, text appears instantly.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+                Text("Your intelligent voice keyboard.\nSpeak in any app, text appears instantly.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
 
-            Spacer()
+                Spacer()
 
-            nextButton("Get Started")
+                nextButton("Get Started")
+            }
+            .padding(.vertical, 32)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.bottom, 40)
     }
 
     // MARK: - Step 2: Add Keyboard
 
     private var addKeyboardStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer()
 
-            Image(systemName: "plus.rectangle.on.rectangle")
-                .font(.system(size: 56))
-                .foregroundColor(.accentColor)
+                Image(systemName: "plus.rectangle.on.rectangle")
+                    .font(.system(size: 56))
+                    .foregroundColor(.accentColor)
 
-            Text("Add Vowrite Keyboard")
-                .font(.title2)
-                .fontWeight(.bold)
+                Text("Add Vowrite Keyboard")
+                    .font(.title2)
+                    .fontWeight(.bold)
 
-            KeyboardSetupGuide(step: .addKeyboard)
+                KeyboardSetupGuide(step: .addKeyboard)
 
-            Button("Open Settings") {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
                 }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+
+                Spacer()
+
+                nextButton("I've Added It")
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-
-            Spacer()
-
-            nextButton("I've Added It")
+            .padding(.vertical, 32)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.bottom, 40)
     }
 
     // MARK: - Step 3: Full Access
 
     private var fullAccessStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer()
 
-            Image(systemName: "lock.open.fill")
-                .font(.system(size: 56))
-                .foregroundColor(.accentColor)
+                Image(systemName: "lock.open.fill")
+                    .font(.system(size: 56))
+                    .foregroundColor(.accentColor)
 
-            Text("Enable Full Access")
-                .font(.title2)
-                .fontWeight(.bold)
+                Text("Enable Full Access")
+                    .font(.title2)
+                    .fontWeight(.bold)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Label("Microphone access for voice recording", systemImage: "mic.fill")
-                Label("Network access for STT & AI processing", systemImage: "globe")
-                Label("Vowrite never collects typing data", systemImage: "lock.shield.fill")
-            }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 40)
-
-            Button("Open Keyboard Settings") {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Microphone access for voice recording", systemImage: "mic.fill")
+                    Label("Network access for STT & AI processing", systemImage: "globe")
+                    Label("Vowrite never collects typing data", systemImage: "lock.shield.fill")
                 }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 40)
+
+                Button("Open Keyboard Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+
+                Spacer()
+
+                nextButton("I've Enabled It")
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-
-            Spacer()
-
-            nextButton("I've Enabled It")
+            .padding(.vertical, 32)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.bottom, 40)
     }
 
     // MARK: - Step 4: API Configuration
 
     private var apiStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer()
 
-            Image(systemName: "key.fill")
-                .font(.system(size: 56))
-                .foregroundColor(.accentColor)
+                Image(systemName: "key.fill")
+                    .font(.system(size: 56))
+                    .foregroundColor(.accentColor)
 
-            Text("API Configuration")
-                .font(.title2)
-                .fontWeight(.bold)
+                Text("API Configuration")
+                    .font(.title2)
+                    .fontWeight(.bold)
 
-            Text("Choose a preset and enter your API key.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+                Text("Choose a preset and enter your API key.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
 
-            presetList
+                presetList
 
-            apiKeyField
+                apiKeyField
 
-            Spacer()
+                Spacer()
 
-            nextButton("Continue") {
-                if let preset = selectedPreset,
-                   let provider = KeyVault.requiredProviders(for: preset.configuration).first,
-                   !apiKey.isEmpty {
-                    _ = KeyVault.saveKey(apiKey, for: provider)
+                nextButton("Continue") {
+                    if let preset = selectedPreset,
+                       let provider = KeyVault.requiredProviders(for: preset.configuration).first,
+                       !apiKey.isEmpty {
+                        _ = KeyVault.saveKey(apiKey, for: provider)
+                    }
                 }
             }
+            .padding(.vertical, 32)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.bottom, 40)
     }
 
     private var presetList: some View {
@@ -203,7 +231,7 @@ struct OnboardingView: View {
                     }
                     .padding(14)
                     .background(
-                        selectedPreset?.id == preset.id ? Color.accentColor.opacity(0.1) : Color(.secondarySystemBackground),
+                        selectedPreset?.id == preset.id ? VW.Colors.Action.soft : VW.Colors.Surface.panel,
                         in: RoundedRectangle(cornerRadius: 12)
                     )
                 }
@@ -234,43 +262,46 @@ struct OnboardingView: View {
     // MARK: - Step 5: Microphone
 
     private var microphoneStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer()
 
-            Image(systemName: micGranted ? "mic.fill" : "mic.slash")
-                .font(.system(size: 56))
-                .foregroundColor(micGranted ? .green : .accentColor)
-                .contentTransition(.symbolEffect(.replace))
+                Image(systemName: micGranted ? "mic.fill" : "mic.slash")
+                    .font(.system(size: 56))
+                    .foregroundColor(micGranted ? .green : .accentColor)
+                    .contentTransition(.symbolEffect(.replace))
 
-            Text("Microphone Access")
-                .font(.title2)
-                .fontWeight(.bold)
+                Text("Microphone Access")
+                    .font(.title2)
+                    .fontWeight(.bold)
 
-            Text("The keyboard will also request microphone permission on first use.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-
-            if micGranted {
-                Label("Microphone access granted", systemImage: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                Text("The keyboard will also request microphone permission on first use.")
                     .font(.subheadline)
-            } else {
-                Button("Allow Microphone Access") {
-                    Task {
-                        micGranted = await permissionManager.requestMicrophoneAccess()
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+
+                if micGranted {
+                    Label("Microphone access granted", systemImage: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.subheadline)
+                } else {
+                    Button("Allow Microphone Access") {
+                        Task {
+                            micGranted = await permissionManager.requestMicrophoneAccess()
+                        }
                     }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+
+                Spacer()
+
+                nextButton("Continue")
             }
-
-            Spacer()
-
-            nextButton("Continue")
+            .padding(.vertical, 32)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.bottom, 40)
         .onAppear {
             micGranted = permissionManager.hasMicrophoneAccess()
         }
@@ -279,38 +310,41 @@ struct OnboardingView: View {
     // MARK: - Step 6: Done
 
     private var doneStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer()
 
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 72))
-                .foregroundColor(.green)
-                .symbolRenderingMode(.hierarchical)
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 72))
+                    .foregroundColor(.green)
+                    .symbolRenderingMode(.hierarchical)
 
-            Text("All Set!")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                Text("All Set!")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
 
-            Text("Switch to Vowrite keyboard in any app and start speaking.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+                Text("Switch to Vowrite keyboard in any app and start speaking.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
 
-            Spacer()
+                Spacer()
 
-            Button {
-                onComplete()
-            } label: {
-                Text("Start Using Vowrite")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
+                Button {
+                    onComplete()
+                } label: {
+                    Text("Start Using Vowrite")
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .padding(.horizontal, 24)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .padding(.horizontal, 24)
+            .padding(.vertical, 32)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.bottom, 40)
     }
 
     // MARK: - Helpers
@@ -318,7 +352,7 @@ struct OnboardingView: View {
     private func nextButton(_ title: String, action: (() -> Void)? = nil) -> some View {
         Button {
             action?()
-            withAnimation {
+            withAnimation(reduceMotion ? nil : .easeInOut) {
                 currentStep += 1
             }
         } label: {

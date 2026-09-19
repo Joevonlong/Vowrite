@@ -23,11 +23,9 @@ struct ResultView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-                Divider()
-
                 // Polished text
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Polished Text")
+                    Text("YOUR EXPRESSION")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(.secondary)
@@ -35,7 +33,10 @@ struct ResultView: View {
                     Text(polishedText)
                         .font(.body)
                         .textSelection(.enabled)
+                        .lineSpacing(5)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .vwIOSCard()
 
                 // Raw transcript (collapsible)
                 if rawTranscript != polishedText {
@@ -48,10 +49,9 @@ struct ResultView: View {
                     }
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(VW.Colors.Text.secondary)
+                    .vwIOSCard()
                 }
-
-                Divider()
 
                 // Action buttons
                 HStack(spacing: 12) {
@@ -79,7 +79,9 @@ struct ResultView: View {
             }
             .padding(20)
         }
-        .navigationTitle("Result")
+        .background(VW.Colors.Surface.canvas)
+        .tint(VW.Colors.Action.primary)
+        .navigationTitle("Expression")
         .navigationBarTitleDisplayMode(.inline)
     }
 

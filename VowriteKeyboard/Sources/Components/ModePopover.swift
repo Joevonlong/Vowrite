@@ -6,6 +6,7 @@ struct ModePopover: View {
     @Binding var isPresented: Bool
 
     var body: some View {
+        ScrollView {
         VStack(spacing: 0) {
             ForEach(state.modes) { mode in
                 Button {
@@ -13,8 +14,9 @@ struct ModePopover: View {
                     isPresented = false
                 } label: {
                     HStack(spacing: 8) {
-                        Text(mode.icon)
+                        Image(systemName: mode.icon)
                             .font(.body)
+                            .foregroundStyle(KeyboardTheme.chipActiveText)
                         Text(mode.name)
                             .font(.subheadline)
                             .foregroundStyle(.primary)
@@ -30,7 +32,9 @@ struct ModePopover: View {
                 }
             }
         }
-        .frame(width: 200)
+        }
+        .frame(width: 260)
+        .frame(maxHeight: 240)
         .presentationCompactAdaptation(.popover)
     }
 }

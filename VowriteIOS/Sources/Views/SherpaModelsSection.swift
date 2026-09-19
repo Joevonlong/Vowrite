@@ -8,6 +8,7 @@ struct SherpaLocalModelsList: View {
         ForEach(SherpaModelManager.availableModels) { model in
             SherpaModelRowiOS(model: model, modelManager: modelManager)
         }
+        .padding(.vertical, 8)
     }
 }
 
@@ -16,7 +17,12 @@ private struct SherpaModelRowiOS: View {
     @ObservedObject var modelManager: SherpaModelManager
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
+            Image(systemName: "arrow.down.circle")
+                .font(.title3)
+                .foregroundStyle(VW.Colors.Action.primary)
+                .frame(width: 40, height: 40)
+                .background(VW.Colors.Action.soft, in: RoundedRectangle(cornerRadius: VW.Radius.control))
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.name)
                     .font(.body)

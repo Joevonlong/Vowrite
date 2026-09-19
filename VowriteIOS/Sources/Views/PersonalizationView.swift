@@ -50,30 +50,47 @@ struct PersonalizationView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    VWIOSPageHeader(title: "Sound like yourself.", subtitle: "Choose a scene, then shape how your words read.")
+                        .padding(.vertical, 8)
+                }
+                .listRowBackground(Color.clear)
                 // Modes
                 Section {
                     ForEach(modeManager.modes) { mode in
-                        HStack {
-                            Image(systemName: mode.icon)
-                                .foregroundColor(.accentColor)
-                                .frame(width: 24)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(mode.name)
-                                    .font(.body)
-                                Text(mode.polishEnabled ? "STT + Polish" : "STT only")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            Button { modeManager.select(mode) } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: mode.icon)
+                                        .font(.title3)
+                                        .foregroundStyle(VW.Colors.Action.primary)
+                                        .frame(width: 40, height: 40)
+                                        .background(VW.Colors.Action.soft, in: RoundedRectangle(cornerRadius: VW.Radius.control))
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(mode.name).font(.body.weight(.medium))
+                                        Text(mode.isTranslation ? "Translate your voice" : mode.polishEnabled ? "Clear, natural expression" : "Keep your original words")
+                                            .font(.caption)
+                                            .foregroundStyle(VW.Colors.Text.secondary)
+                                    }
+                                    Spacer(minLength: 0)
+                                    if mode.id == modeManager.currentModeId {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundStyle(VW.Colors.Action.primary)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                             }
-                            Spacer()
-                            if mode.id == modeManager.currentModeId {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.accentColor)
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(mode.id == modeManager.currentModeId ? .isSelected : [])
+                            Button { editingMode = mode } label: {
+                                Image(systemName: "pencil").frame(width: 44, height: 44)
                             }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("Edit \(mode.name)")
                         }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            modeManager.select(mode)
-                        }
+                        .padding(.vertical, 8)
+                        .listRowBackground(mode.id == modeManager.currentModeId ? VW.Colors.Action.soft : VW.Colors.Surface.panel)
                         .swipeActions(edge: .trailing) {
                             Button {
                                 editingMode = mode
@@ -95,19 +112,21 @@ struct PersonalizationView: View {
                     }
                 } header: {
                     HStack {
-                        Text("Dictation Modes")
+                        Text("Expression Scenes")
                         Spacer()
                         Button {
                             isPickingTemplate = true
                         } label: {
                             Image(systemName: "square.grid.2x2")
                                 .font(.body)
+                                .frame(width: 44, height: 44)
                         }
                         Button {
                             isCreatingNew = true
                         } label: {
                             Image(systemName: "plus.circle.fill")
                                 .font(.body)
+                                .frame(width: 44, height: 44)
                         }
                     }
                 } footer: {
@@ -148,7 +167,7 @@ struct PersonalizationView: View {
                         }
                     }
                 } header: {
-                    Text("Quick Presets")
+                    Text("Preference Templates")
                 } footer: {
                     Text("Tap a preset to load it into the User Prompt editor below. You'll still need to Save to apply it.")
                 }
@@ -180,7 +199,7 @@ struct PersonalizationView: View {
                         }
                     }
                 } header: {
-                    Text("User Prompt")
+                    Text("Global Preferences")
                 } footer: {
                     Text(isEditingPrompt
                          ? "Tap Save to apply, or Cancel to discard your changes."
@@ -218,52 +237,19 @@ struct PersonalizationView: View {
                     ))
                 }
 
-                // Personal Vocabulary
-                Section {
-                    ForEach(vocabManager.words, id: \.self) { word in
-                        Text(word)
-                    }
-                    .onDelete { offsets in
-                        vocabManager.remove(at: offsets)
-                    }
-
-                    HStack {
-                        TextField("Add word...", text: $newVocabWord)
-                            .onSubmit {
-                                let trimmed = newVocabWord.trimmingCharacters(in: .whitespacesAndNewlines)
-                                guard !trimmed.isEmpty else { return }
-                                if trimmed.contains(",") {
-                                    vocabManager.addBulk(trimmed)
-                                } else {
-                                    vocabManager.add(trimmed)
-                                }
-                                newVocabWord = ""
+                Section("Vocabulary & Corrections") {
+                    NavigationLink {
+                        vocabularyPage
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "text.book.closed").foregroundStyle(VW.Colors.Action.primary)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Personal Vocabulary")
+                                Text("\(vocabManager.words.count) words · \(replacementManager.rules.count) corrections")
+                                    .font(.caption).foregroundStyle(VW.Colors.Text.secondary)
                             }
-                    }
-                } header: {
-                    HStack {
-                        Text("Personal Vocabulary")
-                        Spacer()
-                        Button {
-                            isImporting = true
-                        } label: {
-                            Image(systemName: "square.and.arrow.down")
-                                .font(.body)
                         }
-                        Button {
-                            isExporting = true
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.body)
-                        }
-                        .disabled(vocabManager.words.isEmpty)
-                    }
-                } footer: {
-                    if let message = importStatusMessage {
-                        Text(message)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("Swipe to delete. Tap ↓ to import CSV, ↑ to export.")
+                        .padding(.vertical, 8)
                     }
                 }
 
@@ -338,74 +324,10 @@ struct PersonalizationView: View {
                     Text(clearLearnedConfirmMessage)
                 }
 
-                // Text Corrections (F-051)
-                Section {
-                    ForEach(replacementManager.rules) { rule in
-                        HStack {
-                            Text(rule.trigger)
-                                .font(.body)
-                                .foregroundStyle(.primary)
-                            Image(systemName: "arrow.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(rule.replacement)
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .onDelete { offsets in
-                        replacementManager.remove(at: offsets)
-                    }
-
-                    HStack(spacing: 8) {
-                        TextField("Trigger", text: $newTrigger)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: .infinity)
-                        Image(systemName: "arrow.right")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        TextField("Replace with", text: $newReplacement)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: .infinity)
-                        Button {
-                            let trigger = newTrigger.trimmingCharacters(in: .whitespaces)
-                            let replacement = newReplacement.trimmingCharacters(in: .whitespaces)
-                            guard !trigger.isEmpty, !replacement.isEmpty else { return }
-                            replacementManager.add(trigger: trigger, replacement: replacement)
-                            newTrigger = ""
-                            newReplacement = ""
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                        }
-                        .disabled(newTrigger.trimmingCharacters(in: .whitespaces).isEmpty ||
-                                  newReplacement.trimmingCharacters(in: .whitespaces).isEmpty)
-                    }
-                } header: {
-                    Text("Text Corrections")
-                } footer: {
-                    Text("Auto-correct misrecognized words. Swipe to delete.")
-                }
             }
+            .vwIOSForm()
             .navigationTitle("Personalization")
-            // CSV file pickers (F-074)
-            .fileImporter(
-                isPresented: $isImporting,
-                allowedContentTypes: [.commaSeparatedText],
-                allowsMultipleSelection: false
-            ) { result in
-                handleImport(result: result)
-            }
-            .fileExporter(
-                isPresented: $isExporting,
-                document: VocabularyCSVDocumentIOS(csv: vocabManager.exportCSV()),
-                contentType: .commaSeparatedText,
-                defaultFilename: exportFilename()
-            ) { _ in }
-            .alert("Import Error", isPresented: $showImportError, presenting: importError) { _ in
-                Button("OK", role: .cancel) {}
-            } message: { error in
-                Text(error)
-            }
+            .navigationBarTitleDisplayMode(.inline)
             // Edit sheet
             .sheet(item: $editingMode) { mode in
                 ModeEditorSheet(
@@ -544,6 +466,132 @@ struct PersonalizationView: View {
             }
         }
     }
+}
+
+private extension PersonalizationView {
+    var vocabularyPage: some View {
+        Form {
+            // Personal Vocabulary
+            Section {
+                ForEach(vocabManager.words, id: \.self) { word in
+                    Text(word)
+                }
+                .onDelete { offsets in
+                    vocabManager.remove(at: offsets)
+                }
+
+                HStack {
+                    TextField("Add word...", text: $newVocabWord)
+                        .onSubmit {
+                            let trimmed = newVocabWord.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !trimmed.isEmpty else { return }
+                            if trimmed.contains(",") {
+                                vocabManager.addBulk(trimmed)
+                            } else {
+                                vocabManager.add(trimmed)
+                            }
+                            newVocabWord = ""
+                        }
+                }
+            } header: {
+                HStack {
+                    Text("Personal Vocabulary")
+                    Spacer()
+                    Button {
+                        isImporting = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.down")
+                            .font(.body)
+                    }
+                    Button {
+                        isExporting = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.body)
+                    }
+                    .disabled(vocabManager.words.isEmpty)
+                }
+            } footer: {
+                if let message = importStatusMessage {
+                    Text(message)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Swipe to delete. Tap ↓ to import CSV, ↑ to export.")
+                }
+            }
+
+            // Text Corrections (F-051)
+            Section {
+                ForEach(replacementManager.rules) { rule in
+                    HStack {
+                        Text(rule.trigger)
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                        Image(systemName: "arrow.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(rule.replacement)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .onDelete { offsets in
+                    replacementManager.remove(at: offsets)
+                }
+
+                HStack(spacing: 8) {
+                    TextField("Trigger", text: $newTrigger)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: .infinity)
+                    Image(systemName: "arrow.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("Replace with", text: $newReplacement)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: .infinity)
+                    Button {
+                        let trigger = newTrigger.trimmingCharacters(in: .whitespaces)
+                        let replacement = newReplacement.trimmingCharacters(in: .whitespaces)
+                        guard !trigger.isEmpty, !replacement.isEmpty else { return }
+                        replacementManager.add(trigger: trigger, replacement: replacement)
+                        newTrigger = ""
+                        newReplacement = ""
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                    .disabled(newTrigger.trimmingCharacters(in: .whitespaces).isEmpty ||
+                              newReplacement.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            } header: {
+                Text("Text Corrections")
+            } footer: {
+                Text("Auto-correct misrecognized words. Swipe to delete.")
+            }
+        }
+        .vwIOSForm()
+        .navigationTitle("Vocabulary & Corrections")
+        .navigationBarTitleDisplayMode(.inline)
+        // CSV file pickers (F-074)
+        .fileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.commaSeparatedText],
+            allowsMultipleSelection: false
+        ) { result in
+            handleImport(result: result)
+        }
+        .fileExporter(
+            isPresented: $isExporting,
+            document: VocabularyCSVDocumentIOS(csv: vocabManager.exportCSV()),
+            contentType: .commaSeparatedText,
+            defaultFilename: exportFilename()
+        ) { _ in }
+        .alert("Import Error", isPresented: $showImportError, presenting: importError) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { error in
+            Text(error)
+        }
+    }
+
 }
 
 // MARK: - VocabularyCSVDocumentIOS (F-074)

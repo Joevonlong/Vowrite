@@ -30,74 +30,191 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // API Preset
-                Section("Quick Setup") {
-                    if let recovery = presetRecovery {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("\(recovery.name) preset unavailable", systemImage: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
-                            Text(recovery.message)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            HStack {
-                                Button("Use Recommended") {
-                                    let preset = BuiltInAPIPreset.recommended
-                                    APIConfig.apply(preset.configuration, presetID: preset.id)
-                                    syncStateFromConfig()
-                                    presetRecovery = nil
-                                }
-                                Button("Keep Current") {
-                                    APIConfig.acknowledgePresetRecoveryKeepingCurrentConfiguration()
-                                    presetRecovery = nil
-                                }
-                            }
-                            .font(.caption)
-                        }
+                Section {
+                    VWIOSPageHeader(title: "Make Vowrite yours.", subtitle: "Connect your models and fine-tune your input experience.")
+                        .padding(.vertical, 8)
+                }
+                .listRowBackground(Color.clear)
+                Section {
+                    NavigationLink { modelsPage } label: {
+                        settingsDestination("Models", detail: "Speech recognition and AI polish", icon: "cpu")
                     }
+                    NavigationLink { connectionsPage } label: {
+                        settingsDestination("API Keys", detail: "Connect your own providers", icon: "key")
+                    }
+                    NavigationLink { generalPage } label: {
+                        settingsDestination("Language & Feedback", detail: "Translation and sound preferences", icon: "slider.horizontal.3")
+                    }
+                }
+                Section("About") {
+                    HStack(spacing: 12) {
+                        Image(systemName: "waveform").font(.title2).foregroundStyle(VW.Colors.Action.primary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Vowrite").font(.headline)
+                            Text("Say it once. Mean it perfectly.").font(.caption).foregroundStyle(VW.Colors.Text.secondary)
+                        }
+                        Spacer()
+                        Text(AppVersion.current).font(.caption).foregroundStyle(VW.Colors.Text.secondary)
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+            .vwIOSForm()
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .onAppear { syncStateFromConfig() }
+        .onChange(of: modeManager.modes) { _, _ in
+            let src = translationSource
+            let tgt = translationTarget
+            if src != translationSourceLocal { translationSourceLocal = src }
+            if tgt != translationTargetLocal { translationTargetLocal = tgt }
+        }
+        .onChange(of: focusedKeyField) { oldValue, _ in
+            // Save when focus leaves a key field (tab away, dismiss keyboard),
+            // not just on submit — covers the common "type then tap elsewhere" path.
+            switch oldValue {
+            case .stt: saveKey(sttAPIKey, for: sttProvider)
+            case .polish: saveKey(polishAPIKey, for: polishProvider)
+            case nil: break
+            }
+        }
+        .onDisappear {
+            // Backstop: if the view (and its field) disappears while still
+            // focused — e.g. the user types a key then immediately
+            // backgrounds/switches tabs — the focus-change handler above
+            // may not fire in time. Save whatever is currently entered.
+            saveKey(sttAPIKey, for: sttProvider)
+            saveKey(polishAPIKey, for: polishProvider)
+        }
+    }
 
-                    ForEach(APIPresetStore.builtInPresets, id: \.id) { preset in
-                        Button {
-                            APIConfig.apply(preset)
-                            syncStateFromConfig()
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(preset.name)
-                                        .font(.body)
-                                        .foregroundStyle(.primary)
-                                    Text(preset.summary)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                if APIConfig.selectedPresetID == preset.id {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.accentColor)
-                                }
+    private func settingsDestination(_ title: String, detail: String, icon: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(VW.Colors.Action.primary)
+                .frame(width: 40, height: 40)
+                .background(VW.Colors.Action.soft, in: RoundedRectangle(cornerRadius: VW.Radius.control))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.body.weight(.medium))
+                Text(detail).font(.caption).foregroundStyle(VW.Colors.Text.secondary)
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    private var modelsPage: some View {
+        Form {
+            // API Preset
+            Section("Quick Setup") {
+                if let recovery = presetRecovery {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("\(recovery.name) preset unavailable", systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text(recovery.message)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        HStack {
+                            Button("Use Recommended") {
+                                let preset = BuiltInAPIPreset.recommended
+                                APIConfig.apply(preset.configuration, presetID: preset.id)
+                                syncStateFromConfig()
+                                presetRecovery = nil
+                            }
+                            Button("Keep Current") {
+                                APIConfig.acknowledgePresetRecoveryKeepingCurrentConfiguration()
+                                presetRecovery = nil
+                            }
+                        }
+                        .font(.caption)
+                    }
+                }
+
+                ForEach(APIPresetStore.builtInPresets, id: \.id) { preset in
+                    Button {
+                        APIConfig.apply(preset)
+                        syncStateFromConfig()
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(preset.name)
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
+                                Text(preset.summary)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if APIConfig.selectedPresetID == preset.id {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }
                 }
+            }
 
-                // STT Configuration
-                Section("Speech-to-Text") {
-                    Picker("Provider", selection: $sttProvider) {
-                        ForEach(APIProvider.availableSTTCases, id: \.self) { provider in
-                            Text(provider.rawValue).tag(provider)
-                        }
+            // STT Configuration
+            Section("Speech-to-Text") {
+                Picker("Provider", selection: $sttProvider) {
+                    ForEach(APIProvider.availableSTTCases, id: \.self) { provider in
+                        Text(provider.rawValue).tag(provider)
                     }
-                    .onChange(of: sttProvider) { _, newValue in
-                        sttModel = newValue.defaultSTTModel
-                        applyConfig()
-                    }
+                }
+                .onChange(of: sttProvider) { _, newValue in
+                    sttModel = newValue.defaultSTTModel
+                    applyConfig()
+                }
 
-                    Picker("Model", selection: $sttModel) {
-                        ForEach(sttProvider.presetSTTModels, id: \.self) { model in
-                            Text(model).tag(model)
-                        }
+                Picker("Model", selection: $sttModel) {
+                    ForEach(sttProvider.presetSTTModels, id: \.self) { model in
+                        Text(model).tag(model)
                     }
-                    .onChange(of: sttModel) { _, _ in applyConfig() }
+                }
+                .onChange(of: sttModel) { _, _ in applyConfig() }
 
+            }
+
+            // Polish Configuration
+            Section("AI Polish") {
+                Picker("Provider", selection: $polishProvider) {
+                    ForEach(APIProvider.availableCases, id: \.self) { provider in
+                        Text(provider.rawValue).tag(provider)
+                    }
+                }
+                .onChange(of: polishProvider) { _, newValue in
+                    polishModel = newValue.defaultPolishModel
+                    applyConfig()
+                }
+
+                Picker("Model", selection: $polishModel) {
+                    ForEach(polishProvider.presetPolishModels, id: \.self) { model in
+                        Text(model).tag(model)
+                    }
+                }
+                .onChange(of: polishModel) { _, _ in applyConfig() }
+
+            }
+
+            // Local Models (Sherpa offline ASR)
+            Section("Local Models") {
+                SherpaLocalModelsList()
+            }
+
+        }
+        .vwIOSForm()
+        .navigationTitle("Models")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var connectionsPage: some View {
+        Form {
+            Section {
+                Text("Keys are stored securely and used by your selected speech and polish providers.")
+                    .font(.subheadline).foregroundStyle(VW.Colors.Text.secondary)
+            }
+            Section("Speech-to-Text · \(sttProvider.rawValue)") {
                     if sttProvider.requiresAPIKey {
                         SecureField(sttProvider.keyPlaceholder, text: $sttAPIKey)
                             .textContentType(.password)
@@ -112,27 +229,12 @@ struct SettingsView: View {
                                 .foregroundStyle(.green)
                         }
                     }
+                if !sttProvider.requiresAPIKey {
+                    Label("No API key required", systemImage: "checkmark.circle")
+                        .foregroundStyle(VW.Colors.Text.secondary)
                 }
-
-                // Polish Configuration
-                Section("AI Polish") {
-                    Picker("Provider", selection: $polishProvider) {
-                        ForEach(APIProvider.availableCases, id: \.self) { provider in
-                            Text(provider.rawValue).tag(provider)
-                        }
-                    }
-                    .onChange(of: polishProvider) { _, newValue in
-                        polishModel = newValue.defaultPolishModel
-                        applyConfig()
-                    }
-
-                    Picker("Model", selection: $polishModel) {
-                        ForEach(polishProvider.presetPolishModels, id: \.self) { model in
-                            Text(model).tag(model)
-                        }
-                    }
-                    .onChange(of: polishModel) { _, _ in applyConfig() }
-
+            }
+            Section("AI Polish · \(polishProvider.rawValue)") {
                     if polishProvider.requiresAPIKey && polishProvider != sttProvider {
                         SecureField(polishProvider.keyPlaceholder, text: $polishAPIKey)
                             .textContentType(.password)
@@ -147,80 +249,60 @@ struct SettingsView: View {
                                 .foregroundStyle(.green)
                         }
                     }
+                if polishProvider == sttProvider {
+                    Text("Uses the same provider key as Speech-to-Text.").foregroundStyle(VW.Colors.Text.secondary)
+                } else if !polishProvider.requiresAPIKey {
+                    Label("No API key required", systemImage: "checkmark.circle")
+                        .foregroundStyle(VW.Colors.Text.secondary)
                 }
-
-                // Feedback
-                Section("Feedback") {
-                    Toggle("Sound Feedback", isOn: $soundFeedbackEnabled)
-                        .onChange(of: soundFeedbackEnabled) { _, newValue in
-                            SoundFeedback.isEnabled = newValue
-                        }
-                }
-
-                // F-066: Translation language quick settings
-                // F-079: two-level picker — region variant row appears only
-                // for languages that have one (Chinese, English, Spanish,
-                // Portuguese, French).
-                Section {
-                    // Persistence folded into the binding setter (rather than
-                    // a separate .onChange) so the multi-row picker component
-                    // sits unmodified in the Section, same as the other
-                    // LanguageRegionPicker call sites.
-                    LanguageRegionPicker(label: "Source", selection: Binding(
-                        get: { translationSourceLocal },
-                        set: { translationSourceLocal = $0; setTranslationSource($0) }
-                    ))
-                    LanguageRegionPicker(label: "Target", selection: Binding(
-                        get: { translationTargetLocal },
-                        set: { translationTargetLocal = $0; setTranslationTarget($0) }
-                    ), excludeAuto: true)
-                } header: {
-                    Text("Translation")
-                } footer: {
-                    Text("Applies to the built-in Translate mode. Custom translation modes keep their own settings.")
-                }
-
-                // Local Models (Sherpa offline ASR)
-                Section("Local Models") {
-                    SherpaLocalModelsList()
-                }
-
-                // About
-                Section("About") {
-                    HStack {
-                        Text("Version")
-                        Spacer()
-                        Text(AppVersion.current)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .navigationTitle("Settings")
-            .onAppear { syncStateFromConfig() }
-            .onChange(of: modeManager.modes) { _, _ in
-                let src = translationSource
-                let tgt = translationTarget
-                if src != translationSourceLocal { translationSourceLocal = src }
-                if tgt != translationTargetLocal { translationTargetLocal = tgt }
-            }
-            .onChange(of: focusedKeyField) { oldValue, _ in
-                // Save when focus leaves a key field (tab away, dismiss keyboard),
-                // not just on submit — covers the common "type then tap elsewhere" path.
-                switch oldValue {
-                case .stt: saveKey(sttAPIKey, for: sttProvider)
-                case .polish: saveKey(polishAPIKey, for: polishProvider)
-                case nil: break
-                }
-            }
-            .onDisappear {
-                // Backstop: if the view (and its field) disappears while still
-                // focused — e.g. the user types a key then immediately
-                // backgrounds/switches tabs — the focus-change handler above
-                // may not fire in time. Save whatever is currently entered.
-                saveKey(sttAPIKey, for: sttProvider)
-                saveKey(polishAPIKey, for: polishProvider)
             }
         }
+        .vwIOSForm()
+        .navigationTitle("API Keys")
+        .navigationBarTitleDisplayMode(.inline)
+        .onDisappear {
+            saveKey(sttAPIKey, for: sttProvider)
+            saveKey(polishAPIKey, for: polishProvider)
+        }
+    }
+
+    private var generalPage: some View {
+        Form {
+            // Feedback
+            Section("Feedback") {
+                Toggle("Sound Feedback", isOn: $soundFeedbackEnabled)
+                    .onChange(of: soundFeedbackEnabled) { _, newValue in
+                        SoundFeedback.isEnabled = newValue
+                    }
+            }
+
+            // F-066: Translation language quick settings
+            // F-079: two-level picker — region variant row appears only
+            // for languages that have one (Chinese, English, Spanish,
+            // Portuguese, French).
+            Section {
+                // Persistence folded into the binding setter (rather than
+                // a separate .onChange) so the multi-row picker component
+                // sits unmodified in the Section, same as the other
+                // LanguageRegionPicker call sites.
+                LanguageRegionPicker(label: "Source", selection: Binding(
+                    get: { translationSourceLocal },
+                    set: { translationSourceLocal = $0; setTranslationSource($0) }
+                ))
+                LanguageRegionPicker(label: "Target", selection: Binding(
+                    get: { translationTargetLocal },
+                    set: { translationTargetLocal = $0; setTranslationTarget($0) }
+                ), excludeAuto: true)
+            } header: {
+                Text("Translation")
+            } footer: {
+                Text("Applies to the built-in Translate mode. Custom translation modes keep their own settings.")
+            }
+
+        }
+        .vwIOSForm()
+        .navigationTitle("Language & Feedback")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func syncStateFromConfig() {
