@@ -79,6 +79,7 @@ SKIP_REASONS = {
     "sherpa": "offline local models, managed by SherpaModelManager",
     "ollama": "local runtime",
     "mlxServer": "local runtime",
+    "doubaoSpeech": "native speech API — no /models catalog; maintain manually from official docs",
     "custom": "user-defined endpoint",
 }
 
