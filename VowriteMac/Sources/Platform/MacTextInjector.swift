@@ -18,6 +18,16 @@ private let injectorLog = OSLog(subsystem: "com.vowrite.app", category: "TextInj
 final class MacTextInjector: TextOutputProvider {
     private var previousApp: NSRunningApplication?
     private var previousBundleID: String?
+    private let accessibilityTrustProvider: () -> Bool
+    private let activationOverride: (() -> Bool)?
+
+    init(
+        accessibilityTrustProvider: @escaping () -> Bool = { AXIsProcessTrusted() },
+        activationOverride: (() -> Bool)? = nil
+    ) {
+        self.accessibilityTrustProvider = accessibilityTrustProvider
+        self.activationOverride = activationOverride
+    }
 
     /// Call when recording STARTS to remember where to paste later.
     func prepareForOutput() {
@@ -34,16 +44,27 @@ final class MacTextInjector: TextOutputProvider {
 
     /// Inject text into the previously active app at the cursor position.
     /// Returns `true` if the paste was actually delivered, `false` if injection
-    /// was aborted (target app activation failed — the V-014 guard). On the
+    /// was aborted (Accessibility permission is missing or target app activation
+    /// failed — the V-014 guard). On the
     /// `false` path the clipboard has NOT been touched by this call (the guard
     /// runs before any pasteboard write), so the caller cannot assume the text
     /// is on the clipboard for a manual paste.
     func output(text: String) async -> Bool {
+        let isAccessibilityTrusted = accessibilityTrustProvider()
         NSLog("[TextInjector] Injecting %d chars, AXTrusted=%d",
-              text.count, AXIsProcessTrusted() ? 1 : 0)
+              text.count, isAccessibilityTrusted ? 1 : 0)
+
+        // CGEvent posting silently fails when this process is not trusted for
+        // Accessibility. Reject before activating another app or touching the
+        // clipboard so the engine can preserve History and report paste failure.
+        guard isAccessibilityTrusted else {
+            os_log(.error, log: injectorLog,
+                   "Accessibility permission missing — injection aborted before side effects")
+            return false
+        }
 
         // Step 1: Activate the previous app — abort if activation fails (V-014 guard)
-        guard activatePreviousApp() else {
+        guard activationOverride?() ?? activatePreviousApp() else {
             os_log(.error, log: injectorLog,
                    "V-014: target app activation failed — aborting Cmd+V injection to avoid wrong-app paste")
             NSLog("[TextInjector] ERROR: activation failed, injection aborted (clipboard untouched)")

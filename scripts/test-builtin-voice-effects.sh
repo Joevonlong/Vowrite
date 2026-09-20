@@ -6,8 +6,8 @@ MAC_DIR="$PROJECT_ROOT/VowriteMac"
 BUILD_DIR="$MAC_DIR/.build/arm64-apple-macosx/debug"
 
 if [ "${1:-}" != "--skip-build" ]; then
-    (cd "$MAC_DIR" && swift test --filter BuiltinVoiceEffectsTests)
-    (cd "$MAC_DIR" && swift build --product BuiltinVoiceEffectsHarness)
+    (cd "$MAC_DIR" && swift test --build-system native --filter BuiltinVoiceEffectsTests)
+    (cd "$MAC_DIR" && swift build --build-system native --product BuiltinVoiceEffectsHarness)
 fi
 
 TEMP_ROOT="$(mktemp -d /tmp/vowrite-builtin-effects.XXXXXX)"
