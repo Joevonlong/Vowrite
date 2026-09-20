@@ -62,6 +62,13 @@ else
     codesign --force --deep --sign "-" --entitlements Resources/Vowrite.entitlements Vowrite.app
 fi
 
+echo "Refreshing local app registration..."
+# Replacing files inside an existing bundle can leave Launch Services using
+# cached metadata (including a previously missing CFBundleExecutable).
+touch Vowrite.app
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+"$LSREGISTER" -f "$PWD/Vowrite.app"
+
 echo "Restarting Vowrite..."
 pkill -x Vowrite 2>/dev/null || true
 sleep 2
