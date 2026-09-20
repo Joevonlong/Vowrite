@@ -184,6 +184,12 @@ fi
 echo ""
 echo "▶ App Bundle (VowriteMac)"
 
+if "$PROJECT_ROOT/scripts/check-mac-bundle.sh"; then
+    pass "Mac launch metadata names the packaged executable"
+else
+    fail "Mac launch metadata is missing or mismatched"
+fi
+
 if [ -f "$MAC_DIR/Vowrite.app/Contents/Info.plist" ]; then
     pass "Info.plist exists"
 else

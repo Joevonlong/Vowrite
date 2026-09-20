@@ -2,6 +2,9 @@
 set -e
 cd "$(dirname "$0")"
 
+# Reject invalid launch metadata before building or replacing the local app.
+../scripts/check-mac-bundle.sh
+
 # Regenerate .icns when source PNG is missing the .icns or newer than it
 if [ -f "Resources/AppIcon-source.png" ]; then
   ICNS="Vowrite.app/Contents/Resources/AppIcon.icns"
@@ -42,6 +45,7 @@ else
 fi
 
 echo "Re-signing app bundle..."
+../scripts/check-mac-bundle.sh --app "$PWD/Vowrite.app"
 # F-024: Use stable self-signed cert for persistent permissions across updates
 SIGN_ID="Vowrite Developer"
 SIGN_KEYCHAIN="$HOME/Library/Keychains/vowrite-signing.keychain-db"
