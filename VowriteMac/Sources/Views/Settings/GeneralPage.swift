@@ -233,6 +233,7 @@ struct PermissionsContent: View {
 
 struct RecordingIndicatorPicker: View {
     @State private var selectedPreset = IndicatorPreset.current
+    @State private var overlayStyle = OverlayStyle.current
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -248,6 +249,7 @@ struct RecordingIndicatorPicker: View {
                             selectedPreset = preset
                             IndicatorPreset.current = preset
                         }
+                        MacOverlayController.shared.update()
                     } label: {
                         VStack(spacing: VW.Spacing.md) {
                             indicatorPreview(for: preset)
@@ -279,6 +281,22 @@ struct RecordingIndicatorPicker: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(preset.displayName)
                     .accessibilityAddTraits(selectedPreset == preset ? [.isSelected] : [])
+                }
+            }
+
+            if selectedPreset == .classicBar {
+                SettingsRow(title: "Bar size", description: "Choose a compact bar or a larger bar with a recording timer.") {
+                    Picker("Bar size", selection: $overlayStyle) {
+                        ForEach(OverlayStyle.allCases, id: \.rawValue) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 120)
+                    .onChange(of: overlayStyle) { _, style in
+                        OverlayStyle.current = style
+                        MacOverlayController.shared.update()
+                    }
                 }
             }
         }
@@ -359,7 +377,6 @@ struct RecordingIndicatorPicker: View {
 struct GeneralOptionsContent: View {
     @State private var launchAtLogin = false
     @State private var launchAtLoginError: String?
-    @State private var overlayStyle = OverlayStyle.current
 
     var body: some View {
         VStack(spacing: 12) {
@@ -396,19 +413,6 @@ struct GeneralOptionsContent: View {
                     set: { SoundFeedback.isEnabled = $0 }
                 ))
                 .toggleStyle(.switch)
-            }
-            if IndicatorPreset.current == .classicBar {
-                SettingsRow(title: "Bar size", description: "Size of the classic recording bar") {
-                    Picker("", selection: $overlayStyle) {
-                        ForEach(OverlayStyle.allCases, id: \.rawValue) { style in
-                            Text(style.rawValue).tag(style)
-                        }
-                    }
-                    .frame(width: 120)
-                    .onChange(of: overlayStyle) { _, v in
-                        OverlayStyle.current = v
-                    }
-                }
             }
         }
         .onAppear {
