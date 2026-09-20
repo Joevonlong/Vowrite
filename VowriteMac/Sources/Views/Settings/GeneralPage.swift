@@ -2,6 +2,7 @@ import VowriteKit
 import SwiftUI
 import ServiceManagement
 import AppKit
+import BuiltinVoiceEffects
 
 // MARK: - General Page
 
@@ -234,6 +235,7 @@ struct PermissionsContent: View {
 struct RecordingIndicatorPicker: View {
     @State private var selectedPreset = IndicatorPreset.current
     @State private var overlayStyle = OverlayStyle.current
+    @ObservedObject private var builtinSelection = BuiltinVoiceEffectSelection.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -248,6 +250,7 @@ struct RecordingIndicatorPicker: View {
                         withAnimation(reduceMotion ? nil : VW.Anim.easeQuick) {
                             selectedPreset = preset
                             IndicatorPreset.current = preset
+                            builtinSelection.select(nil)
                         }
                         MacOverlayController.shared.update()
                     } label: {
@@ -257,13 +260,13 @@ struct RecordingIndicatorPicker: View {
 
                             Text(preset.displayName)
                                 .font(.caption)
-                                .fontWeight(selectedPreset == preset ? .semibold : .regular)
-                                .foregroundColor(selectedPreset == preset ? VW.Colors.Action.primary : VW.Colors.Text.secondary)
+                                .fontWeight(isSelected(preset) ? .semibold : .regular)
+                                .foregroundColor(isSelected(preset) ? VW.Colors.Action.primary : VW.Colors.Text.secondary)
                         }
                         .padding(VW.Spacing.xl)
                         .frame(maxWidth: .infinity, minHeight: 84)
                         .background(
-                            selectedPreset == preset
+                            isSelected(preset)
                                 ? VW.Colors.Action.soft
                                 : VW.Colors.Surface.panel
                         )
@@ -271,7 +274,7 @@ struct RecordingIndicatorPicker: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: VW.Radius.xxxl)
                                 .stroke(
-                                    selectedPreset == preset
+                                    isSelected(preset)
                                         ? VW.Colors.Action.primary
                                         : VW.Colors.Border.standard,
                                     lineWidth: 1
@@ -280,11 +283,11 @@ struct RecordingIndicatorPicker: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(preset.displayName)
-                    .accessibilityAddTraits(selectedPreset == preset ? [.isSelected] : [])
+                    .accessibilityAddTraits(isSelected(preset) ? [.isSelected] : [])
                 }
             }
 
-            if selectedPreset == .classicBar {
+            if selectedPreset == .classicBar && builtinSelection.selectedID == nil {
                 SettingsRow(title: "Bar size", description: "Choose a compact bar or a larger bar with a recording timer.") {
                     Picker("Bar size", selection: $overlayStyle) {
                         ForEach(OverlayStyle.allCases, id: \.rawValue) { style in
@@ -299,7 +302,16 @@ struct RecordingIndicatorPicker: View {
                     }
                 }
             }
+
+            Divider().padding(.vertical, 4)
+            BuiltinVoiceEffectSelectorView(selection: builtinSelection) {
+                MacOverlayController.shared.update()
+            }
         }
+    }
+
+    private func isSelected(_ preset: IndicatorPreset) -> Bool {
+        builtinSelection.selectedID == nil && selectedPreset == preset
     }
 
     @ViewBuilder

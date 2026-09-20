@@ -374,6 +374,10 @@ echo "  ✓ Binary and Info.plist copied"
     ".build/arm64-apple-macosx/release/VowriteKit_VowriteKit.bundle" \
     "$APP_BUNDLE"
 
+"$PROJECT_ROOT/ops/scripts/embed-builtin-voice-effects.sh" \
+    ".build/arm64-apple-macosx/release/VowriteMac_BuiltinVoiceEffects.bundle" \
+    "$APP_BUNDLE"
+
 # Embed Sparkle.framework into app bundle
 SPARKLE_FW=".build/arm64-apple-macosx/release/Sparkle.framework"
 if [ -d "$SPARKLE_FW" ]; then

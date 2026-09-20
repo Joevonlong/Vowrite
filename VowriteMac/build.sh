@@ -30,6 +30,10 @@ echo "Embedding VowriteKit resources..."
   ".build/arm64-apple-macosx/debug/VowriteKit_VowriteKit.bundle" \
   "Vowrite.app"
 
+../ops/scripts/embed-builtin-voice-effects.sh \
+  ".build/arm64-apple-macosx/debug/VowriteMac_BuiltinVoiceEffects.bundle" \
+  "Vowrite.app"
+
 echo "Embedding Sparkle.framework..."
 mkdir -p Vowrite.app/Contents/Frameworks
 SPARKLE_SRC=".build/arm64-apple-macosx/debug/Sparkle.framework"

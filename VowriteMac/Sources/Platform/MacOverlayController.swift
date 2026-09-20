@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import VowriteKit
+import BuiltinVoiceEffects
 
 // MARK: - Non-activating panel: accepts clicks but doesn't steal app activation
 
@@ -130,6 +131,9 @@ final class MacOverlayController: OverlayProvider {
     }
 
     private var overlaySize: NSSize {
+        if BuiltinVoiceEffectSelection.shared.selectedEffect != nil {
+            return NSSize(width: 320, height: 160)
+        }
         switch IndicatorPreset.current {
         case .orbPulse:
             return NSSize(width: 100, height: 100)

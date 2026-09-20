@@ -7,6 +7,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Added
+
+- **F-094 Built-in Voice Bar effects**: General settings now offer the original 80 Open Design effects alongside all five existing recording indicators. The selected effect responds to live microphone level and recording state while keeping the native timer, session badge, and recording controls.
+
 ### Changed
 
 - The idle macOS menu-bar icon now uses Vowrite's adaptive monochrome V-leaves logo at a compact 16-point size. Recording, processing, and error indicators retain their existing status symbols.
