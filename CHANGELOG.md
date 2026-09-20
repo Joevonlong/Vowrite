@@ -16,6 +16,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 - The idle macOS menu-bar icon now uses Vowrite's adaptive monochrome V-leaves logo at a compact 16-point size. Recording, processing, and error indicators retain their existing status symbols.
 - Reduced the classic recording bar's compact and normal sizes, including its controls and waveform. All five indicator styles remain available in General settings, with bar size alongside the style picker; changing either immediately updates an active overlay without moving its bottom-center anchor.
 
+### Fixed
+
+- **Accessibility-aware text delivery**: When macOS Accessibility permission is missing for the running Vowrite build, dictation now stays recoverable in History and reports paste failure instead of silently claiming that a blocked Cmd+V succeeded.
+
 ## [0.2.3.0] — 2026-09-19
 
 ### Changed

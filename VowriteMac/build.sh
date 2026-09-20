@@ -15,7 +15,8 @@ if [ -f "Resources/AppIcon-source.png" ]; then
 fi
 
 echo "Building Vowrite..."
-swift build
+# Packaging below uses the native SwiftPM output and resource bundle layout.
+swift build --build-system native
 
 echo "Syncing Info.plist to app bundle..."
 cp Resources/Info.plist Vowrite.app/Contents/Info.plist

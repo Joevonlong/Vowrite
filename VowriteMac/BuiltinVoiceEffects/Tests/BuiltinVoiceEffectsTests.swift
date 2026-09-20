@@ -26,9 +26,10 @@ final class BuiltinVoiceEffectsTests: XCTestCase {
     }
 
     func testTrustedResourcesHaveNoDynamicOrNetworkCode() throws {
-        let resources = try XCTUnwrap(BuiltinVoiceEffectResources.bundleURL)
-        let source = try String(contentsOf: resources.appendingPathComponent("voice-effects.js"), encoding: .utf8)
-        let host = try String(contentsOf: resources.appendingPathComponent("host.html"), encoding: .utf8)
+        let sourceURL = try XCTUnwrap(BuiltinVoiceEffectResources.url(forResource: "voice-effects", withExtension: "js"))
+        let hostURL = try XCTUnwrap(BuiltinVoiceEffectResources.url(forResource: "host", withExtension: "html"))
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        let host = try String(contentsOf: hostURL, encoding: .utf8)
         XCTAssertTrue(source.contains("case 80:"))
         XCTAssertFalse(source.contains("case 81:"))
         XCTAssertFalse(source.contains("eval("))
