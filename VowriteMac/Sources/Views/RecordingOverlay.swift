@@ -26,8 +26,8 @@ struct RecordingBarView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var isCompact: Bool { OverlayStyle.current == .compact }
-    private var width: CGFloat { isCompact ? 232 : 296 }
-    private var height: CGFloat { isCompact ? 60 : 64 }
+    private var width: CGFloat { OverlayStyle.current.barSize.width }
+    private var height: CGFloat { OverlayStyle.current.barSize.height }
     private var durationText: String {
         let total = Int(appState.recordingDuration)
         return String(format: "%d:%02d", total / 60, total % 60)
@@ -55,12 +55,12 @@ struct RecordingBarView: View {
     }
 
     private var recordingBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             capsuleButton("Cancel recording", icon: "xmark", primary: false) { appState.cancelRecording() }
             VStack(spacing: 2) {
-                WaveformView(level: appState.audioLevel)
+                WaveformView(level: appState.audioLevel, maximumHeight: isCompact ? 22 : 20)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 30)
+                    .frame(height: isCompact ? 22 : 20)
                     .accessibilityLabel("Recording")
                 if !isCompact {
                     Text(durationText).font(.system(size: 11, weight: .medium, design: .monospaced))
@@ -93,8 +93,8 @@ struct RecordingBarView: View {
     private func capsuleButton(_ label: String, icon: String, primary: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
-                .frame(width: 44, height: 44)
+                .font(.system(size: isCompact ? 13 : 15, weight: .semibold))
+                .frame(width: isCompact ? 28 : 32, height: isCompact ? 28 : 32)
                 .foregroundStyle(primary ? Color.black : Color.white)
                 .background(primary ? Color.white : Color(white: 0.26), in: Circle())
                 .contentShape(Circle())
@@ -107,7 +107,7 @@ struct RecordingBarView: View {
     private var processingBar: some View {
         HStack(spacing: 12) {
             ProgressView().progressViewStyle(OverlayProcessingProgressStyle())
-            Text("Processing").font(.system(size: 14, weight: .medium))
+            Text("Processing").font(.system(size: 12, weight: .medium))
         }
         .foregroundStyle(.white)
         .frame(width: width, height: height)
@@ -122,6 +122,7 @@ struct RecordingBarView: View {
 /// samples or autonomous animation imply speech when the microphone is quiet.
 struct WaveformView: View {
     let level: Float
+    var maximumHeight: CGFloat = 28
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -131,7 +132,7 @@ struct WaveformView: View {
                 let amplitude = CGFloat(min(1, max(0, level))) * (1 - distance * 0.65)
                 Capsule()
                     .fill(Color.white)
-                    .frame(width: 3, height: 3 + amplitude * 25)
+                    .frame(width: 3, height: 3 + amplitude * (maximumHeight - 3))
             }
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: level)

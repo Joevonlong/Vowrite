@@ -14,6 +14,13 @@ enum OverlayStyle: String, CaseIterable {
     case compact = "Compact"
     case normal = "Normal"
 
+    var barSize: NSSize {
+        switch self {
+        case .compact: return NSSize(width: 184, height: 40)
+        case .normal: return NSSize(width: 232, height: 48)
+        }
+    }
+
     static var current: OverlayStyle {
         get {
             guard let raw = UserDefaults.standard.string(forKey: "overlayStyle"),
@@ -111,9 +118,15 @@ final class MacOverlayController: OverlayProvider {
     }
 
     func update() {
-        guard let appState = appState else { return }
+        guard let appState, let window, let hostingView else { return }
+        let oldFrame = window.frame
+        let size = overlaySize
         let indicatorView = RecordingIndicatorView(appState: appState)
-        hostingView?.rootView = indicatorView
+        hostingView.rootView = indicatorView
+        window.setContentSize(size)
+        hostingView.frame = NSRect(origin: .zero, size: size)
+        // Keep the user's dragged position anchored at the bottom center.
+        window.setFrameOrigin(NSPoint(x: oldFrame.midX - size.width / 2, y: oldFrame.minY))
     }
 
     private var overlaySize: NSSize {
@@ -127,10 +140,8 @@ final class MacOverlayController: OverlayProvider {
         case .minimalDot:
             return NSSize(width: 60, height: 60)
         case .classicBar:
-            switch OverlayStyle.current {
-            case .compact: return NSSize(width: 232, height: 72)
-            case .normal: return NSSize(width: 296, height: 76)
-            }
+            let barSize = OverlayStyle.current.barSize
+            return NSSize(width: barSize.width, height: barSize.height + 12)
         }
     }
 }
