@@ -3,7 +3,8 @@ import AppKit
 /// The V-leaves brand silhouette, drawn as vectors for every display scale.
 enum MenuBarLogo {
     static let image: NSImage = {
-        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
+        let side: CGFloat = 16
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: true) { _ in
             guard let context = NSGraphicsContext.current?.cgContext else { return false }
             context.saveGState()
             defer { context.restoreGState() }
@@ -11,8 +12,8 @@ enum MenuBarLogo {
             // Crop the transparent master margins and center its visible bounds.
             // Paths are from Resources/AppIcon-source.svg; fine colored details
             // are omitted to keep the silhouette legible at menu-bar sizes.
-            let scale: CGFloat = 18 / 754
-            context.translateBy(x: 9 - 512 * scale, y: -198 * scale)
+            let scale = side / 754
+            context.translateBy(x: side / 2 - 512 * scale, y: -198 * scale)
             context.scaleBy(x: scale, y: scale)
 
             let leaves = CGMutablePath()
