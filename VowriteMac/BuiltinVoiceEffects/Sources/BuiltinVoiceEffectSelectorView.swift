@@ -3,14 +3,17 @@ import SwiftUI
 public struct BuiltinVoiceEffectSelectorView: View {
     @ObservedObject private var selection: BuiltinVoiceEffectSelection
     private let onSelect: () -> Void
+    private let previewSize: BuiltinVoiceEffectCapsuleSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var category = BuiltinVoiceEffectCatalog.categories.first ?? ""
 
     public init(
         selection: BuiltinVoiceEffectSelection = .shared,
+        previewSize: BuiltinVoiceEffectCapsuleSize = .compact,
         onSelect: @escaping () -> Void = {}
     ) {
         self.selection = selection
+        self.previewSize = previewSize
         self.onSelect = onSelect
     }
 
@@ -39,27 +42,27 @@ public struct BuiltinVoiceEffectSelectorView: View {
                 TimelineView(.animation(minimumInterval: 1.0 / 15, paused: reduceMotion)) { context in
                     let time = reduceMotion ? 0 : context.date.timeIntervalSinceReferenceDate
                     let level = reduceMotion ? 0.55 : 0.55 + sin(time * 3.2) * 0.3
-                    HStack(spacing: 14) {
-                        BuiltinVoiceEffectPreview(
+                    HStack(spacing: 12) {
+                        BuiltinVoiceEffectCapsule(
                             effect: effect,
                             frame: BuiltinVoiceEffectFrame(
                                 phase: .listening,
                                 time: time,
                                 level: level,
                                 reducedMotion: reduceMotion
-                            )
+                            ),
+                            size: previewSize,
+                            durationText: previewSize == .normal ? "0:08" : nil
                         )
-                        .frame(height: 64)
+                        .allowsHitTesting(false)
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(effect.name).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
-                            Text(effect.english).font(.caption2).foregroundStyle(.white.opacity(0.65))
+                            Text(effect.name).font(.subheadline.weight(.semibold))
+                            Text(effect.english).font(.caption2).foregroundStyle(.secondary)
                         }
                         .frame(width: 92, alignment: .leading)
                     }
-                    .padding(10)
-                    .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 12))
                 }
-                .frame(height: 84)
+                .frame(height: previewSize.dimensions.height)
             }
 
             Picker("Effect", selection: selectedEffectBinding) {

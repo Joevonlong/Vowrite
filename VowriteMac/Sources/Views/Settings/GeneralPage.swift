@@ -287,7 +287,7 @@ struct RecordingIndicatorPicker: View {
                 }
             }
 
-            if selectedPreset == .classicBar && builtinSelection.selectedID == nil {
+            if selectedPreset == .classicBar || builtinSelection.selectedID != nil {
                 SettingsRow(title: "Bar size", description: "Choose a compact bar or a larger bar with a recording timer.") {
                     Picker("Bar size", selection: $overlayStyle) {
                         ForEach(OverlayStyle.allCases, id: \.rawValue) { style in
@@ -304,7 +304,10 @@ struct RecordingIndicatorPicker: View {
             }
 
             Divider().padding(.vertical, 4)
-            BuiltinVoiceEffectSelectorView(selection: builtinSelection) {
+            BuiltinVoiceEffectSelectorView(
+                selection: builtinSelection,
+                previewSize: overlayStyle == .compact ? .compact : .normal
+            ) {
                 MacOverlayController.shared.update()
             }
         }
