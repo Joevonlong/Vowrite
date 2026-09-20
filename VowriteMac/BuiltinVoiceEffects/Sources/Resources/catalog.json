@@ -1,0 +1,802 @@
+[
+  {
+    "id": 1,
+    "number": "01",
+    "name": "游丝",
+    "english": "FILAMENT",
+    "category": "无框线条",
+    "description": "自由悬浮的细线束，轻得像一句耳语。",
+    "motion": "波峰沿线迁移，多层丝线错相舒展。",
+    "shape": "wide"
+  },
+  {
+    "id": 2,
+    "number": "02",
+    "name": "弦月",
+    "english": "CRESCENT",
+    "category": "无框线条",
+    "description": "三道开放弯弧，给声音留出空白。",
+    "motion": "弧线逐层张合，像拨动的弦。",
+    "shape": "wide"
+  },
+  {
+    "id": 3,
+    "number": "03",
+    "name": "心电",
+    "english": "IMPULSE",
+    "category": "无框线条",
+    "description": "一条折线，一个追随声音的信号点。",
+    "motion": "局部峰值脉冲沿横轴传播。",
+    "shape": "wide"
+  },
+  {
+    "id": 4,
+    "number": "04",
+    "name": "丝结",
+    "english": "SILK KNOT",
+    "category": "无框线条",
+    "description": "交织的曲线，把表达编成柔软的结。",
+    "motion": "双曲线错相扭动，保持开放轮廓。",
+    "shape": "wide"
+  },
+  {
+    "id": 5,
+    "number": "05",
+    "name": "山脊",
+    "english": "RIDGELINE",
+    "category": "无框线条",
+    "description": "层叠轮廓，让语调形成微型地貌。",
+    "motion": "波峰在不同高度的轮廓间递进。",
+    "shape": "wide"
+  },
+  {
+    "id": 6,
+    "number": "06",
+    "name": "星尘",
+    "english": "STARDUST",
+    "category": "粒子点阵",
+    "description": "一簇疏密有致的粒子，不需要容器。",
+    "motion": "粒子散开与回聚，亮点勾勒声音重心。",
+    "shape": "wide"
+  },
+  {
+    "id": 7,
+    "number": "07",
+    "name": "萤群",
+    "english": "FIREFLIES",
+    "category": "粒子点阵",
+    "description": "几颗独立光点，像黑暗中的回应。",
+    "motion": "不同速度的游走与交替亮起。",
+    "shape": "wide"
+  },
+  {
+    "id": 8,
+    "number": "08",
+    "name": "沙漏",
+    "english": "HOURGLASS",
+    "category": "粒子点阵",
+    "description": "粒子穿过细腰，让时间变得可见。",
+    "motion": "光点从双锥形场中持续穿流。",
+    "shape": "compact"
+  },
+  {
+    "id": 9,
+    "number": "09",
+    "name": "磁场",
+    "english": "MAGNETIC",
+    "category": "粒子点阵",
+    "description": "两个极点之间，声音遵循自己的引力。",
+    "motion": "信号沿弯曲的磁力线偏转。",
+    "shape": "wide"
+  },
+  {
+    "id": 10,
+    "number": "10",
+    "name": "雨幕",
+    "english": "RAINFALL",
+    "category": "粒子点阵",
+    "description": "一片悬空短划，声音像雨一样落下。",
+    "motion": "分列错速下落，音量改变雨丝长度。",
+    "shape": "wide"
+  },
+  {
+    "id": 11,
+    "number": "11",
+    "name": "日蚀",
+    "english": "ECLIPSE",
+    "category": "环形轨道",
+    "description": "偏心圆盘后，一圈光若隐若现。",
+    "motion": "遮挡轻微错位，亮边呈呼吸变化。",
+    "shape": "compact"
+  },
+  {
+    "id": 12,
+    "number": "12",
+    "name": "双星",
+    "english": "BINARY",
+    "category": "环形轨道",
+    "description": "两个光体，围绕同一个想法运行。",
+    "motion": "大小节点沿椭圆轨道相向环绕。",
+    "shape": "compact"
+  },
+  {
+    "id": 13,
+    "number": "13",
+    "name": "声瞳",
+    "english": "IRIS",
+    "category": "环形轨道",
+    "description": "细密径向线条，聚焦每一段表达。",
+    "motion": "虹膜状频谱同步收缩和扩张。",
+    "shape": "compact"
+  },
+  {
+    "id": 14,
+    "number": "14",
+    "name": "涡环",
+    "english": "VORTEX",
+    "category": "环形轨道",
+    "description": "开放的螺旋，将声音卷入中心。",
+    "motion": "三束脉冲沿螺旋方向转移。",
+    "shape": "compact"
+  },
+  {
+    "id": 15,
+    "number": "15",
+    "name": "星仪",
+    "english": "ORRERY",
+    "category": "环形轨道",
+    "description": "多轴轨道交叠，构成精密的小型仪器。",
+    "motion": "椭圆环错轴摆动，定位点沿轨道移动。",
+    "shape": "compact"
+  },
+  {
+    "id": 16,
+    "number": "16",
+    "name": "极光",
+    "english": "AURORA",
+    "category": "光带流体",
+    "description": "自由悬浮的色带，柔和但不安静。",
+    "motion": "半透明层次错相漂移与舒展。",
+    "shape": "wide"
+  },
+  {
+    "id": 17,
+    "number": "17",
+    "name": "熔珠",
+    "english": "MOLTEN",
+    "category": "光带流体",
+    "description": "三颗柔软的金属珠，彼此靠近。",
+    "motion": "珠体聚合分离，以体积变化回应声音。",
+    "shape": "compact"
+  },
+  {
+    "id": 18,
+    "number": "18",
+    "name": "光翼",
+    "english": "LIGHT WINGS",
+    "category": "光带流体",
+    "description": "从中心张开的光片，让声音起飞。",
+    "motion": "双翼同步张开，边缘光线逐层响应。",
+    "shape": "wide"
+  },
+  {
+    "id": 19,
+    "number": "19",
+    "name": "潮汐",
+    "english": "TIDAL",
+    "category": "光带流体",
+    "description": "薄薄一片流面，容纳起伏的语调。",
+    "motion": "层叠波浪缓慢推进，回退，再展开。",
+    "shape": "wide"
+  },
+  {
+    "id": 20,
+    "number": "20",
+    "name": "彗尾",
+    "english": "COMET",
+    "category": "光带流体",
+    "description": "亮核走过，声音留下短暂的轨迹。",
+    "motion": "尾迹追随亮核，逐渐变细并消散。",
+    "shape": "wide"
+  },
+  {
+    "id": 21,
+    "number": "21",
+    "name": "音叉",
+    "english": "TUNING FORK",
+    "category": "几何机械",
+    "description": "开放双臂，回到声音最初的形状。",
+    "motion": "双臂反向共振，外侧细线传递余波。",
+    "shape": "compact"
+  },
+  {
+    "id": 22,
+    "number": "22",
+    "name": "百叶",
+    "english": "LOUVERS",
+    "category": "几何机械",
+    "description": "分离的薄片，在明暗间翻动。",
+    "motion": "每片按相位顺序旋转，组成流动频谱。",
+    "shape": "wide"
+  },
+  {
+    "id": 23,
+    "number": "23",
+    "name": "晶簇",
+    "english": "CRYSTALS",
+    "category": "几何机械",
+    "description": "有棱有面的晶体，切出不同音高。",
+    "motion": "不等高晶体错落升降，反光面随之变化。",
+    "shape": "wide"
+  },
+  {
+    "id": 24,
+    "number": "24",
+    "name": "折扇",
+    "english": "FOLDING FAN",
+    "category": "几何机械",
+    "description": "从一个支点展开，不必横着排列。",
+    "motion": "扇叶交替开合，让音量变成角度。",
+    "shape": "compact"
+  },
+  {
+    "id": 25,
+    "number": "25",
+    "name": "跃阶",
+    "english": "STEPPING",
+    "category": "几何机械",
+    "description": "一组离散方块，用轻快步伐回应。",
+    "motion": "方块依次跃起，再回到自己的位置。",
+    "shape": "wide"
+  },
+  {
+    "id": 26,
+    "number": "26",
+    "name": "双岛",
+    "english": "TWIN ISLANDS",
+    "category": "特殊结构",
+    "description": "两个独立几何岛之间，信号自由穿行。",
+    "motion": "中央频谱在双岛间传递；真实操作由统一载体承载。",
+    "shape": "wide"
+  },
+  {
+    "id": 27,
+    "number": "27",
+    "name": "切角舱",
+    "english": "CHAMBER",
+    "category": "特殊结构",
+    "description": "切角轮廓与精细信号，像一件小仪器。",
+    "motion": "内部扫描接力移动，舱体保持稳定。",
+    "shape": "wide"
+  },
+  {
+    "id": 28,
+    "number": "28",
+    "name": "唱针",
+    "english": "STYLUS",
+    "category": "特殊结构",
+    "description": "旋转盘面与悬臂，把声音变成触感。",
+    "motion": "唱片沟槽缓慢转动，指针轻微摆动。",
+    "shape": "compact"
+  },
+  {
+    "id": 29,
+    "number": "29",
+    "name": "悬浮键",
+    "english": "FLOATING KEY",
+    "category": "特殊结构",
+    "description": "一颗悬空按键，下方展开自由频谱。",
+    "motion": "按键轻压回弹，频谱在下方回应。",
+    "shape": "compact"
+  },
+  {
+    "id": 30,
+    "number": "30",
+    "name": "呼吸石",
+    "english": "BREATHING STONE",
+    "category": "特殊结构",
+    "description": "不规则的柔润轮廓，安静地握住声音。",
+    "motion": "卵石轻微收扩，表面信号柔和起伏。",
+    "shape": "compact"
+  },
+  {
+    "id": 31,
+    "number": "31",
+    "name": "回声",
+    "english": "ECHO",
+    "category": "无框线条",
+    "description": "递减的开放弧，从一个点向外传递。",
+    "motion": "波弧逐层扩散，抵达边缘后淡出。",
+    "shape": "wide"
+  },
+  {
+    "id": 32,
+    "number": "32",
+    "name": "琴弦",
+    "english": "STRINGS",
+    "category": "无框线条",
+    "description": "平行悬弦，让声音有了触感。",
+    "motion": "不同弦长的驻波各自振动。",
+    "shape": "wide"
+  },
+  {
+    "id": 33,
+    "number": "33",
+    "name": "频桥",
+    "english": "BRIDGE",
+    "category": "无框线条",
+    "description": "双端固定的细线，搭起柔软的桥。",
+    "motion": "拱顶交替抬升，端点保持稳定。",
+    "shape": "wide"
+  },
+  {
+    "id": 34,
+    "number": "34",
+    "name": "墨线",
+    "english": "INK",
+    "category": "无框线条",
+    "description": "粗细自然变化的单笔，像写下一句声音。",
+    "motion": "笔触沿波峰舒展，在两端收细。",
+    "shape": "wide"
+  },
+  {
+    "id": 35,
+    "number": "35",
+    "name": "流苏",
+    "english": "FRINGE",
+    "category": "无框线条",
+    "description": "悬挂的细线束，垂落成轻盈的帘。",
+    "motion": "末梢错相摇摆，上端保持整齐。",
+    "shape": "wide"
+  },
+  {
+    "id": 36,
+    "number": "36",
+    "name": "绸环",
+    "english": "SILK LOOP",
+    "category": "无框线条",
+    "description": "一条有宽度的细带，折成柔软的环。",
+    "motion": "带面扭转，明暗沿环传递。",
+    "shape": "compact"
+  },
+  {
+    "id": 37,
+    "number": "37",
+    "name": "针脚",
+    "english": "STITCH",
+    "category": "无框线条",
+    "description": "短线与连接线，像缝合中的声音。",
+    "motion": "针脚依次抬起，再回到连续的节奏。",
+    "shape": "wide"
+  },
+  {
+    "id": 38,
+    "number": "38",
+    "name": "水纹",
+    "english": "RIPPLES",
+    "category": "无框线条",
+    "description": "椭圆波纹在一个偏心点轻轻展开。",
+    "motion": "波纹向外扩散，逐渐消失。",
+    "shape": "wide"
+  },
+  {
+    "id": 39,
+    "number": "39",
+    "name": "双螺旋",
+    "english": "HELIX",
+    "category": "无框线条",
+    "description": "两道波线由细横档相连。",
+    "motion": "双线旋转，交点和横档相互穿行。",
+    "shape": "wide"
+  },
+  {
+    "id": 40,
+    "number": "40",
+    "name": "风痕",
+    "english": "WIND",
+    "category": "无框线条",
+    "description": "方向明确的短曲线，掠过后不留负担。",
+    "motion": "曲线错速划过，边缘渐隐。",
+    "shape": "wide"
+  },
+  {
+    "id": 41,
+    "number": "41",
+    "name": "光砂",
+    "english": "LIGHT SAND",
+    "category": "粒子点阵",
+    "description": "细小颗粒在水平线上积聚。",
+    "motion": "局部波峰扬起砂粒，再缓慢落下。",
+    "shape": "wide"
+  },
+  {
+    "id": 42,
+    "number": "42",
+    "name": "蜂群",
+    "english": "HIVE",
+    "category": "粒子点阵",
+    "description": "六边形群落，既有秩序也有生命感。",
+    "motion": "节点围绕各自中心小幅迁移。",
+    "shape": "compact"
+  },
+  {
+    "id": 43,
+    "number": "43",
+    "name": "珠链",
+    "english": "BEADS",
+    "category": "粒子点阵",
+    "description": "一串离散圆珠，连接成柔软曲线。",
+    "motion": "圆珠依次膨胀，亮点随链传递。",
+    "shape": "wide"
+  },
+  {
+    "id": 44,
+    "number": "44",
+    "name": "雪晶",
+    "english": "SNOWFLAKE",
+    "category": "粒子点阵",
+    "description": "向六个方向伸展的分枝点簇。",
+    "motion": "信号从中心向枝梢逐次亮起。",
+    "shape": "compact"
+  },
+  {
+    "id": 45,
+    "number": "45",
+    "name": "引力井",
+    "english": "GRAVITY",
+    "category": "粒子点阵",
+    "description": "点流绕中心聚拢，像被声音吸引。",
+    "motion": "粒子旋入中心，再从外围重生。",
+    "shape": "compact"
+  },
+  {
+    "id": 46,
+    "number": "46",
+    "name": "跳豆",
+    "english": "BOUNCE",
+    "category": "粒子点阵",
+    "description": "底线上方，一列轻快的小粒子。",
+    "motion": "不同高度的弹跳组成节奏。",
+    "shape": "wide"
+  },
+  {
+    "id": 47,
+    "number": "47",
+    "name": "星图",
+    "english": "CONSTELLATION",
+    "category": "粒子点阵",
+    "description": "不规则星点之间，有清晰的连接。",
+    "motion": "光点沿节点路径逐段传递。",
+    "shape": "wide"
+  },
+  {
+    "id": 48,
+    "number": "48",
+    "name": "气泡",
+    "english": "BUBBLES",
+    "category": "粒子点阵",
+    "description": "空心小圆，自由漂浮。",
+    "motion": "气泡向上移动，收小并淡出。",
+    "shape": "wide"
+  },
+  {
+    "id": 49,
+    "number": "49",
+    "name": "微火",
+    "english": "EMBERS",
+    "category": "粒子点阵",
+    "description": "从中心升起的短尾光粒。",
+    "motion": "粒子升腾、散开，逐渐熄灭。",
+    "shape": "compact"
+  },
+  {
+    "id": 50,
+    "number": "50",
+    "name": "像素潮",
+    "english": "PIXEL TIDE",
+    "category": "粒子点阵",
+    "description": "离散方格组成小小的数字地形。",
+    "motion": "波峰逐列推进，显露不同高度。",
+    "shape": "wide"
+  },
+  {
+    "id": 51,
+    "number": "51",
+    "name": "罗盘",
+    "english": "COMPASS",
+    "category": "环形轨道",
+    "description": "双端指针置于细密刻度之中。",
+    "motion": "指针随信号来回偏转。",
+    "shape": "compact"
+  },
+  {
+    "id": 52,
+    "number": "52",
+    "name": "光晕",
+    "english": "HALO",
+    "category": "环形轨道",
+    "description": "由短弧组成的环，留出呼吸间隙。",
+    "motion": "光沿圆周渐次点亮。",
+    "shape": "compact"
+  },
+  {
+    "id": 53,
+    "number": "53",
+    "name": "行星环",
+    "english": "SATURN",
+    "category": "环形轨道",
+    "description": "中心球体与倾斜轨道彼此交叠。",
+    "motion": "卫星沿环掠过，形成前后层次。",
+    "shape": "compact"
+  },
+  {
+    "id": 54,
+    "number": "54",
+    "name": "花冠",
+    "english": "COROLLA",
+    "category": "环形轨道",
+    "description": "弧形花瓣围绕中心展开。",
+    "motion": "花瓣交替开合，中心保持安静。",
+    "shape": "compact"
+  },
+  {
+    "id": 55,
+    "number": "55",
+    "name": "陀螺",
+    "english": "GYROSCOPE",
+    "category": "环形轨道",
+    "description": "一叠椭圆形成精细的环锥。",
+    "motion": "轴心轻微倾斜，各层保持联动。",
+    "shape": "compact"
+  },
+  {
+    "id": 56,
+    "number": "56",
+    "name": "声门",
+    "english": "APERTURE",
+    "category": "环形轨道",
+    "description": "环内的几片折面，围住一个开口。",
+    "motion": "中心开口随声音收缩扩张。",
+    "shape": "compact"
+  },
+  {
+    "id": 57,
+    "number": "57",
+    "name": "轨迹球",
+    "english": "GLOBE",
+    "category": "环形轨道",
+    "description": "经纬弧线勾出透明球体。",
+    "motion": "经线轮转，亮点沿球面滑动。",
+    "shape": "compact"
+  },
+  {
+    "id": 58,
+    "number": "58",
+    "name": "月相",
+    "english": "PHASES",
+    "category": "环形轨道",
+    "description": "五个小圆盘，组成一段月相序列。",
+    "motion": "遮挡按顺序变化，让节奏缓缓流过。",
+    "shape": "wide"
+  },
+  {
+    "id": 59,
+    "number": "59",
+    "name": "共振环",
+    "english": "RESONANCE",
+    "category": "环形轨道",
+    "description": "两个开放的环，重叠但不重合。",
+    "motion": "环体错位，交点随之移动。",
+    "shape": "compact"
+  },
+  {
+    "id": 60,
+    "number": "60",
+    "name": "时轮",
+    "english": "CHRONO",
+    "category": "环形轨道",
+    "description": "短刻度围成一圈，像精密的时间仪器。",
+    "motion": "长短刻度按节拍轮替。",
+    "shape": "compact"
+  },
+  {
+    "id": 61,
+    "number": "61",
+    "name": "液镜",
+    "english": "MIRROR",
+    "category": "光带流体",
+    "description": "柔性反光面，薄得像一片液体。",
+    "motion": "表面纹理流动，轮廓微微变化。",
+    "shape": "wide"
+  },
+  {
+    "id": 62,
+    "number": "62",
+    "name": "光瀑",
+    "english": "CASCADE",
+    "category": "光带流体",
+    "description": "下垂的细光带，组成一面轻帘。",
+    "motion": "亮度按相位流动，带面小幅摆动。",
+    "shape": "wide"
+  },
+  {
+    "id": 63,
+    "number": "63",
+    "name": "波瓣",
+    "english": "LOBES",
+    "category": "光带流体",
+    "description": "从中心展开的柔性波瓣。",
+    "motion": "各瓣交替伸缩，轮廓持续连贯。",
+    "shape": "compact"
+  },
+  {
+    "id": 64,
+    "number": "64",
+    "name": "焰心",
+    "english": "FLAME",
+    "category": "光带流体",
+    "description": "内外三层火苗，汇聚成一束光。",
+    "motion": "尖端轻摆，内层保持明亮。",
+    "shape": "compact"
+  },
+  {
+    "id": 65,
+    "number": "65",
+    "name": "流云",
+    "english": "CLOUD",
+    "category": "光带流体",
+    "description": "半透明云片，轻轻叠在一起。",
+    "motion": "云片错位穿行，亮度逐层累积。",
+    "shape": "wide"
+  },
+  {
+    "id": 66,
+    "number": "66",
+    "name": "折光",
+    "english": "REFRACTION",
+    "category": "光带流体",
+    "description": "一道入射光，穿过三棱结构。",
+    "motion": "出射光分离成多道细线。",
+    "shape": "wide"
+  },
+  {
+    "id": 67,
+    "number": "67",
+    "name": "光帆",
+    "english": "SAIL",
+    "category": "光带流体",
+    "description": "一张开放薄膜，像被声音撑起的帆。",
+    "motion": "薄膜鼓起回落，边缘保持张力。",
+    "shape": "wide"
+  },
+  {
+    "id": 68,
+    "number": "68",
+    "name": "液滴",
+    "english": "DROPLET",
+    "category": "光带流体",
+    "description": "带着细颈的悬浮水滴。",
+    "motion": "尖端拉长又回弹，表面保留反光。",
+    "shape": "compact"
+  },
+  {
+    "id": 69,
+    "number": "69",
+    "name": "晨弧",
+    "english": "DAWN",
+    "category": "光带流体",
+    "description": "低低的拱形光带，向两翼舒展。",
+    "motion": "亮部逐层展开，形成柔和轮廓。",
+    "shape": "wide"
+  },
+  {
+    "id": 70,
+    "number": "70",
+    "name": "光结",
+    "english": "LIGHT KNOT",
+    "category": "光带流体",
+    "description": "发光薄带在中央交错穿越。",
+    "motion": "带面轮替显露，形成流动的结。",
+    "shape": "wide"
+  },
+  {
+    "id": 71,
+    "number": "71",
+    "name": "齿语",
+    "english": "GEAR",
+    "category": "几何机械",
+    "description": "断开的齿环，保留机械节奏。",
+    "motion": "齿段按小步旋转，留白保持可见。",
+    "shape": "compact"
+  },
+  {
+    "id": 72,
+    "number": "72",
+    "name": "拨片",
+    "english": "PLECTRUM",
+    "category": "几何机械",
+    "description": "围绕中轴排列的独立短片。",
+    "motion": "短片逐片摆动，再回到原位。",
+    "shape": "wide"
+  },
+  {
+    "id": 73,
+    "number": "73",
+    "name": "风车",
+    "english": "PINWHEEL",
+    "category": "几何机械",
+    "description": "四片不对称薄翼，围绕小轴心。",
+    "motion": "翼片连续转动，角速度轻微起伏。",
+    "shape": "compact"
+  },
+  {
+    "id": 74,
+    "number": "74",
+    "name": "棱镜",
+    "english": "PRISM",
+    "category": "几何机械",
+    "description": "透明线框构成一个多面体。",
+    "motion": "前后切面轮转，连接边保持清晰。",
+    "shape": "compact"
+  },
+  {
+    "id": 75,
+    "number": "75",
+    "name": "折纸",
+    "english": "ORIGAMI",
+    "category": "几何机械",
+    "description": "连续三角折片，像一段展开的纸。",
+    "motion": "折痕按序起伏，形成光暗交替。",
+    "shape": "wide"
+  },
+  {
+    "id": 76,
+    "number": "76",
+    "name": "声尺",
+    "english": "RULER",
+    "category": "几何机械",
+    "description": "上下两排长短刻度，精确而克制。",
+    "motion": "激活区域从中央向两侧展开。",
+    "shape": "wide"
+  },
+  {
+    "id": 77,
+    "number": "77",
+    "name": "浮标",
+    "english": "BUOY",
+    "category": "几何机械",
+    "description": "中心细杆与几枚悬浮标记。",
+    "motion": "标记以不同相位上下浮动。",
+    "shape": "compact"
+  },
+  {
+    "id": 78,
+    "number": "78",
+    "name": "悬桥",
+    "english": "SUSPENSION",
+    "category": "几何机械",
+    "description": "悬索下方，一组分节小桥面。",
+    "motion": "波动经过节段，索线随之起伏。",
+    "shape": "wide"
+  },
+  {
+    "id": 79,
+    "number": "79",
+    "name": "脉冲芯",
+    "english": "PULSE CORE",
+    "category": "特殊结构",
+    "description": "嵌套切角轮廓，形成层层核心。",
+    "motion": "脉冲由内向外传递。",
+    "shape": "compact"
+  },
+  {
+    "id": 80,
+    "number": "80",
+    "name": "折叠舱",
+    "english": "FOLD",
+    "category": "特殊结构",
+    "description": "两片开放折面，露出中央信号。",
+    "motion": "折面开合，中部频谱保持可见。",
+    "shape": "compact"
+  }
+]

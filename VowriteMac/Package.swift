@@ -5,7 +5,8 @@ let package = Package(
     name: "VowriteMac",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "VowriteMac", targets: ["VowriteMac"])
+        .executable(name: "VowriteMac", targets: ["VowriteMac"]),
+        .executable(name: "BuiltinVoiceEffectsHarness", targets: ["BuiltinVoiceEffectsHarness"])
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0"),
@@ -16,7 +17,8 @@ let package = Package(
             name: "VowriteMac",
             dependencies: [
                 .product(name: "Sparkle", package: "Sparkle"),
-                .product(name: "VowriteKit", package: "VowriteKit")
+                .product(name: "VowriteKit", package: "VowriteKit"),
+                "BuiltinVoiceEffects"
             ],
             path: "Sources",
             exclude: [],
@@ -29,6 +31,22 @@ let package = Package(
                 .linkedFramework("Security"),
                 .linkedFramework("AuthenticationServices")
             ]
+        ),
+        .target(
+            name: "BuiltinVoiceEffects",
+            path: "BuiltinVoiceEffects/Sources",
+            resources: [.process("Resources")],
+            linkerSettings: [.linkedFramework("WebKit")]
+        ),
+        .executableTarget(
+            name: "BuiltinVoiceEffectsHarness",
+            dependencies: ["BuiltinVoiceEffects"],
+            path: "BuiltinVoiceEffects/Harness"
+        ),
+        .testTarget(
+            name: "BuiltinVoiceEffectsTests",
+            dependencies: ["BuiltinVoiceEffects"],
+            path: "BuiltinVoiceEffects/Tests"
         )
     ]
 )

@@ -70,6 +70,12 @@ else
     fail "VowriteMac release build failed"
 fi
 
+if "$PROJECT_ROOT/scripts/test-builtin-voice-effects.sh"; then
+    pass "Built-in Voice Bar effects pass catalog, persistence, and packaged WK rendering checks"
+else
+    fail "Built-in Voice Bar effects checks failed"
+fi
+
 # --- iOS Compile Check ---
 echo ""
 echo "▶ Build — VowriteIOS (compile check)"
