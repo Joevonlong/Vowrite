@@ -30,6 +30,10 @@ private struct BuiltinVoiceEffectOverlay: View {
     let effect: BuiltinVoiceEffect
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private var capsuleSize: BuiltinVoiceEffectCapsuleSize {
+        OverlayStyle.current == .compact ? .compact : .normal
+    }
+
     private var durationText: String {
         let total = Int(appState.recordingDuration)
         return String(format: "%d:%02d", total / 60, total % 60)
@@ -46,40 +50,19 @@ private struct BuiltinVoiceEffectOverlay: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            BuiltinVoiceEffectPreview(
-                effect: effect,
-                frame: BuiltinVoiceEffectFrame(
-                    phase: appState.state == .recording ? .listening : .processing,
-                    time: reduceMotion ? 0 : Date.timeIntervalSinceReferenceDate,
-                    level: reduceMotion ? 0.5 : Double(appState.audioLevel),
-                    reducedMotion: reduceMotion
-                )
-            )
-            .frame(height: 96)
-
-            if appState.state == .recording {
-                HStack(spacing: 12) {
-                    overlayButton("Cancel recording", icon: "xmark", primary: false) { appState.cancelRecording() }
-                    Text(durationText)
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.78))
-                        .frame(maxWidth: .infinity)
-                    overlayButton("Finish recording", icon: "checkmark", primary: true) { appState.stopRecording() }
-                }
-            } else if appState.state == .processing {
-                HStack(spacing: 10) {
-                    ProgressView().progressViewStyle(OverlayProcessingProgressStyle(diameter: 15))
-                    Text("Processing").font(.system(size: 12, weight: .medium))
-                }
-                .frame(maxWidth: .infinity)
-                .foregroundStyle(.white)
-            }
-        }
-        .padding(8)
-        .frame(width: 320, height: 148)
-        .background(Color(white: 0.035), in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(white: 0.38), lineWidth: 1))
+        BuiltinVoiceEffectCapsule(
+            effect: effect,
+            frame: BuiltinVoiceEffectFrame(
+                phase: appState.state == .recording ? .listening : .processing,
+                time: reduceMotion ? 0 : Date.timeIntervalSinceReferenceDate,
+                level: reduceMotion ? 0.5 : Double(appState.audioLevel),
+                reducedMotion: reduceMotion
+            ),
+            size: capsuleSize,
+            durationText: durationText,
+            onCancel: { appState.cancelRecording() },
+            onFinish: { appState.stopRecording() }
+        )
         .overlay(alignment: .topTrailing) {
             if let badge = sessionBadge {
                 Label(badge.label, systemImage: badge.icon)
@@ -96,18 +79,6 @@ private struct BuiltinVoiceEffectOverlay: View {
         }
     }
 
-    private func overlayButton(_ label: String, icon: String, primary: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 13, weight: .semibold))
-                .frame(width: 28, height: 28)
-                .foregroundStyle(primary ? Color.black : Color.white)
-                .background(primary ? Color.white : Color(white: 0.26), in: Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label)
-        .help(label)
-    }
 }
 
 /// The compact capsule exposes only the existing recording actions. Processing

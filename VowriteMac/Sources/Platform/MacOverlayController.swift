@@ -132,7 +132,8 @@ final class MacOverlayController: OverlayProvider {
 
     private var overlaySize: NSSize {
         if BuiltinVoiceEffectSelection.shared.selectedEffect != nil {
-            return NSSize(width: 320, height: 160)
+            let barSize = OverlayStyle.current.barSize
+            return NSSize(width: barSize.width, height: barSize.height + 12)
         }
         switch IndicatorPreset.current {
         case .orbPulse:

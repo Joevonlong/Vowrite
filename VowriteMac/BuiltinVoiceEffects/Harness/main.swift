@@ -2,6 +2,44 @@ import AppKit
 import BuiltinVoiceEffects
 import SwiftUI
 
+private struct CapsuleLayoutPreview: View {
+    let effect: BuiltinVoiceEffect
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 15)) { context in
+            let time = context.date.timeIntervalSinceReferenceDate
+            let level = 0.55 + sin(time * 3.2) * 0.3
+            VStack(alignment: .leading, spacing: 18) {
+                previewRow("Compact · Recording", size: .compact, phase: .listening, time: time, level: level)
+                previewRow("Normal · Recording", size: .normal, phase: .listening, time: time, level: level)
+                previewRow("Compact · Processing", size: .compact, phase: .processing, time: time, level: level)
+                previewRow("Normal · Processing", size: .normal, phase: .processing, time: time, level: level)
+            }
+        }
+    }
+
+    private func previewRow(
+        _ label: String,
+        size: BuiltinVoiceEffectCapsuleSize,
+        phase: BuiltinVoiceEffectFrame.Phase,
+        time: Double,
+        level: Double
+    ) -> some View {
+        HStack(spacing: 18) {
+            Text(label)
+                .font(.caption.weight(.medium))
+                .frame(width: 150, alignment: .trailing)
+            BuiltinVoiceEffectCapsule(
+                effect: effect,
+                frame: .init(phase: phase, time: time, level: level, reducedMotion: false),
+                size: size,
+                durationText: size == .normal ? "0:08" : nil
+            )
+            .allowsHitTesting(false)
+        }
+    }
+}
+
 let arguments = CommandLine.arguments
 let suiteIndex = arguments.firstIndex(of: "--suite")
 let suiteName = suiteIndex.flatMap { arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil }
@@ -33,7 +71,7 @@ if arguments.contains("--smoke") {
 
         let session = BuiltinVoiceEffectSession()
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 96),
+            contentRect: NSRect(x: 0, y: 0, width: 104, height: 28),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -95,11 +133,26 @@ if arguments.contains("--smoke") {
         session.clear()
         print(
             "BUILTIN_EFFECT_SMOKE_OK effects=\(BuiltinVoiceEffectCatalog.all.count) "
-                + "frames=\(session.frameCount) resource=\(resourceURL.path)"
+                + "frames=\(session.frameCount) canvas=104x28 resource=\(resourceURL.path)"
         )
         window.close()
         app.terminate(nil)
     }
+} else if arguments.contains("--layout-preview"),
+          let effect = BuiltinVoiceEffectCatalog.effect(id: 1) {
+    let root = CapsuleLayoutPreview(effect: effect)
+        .padding(24)
+    let window = NSWindow(
+        contentRect: NSRect(x: 0, y: 0, width: 460, height: 310),
+        styleMask: [.titled, .closable],
+        backing: .buffered,
+        defer: false
+    )
+    window.title = "Compact Voice Bar Layouts"
+    window.contentView = NSHostingView(rootView: root)
+    window.center()
+    window.makeKeyAndOrderFront(nil)
+    app.activate(ignoringOtherApps: true)
 } else {
     let selection = BuiltinVoiceEffectSelection(defaults: defaults)
     let root = VStack(alignment: .leading, spacing: 14) {
