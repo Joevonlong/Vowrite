@@ -9,6 +9,7 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ### Changed
 
+- The idle macOS menu-bar icon now uses Vowrite's adaptive monochrome V-leaves logo. Recording, processing, and error indicators retain their existing status symbols.
 - Reduced the classic recording bar's compact and normal sizes, including its controls and waveform. All five indicator styles remain available in General settings, with bar size alongside the style picker; changing either immediately updates an active overlay without moving its bottom-center anchor.
 
 ## [0.2.3.0] — 2026-09-19
