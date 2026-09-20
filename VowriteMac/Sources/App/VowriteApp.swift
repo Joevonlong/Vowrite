@@ -34,8 +34,14 @@ struct VowriteApp: App {
                     }
                 }
         } label: {
-            Image(systemName: appState.menuBarIcon)
-                .symbolRenderingMode(.hierarchical)
+            if appState.engine.state == .idle {
+                Image(nsImage: MenuBarLogo.image)
+                    .accessibilityLabel("Vowrite")
+            } else {
+                Image(systemName: appState.menuBarIcon)
+                    .symbolRenderingMode(.hierarchical)
+                    .accessibilityLabel("Vowrite")
+            }
         }
         .menuBarExtraStyle(.menu)
 
