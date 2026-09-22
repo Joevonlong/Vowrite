@@ -1,0 +1,537 @@
+{
+  "schema": 1,
+  "decision": "Owner requested one clear homepage with prominent feature modules, fewer subpages and no repeated descriptions. Keep unique detail and compatible old links.",
+  "baselineCommit": "ec825be4d4db0f0ed0914bbd91f39f933166b755",
+  "canonicalPages": [
+    "index",
+    "pricing"
+  ],
+  "contentDestinations": {
+    "index": "index",
+    "why": "index",
+    "apps": "index",
+    "translate": "index",
+    "pricing": "pricing"
+  },
+  "legacyRoutes": {
+    "apps": {
+      "": "platforms",
+      "mac": "download-mac",
+      "ios": "download-ios",
+      "site-navigation": "site-navigation",
+      "language-options": "language-options",
+      "main": "main"
+    },
+    "translate": {
+      "": "translation",
+      "how": "translation-flow",
+      "trig": "translation-triggers",
+      "site-navigation": "site-navigation",
+      "language-options": "language-options",
+      "main": "main",
+      "trDemoRow": "trDemoRow",
+      "trDemoFlagIn": "trDemoFlagIn",
+      "trDemoLangIn": "trDemoLangIn",
+      "trDemoIn": "trDemoIn",
+      "trDemoFlagOut": "trDemoFlagOut",
+      "trDemoLangOut": "trDemoLangOut",
+      "trDemoOut": "trDemoOut"
+    },
+    "why": {
+      "": "compare",
+      "site-navigation": "site-navigation",
+      "language-options": "language-options",
+      "main": "main"
+    },
+    "demo": {
+      "": "live-demo",
+      "configuration": "configuration"
+    }
+  },
+  "mergedKeys": {
+    "index:nav.why": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Why Vowrite"
+    },
+    "index:nav.translate": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Translate"
+    },
+    "index:nav.apps": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Apps"
+    },
+    "index:hero.badge": {
+      "target": "index.html#main",
+      "reason": "The legacy second hero repeats the primary homepage hero and its download/source actions.",
+      "sourceText": "Open Source · Free · macOS 14+"
+    },
+    "index:hero.title": {
+      "target": "index.html#main",
+      "reason": "The legacy second hero repeats the primary homepage hero and its download/source actions.",
+      "sourceText": "Say it once. Mean it perfectly."
+    },
+    "index:hero.sub": {
+      "target": "index.html#main",
+      "reason": "The legacy second hero repeats the primary homepage hero and its download/source actions.",
+      "sourceText": "AI-powered voice input for Mac. Speak naturally, get clean text instantly. 20+ providers — including true offline options — with built-in translation and per-app Modes."
+    },
+    "index:hero.github": {
+      "target": "index.html#main",
+      "reason": "The legacy second hero repeats the primary homepage hero and its download/source actions.",
+      "sourceText": "View on GitHub"
+    },
+    "index:flow.speak": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Speak"
+    },
+    "index:flow.clean": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Clean"
+    },
+    "index:flow.done": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Done"
+    },
+    "index:feat.title": {
+      "target": "index.html#features",
+      "reason": "The summary card repeats the dedicated feature module; the module is now the canonical explanation.",
+      "sourceText": "Your input butler"
+    },
+    "index:feat.sub": {
+      "target": "index.html#features",
+      "reason": "The summary card repeats the dedicated feature module; the module is now the canonical explanation.",
+      "sourceText": "You speak. Vowrite handles the rest."
+    },
+    "index:feat.works.t": {
+      "target": "index.html#platform-mac",
+      "reason": "The summary card repeats the dedicated feature module; the module is now the canonical explanation.",
+      "sourceText": "Works everywhere"
+    },
+    "index:feat.choice.t": {
+      "target": "index.html#configuration",
+      "reason": "The summary card repeats the dedicated feature module; the module is now the canonical explanation.",
+      "sourceText": "Your AI, your choice"
+    },
+    "index:feat.choice.d": {
+      "target": "index.html#configuration",
+      "reason": "The summary card repeats the dedicated feature module; the module is now the canonical explanation.",
+      "sourceText": "Bring your own API key. Pick from 20+ providers or plug in your own. No subscriptions, no lock-in."
+    },
+    "index:feat.translate.t": {
+      "target": "index.html#translation",
+      "reason": "The summary card repeats the dedicated feature module; the module is now the canonical explanation.",
+      "sourceText": "Voice translation"
+    },
+    "index:feat.translate.d": {
+      "target": "index.html#translation",
+      "reason": "The summary card repeats the dedicated feature module; the module is now the canonical explanation.",
+      "sourceText": "Speak any language, output any language. Dedicated hotkey on Mac, long-press arc on iOS — no Mode switching. <a data-i18n=\"feat.translate.link\" href=\"/translate\" style=\"color: var(--accent-warm); font-weight: 600;\">Learn more →</a>"
+    },
+    "index:feat.translate.link": {
+      "target": "index.html#translation",
+      "reason": "The summary card repeats the dedicated feature module; the module is now the canonical explanation.",
+      "sourceText": "Learn more →"
+    },
+    "index:how.title": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Three steps. Two seconds."
+    },
+    "index:how.sub": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "From thought to polished text, instantly."
+    },
+    "index:how.s1.t": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Speak"
+    },
+    "index:how.s1.d": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Press"
+    },
+    "index:how.s1.d2": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "and talk. Say as much as you need."
+    },
+    "index:how.s2.t": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Clean"
+    },
+    "index:how.s2.d": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "AI transcribes and polishes. Filler words vanish, punctuation appears."
+    },
+    "index:how.s3.t": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Done"
+    },
+    "index:how.s3.d": {
+      "target": "index.html#live-demo",
+      "reason": "Repeated voice-workflow labels are represented by the interactive six-stage voice workflow.",
+      "sourceText": "Clean text inserted at your cursor. No paste, no switching apps. Keep working."
+    },
+    "index:faq.title": {
+      "target": "index.html#faq",
+      "reason": "The repeated FAQ heading is replaced by the single heading above all seven original questions.",
+      "sourceText": "Frequently asked questions"
+    },
+    "apps:nav.why": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Why Vowrite"
+    },
+    "apps:nav.translate": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Translate"
+    },
+    "apps:nav.apps": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Apps"
+    },
+    "apps:ap.badge": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "macOS 14+ · iOS 17+ · Apple Silicon"
+    },
+    "apps:ap.h1a": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Same voice."
+    },
+    "apps:ap.h1b": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Two platforms."
+    },
+    "apps:ap.sub": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "A polished Mac menu-bar app and an iOS keyboard extension — driven by the same engine, the same providers, the same Modes. Speak once, get clean text wherever you type."
+    },
+    "apps:ap.pick.mac.sub": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Menu bar · ⌥ Space"
+    },
+    "apps:ap.pick.ios.sub": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Keyboard · long-press mic"
+    },
+    "apps:ap.free": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Free · Open Source"
+    },
+    "apps:ap.mac.use.t": {
+      "target": "index.html#platform-mac",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Daily usage"
+    },
+    "apps:ap.mac.flow1": {
+      "target": "index.html#platform-mac",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Hold the hotkey"
+    },
+    "apps:ap.mac.flow2": {
+      "target": "index.html#platform-mac",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Speak naturally"
+    },
+    "apps:ap.mac.flow3": {
+      "target": "index.html#platform-mac",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Release"
+    },
+    "apps:ap.mac.flow4": {
+      "target": "index.html#platform-mac",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Text at cursor"
+    },
+    "apps:ap.mac.cta": {
+      "target": "index.html#platform-mac",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Download for Mac"
+    },
+    "apps:ap.source": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "View source"
+    },
+    "apps:ap.ios.use.t": {
+      "target": "index.html#platform-ios",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Daily usage"
+    },
+    "apps:ap.ios.flow1": {
+      "target": "index.html#platform-ios",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Switch to Vowrite keyboard"
+    },
+    "apps:ap.ios.flow2": {
+      "target": "index.html#platform-ios",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Tap or long-press mic"
+    },
+    "apps:ap.ios.flow3": {
+      "target": "index.html#platform-ios",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Speak, tap to stop"
+    },
+    "apps:ap.ios.flow4": {
+      "target": "index.html#platform-ios",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Polished text inserted"
+    },
+    "apps:ap.ios.cta": {
+      "target": "index.html#platform-ios",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Build from source"
+    },
+    "apps:ap.ios.beta": {
+      "target": "index.html#platform-ios",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Request TestFlight invite"
+    },
+    "apps:ap.final.t": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Pick your platform"
+    },
+    "apps:ap.final.sub": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Or grab both — your settings travel together."
+    },
+    "apps:ap.final.mac": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Download for Mac"
+    },
+    "apps:ap.final.ios": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Get iOS source"
+    },
+    "apps:ap.final.home": {
+      "target": "index.html#platforms",
+      "reason": "Repeated platform introduction, daily-flow labels or call to action is consolidated into the visible platform card and its installation guide.",
+      "sourceText": "Back to home"
+    },
+    "translate:nav.why": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Why Vowrite"
+    },
+    "translate:nav.translate": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Translate"
+    },
+    "translate:nav.apps": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Apps"
+    },
+    "translate:tr.badge": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "🌐 Since v0.2.1.0 · macOS + iOS"
+    },
+    "translate:tr.h1a": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "Speak any language."
+    },
+    "translate:tr.h1b": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "Output any language."
+    },
+    "translate:tr.dl": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "Download for Mac"
+    },
+    "translate:tr.see": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "See how it works"
+    },
+    "translate:tr.cta.t": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "Stop typing translations. Speak them."
+    },
+    "translate:tr.cta.p": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "Vowrite v0.2.1.0 ships with Translate mode on macOS and iOS. Free, open source, your AI key."
+    },
+    "translate:tr.cta.dl": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "Download for Mac"
+    },
+    "translate:tr.cta.home": {
+      "target": "index.html#translation",
+      "reason": "Repeated translation hero or download call to action is consolidated into the visible homepage translation example and controls.",
+      "sourceText": "Back to home"
+    },
+    "why:nav.why": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Why Vowrite"
+    },
+    "why:nav.translate": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Translate"
+    },
+    "why:nav.apps": {
+      "target": "index.html#site-navigation",
+      "reason": "Repeated headline, navigation label or call to action is replaced by the canonical homepage section.",
+      "sourceText": "Apps"
+    },
+    "why:why.hero": {
+      "target": "index.html#compare",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "Why Vowrite"
+    },
+    "why:why.q.h": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "Why not use the fastest way to input?"
+    },
+    "why:why.q.b": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "Every day you have countless ideas to convey: emails, messages, notes, documents. But you choose the slowest way — typing one character at a time."
+    },
+    "why:why.t.h": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "All you really need is to get your ideas out."
+    },
+    "why:why.t.b1": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "Your input method should keep up with your brain, not slow it down. When you already have a complete thought, why spend a minute typing it out?"
+    },
+    "why:why.t.b2": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "Your mouth is much faster than your fingers. From thought to speech, there's almost no delay. Speaking is the most natural, most efficient form of human output — but past voice input was too rough: inaccurate recognition, filler words everywhere, messy formatting."
+    },
+    "why:why.s.h": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "It's not that voice input doesn't work — the tools weren't good enough."
+    },
+    "why:why.s.h2": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "Now, the tools have caught up."
+    },
+    "why:why.s.demo": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "You say 'um so basically let's have a meeting tomorrow at 3pm to discuss' and the screen shows:"
+    },
+    "why:why.s.result": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "Meeting tomorrow at 3pm."
+    },
+    "why:why.s.note": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "It doesn't record what you said — it captures what you meant. Clean, precise, done in one step."
+    },
+    "why:why.c.h": {
+      "target": "index.html#cleanup",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "The best input is the most natural one."
+    },
+    "why:why.c.dl": {
+      "target": "index.html#download",
+      "reason": "Repeated rationale and cleanup example are demonstrated by the homepage; distinct vision, ambition and goal remain under the comparison.",
+      "sourceText": "Download for Mac"
+    },
+    "pricing:nav.why": {
+      "target": "index.html#site-navigation",
+      "reason": "Shared navigation now links to homepage features and platforms; repeated subpages are compatibility entries.",
+      "sourceText": "Why Vowrite"
+    },
+    "pricing:nav.apps": {
+      "target": "index.html#site-navigation",
+      "reason": "Shared navigation now links to homepage features and platforms; repeated subpages are compatibility entries.",
+      "sourceText": "Apps"
+    },
+    "pricing:nav.translate": {
+      "target": "index.html#site-navigation",
+      "reason": "Shared navigation now links to homepage features and platforms; repeated subpages are compatibility entries.",
+      "sourceText": "Translate"
+    }
+  },
+  "visibleModules": [
+    "dictation",
+    "cleanup",
+    "expression",
+    "translation",
+    "platforms",
+    "configuration"
+  ],
+  "visibleTranslation": [
+    "trDemoRow",
+    "translation-triggers"
+  ],
+  "detailDestinations": [
+    "translation-details",
+    "mac-details",
+    "ios-details",
+    "provider-details",
+    "about"
+  ],
+  "removedRepeatedBlocks": [
+    "legacy feature-summary grid",
+    "second homepage hero",
+    "second three-question FAQ",
+    "translation mini-demo duplicated by full example",
+    "standalone Apps/Translate/Why bodies"
+  ],
+  "sourceTextBaselineCommit": "5c9e49021f29053ea7d07fd779319c4829558f0d",
+  "homepageAliases": {
+    "vc-translate": "translation"
+  },
+  "mergedSupplementalLabels": {
+    "site.allFeatures": {
+      "target": "index.html#features",
+      "reason": "The old folded feature summary is replaced by the visible six-section feature index."
+    },
+    "site.allQuestions": {
+      "target": "index.html#faq",
+      "reason": "The old outer FAQ disclosure is removed; all seven question summaries are immediately reachable."
+    },
+    "site.overview": {
+      "target": "index.html#main",
+      "reason": "The duplicated overview and second hero are merged into the main hero."
+    }
+  }
+}

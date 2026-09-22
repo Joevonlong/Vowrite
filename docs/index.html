@@ -103,7 +103,7 @@
 <nav aria-label="Main navigation" class="nav">
 <div class="container nav-inner">
 <a aria-current="page" class="logo" href="index.html"><img alt="Vowrite app icon" class="logo-icon" height="64" src="app-icon-64.png" width="64"/> Vowrite</a>
-<button aria-controls="site-navigation" aria-expanded="false" aria-label="Menu" class="nav-menu-toggle" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button><div class="nav-links" id="site-navigation"><a data-i18n="nav.features" href="index.html#features">Features</a><a data-i18n="nav.why" href="why.html">Why Vowrite</a><a data-i18n="nav.apps" href="apps.html">Apps</a><a data-i18n="nav.translate" href="translate.html">Translate</a><a data-i18n="nav.pricing" href="pricing.html">Usage</a><a class="btn btn-small" data-i18n="nav.download" href="index.html#download">Download</a></div>
+<button aria-controls="site-navigation" aria-expanded="false" aria-label="Menu" class="nav-menu-toggle" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button><div class="nav-links" id="site-navigation"><a data-i18n="nav.features" href="index.html#features">Features</a><a data-i18n="home.nav.platforms" href="index.html#platforms">Platforms</a><a data-i18n="nav.pricing" href="pricing.html">Usage</a><a class="btn btn-small" data-i18n="nav.download" href="index.html#download">Download</a></div>
 <div class="vh-header-actions"><a aria-label="Vowrite on GitHub" class="vh-github" href="https://github.com/Joevonlong/Vowrite" title="GitHub"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M12 .297C5.37.297 0 5.67 0 12.297c0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.043-1.61-4.043-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.084 1.838 1.237 1.838 1.237 1.07 1.835 2.809 1.305 3.493.998.108-.776.418-1.305.762-1.605-2.665-.305-5.467-1.334-5.467-5.93 0-1.31.469-2.38 1.236-3.22-.124-.303-.536-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.52 11.52 0 0 1 3.003-.404c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.655 1.652.243 2.873.12 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.622-5.479 5.92.43.372.823 1.102.823 2.222 0 1.606-.015 2.898-.015 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="currentColor"></path></svg></a> <div class="lang-dropdown">
 <button aria-controls="language-options" aria-expanded="false" aria-haspopup="listbox" aria-label="Choose language" class="lang-toggle" type="button">
 <span class="lang-current">EN</span>
@@ -130,127 +130,37 @@
 <span class="btn-icon">⬇</span> <span data-i18n="hero.dl">Download for Mac</span>
 </a>
 <a class="vh-demo-link" href="#live-demo"><span data-vh="demo">Try the demo</span><span aria-hidden="true">↗</span></a>
-</div><p class="site-requirements" data-i18n="site.requirements">macOS 14+ · Apple Silicon · Free app, provider usage billed separately</p><p class="site-onboarding"><a data-i18n="site.onboarding" href="apps.html#mac">Download → Install → Add provider keys → Try your first dictation</a></p>
-<div class="vw-demo" data-refined="true" data-vw-demo="" id="live-demo"><p>Notes · Email · Chat</p><p>Speak → Transcribe → Polish → Insert</p><p>Enable JavaScript to play the interactive example. No microphone is used.</p></div>
+</div><p class="site-requirements" data-i18n="site.requirements">macOS 14+ · Apple Silicon · Free app, provider usage billed separately</p><p class="site-onboarding"><a data-i18n="site.onboarding" href="index.html#download-mac">Download → Install → Add provider keys → Try your first dictation</a></p>
+<span aria-hidden="true" class="home-anchor" id="how-it-works"></span><div class="vw-demo" data-refined="true" data-vw-demo="" id="live-demo"><p>Notes · Email · Chat</p><p>Speak → Transcribe → Polish → Insert</p><p>Enable JavaScript to play the interactive example. No microphone is used.</p></div>
 </div></section>
 <!-- Features -->
-<div id="features"></div><section class="vc-section" id="dictation"><div class="container vc-layout"><div class="vc-copy"><h2 data-hc="dictTitle">Your words. Straight to text.</h2><p data-hc="dictDesc">Just want to dictate? Turn speech into text without asking AI to rewrite your wording.</p></div><div class="vc-window"><div class="vc-chrome"><strong>Vowrite / Dictation</strong><span data-hc="sample">Preset example · no recording</span></div><div class="vc-body od-stack"><blockquote data-hc="raw">“Let’s meet on Thursday at ten.”</blockquote><p aria-live="polite" class="vc-paper" data-hc-dict-output="">…</p><button class="va-btn" data-hc-dict="" type="button">Show dictation</button></div></div></div></section><div class="container"><details class="hc-details"><summary data-i18n="site.allFeatures">All features and the voice workflow</summary><section class="features" id="feature-details">
-<div class="container">
-<h2 class="section-title fade-in" data-i18n="feat.title">Your input butler</h2>
-<p class="section-sub fade-in" data-i18n="feat.sub">You speak. Vowrite handles the rest.</p>
-<div class="features-grid">
-<div class="feature-card fade-in">
+<nav aria-label="Features" class="home-feature-nav container" id="features"><a href="#dictation"><span aria-hidden="true">01</span><strong data-i18n="home.jump.dictation">Dictate</strong></a><a href="#cleanup"><span aria-hidden="true">02</span><strong data-i18n="home.jump.cleanup">Refine</strong></a><a href="#expression"><span aria-hidden="true">03</span><strong data-i18n="home.jump.expression">Your style</strong></a><a href="#translation"><span aria-hidden="true">04</span><strong data-i18n="home.jump.translation">Translate</strong></a><a href="#platforms"><span aria-hidden="true">05</span><strong data-i18n="home.jump.platforms">Mac + iPhone</strong></a><a href="#configuration"><span aria-hidden="true">06</span><strong data-i18n="home.jump.configuration">Your AI</strong></a></nav><section class="vc-section" id="dictation"><span aria-hidden="true" class="home-anchor" id="feature-details"></span><div class="container vc-layout"><div class="vc-copy"><h2 data-hc="dictTitle">Your words. Straight to text.</h2><p data-hc="dictDesc">Just want to dictate? Turn speech into text without asking AI to rewrite your wording.</p></div><div class="vc-window"><div class="vc-chrome"><strong>Vowrite / Dictation</strong><span data-hc="sample">Preset example · no recording</span></div><div class="vc-body od-stack"><blockquote data-hc="raw">“Let’s meet on Thursday at ten.”</blockquote><p aria-live="polite" class="vc-paper" data-hc-dict-output="">…</p><button class="va-btn" data-hc-dict="" type="button">Show dictation</button></div></div></div></section><section class="vc-section" id="cleanup"><div class="container"><div class="vc-layout"><div class="vc-copy"><div class="vc-eyebrow"><span data-vc-text="labels.0">SAY IT</span></div><h2 data-vc-text="heads.0">A thought. A finished draft.</h2><p data-vc-text="desc.0">Speak naturally. Turn pauses and repeated words into a message that is ready to use.</p></div><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-clean"><p>Let’s meet Thursday at 10. Bring the updated design!</p></div></div></div><div class="home-support-grid home-support-grid-two"><div class="home-feature-note">
 <div class="feature-icon">✨</div>
 <h3 data-i18n="feat.clean.t">Smart cleanup</h3>
 <p data-i18n="feat.clean.d">Filler words gone, grammar fixed, punctuation added — and your personal vocabulary auto-corrects itself as you keep dictating.</p>
-</div>
-<div class="feature-card fade-in">
-<div class="feature-icon">📋</div>
-<h3 data-i18n="feat.works.t">Works everywhere</h3>
-<p data-i18n="feat.works.d">Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.</p>
-</div>
-<div class="feature-card fade-in">
-<div class="feature-icon">🔑</div>
-<h3 data-i18n="feat.choice.t">Your AI, your choice</h3>
-<p data-i18n="feat.choice.d">Bring your own API key. Pick from 20+ providers or plug in your own. No subscriptions, no lock-in.</p>
-</div>
-<div class="feature-card fade-in">
+</div><div class="home-feature-note">
 <div class="feature-icon">⚡</div>
 <h3 data-i18n="feat.fast.t">Blazing fast</h3>
 <p data-i18n="feat.fast.d">Speculative polish pre-warms connections during recording. Response time depends on the provider, network and recording length.</p>
-</div>
-<div class="feature-card fade-in">
-<div class="feature-icon">🌐</div>
-<h3 data-i18n="feat.translate.t">Voice translation</h3>
-<p data-i18n="feat.translate.d">Translate between languages supported by your chosen recognition and text models. Use the Mac translation shortcut or the iOS keyboard gesture without changing your Mode. <a data-i18n="feat.translate.link" href="translate.html">Learn more →</a></p>
-</div>
-<div class="feature-card fade-in">
-<div class="feature-icon">📑</div>
-<h3 data-i18n="feat.cmd.t">Command templates</h3>
-<p data-i18n="feat.cmd.d">15 built-in commands — Improve, Fix Grammar, TL;DR, Make Professional, and more — applied straight to your selected text.</p>
-</div>
-<div class="feature-card fade-in">
-<div class="feature-icon">🎯</div>
-<h3 data-i18n="feat.perapp.t">Per-app Modes</h3>
-<p data-i18n="feat.perapp.d">Vowrite senses the app in front of you and switches Mode automatically — Slack stays casual, your editor stays code-flavored. Manual switches always win.</p>
-</div>
-<div class="feature-card fade-in">
-<div class="feature-icon">📄</div>
-<h3 data-i18n="feat.md.t">Markdown &amp; output styles</h3>
-<p data-i18n="feat.md.d">Built-in Markdown formatting plus 7 more Output Styles — bullet lists, headings, and code blocks land exactly right, per Mode.</p>
-</div>
-</div>
-</div>
-</section><section class="how-it-works" id="how-it-works">
-<div class="container">
-<h2 class="section-title fade-in" data-i18n="how.title">Three steps. From voice to text.</h2>
-<p class="section-sub fade-in" data-i18n="how.sub">Record, transcribe and refine, then insert.</p>
-<div class="steps fade-in">
-<div class="step">
-<div class="step-number">1</div>
-<h3 data-i18n="how.s1.t">Speak</h3>
-<p><span data-i18n="how.s1.d">Press</span> <kbd>⌥ Space</kbd> <span data-i18n="how.s1.d2">and talk. Say as much as you need.</span></p>
-</div>
-<div class="step-arrow">→</div>
-<div class="step">
-<div class="step-number">2</div>
-<h3 data-i18n="how.s2.t">Clean</h3>
-<p data-i18n="how.s2.d">AI transcribes and polishes. Filler words vanish, punctuation appears.</p>
-</div>
-<div class="step-arrow">→</div>
-<div class="step">
-<div class="step-number">3</div>
-<h3 data-i18n="how.s3.t">Done</h3>
-<p data-i18n="how.s3.d">Clean text inserted at your cursor. No paste, no switching apps. Keep working.</p>
-</div>
-</div>
-</div>
-</section></details><details class="hc-details"><summary data-i18n="site.overview">About Vowrite</summary><section class="site-overview">
-<div class="container">
-<div class="badge" data-i18n="hero.badge">Open Source · Free · macOS 14+</div>
-<h2 data-i18n="hero.title">Say it once. Mean it perfectly.</h2>
-<p class="hero-sub" data-i18n="hero.sub">AI voice input for Mac, with built-in translation, per-app Modes and 20+ provider integrations. Use cloud recognition and cloud or local text refinement.</p>
-<div class="hero-actions">
-<a class="btn btn-primary" href="https://github.com/Joevonlong/Vowrite/releases/latest">
-<span class="btn-icon">⬇</span> <span data-i18n="hero.dl">Download for Mac</span>
-</a>
-<a class="btn btn-secondary" data-i18n="hero.github" href="https://github.com/Joevonlong/Vowrite">View on GitHub</a>
-</div>
-<!-- Animated flow -->
-<div class="hero-flow">
-<div class="flow-step flow-animate" style="--delay: 0s">
-<span class="flow-key">⌥ Space</span>
-</div>
-<div class="flow-arrow flow-animate" style="--delay: 0.3s">→</div>
-<div class="flow-step flow-animate" style="--delay: 0.6s">
-<span class="flow-emoji">🎤</span>
-<span class="flow-label" data-i18n="flow.speak">Speak</span>
-</div>
-<div class="flow-arrow flow-animate" style="--delay: 0.9s">→</div>
-<div class="flow-step flow-animate" style="--delay: 1.2s">
-<span class="flow-emoji">✨</span>
-<span class="flow-label" data-i18n="flow.clean">Clean</span>
-</div>
-<div class="flow-arrow flow-animate" style="--delay: 1.5s">→</div>
-<div class="flow-step flow-animate" style="--delay: 1.8s">
-<span class="flow-emoji">📋</span>
-<span class="flow-label" data-i18n="flow.done">Done</span>
-</div>
-</div>
-</div>
-</section></details></div><section class="vc-section" id="cleanup"><div class="container"><div class="vc-layout"><div class="vc-copy"><div class="vc-eyebrow"><span data-vc-text="labels.0">SAY IT</span></div><h2 data-vc-text="heads.0">A thought. A finished draft.</h2><p data-vc-text="desc.0">Speak naturally. Turn pauses and repeated words into a message that is ready to use.</p></div><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-clean"><p>Let’s meet Thursday at 10. Bring the updated design!</p></div></div></div></div></section>
+</div></div></div></section>
 <section class="vc-section" id="expression"><div class="container"><div class="vc-layout"><div class="vc-copy"><div class="vc-eyebrow"><span data-vc-text="labels.1">MAKE IT YOURS</span></div><h2 data-vc-text="heads.1">The right words, wherever you write.</h2><p data-vc-text="desc.1">A quick reply, a thoughtful email, a tidy note. Try the same thought in three different places.</p></div><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-style"><p>Hi team,
 
 Let’s meet Thursday at 10 to review the updated design. Please bring the latest version.
 
-Thank you!</p></div></div></div></div><div class="container"><details class="hc-details"><summary><span data-hc="templates">More possibilities</span></summary><div class="vw-future" data-demo-slot="command-templates"><span class="vw-kicker" data-vw-copy="futureLabel">Command templates and output styles</span><h3 data-vw-copy="futureTitle">More ways to use your voice.</h3><p data-vw-copy="futureBody">Use command templates on selected text, customize each Mode’s prompt, and choose Markdown or another output style.</p><div class="vw-sequence"><span>01 · <span data-vw-copy="mode">Email writing style</span></span><span>02 · <span data-vw-copy="start">Start speaking</span></span><span>03 · <span data-vw-copy="finish">View result</span></span></div><a class="vw-link" href="index.html#features"><span data-vw-copy="back">Back to the homepage</span> →</a></div></details></div></section>
-<section class="vc-section" id="translation"><div class="container"><div class="vc-layout"><div class="vc-copy"><div class="vc-eyebrow"><span data-vc-text="labels.2">GO FURTHER</span></div><h2 data-vc-text="heads.2">Your voice. Another language.</h2><p data-vc-text="desc.2">Switch the output language and see your message take shape. Keep the conversation moving.</p></div><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-translate"><p>Design review
-
-Thursday, 10:00
-Bring the updated design.</p></div></div></div></div><div class="container"><details class="hc-details" id="translation-details"><summary><span data-hc="translationDetails">Translation examples, gestures and settings</span></summary><!-- Live Demo -->
-<section class="tr-demo">
-<div class="container">
-<div class="tr-demo-card fade-in">
+Thank you!</p></div></div></div></div><div class="container"><div class="home-support-grid"><div class="home-feature-note">
+<div class="feature-icon">🎯</div>
+<h3 data-i18n="feat.perapp.t">Per-app Modes</h3>
+<p data-i18n="feat.perapp.d">Vowrite senses the app in front of you and switches Mode automatically — Slack stays casual, your editor stays code-flavored. Manual switches always win.</p>
+</div><div class="home-feature-note">
+<div class="feature-icon">📑</div>
+<h3 data-i18n="feat.cmd.t">Command templates</h3>
+<p data-i18n="feat.cmd.d">15 built-in commands — Improve, Fix Grammar, TL;DR, Make Professional, and more — applied straight to your selected text.</p>
+</div><div class="home-feature-note">
+<div class="feature-icon">📄</div>
+<h3 data-i18n="feat.md.t">Markdown &amp; output styles</h3>
+<p data-i18n="feat.md.d">Built-in Markdown formatting plus 7 more Output Styles — bullet lists, headings, and code blocks land exactly right, per Mode.</p>
+</div></div></div></section>
+<section class="vc-section" id="translation"><span aria-hidden="true" class="home-anchor" id="vc-translate"></span><div class="container"><div class="home-section-head"><p class="vc-eyebrow" data-i18n="home.translation.eyebrow">04 / VOICE TRANSLATION</p><h2 data-i18n="home.translation.title">Speak one language. Write another.</h2><p class="tr-hero-sub" data-i18n="tr.sub">Press the translation shortcut on Mac or choose Translate in the iOS keyboard. Vowrite recognizes speech and writes the requested output language into a compatible text field. Language support depends on your models.</p></div><div class="tr-demo-card fade-in home-translation-demo">
 <div class="va-chrome" style="padding:24px"><strong>Vowrite / Translate</strong><span data-va="sample">Interactive example · no recording</span></div><div class="tr-demo-row" id="trDemoRow">
 <div class="tr-demo-pane tr-demo-in">
 <div class="tr-demo-tag">
@@ -276,43 +186,9 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 <button aria-label="Example 3" aria-pressed="false" class="tr-demo-dot" data-i="2" type="button"></button>
 <button aria-label="Example 4" aria-pressed="false" class="tr-demo-dot" data-i="3" type="button"></button>
 </div>
-</div>
-</div>
-</section>
-<!-- Pipeline -->
-<section class="tr-pipeline" id="translation-flow">
+</div><section class="tr-triggers home-translation-controls" id="translation-triggers">
 <div class="container">
-<h2 class="section-title fade-in" data-i18n="tr.pipe.title">From voice to translation in one breath</h2>
-<p class="section-sub fade-in" data-i18n="tr.pipe.sub">A purpose-built pipeline that detects, recognises, translates, and types — without ever leaving your text field.</p>
-<div class="tr-pipe-row fade-in">
-<div class="tr-pipe-step">
-<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></div>
-<h3 data-i18n="tr.pipe.s1.t">Speak naturally</h3>
-<p data-i18n="tr.pipe.s1.d">Press the translation shortcut on Mac, or choose Translate from the iOS microphone menu. Speak in a language supported by your chosen models.</p>
-</div>
-<div class="tr-pipe-step">
-<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></div>
-<h3 data-i18n="tr.pipe.s2.t">Auto-detect &amp; transcribe</h3>
-<p data-i18n="tr.pipe.s2.d">Compatible recognition models can detect the spoken language automatically. A configured source language provides a hint when the provider supports it.</p>
-</div>
-<div class="tr-pipe-step is-accent">
-<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
-<h3 data-i18n="tr.pipe.s3.t">LLM translates</h3>
-<p data-i18n="tr.pipe.s3.d">A dedicated translation prompt rewrites the transcript into your target language — formal stays formal, casual stays casual.</p>
-<span class="tr-pipe-tag" data-i18n="tr.pipe.s3.tag">Translation prompt</span>
-</div>
-<div class="tr-pipe-step">
-<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
-<h3 data-i18n="tr.pipe.s4.t">Type at the cursor</h3>
-<p data-i18n="tr.pipe.s4.d">The finished translation is inserted into a compatible text field, such as a message, email or document.</p>
-</div>
-</div>
-</div>
-</section>
-<!-- Triggers (Mac + iOS) -->
-<section class="tr-triggers" id="translation-triggers">
-<div class="container">
-<h2 class="section-title fade-in" data-i18n="tr.trig.title">Two ways to trigger. Zero context switch.</h2>
+<h3 class="section-title fade-in" data-i18n="tr.trig.title">Two ways to trigger. Zero context switch.</h3>
 <p class="section-sub fade-in" data-i18n="tr.trig.sub">Translate mode is a separate gesture, so it never overwrites the Mode you were already using.</p>
 <div class="tr-trig-grid">
 <div class="tr-trig-card fade-in">
@@ -359,9 +235,7 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 </div>
 </div>
 </div>
-</section>
-<!-- Settings (F-066) -->
-<section class="tr-settings">
+</section><details class="hc-details home-detail" id="translation-details"><summary data-i18n="home.translation.settings">Language settings and the translation workflow</summary><section class="tr-settings">
 <div class="container">
 <div class="tr-settings-row">
 <div class="tr-settings-text fade-in">
@@ -389,9 +263,35 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 </div>
 </div>
 </div>
-</section>
-<!-- Language Matrix -->
-<section class="tr-langs">
+</section><section class="tr-pipeline" id="translation-flow">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="tr.pipe.title">From voice to translation in one breath</h2>
+<p class="section-sub fade-in" data-i18n="tr.pipe.sub">A purpose-built pipeline that detects, recognises, translates, and types — without ever leaving your text field.</p>
+<div class="tr-pipe-row fade-in">
+<div class="tr-pipe-step">
+<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></div>
+<h3 data-i18n="tr.pipe.s1.t">Speak naturally</h3>
+<p data-i18n="tr.pipe.s1.d">Press the translation shortcut on Mac, or choose Translate from the iOS microphone menu. Speak in a language supported by your chosen models.</p>
+</div>
+<div class="tr-pipe-step">
+<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></div>
+<h3 data-i18n="tr.pipe.s2.t">Auto-detect &amp; transcribe</h3>
+<p data-i18n="tr.pipe.s2.d">Compatible recognition models can detect the spoken language automatically. A configured source language provides a hint when the provider supports it.</p>
+</div>
+<div class="tr-pipe-step is-accent">
+<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h3 data-i18n="tr.pipe.s3.t">LLM translates</h3>
+<p data-i18n="tr.pipe.s3.d">A dedicated translation prompt rewrites the transcript into your target language — formal stays formal, casual stays casual.</p>
+<span class="tr-pipe-tag" data-i18n="tr.pipe.s3.tag">Translation prompt</span>
+</div>
+<div class="tr-pipe-step">
+<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h3 data-i18n="tr.pipe.s4.t">Type at the cursor</h3>
+<p data-i18n="tr.pipe.s4.d">The finished translation is inserted into a compatible text field, such as a message, email or document.</p>
+</div>
+</div>
+</div>
+</section></details><details class="hc-details home-detail"><summary data-i18n="home.translation.examples">Languages and everyday uses</summary><section class="tr-langs">
 <div class="container">
 <h2 class="section-title fade-in" data-i18n="tr.lang.title">Translation in both directions.</h2>
 <p class="section-sub fade-in" data-i18n="tr.lang.sub">Choose a source and target language supported by your recognition and text models.</p>
@@ -411,9 +311,7 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 </div>
 <p class="tr-langs-note fade-in" data-i18n="tr.lang.note">Plus any other language your STT and LLM provider support — Whisper covers 90+, GPT and Claude translate even further.</p>
 </div>
-</section>
-<!-- Use cases -->
-<section class="tr-cases">
+</section><section class="tr-cases">
 <div class="container">
 <h2 class="section-title fade-in" data-i18n="tr.case.title">Made for the moments your hands can't keep up</h2>
 <p class="section-sub fade-in" data-i18n="tr.case.sub">Real situations where pulling up Google Translate kills the flow.</p>
@@ -444,12 +342,10 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 </div>
 </div>
 </div>
-</section>
-<!-- Compare -->
-<section class="tr-compare">
+</section></details><details class="hc-details home-detail"><summary data-i18n="home.translation.compare">Compare translation tools</summary><section class="tr-compare">
 <div class="container">
 <h2 class="section-title fade-in" data-i18n="tr.cmp.title">Why Vowrite Translate</h2>
-<p class="section-sub fade-in" data-i18n="tr.cmp.sub">Most translators want you to copy-paste. Vowrite types straight at your cursor.</p>
+<p class="section-sub fade-in" data-i18n="tr.cmp.sub">Compare translated-text output, platform support and processing options to find the right workflow.</p>
 <div aria-label="Comparison table; scroll horizontally to see all columns" class="compare-table-wrap fade-in" role="region" tabindex="0">
 <table class="compare-table">
 <thead>
@@ -515,11 +411,185 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 </table>
 </div><p class="site-fact-note"><span data-i18n="site.compareNote">Checked 22 September 2026. Features vary by platform, model and plan. “Not documented” means no support claim was confirmed in the linked official documentation.</span><br/><a href="https://apps.apple.com/us/app/translate/id1514844618">Apple Translate</a> · <a href="https://support.google.com/translate/answer/6142473?co=GENIE.Platform%3DiOS&amp;hl=en">Google Translate</a> · <a href="https://www.deepl.com/en/voice-app">DeepL Voice</a></p>
 </div>
-</section>
-</details></div></section>
+</section></details></div></section><section class="vc-section home-platforms" id="platforms"><div class="container"><div class="home-section-head"><p class="vc-eyebrow" data-i18n="home.platforms.eyebrow">05 / MAC + IPHONE</p><h2 data-i18n="home.platforms.title">At your desk. In your pocket.</h2><p data-i18n="home.platforms.intro">A Mac menu-bar app and an iPhone keyboard. The same voice workflow, with controls made for each device.</p></div><div class="home-platform-grid"><article class="home-platform-card" id="platform-mac"><p class="home-platform-status" data-i18n="home.platforms.mac.status">Ready to download</p><div class="ap-platform-head">
+<div>
+<h3 class="ap-platform-title">Vowrite for macOS</h3>
+<p class="ap-platform-tag" data-i18n="ap.mac.tag">A menu-bar companion: press your shortcut, speak, then insert clean text into a compatible editable field.</p>
+</div>
+<div class="ap-platform-meta">
+<span class="ap-meta-pill">macOS 14+</span>
+<span class="ap-meta-pill">Apple Silicon</span>
+</div>
+</div><div aria-hidden="true" class="home-device home-device-mac"><p data-i18n="home.platforms.mac.control">Press ⌥ Space. Speak. Press again.</p><p class="home-device-output" data-i18n="home.platforms.example">The design review is on Thursday at 10.</p><span class="home-device-caption" data-i18n="home.platforms.illustration">Illustration · no recording</span></div><p class="home-platform-note" data-i18n="feat.works.d">Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.</p><div class="home-platform-actions"><a class="va-btn" href="https://github.com/Joevonlong/Vowrite/releases/latest"><span data-i18n="home.platforms.mac.action">Download for Mac</span></a></div><details class="hc-details home-install" id="mac-details"><summary><span data-hc="mac">macOS — installation &amp; use</span></summary><section class="ap-platform" id="download-mac">
+<div class="container">
+<!-- Install steps -->
+<h3 class="ap-step-h" data-i18n="ap.mac.install.t">Install in 3 steps</h3>
+<div class="ap-step-grid">
+<div class="ap-step">
+<div class="ap-step-num">1</div>
+<h4 data-i18n="ap.mac.s1.t">Download the DMG</h4>
+<p data-i18n="ap.mac.s1.d">Download the latest macOS DMG from GitHub Releases. Sparkle verifies updates with EdDSA signatures; this does not imply Apple notarization.</p>
+<a class="ap-step-link" href="https://github.com/Joevonlong/Vowrite/releases/latest"><span data-i18n="ap.mac.s1.cta">Download Vowrite.dmg</span> →</a>
+</div>
+<div class="ap-step">
+<div class="ap-step-num">2</div>
+<h4 data-i18n="ap.mac.s2.t">Drag to Applications</h4>
+<p data-i18n="ap.mac.s2.d">Mount the DMG, drop the app into <code>/Applications</code>. First launch will prompt for Microphone + Accessibility permission — grant both (the second enables Cmd+V keystroke output).</p>
+</div>
+<div class="ap-step">
+<div class="ap-step-num">3</div>
+<h4 data-i18n="ap.mac.s3.t">Add an API key</h4>
+<p data-i18n="ap.mac.s3.d">Open Settings → API Keys to add your recognition and text-provider keys, then select them under Models. Keys stay in Keychain at rest and are used to authenticate directly with providers. No Vowrite account is required.</p>
+</div>
+</div>
+<!-- Usage -->
+<p class="ap-flow-note" data-i18n="ap.mac.flow.note">Press <kbd>⇧⌥ Space</kbd> to start translation. Stop with <kbd>⌥ Space</kbd> or the overlay Stop button. Dictation supports hold-to-record when Push-to-Talk is enabled. <a href="index.html#translation-triggers">Learn more →</a></p>
+<!-- Features -->
+<h3 class="ap-step-h" data-i18n="ap.mac.features.t">What's in the Mac app</h3>
+<div class="ap-feat-grid">
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f1.t">Global hotkey</strong>
+<span data-i18n="ap.mac.f1.d">Carbon global shortcuts, including in fullscreen apps; avoid conflicting system shortcuts.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f2.t">Cmd+V injection</strong>
+<span data-i18n="ap.mac.f2.d">Clipboard paste into compatible editable fields in browsers, editors and other apps.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f3.t">Floating overlay</strong>
+<span data-i18n="ap.mac.f3.d">Orb Pulse animation tells you it's listening</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f4.t">Translate hotkey</strong>
+<span data-i18n="ap.mac.f4.d">⇧⌥ Space starts translation; use ⌥ Space or Stop to finish.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f5.t">Custom Modes</strong>
+<span data-i18n="ap.mac.f5.d">Email · Code · Slack — each with its own polish prompt</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f6.t">Auto-update</strong>
+<span data-i18n="ap.mac.f6.d">EdDSA-signed Sparkle appcast, opt-in beta channel</span>
+</div>
+</div>
+</div>
+</section></details></article><article class="home-platform-card" id="platform-ios"><p class="home-platform-status" data-i18n="home.platforms.ios.status">Build from source</p><div class="ap-platform-head">
+<div>
+<h3 class="ap-platform-title">Vowrite for iOS</h3>
+<p class="ap-platform-tag" data-i18n="ap.ios.tag">Speak from your iPhone keyboard. The companion app handles recording and refinement, then the keyboard inserts the result.</p>
+</div>
+<div class="ap-platform-meta">
+<span class="ap-meta-pill">iOS 17+</span>
+<span class="ap-meta-pill">A14+</span>
+</div>
+</div><div aria-hidden="true" class="home-device home-device-ios"><p data-i18n="home.platforms.ios.control">In the Vowrite keyboard: tap, speak, tap to finish.</p><p class="home-device-output" data-i18n="home.platforms.example">The design review is on Thursday at 10.</p><span class="home-device-caption" data-i18n="home.platforms.illustration">Illustration · no recording</span></div><p class="home-platform-note" data-i18n="ap.ios.install.note">The iOS app is open source and currently requires building in Xcode. No public App Store or TestFlight distribution is available.</p><div class="home-platform-actions"><a class="va-btn" href="https://github.com/Joevonlong/Vowrite/tree/main/VowriteIOS"><span data-i18n="home.platforms.ios.action">Get the iOS source</span></a></div><details class="hc-details home-install" id="ios-details"><summary><span data-hc="ios">iOS — source build &amp; keyboard</span></summary><section class="ap-platform ap-platform-alt" id="download-ios">
+<div class="container">
+<!-- iOS architecture explainer -->
+<div class="ap-ios-arch">
+<div class="ap-ios-arch-card">
+<div class="ap-ios-arch-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h4 data-i18n="ap.ios.arch.app.t">VowriteIOS app</h4>
+<p data-i18n="ap.ios.arch.app.d">Hosts the engine, settings, history, Modes, and language pickers. Runs the recording service in the background so the keyboard can stay tiny.</p>
+</div>
+<div class="ap-ios-arch-arrow">⇄</div>
+<div class="ap-ios-arch-card">
+<div class="ap-ios-arch-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h4 data-i18n="ap.ios.arch.kb.t">VowriteKeyboard extension</h4>
+<p data-i18n="ap.ios.arch.kb.d">A real iOS keyboard. Tap the mic to dictate, long-press to pick Translate. Talks to the host app over App Group + Darwin notifications.</p>
+</div>
+</div>
+<!-- Install steps (build from source) -->
+<h3 class="ap-step-h" data-i18n="ap.ios.install.t">Install (build from source)</h3>
+<div class="ap-step-grid">
+<div class="ap-step">
+<div class="ap-step-num">1</div>
+<h4 data-i18n="ap.ios.s1.t">Clone the repo</h4>
+<p data-i18n="ap.ios.s1.d">Requires Xcode 15+ and a free Apple developer account.</p>
+<pre class="ap-code">git clone https://github.com/Joevonlong/Vowrite.git
+cd Vowrite/VowriteIOS
+open VowriteIOS.xcodeproj</pre>
+</div>
+<div class="ap-step">
+<div class="ap-step-num">2</div>
+<h4 data-i18n="ap.ios.s2.t">Sign and run</h4>
+<p data-i18n="ap.ios.s2.d">In Xcode → Signing &amp; Capabilities → set your Team. Plug in your iPhone, hit ▶. Build &amp; deploy both <code>VowriteIOS</code> and <code>VowriteKeyboard</code> targets.</p>
+</div>
+<div class="ap-step">
+<div class="ap-step-num">3</div>
+<h4 data-i18n="ap.ios.s3.t">Enable the keyboard</h4>
+<p data-i18n="ap.ios.s3.d">iOS Settings → General → Keyboard → Keyboards → Add New Keyboard → Vowrite. Tap "Vowrite" again and toggle <strong>Allow Full Access</strong> (required for clipboard + network).</p>
+</div>
+</div>
+<!-- Daily usage -->
+<p class="ap-flow-note" data-i18n="ap.ios.flow.note">Long-press the mic and you'll see the Dictate / Translate arc — slide up to choose, release. <a href="index.html#translation-triggers">See the gesture →</a></p>
+<!-- Features -->
+<h3 class="ap-step-h" data-i18n="ap.ios.features.t">What's in the iOS app</h3>
+<div class="ap-feat-grid">
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f1.t">Real keyboard</strong>
+<span data-i18n="ap.ios.f1.d">Works in iOS apps and fields that allow third-party keyboards.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></span>
+<strong data-i18n="ap.ios.f2.t">Long-press arc</strong>
+<span data-i18n="ap.ios.f2.d">Hold the mic, slide up to pick Dictate or Translate. Release to fire.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f3.t">Translate banner</strong>
+<span data-i18n="ap.ios.f3.d">"Translating to English" sticker stays on screen so you never wonder what's about to come out</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f4.t">Mode editor parity</strong>
+<span data-i18n="ap.ios.f4.d">Edit Modes and source/target languages in the iOS app.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f5.t">History and text deletion</strong>
+<span data-i18n="ap.ios.f5.d">Review transcripts and swipe to delete history. The keyboard can delete a word, line, paragraph or all available text.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f6.t">Keychain + App Group</strong>
+<span data-i18n="ap.ios.f6.d">Keys are stored in Keychain and used to authenticate directly with providers. The app and keyboard communicate through App Group and Darwin notifications.</span>
+</div>
+</div>
+</div>
+</section></details></article></div><p class="home-platform-note" data-i18n="home.platforms.sync">Set up each device separately. Mac and iPhone settings do not sync automatically.</p><details class="hc-details home-detail"><summary data-i18n="home.platforms.engine">Shared engine and platform architecture</summary><section class="ap-sync">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="ap.sync.t">One engine, two platforms</h2><p class="home-platform-note" data-i18n="ap.sync.sub">Both apps share <strong>VowriteKit</strong>: audio, provider integrations, Modes and translation. On iOS, the app and keyboard share settings through an App Group on the same device. Mac and iOS settings are separate; there is no automatic cross-device sync.</p>
+<div class="ap-sync-row fade-in">
+<div class="ap-sync-card">
+<div class="ap-sync-icon">🧠</div>
+<strong>VowriteKit</strong>
+<span data-i18n="ap.sync.kit">Shared Swift library — audio, Whisper, polish, Modes, translation</span>
+</div>
+<div class="ap-sync-arrow">↗</div>
+<div class="ap-sync-card">
+<div class="ap-sync-icon">🖥️</div>
+<strong>VowriteMac</strong>
+<span data-i18n="ap.sync.mac">Menu bar UI, Carbon hotkey, CGEvent injection, Sparkle</span>
+</div>
+<div class="ap-sync-arrow">↘</div>
+<div class="ap-sync-card">
+<div class="ap-sync-icon">📱</div>
+<strong>VowriteIOS + VowriteKeyboard</strong>
+<span data-i18n="ap.sync.ios">Host app + keyboard extension, App Group IPC, haptics</span>
+</div>
+</div>
+</div>
+</section></details></div></section>
 <!-- How it works -->
 <!-- Providers -->
-<section class="vc-section" id="configuration"><div class="container"><div class="vc-layout"><div class="vc-copy"><h2 data-hc="providers">A little setup. All yours.</h2><p data-hc="providersDesc">Choose what listens and what helps you write. Your preferences stay in your hands.</p></div><div class="od-stack"><div class="hf-choice"><div class="hf-choice-top od-row"><div class="od-field od-fill"><h3 data-hf="choice">Your providers. Your choice.</h3></div><span class="hf-hybrid" data-hf="hybrid">Cloud + Local</span></div><p class="hf-explain" data-hf="explanation">Choose providers independently for recognition and refinement. Combine cloud services with local models.</p><div class="hf-provider-pair"><label class="hf-provider-field"><span data-hf="recognition">Voice recognition</span><select data-hf-provider="recognition"><option data-hf="choose" value="">Choose a provider</option><optgroup data-hf-group="cloud" label="Cloud"><option data-location="cloud" value="OpenAI">OpenAI</option><option data-location="cloud" value="Groq">Groq</option></optgroup></select></label><label class="hf-provider-field"><span data-hf="writing">Text refinement</span><select data-hf-provider="writing"><option data-hf="choose" value="">Choose a provider</option><optgroup data-hf-group="cloud" label="Cloud"><option data-location="cloud" value="OpenAI">OpenAI</option><option data-location="cloud" value="Google">Google</option><option data-location="cloud" value="Anthropic">Anthropic</option><option data-location="cloud" value="DeepSeek">DeepSeek</option></optgroup><optgroup data-hf-group="local" label="Local"><option data-location="local" value="Ollama">Ollama</option></optgroup></select></label></div><p aria-live="polite" class="hf-provider-summary" data-hf-summary="" role="status">Choose both providers to see your combination.</p><div class="hc-add"><button class="va-btn" data-hc-add="" type="button">Add to example setup</button><p data-hc-provider-status="" role="status">No providers added yet.</p><ul data-hc-added=""></ul><p data-hc="providerNote">Illustrative setup only. Never enter a real API key here.</p></div><p class="site-fact-note" data-i18n="site.localNote">Local text refinement is available through Ollama or MLX Server on Mac. Built-in Sherpa speech recognition is currently unavailable; a cloud recognition provider is needed for this example.</p></div><details class="hc-details"><summary><span data-hc="extra">Shortcuts, languages and writing styles</span></summary><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-settings"><p>OpenAI · Groq · Google · Anthropic · DeepSeek · Ollama</p></div></div></details></div></div></div></section><section class="vc-section" id="providers"><div class="container"><div class="vc-vendors"><h2 data-vc-text="providersTitle">Your favorites, together.</h2><p data-vc-text="providersDesc">Choose the services you already know. Keep the freedom to change.</p><ul class="vc-logos"><li><img alt="" height="24" loading="lazy" src="assets/providers/openai.svg" width="24"/><span>OpenAI</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/groq.svg" width="24"/><span>Groq</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/deepseek.svg" width="24"/><span>DeepSeek</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/gemini.svg" width="24"/><span>Gemini</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/claude.svg" width="24"/><span>Claude</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/deepgram.svg" width="24"/><span>Deepgram</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/iflytek.svg" width="24"/><span>iFlytek</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/mlx.svg" width="24"/><span>MLX Server</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/ollama.svg" width="24"/><span>Ollama</span></li></ul><ul class="vc-logos"><li><img alt="" height="512" loading="lazy" src="website-assets/provider-icons/cerebras.png" width="512"/><span>Cerebras</span></li><li><img alt="" height="512" loading="lazy" src="website-assets/provider-icons/openrouter.png" width="512"/><span>OpenRouter</span></li><li><img alt="" height="32" loading="lazy" src="website-assets/provider-icons/togetherai.png" width="32"/><span>Together AI</span></li><li><img alt="" height="192" loading="lazy" src="website-assets/provider-icons/volcengine.png" width="192"/><span>Volcengine</span></li><li><img alt="" height="80" loading="lazy" src="website-assets/provider-icons/qwen.png" width="80"/><span>Qwen</span></li><li><img alt="" height="64" loading="lazy" src="website-assets/provider-icons/siliconflow.png" width="64"/><span>SiliconFlow</span></li><li><img alt="" height="48" loading="lazy" src="website-assets/provider-icons/kimi.ico" width="48"/><span>Kimi</span></li><li><img alt="" height="32" loading="lazy" src="website-assets/provider-icons/minimax.ico" width="32"/><span>MiniMax</span></li><li><img alt="" height="96" loading="lazy" src="website-assets/provider-icons/zhipu.png" width="96"/><span>Zhipu</span></li></ul></div><details class="hc-details"><summary data-i18n="site.providerDetails">Full provider guide</summary><section class="providers" id="provider-details">
+<section class="vc-section" id="configuration"><div class="container"><div class="vc-layout"><div class="vc-copy"><h2 data-hc="providers">A little setup. All yours.</h2><p data-hc="providersDesc">Choose what listens and what helps you write. Your preferences stay in your hands.</p></div><div class="od-stack"><div class="hf-choice"><div class="hf-choice-top od-row"><div class="od-field od-fill"><h3 data-hf="choice">Your providers. Your choice.</h3></div><span class="hf-hybrid" data-hf="hybrid">Cloud + Local</span></div><p class="hf-explain" data-hf="explanation">Choose providers independently for recognition and refinement. Combine cloud services with local models.</p><div class="hf-provider-pair"><label class="hf-provider-field"><span data-hf="recognition">Voice recognition</span><select data-hf-provider="recognition"><option data-hf="choose" value="">Choose a provider</option><optgroup data-hf-group="cloud" label="Cloud"><option data-location="cloud" value="OpenAI">OpenAI</option><option data-location="cloud" value="Groq">Groq</option></optgroup></select></label><label class="hf-provider-field"><span data-hf="writing">Text refinement</span><select data-hf-provider="writing"><option data-hf="choose" value="">Choose a provider</option><optgroup data-hf-group="cloud" label="Cloud"><option data-location="cloud" value="OpenAI">OpenAI</option><option data-location="cloud" value="Google">Google</option><option data-location="cloud" value="Anthropic">Anthropic</option><option data-location="cloud" value="DeepSeek">DeepSeek</option></optgroup><optgroup data-hf-group="local" label="Local"><option data-location="local" value="Ollama">Ollama</option></optgroup></select></label></div><p aria-live="polite" class="hf-provider-summary" data-hf-summary="" role="status">Choose both providers to see your combination.</p><div class="hc-add"><button class="va-btn" data-hc-add="" type="button">Add to example setup</button><p data-hc-provider-status="" role="status">No providers added yet.</p><ul data-hc-added=""></ul><p data-hc="providerNote">Illustrative setup only. Never enter a real API key here.</p></div><p class="site-fact-note" data-i18n="site.localNote">Local text refinement is available through Ollama or MLX Server on Mac. Built-in Sherpa speech recognition is currently unavailable; a cloud recognition provider is needed for this example.</p></div><details class="hc-details"><summary><span data-hc="extra">Shortcuts, languages and writing styles</span></summary><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-settings"><p>OpenAI · Groq · Google · Anthropic · DeepSeek · Ollama</p></div></div></details></div></div><div class="vc-vendors" id="providers"><ul class="vc-logos"><li><img alt="" height="24" loading="lazy" src="assets/providers/openai.svg" width="24"/><span>OpenAI</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/groq.svg" width="24"/><span>Groq</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/deepseek.svg" width="24"/><span>DeepSeek</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/gemini.svg" width="24"/><span>Gemini</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/claude.svg" width="24"/><span>Claude</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/deepgram.svg" width="24"/><span>Deepgram</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/iflytek.svg" width="24"/><span>iFlytek</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/mlx.svg" width="24"/><span>MLX Server</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/ollama.svg" width="24"/><span>Ollama</span></li></ul><ul class="vc-logos"><li><img alt="" height="512" loading="lazy" src="website-assets/provider-icons/cerebras.png" width="512"/><span>Cerebras</span></li><li><img alt="" height="512" loading="lazy" src="website-assets/provider-icons/openrouter.png" width="512"/><span>OpenRouter</span></li><li><img alt="" height="32" loading="lazy" src="website-assets/provider-icons/togetherai.png" width="32"/><span>Together AI</span></li><li><img alt="" height="192" loading="lazy" src="website-assets/provider-icons/volcengine.png" width="192"/><span>Volcengine</span></li><li><img alt="" height="80" loading="lazy" src="website-assets/provider-icons/qwen.png" width="80"/><span>Qwen</span></li><li><img alt="" height="64" loading="lazy" src="website-assets/provider-icons/siliconflow.png" width="64"/><span>SiliconFlow</span></li><li><img alt="" height="48" loading="lazy" src="website-assets/provider-icons/kimi.ico" width="48"/><span>Kimi</span></li><li><img alt="" height="32" loading="lazy" src="website-assets/provider-icons/minimax.ico" width="32"/><span>MiniMax</span></li><li><img alt="" height="96" loading="lazy" src="website-assets/provider-icons/zhipu.png" width="96"/><span>Zhipu</span></li></ul></div><details class="hc-details"><summary data-i18n="site.providerDetails">Full provider guide</summary><section class="providers" id="provider-details">
 <div class="container">
 <h2 class="section-title fade-in" data-i18n="prov.title">Your AI, your rules</h2>
 <p class="section-sub fade-in" data-i18n="prov.sub">Pair any speech-to-text engine with any polish model. Bring your own keys.</p>
@@ -743,8 +813,8 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 </table>
 <p class="compare-footnote fade-in" data-i18n="cmp.typeless.foot">* Typeless free tier: 8,000 words/week.</p>
 </div><p class="site-fact-note"><span data-i18n="site.compareNote">Checked 22 September 2026. Features vary by platform, model and plan. “Not documented” means no support claim was confirmed in the linked official documentation.</span><br/><a href="https://www.typeless.com/pricing">Typeless</a> · <a href="https://superwhisper.com/">Superwhisper</a> · <a href="https://support.apple.com/en-ca/guide/mac-help/mh40584/mac">Apple Dictation</a></p>
-</div>
-</section><section class="vc-section" id="faq"><div class="container"><div class="vc-faq"><h2 data-vc-text="faqTitle">A few things to know</h2><details><summary data-vc-text="questions.0">Is Vowrite free?</summary><p data-vc-text="answers.0">The app is free and open source. Your chosen AI provider may charge for usage. See Pricing for details.</p></details><details><summary data-vc-text="questions.1">Where can I use it?</summary><p data-vc-text="answers.1">Use Vowrite in text fields across your Mac apps. Explore Apps to see examples.</p></details><details><summary data-vc-text="questions.2">Can I use more than one language?</summary><p data-vc-text="answers.2">Yes. You can dictate in mixed languages and choose a different output language. Try the translation example above.</p></details></div><details class="hc-details"><summary data-i18n="site.allQuestions">All questions and answers</summary><h3 data-i18n="faq.title">Frequently asked questions</h3><div class="faq-list fade-in">
+<details class="hc-details home-detail" id="about"><summary data-i18n="home.about.title">Why we are building Vowrite</summary><div class="home-support-grid"><article><h3 class="why-section-title" data-i18n="why.v.t">Our Vision</h3><p class="why-section-body" data-i18n="why.v.b">We believe input should be invisible. You shouldn't think about <em>how</em> to input — you should just think, speak, and your ideas arrive exactly as you mean them. Vowrite is the bridge between your mind and the screen.</p></article><article><h3 class="why-section-title" data-i18n="why.a.t">Our Ambition</h3><p class="why-section-body" data-i18n="why.a.b">Today, Vowrite is a smart voice keyboard. Tomorrow, it's your input layer — adapting your words to any context, connecting to any workflow, speaking your language in every sense. Voice is just the beginning.</p></article><article><h3 class="why-section-title" data-i18n="why.g.t">Our Goal</h3><p class="why-section-body" data-i18n="why.g.b">Make input effortless for everyone. No learning curve. No configuration headache. Just speak, and your ideas arrive — clean, precise, and unmistakably yours.</p></article></div></details></div>
+</section><section class="vc-section" id="faq"><div class="container"><h2 data-i18n="home.faq.title">A few things to know</h2><div class="faq-list fade-in">
 <details class="faq-item">
 <summary data-i18n="faq.q1">How does Vowrite turn my voice into clean text?</summary>
 <p data-i18n="faq.a1">Vowrite transcribes your recording, then optionally uses a text model to remove fillers, fix grammar and add punctuation. It pastes the result at the cursor. Processing time depends on the models, network and audio length.</p>
@@ -773,7 +843,7 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 <summary data-i18n="faq.q7">How do I get the newest models?</summary>
 <p data-i18n="faq.a7">App updates include reviewed provider presets. Where supported, refresh the model list in provider settings, or enter a compatible model ID. A provider catalog listing is not a guarantee of account access or compatibility.</p>
 </details>
-</div></details></div></section>
+</div></div></section>
 <!-- Coming Soon -->
 <!-- Download -->
 <section class="coming-soon">
@@ -803,246 +873,7 @@ Bring the updated design.</p></div></div></div></div><div class="container"><det
 </div>
 <p class="download-note"><a data-vc-text="sourceLink" href="https://github.com/Joevonlong/Vowrite#readme">Build from source: read the GitHub guide</a></p>
 </div>
-<div class="container hc-platforms"><h3 data-hc="platformDetails">Installation and platform details</h3><details class="hc-details" id="mac-details"><summary><span data-hc="mac">macOS — installation &amp; use</span></summary><section class="ap-platform" id="download-mac">
-<div class="container">
-<div class="ap-platform-head">
-<div class="ap-platform-icon ap-platform-icon-mac">🖥️</div>
-<div>
-<h2 class="ap-platform-title">Vowrite for macOS</h2>
-<p class="ap-platform-tag" data-i18n="ap.mac.tag">A menu-bar companion: press your shortcut, speak, then insert clean text into a compatible editable field.</p>
-</div>
-<div class="ap-platform-meta">
-<span class="ap-meta-pill">macOS 14+</span>
-<span class="ap-meta-pill">Apple Silicon</span>
-<span class="ap-meta-pill ap-meta-free" data-i18n="ap.free">Free · Open Source</span>
-</div>
-</div>
-<!-- Install steps -->
-<h3 class="ap-step-h" data-i18n="ap.mac.install.t">Install in 3 steps</h3>
-<div class="ap-step-grid">
-<div class="ap-step">
-<div class="ap-step-num">1</div>
-<h4 data-i18n="ap.mac.s1.t">Download the DMG</h4>
-<p data-i18n="ap.mac.s1.d">Download the latest macOS DMG from GitHub Releases. Sparkle verifies updates with EdDSA signatures; this does not imply Apple notarization.</p>
-<a class="ap-step-link" href="https://github.com/Joevonlong/Vowrite/releases/latest"><span data-i18n="ap.mac.s1.cta">Download Vowrite.dmg</span> →</a>
-</div>
-<div class="ap-step">
-<div class="ap-step-num">2</div>
-<h4 data-i18n="ap.mac.s2.t">Drag to Applications</h4>
-<p data-i18n="ap.mac.s2.d">Mount the DMG, drop the app into <code>/Applications</code>. First launch will prompt for Microphone + Accessibility permission — grant both (the second enables Cmd+V keystroke output).</p>
-</div>
-<div class="ap-step">
-<div class="ap-step-num">3</div>
-<h4 data-i18n="ap.mac.s3.t">Add an API key</h4>
-<p data-i18n="ap.mac.s3.d">Open Settings → API Keys to add your recognition and text-provider keys, then select them under Models. Keys stay in Keychain at rest and are used to authenticate directly with providers. No Vowrite account is required.</p>
-</div>
-</div>
-<!-- Usage -->
-<h3 class="ap-step-h" data-i18n="ap.mac.use.t">Daily usage</h3>
-<div class="ap-flow">
-<div class="ap-flow-step">
-<span class="ap-flow-icon"><kbd>⌥</kbd>+<kbd>Space</kbd></span>
-<span class="ap-flow-label" data-i18n="ap.mac.flow1">Press the shortcut</span>
-</div>
-<span class="ap-flow-arrow">→</span>
-<div class="ap-flow-step">
-<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></span>
-<span class="ap-flow-label" data-i18n="ap.mac.flow2">Speak naturally</span>
-</div>
-<span class="ap-flow-arrow">→</span>
-<div class="ap-flow-step">
-<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<span class="ap-flow-label" data-i18n="ap.mac.flow3">Press again to stop</span>
-</div>
-<span class="ap-flow-arrow">→</span>
-<div class="ap-flow-step ap-flow-final">
-<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<span class="ap-flow-label" data-i18n="ap.mac.flow4">Text at cursor</span>
-</div>
-</div>
-<p class="ap-flow-note" data-i18n="ap.mac.flow.note">Press <kbd>⇧⌥ Space</kbd> to start translation. Stop with <kbd>⌥ Space</kbd> or the overlay Stop button. Dictation supports hold-to-record when Push-to-Talk is enabled. <a href="translate.html#trig">Learn more →</a></p>
-<!-- Features -->
-<h3 class="ap-step-h" data-i18n="ap.mac.features.t">What's in the Mac app</h3>
-<div class="ap-feat-grid">
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.mac.f1.t">Global hotkey</strong>
-<span data-i18n="ap.mac.f1.d">Carbon global shortcuts, including in fullscreen apps; avoid conflicting system shortcuts.</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.mac.f2.t">Cmd+V injection</strong>
-<span data-i18n="ap.mac.f2.d">Clipboard paste into compatible editable fields in browsers, editors and other apps.</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.mac.f3.t">Floating overlay</strong>
-<span data-i18n="ap.mac.f3.d">Orb Pulse animation tells you it's listening</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.mac.f4.t">Translate hotkey</strong>
-<span data-i18n="ap.mac.f4.d">⇧⌥ Space starts translation; use ⌥ Space or Stop to finish.</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.mac.f5.t">Custom Modes</strong>
-<span data-i18n="ap.mac.f5.d">Email · Code · Slack — each with its own polish prompt</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.mac.f6.t">Auto-update</strong>
-<span data-i18n="ap.mac.f6.d">EdDSA-signed Sparkle appcast, opt-in beta channel</span>
-</div>
-</div>
-<div class="ap-cta-row">
-<a class="btn btn-primary" href="https://github.com/Joevonlong/Vowrite/releases/latest">
-<span class="btn-icon">⬇</span> <span data-i18n="ap.mac.cta">Download for Mac</span>
-</a>
-<a class="btn btn-secondary" data-i18n="ap.source" href="https://github.com/Joevonlong/Vowrite">View source</a>
-</div>
-</div>
-</section></details><details class="hc-details" id="ios-details"><summary><span data-hc="ios">iOS — source build &amp; keyboard</span></summary><section class="ap-platform ap-platform-alt" id="download-ios">
-<div class="container">
-<div class="ap-platform-head">
-<div class="ap-platform-icon ap-platform-icon-ios">📱</div>
-<div>
-<h2 class="ap-platform-title">Vowrite for iOS</h2>
-<p class="ap-platform-tag" data-i18n="ap.ios.tag">A system-wide keyboard extension that records, polishes, and types — the same engine you use on Mac, in your pocket.</p>
-</div>
-<div class="ap-platform-meta">
-<span class="ap-meta-pill">iOS 17+</span>
-<span class="ap-meta-pill">A14+</span>
-<span class="ap-meta-pill ap-meta-free" data-i18n="ap.free">Free · Open Source</span>
-</div>
-</div>
-<!-- iOS architecture explainer -->
-<div class="ap-ios-arch">
-<div class="ap-ios-arch-card">
-<div class="ap-ios-arch-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
-<h4 data-i18n="ap.ios.arch.app.t">VowriteIOS app</h4>
-<p data-i18n="ap.ios.arch.app.d">Hosts the engine, settings, history, Modes, and language pickers. Runs the recording service in the background so the keyboard can stay tiny.</p>
-</div>
-<div class="ap-ios-arch-arrow">⇄</div>
-<div class="ap-ios-arch-card">
-<div class="ap-ios-arch-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
-<h4 data-i18n="ap.ios.arch.kb.t">VowriteKeyboard extension</h4>
-<p data-i18n="ap.ios.arch.kb.d">A real iOS keyboard. Tap the mic to dictate, long-press to pick Translate. Talks to the host app over App Group + Darwin notifications.</p>
-</div>
-</div>
-<!-- Install steps (build from source) -->
-<h3 class="ap-step-h" data-i18n="ap.ios.install.t">Install (build from source)</h3>
-<p class="ap-note" data-i18n="ap.ios.install.note">The iOS app is open source and currently requires building in Xcode. No public App Store or TestFlight distribution is available.</p>
-<div class="ap-step-grid">
-<div class="ap-step">
-<div class="ap-step-num">1</div>
-<h4 data-i18n="ap.ios.s1.t">Clone the repo</h4>
-<p data-i18n="ap.ios.s1.d">Requires Xcode 15+ and a free Apple developer account.</p>
-<pre class="ap-code">git clone https://github.com/Joevonlong/Vowrite.git
-cd Vowrite/VowriteIOS
-open VowriteIOS.xcodeproj</pre>
-</div>
-<div class="ap-step">
-<div class="ap-step-num">2</div>
-<h4 data-i18n="ap.ios.s2.t">Sign and run</h4>
-<p data-i18n="ap.ios.s2.d">In Xcode → Signing &amp; Capabilities → set your Team. Plug in your iPhone, hit ▶. Build &amp; deploy both <code>VowriteIOS</code> and <code>VowriteKeyboard</code> targets.</p>
-</div>
-<div class="ap-step">
-<div class="ap-step-num">3</div>
-<h4 data-i18n="ap.ios.s3.t">Enable the keyboard</h4>
-<p data-i18n="ap.ios.s3.d">iOS Settings → General → Keyboard → Keyboards → Add New Keyboard → Vowrite. Tap "Vowrite" again and toggle <strong>Allow Full Access</strong> (required for clipboard + network).</p>
-</div>
-</div>
-<!-- Daily usage -->
-<h3 class="ap-step-h" data-i18n="ap.ios.use.t">Daily usage</h3>
-<div class="ap-flow">
-<div class="ap-flow-step">
-<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<span class="ap-flow-label" data-i18n="ap.ios.flow1">Switch to Vowrite keyboard</span>
-</div>
-<span class="ap-flow-arrow">→</span>
-<div class="ap-flow-step">
-<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></span>
-<span class="ap-flow-label" data-i18n="ap.ios.flow2">Tap or long-press mic</span>
-</div>
-<span class="ap-flow-arrow">→</span>
-<div class="ap-flow-step">
-<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<span class="ap-flow-label" data-i18n="ap.ios.flow3">Speak, tap to stop</span>
-</div>
-<span class="ap-flow-arrow">→</span>
-<div class="ap-flow-step ap-flow-final">
-<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<span class="ap-flow-label" data-i18n="ap.ios.flow4">Polished text inserted</span>
-</div>
-</div>
-<p class="ap-flow-note" data-i18n="ap.ios.flow.note">Long-press the mic and you'll see the Dictate / Translate arc — slide up to choose, release. <a href="index.html#translation-triggers">See the gesture →</a></p>
-<!-- Features -->
-<h3 class="ap-step-h" data-i18n="ap.ios.features.t">What's in the iOS app</h3>
-<div class="ap-feat-grid">
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.ios.f1.t">Real keyboard</strong>
-<span data-i18n="ap.ios.f1.d">Works in Messages, Mail, Notes, Slack, browsers — anywhere a keyboard appears</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></span>
-<strong data-i18n="ap.ios.f2.t">Long-press arc</strong>
-<span data-i18n="ap.ios.f2.d">Hold the mic, slide up to pick Dictate or Translate. Release to fire.</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.ios.f3.t">Translate banner</strong>
-<span data-i18n="ap.ios.f3.d">"Translating to English" sticker stays on screen so you never wonder what's about to come out</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.ios.f4.t">Mode editor parity</strong>
-<span data-i18n="ap.ios.f4.d">Edit Modes and source/target languages in the iOS app.</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.ios.f5.t">History and text deletion</strong>
-<span data-i18n="ap.ios.f5.d">Review transcripts and swipe to delete history. The keyboard can delete a word, line, paragraph or all available text.</span>
-</div>
-<div class="ap-feat">
-<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
-<strong data-i18n="ap.ios.f6.t">Keychain + App Group</strong>
-<span data-i18n="ap.ios.f6.d">Keys are stored in Keychain and used to authenticate directly with providers. The app and keyboard communicate through App Group and Darwin notifications.</span>
-</div>
-</div>
-<div class="ap-cta-row">
-<a class="btn btn-primary" href="https://github.com/Joevonlong/Vowrite/tree/main/VowriteIOS">
-<span class="btn-icon">⌥</span> <span data-i18n="ap.ios.cta">Build from source</span>
-</a>
-<a class="btn btn-secondary" data-i18n="ap.ios.beta" href="https://github.com/Joevonlong/Vowrite/issues">Ask about iOS availability</a>
-</div>
-</div>
-</section></details><details class="hc-details"><summary>Vowrite Engine</summary><section class="ap-sync">
-<div class="container">
-<h2 class="section-title fade-in" data-i18n="ap.sync.t">One engine, two platforms</h2>
-<p class="section-sub fade-in" data-i18n="ap.sync.sub">Both apps share <strong>VowriteKit</strong>: audio, provider integrations, Modes and translation. On iOS, the app and keyboard share settings through an App Group on the same device. Mac and iOS settings are separate; there is no automatic cross-device sync.</p>
-<div class="ap-sync-row fade-in">
-<div class="ap-sync-card">
-<div class="ap-sync-icon">🧠</div>
-<strong>VowriteKit</strong>
-<span data-i18n="ap.sync.kit">Shared Swift library — audio, Whisper, polish, Modes, translation</span>
-</div>
-<div class="ap-sync-arrow">↗</div>
-<div class="ap-sync-card">
-<div class="ap-sync-icon">🖥️</div>
-<strong>VowriteMac</strong>
-<span data-i18n="ap.sync.mac">Menu bar UI, Carbon hotkey, CGEvent injection, Sparkle</span>
-</div>
-<div class="ap-sync-arrow">↘</div>
-<div class="ap-sync-card">
-<div class="ap-sync-icon">📱</div>
-<strong>VowriteIOS + VowriteKeyboard</strong>
-<span data-i18n="ap.sync.ios">Host app + keyboard extension, App Group IPC, haptics</span>
-</div>
-</div>
-</div>
-</section></details></div></section>
+</section>
 </main>
 <!-- Footer -->
 <footer class="footer">
@@ -1051,7 +882,7 @@ open VowriteIOS.xcodeproj</pre>
 <img alt="Vowrite app icon" class="footer-icon" height="64" src="app-icon-64.png" width="64"/>
 <span>© 2026 Vowrite. Open source under <a href="https://github.com/Joevonlong/Vowrite/blob/main/LICENSE" style="color: inherit; text-decoration: underline;">MIT license</a>.</span>
 </div>
-<div class="footer-links"><a data-i18n="nav.apps" href="apps.html">Apps</a><a data-i18n="nav.translate" href="translate.html">Translate</a><a data-i18n="nav.pricing" href="pricing.html">Usage</a><a data-i18n="nav.features" href="index.html#features">Features</a><a data-i18n="nav.how" href="index.html#live-demo">How It Works</a>
+<div class="footer-links"><a data-i18n="home.nav.platforms" href="index.html#platforms">Platforms</a><a data-i18n="nav.pricing" href="pricing.html">Usage</a><a data-i18n="nav.features" href="index.html#features">Features</a><a data-i18n="nav.how" href="index.html#live-demo">How It Works</a>
 <a href="https://github.com/Joevonlong/Vowrite">GitHub</a>
 <a href="https://github.com/Joevonlong/Vowrite/releases">Releases</a>
 <a href="https://github.com/Joevonlong/Vowrite/issues">Feedback</a>

@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs'
 BASE = json.loads((DOCS / 'website-assets/content-baseline.json').read_text())
 FACTS = json.loads((DOCS / 'website-assets/fact-corrections.json').read_text())
+CONSOLIDATION = json.loads((DOCS / 'website-assets/content-consolidation.json').read_text())
 errors = []
 
 def check(condition, message):
@@ -58,16 +59,25 @@ def doc_fragment(text): return Document(text).root.text()
 def tables_node(table):
     return [[spaced(c) for c in row.all() if c.tag in ['th','td']] for row in table.all('tr')]
 
-pages = {name:doc(DOCS / (name+'.html')) for name in BASE['pages']}
-report = {'baseline':BASE['commit'], 'pages':{}, 'protected':[], 'errors':errors}
+actual_pages = {name:doc(DOCS / (name+'.html')) for name in [*BASE['pages'], 'demo']}
+pages = {name:actual_pages[CONSOLIDATION['contentDestinations'][name]] for name in BASE['pages']}
+report = {'baseline':BASE['commit'], 'consolidationBaseline':CONSOLIDATION['baselineCommit'], 'canonicalPages':CONSOLIDATION['canonicalPages'], 'pages':{}, 'redirects':[], 'protected':[], 'errors':errors}
 for name, page in pages.items():
     nodes = list(page.all()); ids = [n.attrs['id'] for n in nodes if 'id' in n.attrs]
     check(len(ids) == len(set(ids)), f'{name}: duplicate IDs')
     check(sum(n.tag=='h1' for n in nodes) == 1, f'{name}: expected one h1')
     keys = {n.attrs['data-i18n']:n for n in nodes if 'data-i18n' in n.attrs}
-    changes = []
+    changes, merged = [], []
     for key, old in BASE['pages'][name]['keys'].items():
         destination = key if key in keys else FACTS.get('replacedComparisonKeys',{}).get(key)
+        disposition = CONSOLIDATION['mergedKeys'].get(name+':'+key)
+        if destination not in keys and disposition:
+            target = urlsplit(disposition['target'])
+            check(disposition['sourceText']==old,f'{name}: changed consolidation source {key}')
+            check(bool(disposition['reason']),f'{name}: missing consolidation reason {key}')
+            check(target.path=='index.html' and any(n.attrs.get('id')==target.fragment for n in actual_pages['index'].all()),f'{name}: missing canonical destination for {key}')
+            merged.append({'key':key,**disposition})
+            continue
         check(destination in keys, f'{name}: missing content key {key}')
         if destination not in keys: continue
         before = norm(doc_fragment(old)); after = norm(keys[destination].text())
@@ -80,20 +90,39 @@ for name, page in pages.items():
     for command in BASE['pages'][name]['code']:
         check(any(n.text()==command for n in page.all('code')),f'{name}: missing or changed command {command!r}')
     for identifier in BASE['pages'][name]['ids']:
-        check(identifier in ids, f'{name}: removed URL anchor #{identifier}')
+        mapped = CONSOLIDATION['legacyRoutes'].get(name,{}).get(identifier,identifier)
+        check(mapped in ids, f'{name}: removed URL anchor #{identifier}')
     for n in nodes:
         for attr in ['href','src']:
             value = n.attrs.get(attr)
             if not value: continue
             parsed = urlsplit(value)
             if parsed.scheme or parsed.netloc: continue
-            target = DOCS / unquote(parsed.path.lstrip('/')) if parsed.path else DOCS / (name+'.html')
+            target = DOCS / unquote(parsed.path.lstrip('/')) if parsed.path else DOCS / (CONSOLIDATION['contentDestinations'][name]+'.html')
             if target == DOCS: target = DOCS / 'index.html'
             if not target.suffix: target = target.with_suffix('.html')
             check(target.is_file() and target.stat().st_size>0,f'{name}: missing link/asset {value}')
             if parsed.fragment and target.is_file() and target.suffix=='.html':
                 check(any(x.attrs.get('id')==unquote(parsed.fragment) for x in doc(target).all()),f'{name}: broken fragment {value}')
-    report['pages'][name]={'originalKeys':len(BASE['pages'][name]['keys']), 'preservedOrCorrectedKeys':len(BASE['pages'][name]['keys'])-sum(x.startswith(name+': missing content key') for x in errors),'reviewedChanges':changes,'tableRows':[len(t) for t in tables(page)]}
+    report['pages'][name]={'contentPage':CONSOLIDATION['contentDestinations'][name], 'originalKeys':len(BASE['pages'][name]['keys']), 'preservedOrCorrectedKeys':len(BASE['pages'][name]['keys'])-len(merged)-sum(x.startswith(name+': missing content key') for x in errors),'mergedDuplicateKeys':len(merged),'merges':merged,'reviewedChanges':changes,'tableRows':[len(t) for t in tables(page)]}
+# Redirect pages contain only a compatibility entry, never another feature body.
+home_ids={n.attrs.get('id') for n in actual_pages['index'].all()}
+for identifier,target in CONSOLIDATION['homepageAliases'].items():
+    check(identifier in home_ids and target in home_ids,f'index: missing compatibility anchor {identifier}')
+for key,merged in CONSOLIDATION['mergedSupplementalLabels'].items():
+    check(urlsplit(merged['target']).fragment in home_ids and bool(merged['reason']),f'index: missing supplemental merge target {key}')
+for name,mapping in CONSOLIDATION['legacyRoutes'].items():
+    page=actual_pages[name]
+    redirect=next((n for n in page.all('script') if n.attrs.get('id')=='redirect-map'),None)
+    check(redirect is not None and json.loads(redirect.text())==mapping,f'{name}: redirect map drift')
+    check(all(destination in home_ids for destination in mapping.values()),f'{name}: missing redirect destination')
+    check(not any('data-i18n' in n.attrs for n in page.all()),f'{name}: duplicate feature content in compatibility page')
+    check(any(n.attrs.get('href')=='index.html#'+mapping[''] for n in page.all('a')),f'{name}: missing no-JavaScript fallback')
+    report['redirects'].append({'route':name,'default':mapping[''],'anchors':len(mapping)-1})
+for name in CONSOLIDATION['canonicalPages']:
+    nav=next(n for n in actual_pages[name].all() if n.attrs.get('id')=='site-navigation')
+    hrefs=[n.attrs.get('href') for n in nav.all('a')]
+    check(hrefs==['index.html#features','index.html#platforms','pricing.html','index.html#download'],f'{name}: repeated subpage navigation')
 # Exact historical pricing cells, row order and all columns, not merely row counts.
 check(tables(pages['pricing']) == BASE['pages']['pricing']['tables'], 'pricing: historical table cell/order mismatch')
 for name,prefix in [('index','comparison.app'),('translate','comparison.translate')]:
@@ -118,6 +147,6 @@ sample_source = (DOCS/'website-assets/translation-details.js').read_text()
 for sample in BASE['samples']:
     for field in ['textIn','textOut']:check(sample[field] in sample_source,f'translation sample changed: {field}')
 if '--json' in sys.argv:print(json.dumps(report,ensure_ascii=False,indent=2))
-else:print(f"Website checks: {len(pages)} pages, {sum(len(x['keys']) for x in BASE['pages'].values())} original content keys, 77 pricing rows, 4 translation examples, {len(BASE['protected'])} protected assets; {len(errors)} errors")
+else:print(f"Website checks: {len(CONSOLIDATION['canonicalPages'])} canonical pages, {len(CONSOLIDATION['legacyRoutes'])} compatible routes, {sum(len(x['keys']) for x in BASE['pages'].values())} original content keys accounted for ({sum(p['mergedDuplicateKeys'] for p in report['pages'].values())} merged duplicates), 77 pricing rows, 4 translation examples, {len(BASE['protected'])} protected assets; {len(errors)} errors")
 for error in errors:print('ERROR: '+error,file=sys.stderr)
 sys.exit(bool(errors))

@@ -138,12 +138,15 @@ fi
 echo ""
 echo "▶ Nav consistency"
 
-for page in "$INDEX_HTML" "$DOCS/why.html" "$DOCS/apps.html" "$DOCS/translate.html" "$PRICING_HTML"; do
+for page in "$INDEX_HTML" "$PRICING_HTML"; do
     name=$(basename "$page")
-    for route in pricing why; do
-        # GitHub Pages serves extensionless and .html routes; explicit local
-        # filenames also work when the site is previewed from a subdirectory.
-        if grep -qE "href=\"(\./|/)?${route}(\.html)?([?#][^\"]*)?\"" "$page" 2>/dev/null; then
+    for route in pricing platforms; do
+        if [[ "$route" == "pricing" ]]; then
+            pattern='href="(\./|/)?pricing(\.html)?([?#][^"]*)?"'
+        else
+            pattern='href="(\./|/)?index.html#platforms"'
+        fi
+        if grep -qE "$pattern" "$page" 2>/dev/null; then
             pass "$name has a local $route nav link"
         else
             fail "$name missing a local $route nav link"
@@ -151,6 +154,13 @@ for page in "$INDEX_HTML" "$DOCS/why.html" "$DOCS/apps.html" "$DOCS/translate.ht
         fi
     done
 done
+
+if python3 "$PROJECT_ROOT/scripts/check-website.py"; then
+    pass "Canonical content, consolidation mapping and compatibility entries are valid"
+else
+    fail "Website content or compatibility entries drifted"
+    EXIT_DRIFT=1
+fi
 
 # ─────────────────────────────────────────────
 echo ""

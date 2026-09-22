@@ -1188,7 +1188,111 @@ i18n.de = Object.assign(i18n.de || {}, {
   "why.s.note": "Das Gesagte klarer formulieren und die Bedeutung bewahren: in einem zusammenhängenden Ablauf."
 });
 
-function siteHref(href){const m=href.match(/^(?:https?:\/\/vowrite\.com)?\/(index(?:\.html)?|why(?:\.html)?|apps(?:\.html)?|translate(?:\.html)?|pricing(?:\.html)?)?([?#].*)?$/);if(!m)return href;return (m[1]||'index').replace(/\.html$/,'')+'.html'+(m[2]||'');}
+
+// Homepage consolidation copy; the original dictionaries remain available.
+Object.assign(i18n.en, {
+  "home.translation.eyebrow": "04 / VOICE TRANSLATION",
+  "home.translation.title": "Speak one language. Write another.",
+  "home.translation.settings": "Language settings and the translation workflow",
+  "home.translation.examples": "Languages and everyday uses",
+  "home.translation.compare": "Compare translation tools",
+  "home.platforms.eyebrow": "05 / MAC + IPHONE",
+  "home.platforms.title": "At your desk. In your pocket.",
+  "home.platforms.intro": "A Mac menu-bar app and an iPhone keyboard. The same voice workflow, with controls made for each device.",
+  "home.platforms.mac.status": "Ready to download",
+  "home.platforms.mac.control": "Press ⌥ Space. Speak. Press again.",
+  "home.platforms.example": "The design review is on Thursday at 10.",
+  "home.platforms.illustration": "Illustration · no recording",
+  "home.platforms.mac.action": "Download for Mac",
+  "home.platforms.ios.status": "Build from source",
+  "home.platforms.ios.control": "Tap the microphone. Speak. Tap to finish.",
+  "home.platforms.ios.action": "Get the iOS source",
+  "home.platforms.engine": "Shared engine and platform architecture",
+  "home.faq.title": "A few things to know",
+  "home.about.title": "Why we are building Vowrite",
+  "home.jump.dictation": "Dictate",
+  "home.jump.cleanup": "Refine",
+  "home.jump.expression": "Your style",
+  "home.jump.translation": "Translate",
+  "home.jump.platforms": "Mac + iPhone",
+  "home.jump.configuration": "Your AI",
+  "home.nav.platforms": "Platforms",
+  "home.nav.guide": "Install and get started"
+});
+Object.assign(i18n.zh, {
+  "home.translation.eyebrow": "04 / 语音翻译",
+  "home.translation.title": "说你的语言，写成对方的语言。",
+  "home.translation.settings": "语言设置与翻译流程",
+  "home.translation.examples": "支持的语言与使用场景",
+  "home.translation.compare": "翻译工具对比",
+  "home.platforms.eyebrow": "05 / MAC + IPHONE",
+  "home.platforms.title": "在桌前，也在手边。",
+  "home.platforms.intro": "Mac 菜单栏应用，iPhone 专属键盘。同样的语音流程，在各自设备上自然使用。",
+  "home.platforms.mac.status": "可直接下载",
+  "home.platforms.mac.control": "按 ⌥ Space，开口，再按一次结束。",
+  "home.platforms.example": "设计讨论安排在周四上午十点。",
+  "home.platforms.illustration": "界面示意 · 不录音",
+  "home.platforms.mac.action": "下载 Mac 版",
+  "home.platforms.ios.status": "需从源码构建",
+  "home.platforms.ios.control": "轻点麦克风，开口，再点一下完成。",
+  "home.platforms.ios.action": "查看 iOS 源码",
+  "home.platforms.engine": "共享引擎与平台架构",
+  "home.faq.title": "你可能还想知道",
+  "home.about.title": "我们为什么做 Vowrite",
+  "home.jump.dictation": "语音输入",
+  "home.jump.cleanup": "整理润色",
+  "home.jump.expression": "场景表达",
+  "home.jump.translation": "语音翻译",
+  "home.jump.platforms": "Mac + iPhone",
+  "home.jump.configuration": "自选 AI",
+  "home.nav.platforms": "多平台",
+  "home.nav.guide": "安装与开始使用"
+});
+Object.assign(i18n.de, {
+  "home.translation.eyebrow": "04 / SPRACHÜBERSETZUNG",
+  "home.translation.title": "Sprich eine Sprache. Schreib eine andere.",
+  "home.translation.settings": "Spracheinstellungen und Übersetzungsablauf",
+  "home.translation.examples": "Sprachen und Einsatzbeispiele",
+  "home.translation.compare": "Übersetzungstools vergleichen",
+  "home.platforms.eyebrow": "05 / MAC + IPHONE",
+  "home.platforms.title": "Am Schreibtisch. Und unterwegs.",
+  "home.platforms.intro": "Eine Menüleisten-App für den Mac und eine iPhone-Tastatur. Derselbe Sprachablauf, passend zum jeweiligen Gerät.",
+  "home.platforms.mac.status": "Zum Download verfügbar",
+  "home.platforms.mac.control": "⌥ Space drücken. Sprechen. Erneut drücken.",
+  "home.platforms.example": "Die Designbesprechung ist am Donnerstag um 10 Uhr.",
+  "home.platforms.illustration": "Illustration · keine Aufnahme",
+  "home.platforms.mac.action": "Für Mac herunterladen",
+  "home.platforms.ios.status": "Aus dem Quellcode bauen",
+  "home.platforms.ios.control": "Mikrofon antippen. Sprechen. Zum Beenden erneut tippen.",
+  "home.platforms.ios.action": "iOS-Quellcode öffnen",
+  "home.platforms.engine": "Gemeinsame Engine und Plattformarchitektur",
+  "home.faq.title": "Gut zu wissen",
+  "home.about.title": "Warum wir Vowrite entwickeln",
+  "home.jump.dictation": "Diktieren",
+  "home.jump.cleanup": "Verfeinern",
+  "home.jump.expression": "Dein Stil",
+  "home.jump.translation": "Übersetzen",
+  "home.jump.platforms": "Mac + iPhone",
+  "home.jump.configuration": "Deine KI",
+  "home.nav.platforms": "Plattformen",
+  "home.nav.guide": "Installation und Einstieg"
+});
+
+const homepageRoutes = {"apps": {"": "platforms", "mac": "download-mac", "ios": "download-ios", "site-navigation": "site-navigation", "language-options": "language-options", "main": "main"}, "translate": {"": "translation", "how": "translation-flow", "trig": "translation-triggers", "site-navigation": "site-navigation", "language-options": "language-options", "main": "main", "trDemoRow": "trDemoRow", "trDemoFlagIn": "trDemoFlagIn", "trDemoLangIn": "trDemoLangIn", "trDemoIn": "trDemoIn", "trDemoFlagOut": "trDemoFlagOut", "trDemoLangOut": "trDemoLangOut", "trDemoOut": "trDemoOut"}, "why": {"": "compare", "site-navigation": "site-navigation", "language-options": "language-options", "main": "main"}, "demo": {"": "live-demo", "configuration": "configuration"}};
+Object.assign(i18n.en, {"home.platforms.sync": "Set up each device separately. Mac and iPhone settings do not sync automatically.", "home.platforms.ios.control": "In the Vowrite keyboard: tap, speak, tap to finish.", "ap.ios.tag": "Speak from your iPhone keyboard. The companion app handles recording and refinement, then the keyboard inserts the result."});
+Object.assign(i18n.zh, {"home.platforms.sync": "在每台设备上分别设置。Mac 与 iPhone 的设置不会自动同步。", "home.platforms.ios.control": "在 Vowrite 键盘中轻点麦克风，开口，再点一下完成。", "ap.ios.tag": "在 iPhone 键盘中发起语音输入。主应用负责录音与润色，再由键盘插入结果。"});
+Object.assign(i18n.de, {"home.platforms.sync": "Richte jedes Gerät separat ein. Einstellungen werden nicht automatisch zwischen Mac und iPhone synchronisiert.", "home.platforms.ios.control": "In der Vowrite-Tastatur: antippen, sprechen, zum Beenden erneut tippen.", "ap.ios.tag": "Starte die Spracheingabe über die iPhone-Tastatur. Die zugehörige App übernimmt Aufnahme und Textbearbeitung; die Tastatur fügt das Ergebnis ein."});
+
+Object.assign(i18n.en, {"ap.ios.f1.d": "Works in iOS apps and fields that allow third-party keyboards.", "tr.cmp.sub": "Compare translated-text output, platform support and processing options to find the right workflow."});
+Object.assign(i18n.zh, {"ap.ios.f1.d": "适用于允许第三方键盘的 iOS 应用和输入框。", "tr.cmp.sub": "按译文输出位置、平台支持和处理方式，选择合适的工具。"});
+Object.assign(i18n.de, {"ap.ios.f1.d": "Funktioniert in iOS-Apps und Feldern, die Drittanbietertastaturen erlauben.", "tr.cmp.sub": "Vergleiche die Ausgabe übersetzter Texte, unterstützte Plattformen und Verarbeitungsoptionen für deinen Arbeitsablauf."});
+
+function siteHref(href) {
+ const match=href.match(/^(?:https?:\/\/vowrite\.com)?\/?(index(?:\.html)?|why(?:\.html)?|apps(?:\.html)?|translate(?:\.html)?|pricing(?:\.html)?|demo(?:\.html)?)(\?[^#]*)?(?:#(.*))?$/);
+ if(!match)return href;
+ const name=match[1].replace(/\.html$/,''), query=match[2]||'', hash=match[3]||'', route=homepageRoutes[name];
+ return route?'index.html'+query+'#'+(route[hash]||route['']):name+'.html'+query+(hash?'#'+hash:'');
+}
 // Translate text leaves without replacing interactive descendants.
 
 const enDefaults = new Map();
