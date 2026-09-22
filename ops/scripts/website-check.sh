@@ -6,7 +6,7 @@
 #
 # Exit codes:
 #   0 — all green
-#   1 — version drift (must fix)
+#   1 — version or local navigation drift (must fix)
 #   2 — live URL broken (must fix)
 #   3 — soft warning (>60 days stale). Non-blocking.
 #
@@ -138,20 +138,18 @@ fi
 echo ""
 echo "▶ Nav consistency"
 
-for page in "$INDEX_HTML" "$DOCS/why.html" "$PRICING_HTML"; do
+for page in "$INDEX_HTML" "$DOCS/why.html" "$DOCS/apps.html" "$DOCS/translate.html" "$PRICING_HTML"; do
     name=$(basename "$page")
-    if grep -q 'href="/pricing"' "$page" 2>/dev/null; then
-        pass "$name has /pricing nav link"
-    else
-        fail "$name missing /pricing nav link"
-        EXIT_DRIFT=1
-    fi
-    if grep -qE 'href="/why"' "$page" 2>/dev/null; then
-        pass "$name has /why nav link"
-    else
-        fail "$name missing /why nav link"
-        EXIT_DRIFT=1
-    fi
+    for route in pricing why; do
+        # GitHub Pages serves extensionless and .html routes; explicit local
+        # filenames also work when the site is previewed from a subdirectory.
+        if grep -qE "href=\"(\./|/)?${route}(\.html)?([?#][^\"]*)?\"" "$page" 2>/dev/null; then
+            pass "$name has a local $route nav link"
+        else
+            fail "$name missing a local $route nav link"
+            EXIT_DRIFT=1
+        fi
+    done
 done
 
 # ─────────────────────────────────────────────
