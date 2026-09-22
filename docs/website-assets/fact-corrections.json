@@ -746,6 +746,161 @@
       "en": "Refine what you said while keeping what you meant: clearer wording in one workflow.",
       "zh": "在保留原意的同时整理表达：一套流程，得到更清晰的文字。",
       "de": "Das Gesagte klarer formulieren und die Bedeutung bewahren: in einem zusammenhängenden Ablauf."
+    },
+    "home.translation.eyebrow": {
+      "en": "04 / VOICE TRANSLATION",
+      "zh": "04 / 语音翻译",
+      "de": "04 / SPRACHÜBERSETZUNG"
+    },
+    "home.translation.title": {
+      "en": "Speak one language. Write another.",
+      "zh": "说你的语言，写成对方的语言。",
+      "de": "Sprich eine Sprache. Schreib eine andere."
+    },
+    "home.translation.settings": {
+      "en": "Language settings and the translation workflow",
+      "zh": "语言设置与翻译流程",
+      "de": "Spracheinstellungen und Übersetzungsablauf"
+    },
+    "home.translation.examples": {
+      "en": "Languages and everyday uses",
+      "zh": "支持的语言与使用场景",
+      "de": "Sprachen und Einsatzbeispiele"
+    },
+    "home.translation.compare": {
+      "en": "Compare translation tools",
+      "zh": "翻译工具对比",
+      "de": "Übersetzungstools vergleichen"
+    },
+    "home.platforms.eyebrow": {
+      "en": "05 / MAC + IPHONE",
+      "zh": "05 / MAC + IPHONE",
+      "de": "05 / MAC + IPHONE"
+    },
+    "home.platforms.title": {
+      "en": "At your desk. In your pocket.",
+      "zh": "在桌前，也在手边。",
+      "de": "Am Schreibtisch. Und unterwegs."
+    },
+    "home.platforms.intro": {
+      "en": "A Mac menu-bar app and an iPhone keyboard. The same voice workflow, with controls made for each device.",
+      "zh": "Mac 菜单栏应用，iPhone 专属键盘。同样的语音流程，在各自设备上自然使用。",
+      "de": "Eine Menüleisten-App für den Mac und eine iPhone-Tastatur. Derselbe Sprachablauf, passend zum jeweiligen Gerät."
+    },
+    "home.platforms.mac.status": {
+      "en": "Ready to download",
+      "zh": "可直接下载",
+      "de": "Zum Download verfügbar"
+    },
+    "home.platforms.mac.control": {
+      "en": "Press ⌥ Space. Speak. Press again.",
+      "zh": "按 ⌥ Space，开口，再按一次结束。",
+      "de": "⌥ Space drücken. Sprechen. Erneut drücken."
+    },
+    "home.platforms.example": {
+      "en": "The design review is on Thursday at 10.",
+      "zh": "设计讨论安排在周四上午十点。",
+      "de": "Die Designbesprechung ist am Donnerstag um 10 Uhr."
+    },
+    "home.platforms.illustration": {
+      "en": "Illustration · no recording",
+      "zh": "界面示意 · 不录音",
+      "de": "Illustration · keine Aufnahme"
+    },
+    "home.platforms.mac.action": {
+      "en": "Download for Mac",
+      "zh": "下载 Mac 版",
+      "de": "Für Mac herunterladen"
+    },
+    "home.platforms.ios.status": {
+      "en": "Build from source",
+      "zh": "需从源码构建",
+      "de": "Aus dem Quellcode bauen"
+    },
+    "home.platforms.ios.control": {
+      "en": "In the Vowrite keyboard: tap, speak, tap to finish.",
+      "zh": "在 Vowrite 键盘中轻点麦克风，开口，再点一下完成。",
+      "de": "In der Vowrite-Tastatur: antippen, sprechen, zum Beenden erneut tippen."
+    },
+    "home.platforms.ios.action": {
+      "en": "Get the iOS source",
+      "zh": "查看 iOS 源码",
+      "de": "iOS-Quellcode öffnen"
+    },
+    "home.platforms.engine": {
+      "en": "Shared engine and platform architecture",
+      "zh": "共享引擎与平台架构",
+      "de": "Gemeinsame Engine und Plattformarchitektur"
+    },
+    "home.faq.title": {
+      "en": "A few things to know",
+      "zh": "你可能还想知道",
+      "de": "Gut zu wissen"
+    },
+    "home.about.title": {
+      "en": "Why we are building Vowrite",
+      "zh": "我们为什么做 Vowrite",
+      "de": "Warum wir Vowrite entwickeln"
+    },
+    "home.jump.dictation": {
+      "en": "Dictate",
+      "zh": "语音输入",
+      "de": "Diktieren"
+    },
+    "home.jump.cleanup": {
+      "en": "Refine",
+      "zh": "整理润色",
+      "de": "Verfeinern"
+    },
+    "home.jump.expression": {
+      "en": "Your style",
+      "zh": "场景表达",
+      "de": "Dein Stil"
+    },
+    "home.jump.translation": {
+      "en": "Translate",
+      "zh": "语音翻译",
+      "de": "Übersetzen"
+    },
+    "home.jump.platforms": {
+      "en": "Mac + iPhone",
+      "zh": "Mac + iPhone",
+      "de": "Mac + iPhone"
+    },
+    "home.jump.configuration": {
+      "en": "Your AI",
+      "zh": "自选 AI",
+      "de": "Deine KI"
+    },
+    "home.nav.platforms": {
+      "en": "Platforms",
+      "zh": "多平台",
+      "de": "Plattformen"
+    },
+    "home.nav.guide": {
+      "en": "Install and get started",
+      "zh": "安装与开始使用",
+      "de": "Installation und Einstieg"
+    },
+    "home.platforms.sync": {
+      "en": "Set up each device separately. Mac and iPhone settings do not sync automatically.",
+      "zh": "在每台设备上分别设置。Mac 与 iPhone 的设置不会自动同步。",
+      "de": "Richte jedes Gerät separat ein. Einstellungen werden nicht automatisch zwischen Mac und iPhone synchronisiert."
+    },
+    "ap.ios.tag": {
+      "en": "Speak from your iPhone keyboard. The companion app handles recording and refinement, then the keyboard inserts the result.",
+      "zh": "在 iPhone 键盘中发起语音输入。主应用负责录音与润色，再由键盘插入结果。",
+      "de": "Starte die Spracheingabe über die iPhone-Tastatur. Die zugehörige App übernimmt Aufnahme und Textbearbeitung; die Tastatur fügt das Ergebnis ein."
+    },
+    "ap.ios.f1.d": {
+      "en": "Works in iOS apps and fields that allow third-party keyboards.",
+      "zh": "适用于允许第三方键盘的 iOS 应用和输入框。",
+      "de": "Funktioniert in iOS-Apps und Feldern, die Drittanbietertastaturen erlauben."
+    },
+    "tr.cmp.sub": {
+      "en": "Compare translated-text output, platform support and processing options to find the right workflow.",
+      "zh": "按译文输出位置、平台支持和处理方式，选择合适的工具。",
+      "de": "Vergleiche die Ausgabe übersetzter Texte, unterstützte Plattformen und Verarbeitungsoptionen für deinen Arbeitsablauf."
     }
   },
   "replacedComparisonKeys": {

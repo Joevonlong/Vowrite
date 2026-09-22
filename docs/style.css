@@ -2263,3 +2263,69 @@ pre{max-width:100%;overflow-x:auto}code{overflow-wrap:anywhere}.ap-card,.ap-step
   .vw-site .role-stt { color:#9dc4ff; }
   .vw-site .role-llm { color:#ff9a72; }
 }
+
+/* One homepage: prominent features, with unique reference details nearby. */
+.home-anchor{display:block;height:0;scroll-margin-top:104px}
+.home-feature-nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;padding-block:32px 48px}
+.home-feature-nav a{display:flex;flex-direction:column;gap:12px;min-height:88px;padding:16px;border-top:1px solid var(--vw-line);color:var(--vw-ink);text-decoration:none}
+.home-feature-nav a>span{font:13px/1.5 ui-monospace,monospace;color:var(--vw-muted)}
+.home-feature-nav strong{font-size:16px;font-weight:500;overflow-wrap:anywhere}
+.home-feature-nav a:hover{border-color:var(--vw-orange);color:var(--vw-orange)}
+.home-section-head{max-width:920px;margin-bottom:48px}
+.home-section-head h2{font-size:clamp(32px,4.5vw,52px);line-height:1.15;letter-spacing:-.04em;margin:16px 0 24px;text-wrap:balance}
+.home-section-head>p:not(.vc-eyebrow){max-width:70ch;font-size:18px;line-height:1.7;color:var(--vw-muted);margin-inline:0}
+.home-support-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;margin-top:40px}
+.home-support-grid-two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.home-support-grid>article,.home-feature-note{border-top:1px solid var(--vw-line);padding-top:24px;min-width:0}
+.home-support-grid h3{font-size:20px!important;line-height:1.4;margin:0 0 12px}
+.home-support-grid p{font-size:16px;line-height:1.7;color:var(--vw-muted);margin:0}
+.home-feature-note .feature-icon{display:none}
+.home-translation-demo{margin:0!important;max-width:none!important}
+.home-translation-demo .tr-demo-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch;gap:0}
+.home-translation-demo .tr-demo-pane{padding:32px;min-width:0}
+.home-translation-demo .tr-demo-arrow{align-self:center;padding:16px}
+.home-translation-demo .tr-demo-text{font-size:clamp(20px,2.4vw,28px);line-height:1.65}
+.home-translation-demo .tr-demo-controls{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;padding:16px;border-top:1px solid var(--vw-line)}
+.home-translation-demo .tr-demo-pause{min-height:44px;font:inherit;background:var(--vw-soft);color:var(--vw-ink);border:1px solid var(--vw-line);padding:8px 16px;border-radius:8px;cursor:pointer}
+.home-translation-controls{padding:40px 0 16px!important;border:0!important}
+.home-translation-controls>.container{padding-inline:0}
+.home-translation-controls>.container>h3{font-size:24px;text-align:left}
+.home-translation-controls .section-sub{margin-inline:0;text-align:left}
+.home-translation-controls .tr-trig-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.home-translation-controls .tr-trig-card{padding:28px;min-width:0}
+.home-translation-controls .tr-trig-stage{min-height:144px}
+.home-platform-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.home-platform-card{border:1px solid var(--vw-line);border-radius:16px;padding:32px;background:var(--vw-surface);min-width:0}
+.home-platform-status{display:inline-block;margin:0 0 24px;padding:6px 12px;border-radius:6px;background:var(--vw-soft);font-size:14px;color:var(--vw-ink)}
+.home-platform-card .ap-platform-head{display:block;margin-bottom:24px}
+.home-platform-card .ap-platform-title{font-size:32px;line-height:1.2;margin:0 0 16px;letter-spacing:-.035em}
+.home-platform-card .ap-platform-tag{font-size:16px;line-height:1.7;color:var(--vw-muted);max-width:none}
+.home-platform-card .ap-platform-meta{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:8px;margin:16px 0 0}
+.home-platform-card .ap-meta-pill{font-size:13px;background:var(--vw-soft);color:var(--vw-ink);border-color:var(--vw-line)}
+.home-device{padding:24px;border:1px solid var(--vw-line);border-radius:12px;background:var(--vw-bg);margin:24px 0}
+.home-device>p:first-child{font:14px/1.6 ui-monospace,monospace;color:var(--vw-muted);margin:0 0 24px}
+.home-device-output{font-size:22px;line-height:1.6;margin:0 0 24px;min-height:3.2em}
+.home-device-caption{font-size:12px;color:var(--vw-muted)}
+.home-device-ios{border-radius:24px;border-bottom-width:5px}
+.home-platform-note{font-size:15px!important;line-height:1.7!important;color:var(--vw-muted);text-align:left!important;margin:24px 0!important;max-width:none!important}
+.home-platform-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.home-platform-actions .va-btn,.home-redirect .va-btn{color:var(--vw-bg)}
+.home-install{margin-bottom:0}
+.home-install>summary{font-size:16px}
+.home-install .ap-platform{background:transparent;border:0;padding:0!important}
+.home-install .ap-platform>.container{padding:0}
+.home-install .ap-step-grid,.home-install .ap-feat-grid,.home-install .ap-ios-arch{grid-template-columns:1fr}
+.home-install .ap-ios-arch-arrow{display:none}
+.home-install .ap-step-h{font-size:20px;margin-top:24px}
+.home-install .ap-feat{padding-block:16px}
+.home-platforms .ap-sync-row{display:flex;flex-wrap:wrap;gap:16px}
+.home-platforms .ap-sync-card{flex:1 1 200px;min-width:0}
+#configuration .vc-vendors{padding-top:48px}
+#configuration .vc-logos{flex-wrap:wrap}
+#faq>.container>h2{font-size:clamp(28px,3.5vw,40px);letter-spacing:-.035em;margin-bottom:32px}
+.home-redirect{max-width:760px;margin:10vh auto;padding:32px;font:18px/1.7 system-ui,sans-serif;color:var(--vw-ink)}
+.home-redirect-brand{color:inherit;font-weight:600;text-decoration:none}
+.home-redirect h1{font-size:clamp(32px,6vw,52px);line-height:1.2}
+.home-redirect .va-btn{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:1023px){.home-feature-nav{grid-template-columns:repeat(3,minmax(0,1fr))}.home-platform-card{padding:24px}.home-translation-controls .tr-trig-card{padding:24px}}
+@media(max-width:767px){.home-feature-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-block:24px}.home-feature-nav a{padding:12px}.home-support-grid,.home-platform-grid,.home-translation-controls .tr-trig-grid{grid-template-columns:1fr}.home-section-head{margin-bottom:32px}.home-section-head>p:not(.vc-eyebrow){font-size:16px}.home-translation-demo .tr-demo-row{grid-template-columns:1fr}.home-translation-demo .tr-demo-pane{padding:24px}.home-translation-demo .tr-demo-arrow{padding:8px;transform:rotate(90deg);justify-self:center}.home-translation-demo .tr-demo-out{border-left:0}.home-platform-card .ap-platform-title{font-size:28px}.home-support-grid{gap:24px}.home-device{padding:20px}.home-device-output{font-size:20px}}
