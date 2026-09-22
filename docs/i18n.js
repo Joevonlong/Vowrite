@@ -732,64 +732,499 @@ const i18n = {
   }
 };
 
-// Store default English text on load
-const enDefaults = {};
-document.querySelectorAll('[data-i18n]').forEach(el => {
-  enDefaults[el.getAttribute('data-i18n')] = el.textContent;
+
+// Website fact review and complete new UI copy (2026-09-22).
+i18n.en = Object.assign(i18n.en || {}, {
+  "hero.sub": "AI voice input for Mac, with built-in translation, per-app Modes and 20+ provider integrations. Use cloud recognition and cloud or local text refinement.",
+  "feat.fast.d": "Speculative polish pre-warms connections during recording. Response time depends on the provider, network and recording length.",
+  "how.title": "Three steps. From voice to text.",
+  "how.sub": "Record, transcribe and refine, then insert.",
+  "feat.works.d": "Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.",
+  "feat.translate.d": "Translate between languages supported by your chosen recognition and text models. Use the Mac translation shortcut or the iOS keyboard gesture without changing your Mode. <a href=\"translate.html\" data-i18n=\"feat.translate.link\">Learn more →</a>",
+  "faq.a1": "Vowrite transcribes your recording, then optionally uses a text model to remove fillers, fix grammar and add punctuation. It pastes the result at the cursor. Processing time depends on the models, network and audio length.",
+  "faq.a2": "Yes. Vowrite is free and open source. Bring your own provider credentials; cloud usage is billed directly by your chosen providers under their current rates and limits.",
+  "faq.a3": "Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.",
+  "faq.a4": "Mixed Chinese and English is supported by compatible recognition models. Quality and language coverage depend on the selected model; no manual language switch is needed when automatic detection is supported.",
+  "faq.a5": "The registry includes 20+ provider integrations. OpenAI, Groq, Deepgram and iFlytek offer recognition; DeepSeek, Gemini and Claude offer text refinement. Ollama and MLX Server provide local text refinement. Built-in Sherpa recognition is currently unavailable.",
+  "faq.a6": "History is stored locally. Cloud recognition sends audio to your chosen recognition provider; cloud refinement sends the transcript and any enabled prompt context to the text provider. Their retention policies apply. Local text models keep that refinement step on your machine.",
+  "faq.a7": "App updates include reviewed provider presets. Where supported, refresh the model list in provider settings, or enter a compatible model ID. A provider catalog listing is not a guarantee of account access or compatibility.",
+  "prov.combo.groq.spec": "Cloud recognition · provider limits apply",
+  "prov.combo.ds.spec": "Text refinement · usage billing",
+  "prov.combo.foot": "Example combination: Groq for speech recognition and DeepSeek for refinement. Check each provider’s current prices, account access and limits; latency depends on your recording and network.",
+  "prov.more": "More provider integrations",
+  "prov.ollamad": "Local text refinement",
+  "prov.offline": "Local refinement",
+  "prov.mlxd": "Apple Silicon · local text refinement",
+  "prov.local": "Local text model",
+  "prov.free": "Provider plan",
+  "dl.r3": "♿ Accessibility for automatic paste",
+  "ap.mac.s1.d": "Download the latest macOS DMG from GitHub Releases. Sparkle verifies updates with EdDSA signatures; this does not imply Apple notarization.",
+  "ap.mac.s3.d": "Open Settings → API Keys to add your recognition and text-provider keys, then select them under Models. Keys stay in Keychain at rest and are used to authenticate directly with providers. No Vowrite account is required.",
+  "ap.mac.flow1": "Press the shortcut",
+  "ap.mac.flow3": "Press again to stop",
+  "ap.mac.flow.note": "Press <kbd>⇧⌥ Space</kbd> to start translation. Stop with <kbd>⌥ Space</kbd> or the overlay Stop button. Dictation supports hold-to-record when Push-to-Talk is enabled. <a href=\"translate.html#trig\">Learn more →</a>",
+  "ap.sync.sub": "Both apps share <strong>VowriteKit</strong>: audio, provider integrations, Modes and translation. On iOS, the app and keyboard share settings through an App Group on the same device. Mac and iOS settings are separate; there is no automatic cross-device sync.",
+  "tr.trig.ios.b3": "Configure source and target languages separately on each device. The iOS app shares these settings with its keyboard.",
+  "tr.trig.mac.d": "Press ⇧⌥ Space to start a translation recording. Stop with ⌥ Space or the overlay Stop control. Your current Mode (Email, Code, Note…) stays unchanged.",
+  "tr.pipe.s1.d": "Press the translation shortcut on Mac, or choose Translate from the iOS microphone menu. Speak in a language supported by your chosen models.",
+  "tr.sub": "Press the translation shortcut on Mac or choose Translate in the iOS keyboard. Vowrite recognizes speech and writes the requested output language into a compatible text field. Language support depends on your models.",
+  "site.allFeatures": "All features and the voice workflow",
+  "site.overview": "About Vowrite",
+  "site.providerDetails": "Full provider guide",
+  "site.allQuestions": "All questions and answers",
+  "site.feature": "Feature",
+  "site.requirements": "macOS 14+ · Apple Silicon · Free app, provider usage billed separately",
+  "site.localNote": "Local text refinement is available through Ollama or MLX Server on Mac. Built-in Sherpa speech recognition is currently unavailable; a cloud recognition provider is needed for this example.",
+  "site.historyNote": "Original provider tables are preserved below as an archival snapshot, not verified current quotes or current Vowrite capabilities. In particular, Sherpa is unavailable and Ollama / MLX provide text refinement only. Use the official billing links for current rates.",
+  "site.historyLanguage": "The original model and pricing notes below are preserved in English.",
+  "site.copy": "Copy command",
+  "site.copied": "Copied",
+  "site.copyFailed": "Copy unavailable. Select the command and copy it manually.",
+  "site.onboarding": "Download → Install → Add provider keys → Try your first dictation",
+  "ap.ios.f4.d": "Edit Modes and source/target languages in the iOS app.",
+  "ap.ios.f5.t": "History and text deletion",
+  "ap.ios.f5.d": "Review transcripts and swipe to delete history. The keyboard can delete a word, line, paragraph or all available text.",
+  "ap.ios.f6.d": "Keys are stored in Keychain and used to authenticate directly with providers. The app and keyboard communicate through App Group and Darwin notifications.",
+  "ap.ios.beta": "Ask about iOS availability",
+  "ap.ios.install.note": "The iOS app is open source and currently requires building in Xcode. No public App Store or TestFlight distribution is available.",
+  "tr.set.p1": "On Mac, open General → Language & Translation. On iOS, open Settings → Language & Feedback → Translation. Choose a source-language hint or automatic detection, then a target language. Each device remembers its own settings.",
+  "site.compareNote": "Checked 22 September 2026. Features vary by platform, model and plan. “Not documented” means no support claim was confirmed in the linked official documentation.",
+  "cmp.r9": "Data processing and history",
+  "cmp.r11": "Local processing",
+  "tr.cmp.r1": "Voice translation output",
+  "tr.cmp.r2": "App integration",
+  "tr.cmp.r4": "API keys and subscriptions",
+  "tr.cmp.r6": "Offline / local processing",
+  "comparison.translate.0.0": "Translate recordings into compatible text fields",
+  "comparison.translate.0.1": "Spoken translation; copy/replace supported text",
+  "comparison.translate.0.2": "Spoken translation; copy/share transcript",
+  "comparison.translate.0.3": "Live voice/subtitles for meetings and conversations",
+  "comparison.translate.1.0": "Mac text fields; iOS where third-party keyboards are allowed",
+  "comparison.translate.1.1": "App and supported system text actions",
+  "comparison.translate.1.2": "Web, iOS and Android",
+  "comparison.translate.1.3": "Desktop/mobile/web; Teams, Zoom, Meet",
+  "comparison.translate.2.0": "Choose recognition and text models",
+  "comparison.translate.2.1": "Apple-managed",
+  "comparison.translate.2.2": "Google-managed",
+  "comparison.translate.2.3": "Service-managed",
+  "comparison.translate.3.0": "BYOK; provider costs separate",
+  "comparison.translate.3.1": "Free Apple app",
+  "comparison.translate.3.2": "Free consumer app",
+  "comparison.translate.3.3": "Voice plans; eligible paid Translate plans include limited minutes",
+  "comparison.translate.4.0": "Custom translation prompts",
+  "comparison.translate.4.1": "Language/conversation controls",
+  "comparison.translate.4.2": "Language/conversation controls",
+  "comparison.translate.4.3": "Glossaries, terms and formality",
+  "comparison.translate.5.0": "Local text model option; recognition needs a configured service",
+  "comparison.translate.5.1": "Downloaded supported languages",
+  "comparison.translate.5.2": "Downloadable languages; feature limits",
+  "comparison.translate.5.3": "Online service; offline mode not documented",
+  "comparison.translate.6.0": "Yes",
+  "comparison.translate.6.1": "Not advertised",
+  "comparison.translate.6.2": "Not advertised",
+  "comparison.translate.6.3": "Not advertised",
+  "comparison.app.0.0": "Free app; provider usage billed separately",
+  "comparison.app.0.1": "Free 8,000 words/week; Pro $12/mo yearly or $30 monthly",
+  "comparison.app.0.2": "Free tier; paid Pro plans",
+  "comparison.app.0.3": "Included with Apple devices",
+  "comparison.app.1.0": "Choose recognition and refinement providers",
+  "comparison.app.1.1": "Service-managed models",
+  "comparison.app.1.2": "Multiple cloud/local models",
+  "comparison.app.1.3": "Apple-managed",
+  "comparison.app.2.0": "Yes",
+  "comparison.app.2.1": "Not documented",
+  "comparison.app.2.2": "BYOK with Pro",
+  "comparison.app.2.3": "Not applicable",
+  "comparison.app.3.0": "Local history; chosen providers process audio/text",
+  "comparison.app.3.1": "Cloud processing; local history, optional sync",
+  "comparison.app.3.2": "Local or cloud, model-dependent",
+  "comparison.app.3.3": "On-device or server; check settings",
+  "comparison.app.4.0": "Local refinement; bundled offline recognition unavailable",
+  "comparison.app.4.1": "Cloud transcription",
+  "comparison.app.4.2": "On-device speech models",
+  "comparison.app.4.3": "Device/language-dependent",
+  "comparison.app.5.0": "Mac download; iOS source build",
+  "comparison.app.5.1": "Mac + iOS",
+  "comparison.app.5.2": "Mac + iOS, also Windows/Android",
+  "comparison.app.5.3": "Supported Apple devices",
+  "comparison.app.6.0": "Yes",
+  "comparison.app.6.1": "Not advertised",
+  "comparison.app.6.2": "Not advertised",
+  "comparison.app.6.3": "Proprietary system feature",
+  "comparison.app.7.0": "Optional chosen text model",
+  "comparison.app.7.1": "Yes",
+  "comparison.app.7.2": "Model/mode-dependent",
+  "comparison.app.7.3": "Punctuation; rewriting is separate",
+  "comparison.app.8.0": "Provider/model-dependent",
+  "comparison.app.8.1": "Mixed languages supported",
+  "comparison.app.8.2": "Model-dependent",
+  "comparison.app.8.3": "Select/switch dictation languages",
+  "comparison.app.9.0": "Replacement rules; correction learning on Mac",
+  "comparison.app.9.1": "Dictionary + personalization",
+  "comparison.app.9.2": "Vocabulary + replacements",
+  "comparison.app.9.3": "System replacements in supported apps",
+  "comparison.app.10.0": "Local searchable history",
+  "comparison.app.10.1": "Local, optional cloud sync",
+  "comparison.app.10.2": "Local history",
+  "comparison.app.10.3": "No transcript library documented",
+  "comparison.app.11.0": "Yes (Mac)",
+  "comparison.app.11.1": "Yes (desktop)",
+  "comparison.app.11.2": "Yes (desktop)",
+  "comparison.app.11.3": "Yes (Mac)",
+  "nav.pricing": "Usage",
+  "ap.mac.tag": "A menu-bar companion: press your shortcut, speak, then insert clean text into a compatible editable field.",
+  "ap.mac.f1.d": "Carbon global shortcuts, including in fullscreen apps; avoid conflicting system shortcuts.",
+  "ap.mac.f2.d": "Clipboard paste into compatible editable fields in browsers, editors and other apps.",
+  "ap.mac.f4.d": "⇧⌥ Space starts translation; use ⌥ Space or Stop to finish.",
+  "tr.h1a": "Speak one language.",
+  "tr.h1b": "Write in another.",
+  "tr.lang.title": "Translation in both directions.",
+  "tr.lang.sub": "Choose a source and target language supported by your recognition and text models.",
+  "tr.trig.ios.b1": "Works in iOS apps and fields that allow third-party keyboards.",
+  "tr.pipe.s2.d": "Compatible recognition models can detect the spoken language automatically. A configured source language provides a hint when the provider supports it.",
+  "tr.pipe.s4.d": "The finished translation is inserted into a compatible text field, such as a message, email or document.",
+  "why.s.note": "Refine what you said while keeping what you meant: clearer wording in one workflow."
+});
+i18n.zh = Object.assign(i18n.zh || {}, {
+  "hero.sub": "Mac AI 语音输入，支持翻译、按应用切换 Mode 和 20 多个服务商集成。云端识别可搭配云端或本地文字润色。",
+  "feat.fast.d": "推测式润色在录音时预热连接。实际响应时间取决于服务商、网络和录音长度。",
+  "how.title": "三步，把声音变成文字。",
+  "how.sub": "录音、转写与润色，然后写入。",
+  "feat.works.d": "通过剪贴板粘贴，将文字写入当前可编辑文本框。需要辅助功能权限；安全输入框或限制粘贴的应用可能不支持。",
+  "feat.translate.d": "在所选识别和文字模型支持的语言间翻译。使用 Mac 翻译快捷键或 iOS 键盘手势，无需切换当前 Mode。 <a href=\"translate.html\" data-i18n=\"feat.translate.link\">了解更多 →</a>",
+  "faq.a1": "Vowrite 转写录音，并可使用文字模型去掉口头禅、修正语法和添加标点，再将结果粘贴到光标处。处理时长取决于模型、网络和音频长度。",
+  "faq.a2": "是的，Vowrite 免费且开源。使用自己的服务商凭据，云端用量按所选服务商的当前价格和额度直接结算。",
+  "faq.a3": "通过剪贴板粘贴，将文字写入当前可编辑文本框。需要辅助功能权限；安全输入框或限制粘贴的应用可能不支持。",
+  "faq.a4": "兼容的识别模型支持中英混合输入。识别质量和语言范围取决于所选模型；支持自动检测时无需手动切换语言。",
+  "faq.a5": "注册表包含 20 多个服务商集成。OpenAI、Groq、Deepgram、讯飞提供识别，DeepSeek、Gemini、Claude 提供文字润色。Ollama 和 MLX Server 可用于本地文字润色；内置 Sherpa 识别当前不可用。",
+  "faq.a6": "历史记录保存在本地。云端识别会将音频发送给所选识别服务商；云端润色会将转写文本及启用的提示上下文发送给文字服务商，适用其数据保留政策。本地文字模型可让润色步骤留在你的电脑上。",
+  "faq.a7": "应用更新包含经过核对的服务商预设。受支持的服务商可在设置中刷新模型列表，或填写兼容的模型 ID。目录中列出某个模型，并不保证当前账号有权限或协议兼容。",
+  "prov.combo.groq.spec": "云端识别 · 以服务商额度为准",
+  "prov.combo.ds.spec": "文字润色 · 按用量计费",
+  "prov.combo.foot": "示例组合：Groq 负责识别，DeepSeek 负责润色。请核对各服务商的现价、账号权限和额度；延迟取决于录音和网络。",
+  "prov.more": "更多服务商集成",
+  "prov.ollamad": "本地文字润色",
+  "prov.offline": "本地润色",
+  "prov.mlxd": "Apple Silicon · 本地文字润色",
+  "prov.local": "本地文字模型",
+  "prov.free": "服务商方案",
+  "dl.r3": "♿ 自动粘贴需要辅助功能权限",
+  "ap.mac.s1.d": "从 GitHub Releases 下载最新 macOS DMG。Sparkle 使用 EdDSA 签名验证更新；这不等于 Apple 公证。",
+  "ap.mac.s3.d": "在设置 → API Keys 添加识别和文字服务商密钥，再在 Models 中选择模型。密钥静态保存在钥匙串中，并直接用于服务商认证；无需 Vowrite 账号。",
+  "ap.mac.flow1": "按下快捷键",
+  "ap.mac.flow3": "再次按下结束",
+  "ap.mac.flow.note": "按 <kbd>⇧⌥ Space</kbd> 开始翻译，用 <kbd>⌥ Space</kbd> 或悬浮条停止按钮结束。口述启用 Push-to-Talk 后支持按住录音。<a href=\"translate.html#trig\">了解更多 →</a>",
+  "ap.sync.sub": "两个应用共享 <strong>VowriteKit</strong> 的音频、服务商集成、Mode 和翻译逻辑。iOS 主应用和键盘通过 App Group 在同一台设备上共享设置。Mac 与 iOS 的设置独立，不会自动跨设备同步。",
+  "tr.trig.ios.b3": "在每台设备上分别设置源语言和目标语言；iOS 主应用会与本机键盘共享这些设置。",
+  "tr.trig.mac.d": "按 ⇧⌥ Space 开始翻译录音，用 ⌥ Space 或悬浮条停止按钮结束。当前 Mode（邮件、代码、笔记等）保持不变。",
+  "tr.pipe.s1.d": "在 Mac 按翻译快捷键，或在 iOS 麦克风菜单选择翻译。使用所选模型支持的语言说话。",
+  "tr.sub": "在 Mac 按翻译快捷键，或在 iOS 键盘选择翻译。Vowrite 识别语音并将目标语言文字写入兼容的文本框；支持的语言取决于所选模型。",
+  "site.allFeatures": "全部功能与语音流程",
+  "site.overview": "关于 Vowrite",
+  "site.providerDetails": "完整服务商说明",
+  "site.allQuestions": "全部常见问题与解答",
+  "site.feature": "功能",
+  "site.requirements": "macOS 14+ · Apple Silicon · 应用免费，服务商用量另计费",
+  "site.localNote": "Mac 可通过 Ollama 或 MLX Server 使用本地文字润色。内置 Sherpa 语音识别当前不可用，此示例需要云端识别服务商。",
+  "site.historyNote": "下方完整保留原服务商表格作为历史快照，不是已核验的现价或当前 Vowrite 能力说明。其中 Sherpa 不可用，Ollama / MLX 仅用于文字润色。当前价格请查看官方计费链接。",
+  "site.historyLanguage": "下方原始型号和价格注释保留英文。",
+  "site.copy": "复制命令",
+  "site.copied": "已复制",
+  "site.copyFailed": "无法自动复制，请选中命令手动复制。",
+  "site.onboarding": "下载 → 安装 → 配置服务商密钥 → 第一次口述",
+  "ap.ios.f4.d": "在 iOS 主应用中编辑 Mode 及源语言、目标语言。",
+  "ap.ios.f5.t": "历史记录与文字删除",
+  "ap.ios.f5.d": "查看转写记录并轻扫删除历史。键盘可按单词、行、段落或全部可用文字删除。",
+  "ap.ios.f6.d": "密钥存储在钥匙串中，用于直接向服务商认证。主应用与键盘通过 App Group 和 Darwin 通知通信。",
+  "ap.ios.beta": "咨询 iOS 分发进展",
+  "ap.ios.install.note": "iOS 应用已开源，目前需要使用 Xcode 自行构建，尚无公开 App Store 或 TestFlight 分发渠道。",
+  "tr.set.p1": "Mac：通用 → 语言与翻译。iOS：设置 → 语言与反馈 → 翻译。选择源语言提示或自动检测，再选择目标语言。各设备分别保存自己的设置。",
+  "site.compareNote": "核对日期：2026 年 9 月 22 日。能力因平台、模型和方案而异。“未见说明”表示所链官方文档未确认该支持项。",
+  "cmp.r9": "数据处理与历史",
+  "cmp.r11": "本地处理",
+  "tr.cmp.r1": "语音翻译输出",
+  "tr.cmp.r2": "应用集成",
+  "tr.cmp.r4": "API 密钥与订阅",
+  "tr.cmp.r6": "离线/本地处理",
+  "comparison.translate.0.0": "录音后翻译到兼容文本框",
+  "comparison.translate.0.1": "语音翻译；复制/替换受支持文字",
+  "comparison.translate.0.2": "语音翻译；复制/分享转写",
+  "comparison.translate.0.3": "会议与对话的实时语音/字幕",
+  "comparison.translate.1.0": "Mac 文本框；允许第三方键盘的 iOS 应用",
+  "comparison.translate.1.1": "应用与受支持的系统文字操作",
+  "comparison.translate.1.2": "网页、iOS 与 Android",
+  "comparison.translate.1.3": "桌面/移动/网页；Teams、Zoom、Meet",
+  "comparison.translate.2.0": "自选识别和文字模型",
+  "comparison.translate.2.1": "Apple 管理",
+  "comparison.translate.2.2": "Google 管理",
+  "comparison.translate.2.3": "服务方管理",
+  "comparison.translate.3.0": "自带密钥；服务商费用另计",
+  "comparison.translate.3.1": "Apple 免费应用",
+  "comparison.translate.3.2": "免费消费者应用",
+  "comparison.translate.3.3": "Voice 方案；部分付费 Translate 方案含有限分钟数",
+  "comparison.translate.4.0": "自定义翻译提示词",
+  "comparison.translate.4.1": "语言/对话控制",
+  "comparison.translate.4.2": "语言/对话控制",
+  "comparison.translate.4.3": "术语表、词汇和正式程度",
+  "comparison.translate.5.0": "可选本地文字模型；识别仍需配置服务",
+  "comparison.translate.5.1": "可下载受支持语言",
+  "comparison.translate.5.2": "可下载语言；功能有限制",
+  "comparison.translate.5.3": "在线服务；未见离线模式说明",
+  "comparison.translate.6.0": "开源",
+  "comparison.translate.6.1": "未宣称开源",
+  "comparison.translate.6.2": "未宣称开源",
+  "comparison.translate.6.3": "未宣称开源",
+  "comparison.app.0.0": "应用免费；服务商用量另计",
+  "comparison.app.0.1": "免费 8,000 词/周；Pro 年付折合 $12/月或月付 $30",
+  "comparison.app.0.2": "免费额度；Pro 付费方案",
+  "comparison.app.0.3": "Apple 设备内置",
+  "comparison.app.1.0": "识别与润色服务商分别选",
+  "comparison.app.1.1": "服务方管理模型",
+  "comparison.app.1.2": "多个云端/本地模型",
+  "comparison.app.1.3": "Apple 管理",
+  "comparison.app.2.0": "支持",
+  "comparison.app.2.1": "未见说明",
+  "comparison.app.2.2": "Pro 支持自带密钥",
+  "comparison.app.2.3": "不适用",
+  "comparison.app.3.0": "本地历史；所选服务商处理音频/文本",
+  "comparison.app.3.1": "云处理；本地历史，可选同步",
+  "comparison.app.3.2": "依模型在本地或云端处理",
+  "comparison.app.3.3": "设备端或服务器；查看设置",
+  "comparison.app.4.0": "本地润色；内置离线识别不可用",
+  "comparison.app.4.1": "云端转写",
+  "comparison.app.4.2": "设备端语音模型",
+  "comparison.app.4.3": "取决于设备和语言",
+  "comparison.app.5.0": "Mac 可下载；iOS 自行构建",
+  "comparison.app.5.1": "Mac + iOS",
+  "comparison.app.5.2": "Mac + iOS，另有 Windows/Android",
+  "comparison.app.5.3": "受支持的 Apple 设备",
+  "comparison.app.6.0": "开源",
+  "comparison.app.6.1": "未宣称开源",
+  "comparison.app.6.2": "未宣称开源",
+  "comparison.app.6.3": "专有系统功能",
+  "comparison.app.7.0": "可选所选文字模型",
+  "comparison.app.7.1": "支持",
+  "comparison.app.7.2": "取决于模型/模式",
+  "comparison.app.7.3": "标点；改写为独立功能",
+  "comparison.app.8.0": "取决于服务商/模型",
+  "comparison.app.8.1": "支持混合语言",
+  "comparison.app.8.2": "取决于模型",
+  "comparison.app.8.3": "选择/切换听写语言",
+  "comparison.app.9.0": "替换规则；Mac 可学习纠错",
+  "comparison.app.9.1": "词典与个性化",
+  "comparison.app.9.2": "词汇与替换",
+  "comparison.app.9.3": "兼容应用的系统替换",
+  "comparison.app.10.0": "本地可搜索历史",
+  "comparison.app.10.1": "本地，可选云同步",
+  "comparison.app.10.2": "本地历史",
+  "comparison.app.10.3": "未见转写历史库说明",
+  "comparison.app.11.0": "支持（Mac）",
+  "comparison.app.11.1": "支持（桌面）",
+  "comparison.app.11.2": "支持（桌面）",
+  "comparison.app.11.3": "支持（Mac）",
+  "nav.pricing": "用量与费用",
+  "ap.mac.tag": "菜单栏里的语音助手：按下快捷键、说话，然后将清晰文字写入兼容的可编辑文本框。",
+  "ap.mac.f1.d": "Carbon 全局快捷键支持全屏应用；请避开系统快捷键冲突。",
+  "ap.mac.f2.d": "通过剪贴板粘贴到浏览器、编辑器等应用中兼容的可编辑文本框。",
+  "ap.mac.f4.d": "⇧⌥ Space 开始翻译；用 ⌥ Space 或停止按钮结束。",
+  "tr.h1a": "说出一种语言。",
+  "tr.h1b": "写下另一种语言。",
+  "tr.lang.title": "双向翻译，灵活选择。",
+  "tr.lang.sub": "选择语音识别和文字模型支持的源语言与目标语言。",
+  "tr.trig.ios.b1": "适用于允许第三方键盘的 iOS 应用和输入框。",
+  "tr.pipe.s2.d": "兼容的识别模型可自动检测所说语言；服务商支持时，配置的源语言会作为识别提示。",
+  "tr.pipe.s4.d": "完成的译文写入兼容的文本框，例如消息、邮件或文档。",
+  "why.s.note": "在保留原意的同时整理表达：一套流程，得到更清晰的文字。"
+});
+i18n.de = Object.assign(i18n.de || {}, {
+  "hero.sub": "KI-Spracheingabe für den Mac mit Übersetzung, App-Modi und über 20 Anbieterintegrationen. Cloud-Erkennung mit Cloud- oder lokaler Textbearbeitung.",
+  "feat.fast.d": "Die Textbearbeitung wärmt Verbindungen während der Aufnahme vor. Die Antwortzeit hängt von Anbieter, Netzwerk und Aufnahmelänge ab.",
+  "how.title": "Drei Schritte. Von Stimme zu Text.",
+  "how.sub": "Aufnehmen, transkribieren und bearbeiten, dann einfügen.",
+  "feat.works.d": "Text per Zwischenablage in das aktive Eingabefeld einfügen. Bedienungshilfen sind erforderlich; geschützte Felder oder Apps, die Einfügen blockieren, können inkompatibel sein.",
+  "feat.translate.d": "Zwischen Sprachen deiner Erkennungs- und Textmodelle übersetzen. Mit Mac-Tastenkürzel oder iOS-Tastaturgeste, ohne den Mode zu ändern. <a href=\"translate.html\" data-i18n=\"feat.translate.link\">Mehr erfahren →</a>",
+  "faq.a1": "Vowrite transkribiert die Aufnahme und kann Füllwörter entfernen sowie Grammatik und Zeichensetzung korrigieren. Das Ergebnis wird am Cursor eingefügt. Die Dauer hängt von Modellen, Netzwerk und Audiolänge ab.",
+  "faq.a2": "Ja. Vowrite ist kostenlos und Open Source. Du nutzt eigene Anbieter-Zugangsdaten; Cloud-Nutzung wird direkt nach den aktuellen Preisen und Limits des Anbieters abgerechnet.",
+  "faq.a3": "Text per Zwischenablage in das aktive Eingabefeld einfügen. Bedienungshilfen sind erforderlich; geschützte Felder oder Apps, die Einfügen blockieren, können inkompatibel sein.",
+  "faq.a4": "Kompatible Erkennungsmodelle unterstützen gemischtes Chinesisch und Englisch. Qualität und Sprachumfang hängen vom Modell ab; bei automatischer Erkennung ist kein manueller Wechsel nötig.",
+  "faq.a5": "Die Registry enthält über 20 Anbieterintegrationen. OpenAI, Groq, Deepgram und iFlytek bieten Erkennung, DeepSeek, Gemini und Claude Textbearbeitung. Ollama und MLX Server ermöglichen lokale Textbearbeitung. Die integrierte Sherpa-Erkennung ist derzeit nicht verfügbar.",
+  "faq.a6": "Der Verlauf wird lokal gespeichert. Cloud-Erkennung sendet Audio an den gewählten Anbieter; Cloud-Textbearbeitung sendet Transkript und aktivierten Prompt-Kontext an den Textanbieter. Dessen Aufbewahrungsregeln gelten. Lokale Textmodelle halten diesen Bearbeitungsschritt auf deinem Rechner.",
+  "faq.a7": "App-Updates enthalten geprüfte Anbietervorgaben. Wenn unterstützt, aktualisiere die Modellliste in den Einstellungen oder trage eine kompatible Modell-ID ein. Ein Katalogeintrag garantiert weder Kontozugriff noch Kompatibilität.",
+  "prov.combo.groq.spec": "Cloud-Erkennung · Anbieterlimits gelten",
+  "prov.combo.ds.spec": "Textbearbeitung · nach Verbrauch",
+  "prov.combo.foot": "Beispielkombination: Groq für Erkennung und DeepSeek für Textbearbeitung. Aktuelle Preise, Kontozugriff und Limits prüfen; die Latenz hängt von Aufnahme und Netzwerk ab.",
+  "prov.more": "Weitere Anbieterintegrationen",
+  "prov.ollamad": "Lokale Textbearbeitung",
+  "prov.offline": "Lokale Bearbeitung",
+  "prov.mlxd": "Apple Silicon · lokale Textbearbeitung",
+  "prov.local": "Lokales Textmodell",
+  "prov.free": "Anbietertarif",
+  "dl.r3": "♿ Bedienungshilfen für automatisches Einfügen",
+  "ap.mac.s1.d": "Lade das aktuelle macOS-DMG von GitHub Releases. Sparkle prüft Updates mit EdDSA-Signaturen; dies bedeutet keine Apple-Notarisierung.",
+  "ap.mac.s3.d": "Unter Einstellungen → API Keys die Anbieter-Schlüssel hinzufügen, dann unter Models auswählen. Die Schlüssel werden im Schlüsselbund gespeichert und zur direkten Anbieter-Authentifizierung genutzt. Kein Vowrite-Konto erforderlich.",
+  "ap.mac.flow1": "Tastenkürzel drücken",
+  "ap.mac.flow3": "Zum Beenden erneut drücken",
+  "ap.mac.flow.note": "Mit <kbd>⇧⌥ Space</kbd> die Übersetzung starten. Mit <kbd>⌥ Space</kbd> oder Stopp im Overlay beenden. Diktieren unterstützt bei aktiviertem Push-to-Talk auch Gedrückthalten. <a href=\"translate.html#trig\">Mehr erfahren →</a>",
+  "ap.sync.sub": "Beide Apps nutzen <strong>VowriteKit</strong> für Audio, Anbieter, Modi und Übersetzung. iOS-App und Tastatur teilen Einstellungen per App Group auf demselben Gerät. Mac- und iOS-Einstellungen bleiben getrennt; es gibt keine automatische geräteübergreifende Synchronisierung.",
+  "tr.trig.ios.b3": "Quell- und Zielsprache auf jedem Gerät separat einstellen. Die iOS-App teilt sie mit ihrer Tastatur.",
+  "tr.trig.mac.d": "Mit ⇧⌥ Space eine Übersetzungsaufnahme starten. Mit ⌥ Space oder Stopp im Overlay beenden. Dein aktueller Mode (E-Mail, Code, Notiz …) bleibt unverändert.",
+  "tr.pipe.s1.d": "Auf dem Mac das Übersetzungs-Tastenkürzel drücken oder im iOS-Mikrofonmenü Übersetzen wählen. Eine von deinen Modellen unterstützte Sprache sprechen.",
+  "tr.sub": "Auf dem Mac das Übersetzungs-Tastenkürzel drücken oder in der iOS-Tastatur Übersetzen wählen. Vowrite schreibt die gewünschte Sprache in ein kompatibles Textfeld. Die Sprachunterstützung hängt von den Modellen ab.",
+  "site.allFeatures": "Alle Funktionen und der Sprachablauf",
+  "site.overview": "Über Vowrite",
+  "site.providerDetails": "Vollständige Anbieterübersicht",
+  "site.allQuestions": "Alle Fragen und Antworten",
+  "site.feature": "Funktion",
+  "site.requirements": "macOS 14+ · Apple Silicon · Kostenlose App, Anbieternutzung separat berechnet",
+  "site.localNote": "Lokale Textbearbeitung auf dem Mac ist über Ollama oder MLX Server möglich. Die integrierte Sherpa-Spracherkennung ist derzeit nicht verfügbar; dieses Beispiel benötigt Cloud-Erkennung.",
+  "site.historyNote": "Die ursprünglichen Anbietertabellen bleiben als Archiv erhalten, nicht als verifizierte aktuelle Preise oder Funktionszusagen. Sherpa ist nicht verfügbar; Ollama / MLX dienen nur der Textbearbeitung. Aktuelle Preise stehen auf den verlinkten offiziellen Seiten.",
+  "site.historyLanguage": "Die ursprünglichen Modell- und Preisangaben unten bleiben auf Englisch erhalten.",
+  "site.copy": "Befehl kopieren",
+  "site.copied": "Kopiert",
+  "site.copyFailed": "Automatisches Kopieren nicht verfügbar. Befehl auswählen und manuell kopieren.",
+  "site.onboarding": "Laden → Installieren → Anbieter-Schlüssel eintragen → Erstes Diktat",
+  "ap.ios.f4.d": "Modi sowie Quell- und Zielsprache in der iOS-App bearbeiten.",
+  "ap.ios.f5.t": "Verlauf und Textlöschung",
+  "ap.ios.f5.d": "Transkripte ansehen und Verlaufseinträge per Wischgeste löschen. Die Tastatur kann Wörter, Zeilen, Absätze oder den verfügbaren Text löschen.",
+  "ap.ios.f6.d": "Schlüssel werden im Schlüsselbund gespeichert und direkt zur Anbieter-Authentifizierung genutzt. App und Tastatur kommunizieren per App Group und Darwin-Mitteilungen.",
+  "ap.ios.beta": "Nach iOS-Verfügbarkeit fragen",
+  "ap.ios.install.note": "Die iOS-App ist Open Source und muss derzeit in Xcode gebaut werden. Es gibt keinen öffentlichen App-Store- oder TestFlight-Vertrieb.",
+  "tr.set.p1": "Mac: Allgemein → Sprache & Übersetzung. iOS: Einstellungen → Sprache & Feedback → Übersetzung. Quellsprache oder automatische Erkennung und dann Zielsprache wählen. Jedes Gerät speichert seine eigenen Einstellungen.",
+  "site.compareNote": "Geprüft am 22. September 2026. Funktionen hängen von Plattform, Modell und Tarif ab. „Nicht dokumentiert“ bedeutet, dass die verlinkten offiziellen Unterlagen keine Unterstützung bestätigen.",
+  "cmp.r9": "Datenverarbeitung und Verlauf",
+  "cmp.r11": "Lokale Verarbeitung",
+  "tr.cmp.r1": "Ausgabe der Sprachübersetzung",
+  "tr.cmp.r2": "App-Integration",
+  "tr.cmp.r4": "API-Schlüssel und Abonnements",
+  "tr.cmp.r6": "Offline-/lokale Verarbeitung",
+  "comparison.translate.0.0": "Aufnahmen in kompatible Textfelder übersetzen",
+  "comparison.translate.0.1": "Sprachübersetzung; Text kopieren/ersetzen",
+  "comparison.translate.0.2": "Sprachübersetzung; Transkript kopieren/teilen",
+  "comparison.translate.0.3": "Live-Sprache/Untertitel für Meetings und Gespräche",
+  "comparison.translate.1.0": "Mac-Textfelder; iOS mit erlaubten Drittanbietertastaturen",
+  "comparison.translate.1.1": "App und unterstützte Systemtextaktionen",
+  "comparison.translate.1.2": "Web, iOS und Android",
+  "comparison.translate.1.3": "Desktop/Mobil/Web; Teams, Zoom, Meet",
+  "comparison.translate.2.0": "Erkennungs- und Textmodelle wählen",
+  "comparison.translate.2.1": "Von Apple verwaltet",
+  "comparison.translate.2.2": "Von Google verwaltet",
+  "comparison.translate.2.3": "Vom Dienst verwaltet",
+  "comparison.translate.3.0": "BYOK; Anbieterkosten separat",
+  "comparison.translate.3.1": "Kostenlose Apple-App",
+  "comparison.translate.3.2": "Kostenlose Verbraucher-App",
+  "comparison.translate.3.3": "Voice-Tarife; ausgewählte Translate-Tarife enthalten begrenzte Minuten",
+  "comparison.translate.4.0": "Eigene Übersetzungs-Prompts",
+  "comparison.translate.4.1": "Sprach-/Gesprächseinstellungen",
+  "comparison.translate.4.2": "Sprach-/Gesprächseinstellungen",
+  "comparison.translate.4.3": "Glossare, Begriffe und Formalität",
+  "comparison.translate.5.0": "Lokales Textmodell möglich; Erkennung benötigt Dienst",
+  "comparison.translate.5.1": "Heruntergeladene unterstützte Sprachen",
+  "comparison.translate.5.2": "Sprachdownloads; Funktionseinschränkungen",
+  "comparison.translate.5.3": "Onlinedienst; Offline-Modus nicht dokumentiert",
+  "comparison.translate.6.0": "Ja",
+  "comparison.translate.6.1": "Nicht beworben",
+  "comparison.translate.6.2": "Nicht beworben",
+  "comparison.translate.6.3": "Nicht beworben",
+  "comparison.app.0.0": "Kostenlose App; Anbieternutzung separat",
+  "comparison.app.0.1": "8.000 Wörter/Woche gratis; Pro $12/Monat jährlich oder $30 monatlich",
+  "comparison.app.0.2": "Kostenloser Tarif; Pro kostenpflichtig",
+  "comparison.app.0.3": "In Apple-Geräten enthalten",
+  "comparison.app.1.0": "Erkennung und Bearbeitung frei wählen",
+  "comparison.app.1.1": "Vom Dienst verwaltete Modelle",
+  "comparison.app.1.2": "Mehrere Cloud-/lokale Modelle",
+  "comparison.app.1.3": "Von Apple verwaltet",
+  "comparison.app.2.0": "Ja",
+  "comparison.app.2.1": "Nicht dokumentiert",
+  "comparison.app.2.2": "BYOK mit Pro",
+  "comparison.app.2.3": "Nicht anwendbar",
+  "comparison.app.3.0": "Lokaler Verlauf; Anbieter verarbeiten Audio/Text",
+  "comparison.app.3.1": "Cloud-Verarbeitung; lokaler Verlauf, optionale Synchronisierung",
+  "comparison.app.3.2": "Lokal oder Cloud, je nach Modell",
+  "comparison.app.3.3": "Gerät oder Server; Einstellungen prüfen",
+  "comparison.app.4.0": "Lokale Bearbeitung; integrierte Offline-Erkennung nicht verfügbar",
+  "comparison.app.4.1": "Cloud-Transkription",
+  "comparison.app.4.2": "Sprachmodelle auf dem Gerät",
+  "comparison.app.4.3": "Geräte-/sprachabhängig",
+  "comparison.app.5.0": "Mac-Download; iOS aus Quellcode",
+  "comparison.app.5.1": "Mac + iOS",
+  "comparison.app.5.2": "Mac + iOS, auch Windows/Android",
+  "comparison.app.5.3": "Unterstützte Apple-Geräte",
+  "comparison.app.6.0": "Ja",
+  "comparison.app.6.1": "Nicht beworben",
+  "comparison.app.6.2": "Nicht beworben",
+  "comparison.app.6.3": "Proprietäre Systemfunktion",
+  "comparison.app.7.0": "Optionales Textmodell",
+  "comparison.app.7.1": "Ja",
+  "comparison.app.7.2": "Modell-/modusabhängig",
+  "comparison.app.7.3": "Zeichensetzung; Umschreiben separat",
+  "comparison.app.8.0": "Anbieter-/modellabhängig",
+  "comparison.app.8.1": "Gemischte Sprachen unterstützt",
+  "comparison.app.8.2": "Modellabhängig",
+  "comparison.app.8.3": "Diktiersprachen wählen/wechseln",
+  "comparison.app.9.0": "Ersetzungen; Korrekturlernen auf Mac",
+  "comparison.app.9.1": "Wörterbuch und Personalisierung",
+  "comparison.app.9.2": "Wortschatz und Ersetzungen",
+  "comparison.app.9.3": "Systemersetzungen in unterstützten Apps",
+  "comparison.app.10.0": "Lokal durchsuchbarer Verlauf",
+  "comparison.app.10.1": "Lokal, optionale Cloud-Synchronisierung",
+  "comparison.app.10.2": "Lokaler Verlauf",
+  "comparison.app.10.3": "Keine Transkriptbibliothek dokumentiert",
+  "comparison.app.11.0": "Ja (Mac)",
+  "comparison.app.11.1": "Ja (Desktop)",
+  "comparison.app.11.2": "Ja (Desktop)",
+  "comparison.app.11.3": "Ja (Mac)",
+  "nav.pricing": "Nutzung",
+  "ap.mac.tag": "Dein Begleiter in der Menüleiste: Tastenkürzel drücken, sprechen und klaren Text in ein kompatibles Eingabefeld einfügen.",
+  "ap.mac.f1.d": "Globale Carbon-Tastenkürzel, auch in Vollbild-Apps; Konflikte mit Systemkürzeln vermeiden.",
+  "ap.mac.f2.d": "Per Zwischenablage in kompatible Eingabefelder von Browsern, Editoren und anderen Apps einfügen.",
+  "ap.mac.f4.d": "⇧⌥ Space startet die Übersetzung; mit ⌥ Space oder Stopp beenden.",
+  "tr.h1a": "Sprich eine Sprache.",
+  "tr.h1b": "Schreibe in einer anderen.",
+  "tr.lang.title": "Übersetzen in beide Richtungen.",
+  "tr.lang.sub": "Wähle Quell- und Zielsprache, die deine Erkennungs- und Textmodelle unterstützen.",
+  "tr.trig.ios.b1": "Funktioniert in iOS-Apps und Feldern, die Drittanbietertastaturen erlauben.",
+  "tr.pipe.s2.d": "Kompatible Erkennungsmodelle können die gesprochene Sprache automatisch erkennen. Eine eingestellte Quellsprache dient als Hinweis, wenn der Anbieter dies unterstützt.",
+  "tr.pipe.s4.d": "Die fertige Übersetzung wird in ein kompatibles Textfeld eingefügt, etwa in Nachrichten, E-Mails oder Dokumenten.",
+  "why.s.note": "Das Gesagte klarer formulieren und die Bedeutung bewahren: in einem zusammenhängenden Ablauf."
 });
 
-function setLang(lang) {
-  localStorage.setItem('vowrite-lang', lang);
-  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'de' ? 'de' : 'en';
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (lang === 'en') {
-      el.textContent = enDefaults[key] || el.textContent;
-    } else if (i18n[lang] && i18n[lang][key]) {
-      el.textContent = i18n[lang][key];
-    }
-  });
-  // Update dropdown
-  const langNames = { en: 'EN', zh: '中文', de: 'DE' };
-  document.querySelectorAll('.lang-current').forEach(el => el.textContent = langNames[lang] || 'EN');
-  document.querySelectorAll('.lang-menu li').forEach(li => {
-    li.classList.toggle('active', li.getAttribute('data-lang') === lang);
-  });
-  document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.remove('open'));
+function siteHref(href){const m=href.match(/^(?:https?:\/\/vowrite\.com)?\/(index(?:\.html)?|why(?:\.html)?|apps(?:\.html)?|translate(?:\.html)?|pricing(?:\.html)?)?([?#].*)?$/);if(!m)return href;return (m[1]||'index').replace(/\.html$/,'')+'.html'+(m[2]||'');}
+// Translate text leaves without replacing interactive descendants.
+
+const enDefaults = new Map();
+document.querySelectorAll('[data-i18n]').forEach(el => enDefaults.set(el, el.cloneNode(true)));
+const uiCopy={en:{menu:'Menu',language:'Choose language',skip:'Skip to content',compare:'Comparison table; scroll horizontally to see all columns'},zh:{menu:'菜单',language:'选择语言',skip:'跳至正文',compare:'对比表，可横向滚动查看全部列'},de:{menu:'Menü',language:'Sprache wählen',skip:'Zum Inhalt',compare:'Vergleichstabelle; horizontal scrollen für alle Spalten'}};
+function cleanFragment(value){
+ const parsed=new DOMParser().parseFromString(value,'text/html'), fragment=document.createDocumentFragment();
+ function append(node,to){if(node.nodeType===3){to.append(document.createTextNode(node.textContent));return;}if(node.nodeType!==1)return;if(['SCRIPT','STYLE','IFRAME','OBJECT'].includes(node.tagName))return;const allowed=['STRONG','B','EM','I','CODE','BR','KBD','A','SPAN'];const target=allowed.includes(node.tagName)?document.createElement(node.tagName.toLowerCase()):to;if(target!==to){if(node.tagName==='A'){const href=node.getAttribute('href')||'';if(/^(https?:|mailto:|#|\/|[a-z][a-z0-9-]*\.html(?:[?#]|$))/i.test(href))target.setAttribute('href',siteHref(href));}to.append(target);}Array.from(node.childNodes).forEach(child=>append(child,target));}
+ Array.from(parsed.body.childNodes).forEach(node=>append(node,fragment));return fragment;
 }
-
-// Dropdown toggle & selection
-document.addEventListener('click', (e) => {
-  const toggle = e.target.closest('.lang-toggle');
-  if (toggle) {
-    const dd = toggle.closest('.lang-dropdown');
-    dd.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', dd.classList.contains('open'));
-    e.stopPropagation();
-    return;
-  }
-  const li = e.target.closest('.lang-menu li');
-  if (li) {
-    setLang(li.getAttribute('data-lang'));
-    return;
-  }
-  document.querySelectorAll('.lang-dropdown').forEach(d => {
-    d.classList.remove('open');
-    d.querySelector('.lang-toggle')?.setAttribute('aria-expanded', 'false');
-  });
+function closeLanguage(focus=false){document.querySelectorAll('.lang-dropdown').forEach(dd=>{const opened=dd.classList.contains('open');dd.classList.remove('open');dd.querySelector('.lang-toggle').setAttribute('aria-expanded','false');if(focus&&opened)dd.querySelector('.lang-toggle').focus()})}
+function setLang(lang){
+ if(!['en','zh','de'].includes(lang))lang='en';try{localStorage.setItem('vowrite-lang',lang)}catch{}
+ document.documentElement.lang=lang==='zh'?'zh-CN':lang;
+ document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n,original=enDefaults.get(el);if(lang==='en'||!i18n[lang]?.[key]){if(original)el.replaceChildren(...Array.from(original.childNodes).map(n=>n.cloneNode(true)));}else{el.replaceChildren(cleanFragment(i18n[lang][key]));}});
+ document.querySelectorAll('.lang-current').forEach(el=>el.textContent={en:'EN',zh:'中文',de:'DE'}[lang]);
+ document.querySelectorAll('.lang-menu li').forEach(el=>{const selected=el.dataset.lang===lang;el.classList.toggle('active',selected);el.setAttribute('aria-selected',String(selected));el.tabIndex=selected?0:-1;});
+ document.querySelectorAll('.lang-toggle').forEach(el=>el.setAttribute('aria-label',uiCopy[lang].language));document.querySelector('.nav-menu-toggle').setAttribute('aria-label',uiCopy[lang].menu);document.querySelector('.skip-link').textContent=uiCopy[lang].skip;document.querySelectorAll('.compare-table-wrap,.table-wrap').forEach(el=>el.setAttribute('aria-label',uiCopy[lang].compare));closeLanguage();document.dispatchEvent(new Event('vowrite-language-change'));
+}
+const menuButton=document.querySelector('.nav-menu-toggle'),navInner=document.querySelector('.nav-inner'),navLinks=document.querySelector('.nav-links');
+function closeNavigation(focus=false){navInner.classList.remove('menu-open');menuButton.setAttribute('aria-expanded','false');closeLanguage();if(focus)menuButton.focus();}
+menuButton.addEventListener('click',()=>{const open=navInner.classList.toggle('menu-open');menuButton.setAttribute('aria-expanded',String(open));if(!open)closeLanguage()});
+navLinks.addEventListener('click',event=>{if(event.target.closest('a'))closeNavigation()});
+function openLanguage(dd){const open=!dd.classList.contains('open');closeLanguage();if(open){dd.classList.add('open');dd.querySelector('.lang-toggle').setAttribute('aria-expanded','true');dd.querySelector('[aria-selected=true]')?.focus()}}
+document.addEventListener('click',event=>{const toggle=event.target.closest('.lang-toggle');if(toggle){openLanguage(toggle.closest('.lang-dropdown'));return;}const option=event.target.closest('.lang-menu [data-lang]');if(option){setLang(option.dataset.lang);option.closest('.lang-dropdown').querySelector('.lang-toggle').focus();return;}if(!event.target.closest('.lang-dropdown'))closeLanguage();if(!event.target.closest('.nav'))closeNavigation();});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'){if(document.querySelector('.lang-dropdown.open')){event.preventDefault();closeLanguage(true);}else if(navInner.classList.contains('menu-open')){event.preventDefault();closeNavigation(true);}return;}
+ const toggle=event.target.closest('.lang-toggle');if(toggle&&['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();if(!toggle.closest('.lang-dropdown').classList.contains('open'))openLanguage(toggle.closest('.lang-dropdown'));return;}
+ const option=event.target.closest('.lang-menu [data-lang]');if(!option)return;
+ if(['Enter',' '].includes(event.key)){event.preventDefault();setLang(option.dataset.lang);option.closest('.lang-dropdown').querySelector('.lang-toggle').focus();return;}
+ const all=Array.from(option.parentNode.children),i=all.indexOf(option);let next;
+ if(event.key==='ArrowDown')next=(i+1)%all.length;if(event.key==='ArrowUp')next=(i+all.length-1)%all.length;if(event.key==='Home')next=0;if(event.key==='End')next=all.length-1;
+ if(next!==undefined){event.preventDefault();all.forEach(el=>el.tabIndex=-1);all[next].tabIndex=0;all[next].focus();}
 });
-
-// Scroll fade-in observer
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('visible');
-      observer.unobserve(e.target);
-    }
-  });
-}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
-// Load saved language preference
-const savedLang = localStorage.getItem('vowrite-lang');
-if (savedLang && savedLang !== 'en') { setLang(savedLang); }
+document.addEventListener('focusin',event=>{if(!event.target.closest('.lang-dropdown'))closeLanguage()});
+matchMedia('(min-width:1024px)').addEventListener('change',()=>closeNavigation());
+const fades=document.querySelectorAll('.fade-in');if('IntersectionObserver' in window&&!matchMedia('(prefers-reduced-motion:reduce)').matches){const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target)}}),{threshold:.1});fades.forEach(el=>observer.observe(el));}else fades.forEach(el=>el.classList.add('visible'));
+document.documentElement.classList.add('js-enabled');
+let saved=(navigator.language||'en').split('-')[0];try{saved=localStorage.getItem('vowrite-lang')||saved}catch{}setLang(saved);

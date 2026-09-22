@@ -1,524 +1,1062 @@
 <!DOCTYPE html>
+
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vowrite — AI Voice Input for Mac | Say it once. Mean it perfectly.</title>
-  <meta name="description" content="Smart AI voice input for Mac. Speak naturally, get clean text at your cursor instantly. Free, open source, 20+ AI providers. Say it once. Mean it perfectly.">
-  <meta name="keywords" content="AI voice input, voice to text mac, AI dictation, speech to text, smart voice keyboard, voice typing app, 语音输入法, AI语音输入, mac语音转文字">
-  <link rel="canonical" href="https://vowrite.com/">
+<head><meta charset="utf-8"/>
+<style>/* OD-LAYOUT-PRIMITIVES v1 — structure only: display, flex/grid, overflow, wrapping, ratio.
+   Put this @layer first; product CSS outside the layer always wins. */
+@layer od-layout {
+  :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
 
-  <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://vowrite.com">
-  <meta property="og:title" content="Vowrite — AI Voice Input for Mac">
-  <meta property="og:description" content="Speak naturally, get clean text instantly. Smart AI voice input that works in any app. 20+ AI providers.">
-  <meta property="og:image" content="https://vowrite.com/og-image.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:site_name" content="Vowrite">
+  /* containers */
+  .od-stack   { display: flex; flex-direction: column; gap: var(--od-gap, 8px); }
+  .od-row     { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+  .od-row-top { display: flex; align-items: flex-start; gap: var(--od-gap, 8px); }
+  .od-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--od-gap, 8px); }
+  .od-fill    { flex: 1 1 0; min-width: 0; }
+  .od-fixed   { flex: none; }
+  .od-grid    { display: grid; gap: var(--od-gap, 12px); grid-template-columns: repeat(var(--od-cols, 3), minmax(0, 1fr)); }
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Vowrite — AI Voice Input for Mac">
-  <meta name="twitter:description" content="Speak naturally, get clean text instantly. Smart AI voice input that works in any app. 20+ AI providers.">
-  <meta name="twitter:image" content="https://vowrite.com/og-image.png">
+  /* stacked information: each piece is its own line — never sibling inline spans */
+  .od-stat, .od-field, .od-cell { display: grid; gap: var(--od-gap, 2px); }
+  :where(.od-stat,.od-field,.od-cell) > :where(*) { display: block; }
+  .od-tile { display: grid; grid-template-rows: auto 1fr; }
+  :where(.od-tile) > :where(*) { display: block; }
 
-  <!-- JSON-LD Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Vowrite",
-    "operatingSystem": "macOS 14+",
-    "applicationCategory": "UtilitiesApplication",
-    "description": "Smart AI voice input for Mac. Speak naturally, get clean text instantly. 20+ AI providers.",
-    "url": "https://vowrite.com",
-    "downloadUrl": "https://github.com/Joevonlong/Vowrite/releases/latest",
-    "softwareVersion": "0.2.3.0",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "screenshot": "https://vowrite.com/app-icon-256.png",
-    "image": "https://vowrite.com/app-icon-256.png"
-  }
-  </script>
+  /* media keeps its intrinsic ratio by default; never a distorted or cropped
+     cover by accident. height:auto lets the ratio win over an <img height="…">
+     attribute. Cropping to a uniform box is an explicit opt-in: set --od-ratio
+     AND add .od-media-cover together (per the core rule, only where a crop is
+     deliberate — tile thumbs, decorative fills — never on full-frame content). */
+  .od-media { display: block; width: 100%; height: auto; aspect-ratio: var(--od-ratio, auto); }
+  .od-media-cover { object-fit: cover; }
 
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="icon" type="image/png" href="app-icon-128.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+  /* data text only — authored copy is rewritten to its budget instead */
+  .od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .od-clamp-2, .od-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .od-clamp-2 { -webkit-line-clamp: 2; }
+  .od-clamp-3 { -webkit-line-clamp: 3; }
+  .od-lines-2 { min-height: calc(2 * 1.4em); }   /* block-level reservation for a shared baseline */
+  .od-nowrap  { white-space: nowrap; }           /* 数字+单位 · 价格+起 · 日期+星期 */
+  .od-keep    { word-break: keep-all; overflow-wrap: anywhere; } /* CJK labels break at spaces / <wbr> first */
 
-  <!-- Nav -->
-  <header>
-    <nav class="nav" aria-label="Main navigation">
-      <div class="container nav-inner">
-        <a href="/" class="logo"><img src="app-icon-64.png" alt="Vowrite app icon" class="logo-icon"> Vowrite</a>
-        <div class="nav-links">
-          <a href="/why" class="nav-why" data-i18n="nav.why">Why Vowrite</a>
-          <a href="/translate" class="nav-translate" data-i18n="nav.translate">Translate</a>
-          <a href="/apps" data-i18n="nav.apps">Apps</a>
-          <a href="/pricing" data-i18n="nav.pricing">Pricing</a>
-          <a href="/#features" data-i18n="nav.features">Features</a>
-          <a href="/#how-it-works" data-i18n="nav.how">How It Works</a>
-          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-small" data-i18n="nav.download">Download</a>
-          <div class="lang-dropdown">
-            <button class="lang-toggle" aria-haspopup="listbox" aria-expanded="false">
-              <span class="lang-icon">🌐</span>
-              <span class="lang-current">EN</span>
-              <span class="lang-arrow">▾</span>
-            </button>
-            <ul class="lang-menu" role="listbox">
-              <li role="option" data-lang="en" class="active">English</li>
-              <li role="option" data-lang="zh">中文</li>
-              <li role="option" data-lang="de">Deutsch</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </nav>
-  </header>
+  /* screen skeleton (optional): bars take their own space, the middle scrolls — no padding guessed for chrome */
+  .od-screen { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; }
+  .od-scroll { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
 
-  <main>
+  /* horizontal rail: the next item peeks at the edge; trailing room survives overflow */
+  .od-rail { display: flex; gap: var(--od-gap, 8px); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+             padding-inline: var(--od-rail-pad, 16px); scroll-padding-inline: var(--od-rail-pad, 16px); }
+  .od-rail::-webkit-scrollbar { display: none; }
+  :where(.od-rail) > :where(*) { flex: none; scroll-snap-align: start; }
+  :where(.od-rail) > :where(:last-child) { margin-inline-end: var(--od-rail-pad, 16px); }
 
-    <!-- Hero -->
-    <section class="hero">
-      <div class="container">
-        <div class="badge" data-i18n="hero.badge">Open Source · Free · macOS 14+</div>
-        <h1 data-i18n="hero.title">Say it once. Mean it perfectly.</h1>
-        <p class="hero-sub" data-i18n="hero.sub">AI-powered voice input for Mac. Speak naturally, get clean text instantly. 20+ providers — including true offline options — with built-in translation and per-app Modes.</p>
-        <div class="hero-actions">
-          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary">
-            <span class="btn-icon">⬇</span> <span data-i18n="hero.dl">Download for Mac</span>
-          </a>
-          <a href="https://github.com/Joevonlong/Vowrite" class="btn btn-secondary" data-i18n="hero.github">View on GitHub</a>
-        </div>
+  .od-spacer { flex: none; visibility: hidden; pointer-events: none; }
+  .od-touch  { min-width: 44px; min-height: 44px; }
+}
+/* /OD-LAYOUT-PRIMITIVES v1 */
+</style>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vowrite — AI voice input for Mac</title>
+<meta content="Free, open-source AI voice input for macOS. Dictate, refine and translate into compatible text fields with your chosen providers." name="description"/>
+<meta content="AI voice input, voice to text mac, AI dictation, speech to text, smart voice keyboard, voice typing app, 语音输入法, AI语音输入, mac语音转文字" name="keywords"/>
+<link href="https://vowrite.com/" rel="canonical"/>
+<!-- Open Graph -->
+<meta content="website" property="og:type"/>
+<meta content="https://vowrite.com" property="og:url"/>
+<meta content="Vowrite — AI voice input for Mac" property="og:title"/>
+<meta content="Free, open-source AI voice input for macOS. Dictate, refine and translate into compatible text fields with your chosen providers." property="og:description"/>
+<meta content="https://vowrite.com/og-image.png" property="og:image"/>
+<meta content="1200" property="og:image:width"/>
+<meta content="630" property="og:image:height"/>
+<meta content="Vowrite" property="og:site_name"/>
+<!-- Twitter Card -->
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Vowrite — AI voice input for Mac" name="twitter:title"/>
+<meta content="Free, open-source AI voice input for macOS. Dictate, refine and translate into compatible text fields with your chosen providers." name="twitter:description"/>
+<meta content="https://vowrite.com/og-image.png" name="twitter:image"/>
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Vowrite",
+  "operatingSystem": "macOS 14+",
+  "applicationCategory": "UtilitiesApplication",
+  "description": "Free, open-source AI voice input for macOS. Dictate, refine and translate into compatible text fields with your chosen providers.",
+  "url": "https://vowrite.com",
+  "downloadUrl": "https://github.com/Joevonlong/Vowrite/releases/latest",
+  "softwareVersion": "0.2.3.0",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "screenshot": "https://vowrite.com/app-icon-256.png",
+  "image": "https://vowrite.com/app-icon-256.png"
+}</script>
+<link href="favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="app-icon-128.png" rel="icon" type="image/png"/>
+<link href="apple-touch-icon.png" rel="apple-touch-icon"/>
+<link href="style.css" rel="stylesheet"/><noscript><style>.fade-in,.flow-animate{opacity:1!important;transform:none!important;animation:none!important}.nav-menu-toggle,.lang-dropdown{display:none!important}.nav-links{display:flex!important}</style></noscript></head>
+<body class="vw-site va-site vw-home va-index"><a class="skip-link" href="#main">Skip to content</a>
+<!-- Nav -->
+<header>
+<nav aria-label="Main navigation" class="nav">
+<div class="container nav-inner">
+<a aria-current="page" class="logo" href="index.html"><img alt="Vowrite app icon" class="logo-icon" height="64" src="app-icon-64.png" width="64"/> Vowrite</a>
+<button aria-controls="site-navigation" aria-expanded="false" aria-label="Menu" class="nav-menu-toggle" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button><div class="nav-links" id="site-navigation"><a data-i18n="nav.features" href="index.html#features">Features</a><a data-i18n="nav.why" href="why.html">Why Vowrite</a><a data-i18n="nav.apps" href="apps.html">Apps</a><a data-i18n="nav.translate" href="translate.html">Translate</a><a data-i18n="nav.pricing" href="pricing.html">Usage</a><a class="btn btn-small" data-i18n="nav.download" href="index.html#download">Download</a></div>
+<div class="vh-header-actions"><a aria-label="Vowrite on GitHub" class="vh-github" href="https://github.com/Joevonlong/Vowrite" title="GitHub"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M12 .297C5.37.297 0 5.67 0 12.297c0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.043-1.61-4.043-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.084 1.838 1.237 1.838 1.237 1.07 1.835 2.809 1.305 3.493.998.108-.776.418-1.305.762-1.605-2.665-.305-5.467-1.334-5.467-5.93 0-1.31.469-2.38 1.236-3.22-.124-.303-.536-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.52 11.52 0 0 1 3.003-.404c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.655 1.652.243 2.873.12 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.622-5.479 5.92.43.372.823 1.102.823 2.222 0 1.606-.015 2.898-.015 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="currentColor"></path></svg></a> <div class="lang-dropdown">
+<button aria-controls="language-options" aria-expanded="false" aria-haspopup="listbox" aria-label="Choose language" class="lang-toggle" type="button">
+<span class="lang-current">EN</span>
+<svg aria-hidden="true" class="lang-arrow" viewbox="0 0 16 16"><path d="m4 6 4 4 4-4"></path></svg>
+</button>
+<ul aria-label="Language" class="lang-menu" id="language-options" role="listbox">
+<li aria-selected="true" class="active" data-lang="en" role="option" tabindex="0"><span>English</span><small>EN</small></li>
+<li aria-selected="false" data-lang="zh" role="option" tabindex="-1"><span>中文</span><small>ZH</small></li>
+<li aria-selected="false" data-lang="de" role="option" tabindex="-1"><span>Deutsch</span><small>DE</small></li>
+</ul>
+</div></div>
+</div>
+</nav>
+</header>
+<main id="main">
+<!-- Hero -->
+<section class="hero">
+<div class="container">
+<div class="vh-benefits"><span data-vh="free">Free app</span><span aria-hidden="true" class="vh-separator">/</span><a data-vh="open" href="https://github.com/Joevonlong/Vowrite">Open source</a></div>
+<h1 class="vh-title" data-vh="title">AI voice input.</h1>
+<p class="hero-sub" data-vh="sub">Speak naturally. Turn your thoughts into clear text, right where you write.</p>
+<div class="hero-actions">
+<a class="btn btn-primary" href="https://github.com/Joevonlong/Vowrite/releases/latest">
+<span class="btn-icon">⬇</span> <span data-i18n="hero.dl">Download for Mac</span>
+</a>
+<a class="vh-demo-link" href="#live-demo"><span data-vh="demo">Try the demo</span><span aria-hidden="true">↗</span></a>
+</div><p class="site-requirements" data-i18n="site.requirements">macOS 14+ · Apple Silicon · Free app, provider usage billed separately</p><p class="site-onboarding"><a data-i18n="site.onboarding" href="apps.html#mac">Download → Install → Add provider keys → Try your first dictation</a></p>
+<div class="vw-demo" data-refined="true" data-vw-demo="" id="live-demo"><p>Notes · Email · Chat</p><p>Speak → Transcribe → Polish → Insert</p><p>Enable JavaScript to play the interactive example. No microphone is used.</p></div>
+</div></section>
+<!-- Features -->
+<div id="features"></div><section class="vc-section" id="dictation"><div class="container vc-layout"><div class="vc-copy"><h2 data-hc="dictTitle">Your words. Straight to text.</h2><p data-hc="dictDesc">Just want to dictate? Turn speech into text without asking AI to rewrite your wording.</p></div><div class="vc-window"><div class="vc-chrome"><strong>Vowrite / Dictation</strong><span data-hc="sample">Preset example · no recording</span></div><div class="vc-body od-stack"><blockquote data-hc="raw">“Let’s meet on Thursday at ten.”</blockquote><p aria-live="polite" class="vc-paper" data-hc-dict-output="">…</p><button class="va-btn" data-hc-dict="" type="button">Show dictation</button></div></div></div></section><div class="container"><details class="hc-details"><summary data-i18n="site.allFeatures">All features and the voice workflow</summary><section class="features" id="feature-details">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="feat.title">Your input butler</h2>
+<p class="section-sub fade-in" data-i18n="feat.sub">You speak. Vowrite handles the rest.</p>
+<div class="features-grid">
+<div class="feature-card fade-in">
+<div class="feature-icon">✨</div>
+<h3 data-i18n="feat.clean.t">Smart cleanup</h3>
+<p data-i18n="feat.clean.d">Filler words gone, grammar fixed, punctuation added — and your personal vocabulary auto-corrects itself as you keep dictating.</p>
+</div>
+<div class="feature-card fade-in">
+<div class="feature-icon">📋</div>
+<h3 data-i18n="feat.works.t">Works everywhere</h3>
+<p data-i18n="feat.works.d">Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.</p>
+</div>
+<div class="feature-card fade-in">
+<div class="feature-icon">🔑</div>
+<h3 data-i18n="feat.choice.t">Your AI, your choice</h3>
+<p data-i18n="feat.choice.d">Bring your own API key. Pick from 20+ providers or plug in your own. No subscriptions, no lock-in.</p>
+</div>
+<div class="feature-card fade-in">
+<div class="feature-icon">⚡</div>
+<h3 data-i18n="feat.fast.t">Blazing fast</h3>
+<p data-i18n="feat.fast.d">Speculative polish pre-warms connections during recording. Response time depends on the provider, network and recording length.</p>
+</div>
+<div class="feature-card fade-in">
+<div class="feature-icon">🌐</div>
+<h3 data-i18n="feat.translate.t">Voice translation</h3>
+<p data-i18n="feat.translate.d">Translate between languages supported by your chosen recognition and text models. Use the Mac translation shortcut or the iOS keyboard gesture without changing your Mode. <a data-i18n="feat.translate.link" href="translate.html">Learn more →</a></p>
+</div>
+<div class="feature-card fade-in">
+<div class="feature-icon">📑</div>
+<h3 data-i18n="feat.cmd.t">Command templates</h3>
+<p data-i18n="feat.cmd.d">15 built-in commands — Improve, Fix Grammar, TL;DR, Make Professional, and more — applied straight to your selected text.</p>
+</div>
+<div class="feature-card fade-in">
+<div class="feature-icon">🎯</div>
+<h3 data-i18n="feat.perapp.t">Per-app Modes</h3>
+<p data-i18n="feat.perapp.d">Vowrite senses the app in front of you and switches Mode automatically — Slack stays casual, your editor stays code-flavored. Manual switches always win.</p>
+</div>
+<div class="feature-card fade-in">
+<div class="feature-icon">📄</div>
+<h3 data-i18n="feat.md.t">Markdown &amp; output styles</h3>
+<p data-i18n="feat.md.d">Built-in Markdown formatting plus 7 more Output Styles — bullet lists, headings, and code blocks land exactly right, per Mode.</p>
+</div>
+</div>
+</div>
+</section><section class="how-it-works" id="how-it-works">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="how.title">Three steps. From voice to text.</h2>
+<p class="section-sub fade-in" data-i18n="how.sub">Record, transcribe and refine, then insert.</p>
+<div class="steps fade-in">
+<div class="step">
+<div class="step-number">1</div>
+<h3 data-i18n="how.s1.t">Speak</h3>
+<p><span data-i18n="how.s1.d">Press</span> <kbd>⌥ Space</kbd> <span data-i18n="how.s1.d2">and talk. Say as much as you need.</span></p>
+</div>
+<div class="step-arrow">→</div>
+<div class="step">
+<div class="step-number">2</div>
+<h3 data-i18n="how.s2.t">Clean</h3>
+<p data-i18n="how.s2.d">AI transcribes and polishes. Filler words vanish, punctuation appears.</p>
+</div>
+<div class="step-arrow">→</div>
+<div class="step">
+<div class="step-number">3</div>
+<h3 data-i18n="how.s3.t">Done</h3>
+<p data-i18n="how.s3.d">Clean text inserted at your cursor. No paste, no switching apps. Keep working.</p>
+</div>
+</div>
+</div>
+</section></details><details class="hc-details"><summary data-i18n="site.overview">About Vowrite</summary><section class="site-overview">
+<div class="container">
+<div class="badge" data-i18n="hero.badge">Open Source · Free · macOS 14+</div>
+<h2 data-i18n="hero.title">Say it once. Mean it perfectly.</h2>
+<p class="hero-sub" data-i18n="hero.sub">AI voice input for Mac, with built-in translation, per-app Modes and 20+ provider integrations. Use cloud recognition and cloud or local text refinement.</p>
+<div class="hero-actions">
+<a class="btn btn-primary" href="https://github.com/Joevonlong/Vowrite/releases/latest">
+<span class="btn-icon">⬇</span> <span data-i18n="hero.dl">Download for Mac</span>
+</a>
+<a class="btn btn-secondary" data-i18n="hero.github" href="https://github.com/Joevonlong/Vowrite">View on GitHub</a>
+</div>
+<!-- Animated flow -->
+<div class="hero-flow">
+<div class="flow-step flow-animate" style="--delay: 0s">
+<span class="flow-key">⌥ Space</span>
+</div>
+<div class="flow-arrow flow-animate" style="--delay: 0.3s">→</div>
+<div class="flow-step flow-animate" style="--delay: 0.6s">
+<span class="flow-emoji">🎤</span>
+<span class="flow-label" data-i18n="flow.speak">Speak</span>
+</div>
+<div class="flow-arrow flow-animate" style="--delay: 0.9s">→</div>
+<div class="flow-step flow-animate" style="--delay: 1.2s">
+<span class="flow-emoji">✨</span>
+<span class="flow-label" data-i18n="flow.clean">Clean</span>
+</div>
+<div class="flow-arrow flow-animate" style="--delay: 1.5s">→</div>
+<div class="flow-step flow-animate" style="--delay: 1.8s">
+<span class="flow-emoji">📋</span>
+<span class="flow-label" data-i18n="flow.done">Done</span>
+</div>
+</div>
+</div>
+</section></details></div><section class="vc-section" id="cleanup"><div class="container"><div class="vc-layout"><div class="vc-copy"><div class="vc-eyebrow"><span data-vc-text="labels.0">SAY IT</span></div><h2 data-vc-text="heads.0">A thought. A finished draft.</h2><p data-vc-text="desc.0">Speak naturally. Turn pauses and repeated words into a message that is ready to use.</p></div><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-clean"><p>Let’s meet Thursday at 10. Bring the updated design!</p></div></div></div></div></section>
+<section class="vc-section" id="expression"><div class="container"><div class="vc-layout"><div class="vc-copy"><div class="vc-eyebrow"><span data-vc-text="labels.1">MAKE IT YOURS</span></div><h2 data-vc-text="heads.1">The right words, wherever you write.</h2><p data-vc-text="desc.1">A quick reply, a thoughtful email, a tidy note. Try the same thought in three different places.</p></div><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-style"><p>Hi team,
 
-        <!-- Animated flow -->
-        <div class="hero-flow">
-          <div class="flow-step flow-animate" style="--delay: 0s">
-            <span class="flow-key">⌥ Space</span>
-          </div>
-          <div class="flow-arrow flow-animate" style="--delay: 0.3s">→</div>
-          <div class="flow-step flow-animate" style="--delay: 0.6s">
-            <span class="flow-emoji">🎤</span>
-            <span class="flow-label" data-i18n="flow.speak">Speak</span>
-          </div>
-          <div class="flow-arrow flow-animate" style="--delay: 0.9s">→</div>
-          <div class="flow-step flow-animate" style="--delay: 1.2s">
-            <span class="flow-emoji">✨</span>
-            <span class="flow-label" data-i18n="flow.clean">Clean</span>
-          </div>
-          <div class="flow-arrow flow-animate" style="--delay: 1.5s">→</div>
-          <div class="flow-step flow-animate" style="--delay: 1.8s">
-            <span class="flow-emoji">📋</span>
-            <span class="flow-label" data-i18n="flow.done">Done</span>
-          </div>
-        </div>
-      </div>
-    </section>
+Let’s meet Thursday at 10 to review the updated design. Please bring the latest version.
 
-    <!-- Features -->
-    <section id="features" class="features">
-      <div class="container">
-        <h2 class="section-title fade-in" data-i18n="feat.title">Your input butler</h2>
-        <p class="section-sub fade-in" data-i18n="feat.sub">You speak. Vowrite handles the rest.</p>
-        <div class="features-grid">
-          <div class="feature-card fade-in">
-            <div class="feature-icon">✨</div>
-            <h3 data-i18n="feat.clean.t">Smart cleanup</h3>
-            <p data-i18n="feat.clean.d">Filler words gone, grammar fixed, punctuation added — and your personal vocabulary auto-corrects itself as you keep dictating.</p>
-          </div>
-          <div class="feature-card fade-in">
-            <div class="feature-icon">📋</div>
-            <h3 data-i18n="feat.works.t">Works everywhere</h3>
-            <p data-i18n="feat.works.d">Text lands right at your cursor — any app, any text field. If you can type there, Vowrite works there.</p>
-          </div>
-          <div class="feature-card fade-in">
-            <div class="feature-icon">🔑</div>
-            <h3 data-i18n="feat.choice.t">Your AI, your choice</h3>
-            <p data-i18n="feat.choice.d">Bring your own API key. Pick from 20+ providers or plug in your own. No subscriptions, no lock-in.</p>
-          </div>
-          <div class="feature-card fade-in">
-            <div class="feature-icon">⚡</div>
-            <h3 data-i18n="feat.fast.t">Blazing fast</h3>
-            <p data-i18n="feat.fast.d">Speculative LLM pre-warms connections during recording. Polished text in ~1.5 seconds.</p>
-          </div>
-          <div class="feature-card fade-in">
-            <div class="feature-icon">🌐</div>
-            <h3 data-i18n="feat.translate.t">Voice translation</h3>
-            <p data-i18n="feat.translate.d">Speak any language, output any language. Dedicated hotkey on Mac, long-press arc on iOS — no Mode switching. <a href="/translate" style="color: var(--accent-warm); font-weight: 600;" data-i18n="feat.translate.link">Learn more →</a></p>
-          </div>
-          <div class="feature-card fade-in">
-            <div class="feature-icon">📑</div>
-            <h3 data-i18n="feat.cmd.t">Command templates</h3>
-            <p data-i18n="feat.cmd.d">15 built-in commands — Improve, Fix Grammar, TL;DR, Make Professional, and more — applied straight to your selected text.</p>
-          </div>
-          <div class="feature-card fade-in">
-            <div class="feature-icon">🎯</div>
-            <h3 data-i18n="feat.perapp.t">Per-app Modes</h3>
-            <p data-i18n="feat.perapp.d">Vowrite senses the app in front of you and switches Mode automatically — Slack stays casual, your editor stays code-flavored. Manual switches always win.</p>
-          </div>
-          <div class="feature-card fade-in">
-            <div class="feature-icon">📄</div>
-            <h3 data-i18n="feat.md.t">Markdown & output styles</h3>
-            <p data-i18n="feat.md.d">Built-in Markdown formatting plus 7 more Output Styles — bullet lists, headings, and code blocks land exactly right, per Mode.</p>
-          </div>
-        </div>
-      </div>
-    </section>
+Thank you!</p></div></div></div></div><div class="container"><details class="hc-details"><summary><span data-hc="templates">More possibilities</span></summary><div class="vw-future" data-demo-slot="command-templates"><span class="vw-kicker" data-vw-copy="futureLabel">Command templates and output styles</span><h3 data-vw-copy="futureTitle">More ways to use your voice.</h3><p data-vw-copy="futureBody">Use command templates on selected text, customize each Mode’s prompt, and choose Markdown or another output style.</p><div class="vw-sequence"><span>01 · <span data-vw-copy="mode">Email writing style</span></span><span>02 · <span data-vw-copy="start">Start speaking</span></span><span>03 · <span data-vw-copy="finish">View result</span></span></div><a class="vw-link" href="index.html#features"><span data-vw-copy="back">Back to the homepage</span> →</a></div></details></div></section>
+<section class="vc-section" id="translation"><div class="container"><div class="vc-layout"><div class="vc-copy"><div class="vc-eyebrow"><span data-vc-text="labels.2">GO FURTHER</span></div><h2 data-vc-text="heads.2">Your voice. Another language.</h2><p data-vc-text="desc.2">Switch the output language and see your message take shape. Keep the conversation moving.</p></div><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-translate"><p>Design review
 
-    <!-- How it works -->
-    <section id="how-it-works" class="how-it-works">
-      <div class="container">
-        <h2 class="section-title fade-in" data-i18n="how.title">Three steps. Two seconds.</h2>
-        <p class="section-sub fade-in" data-i18n="how.sub">From thought to polished text, instantly.</p>
-        <div class="steps fade-in">
-          <div class="step">
-            <div class="step-number">1</div>
-            <h3 data-i18n="how.s1.t">Speak</h3>
-            <p><span data-i18n="how.s1.d">Press</span> <kbd>⌥ Space</kbd> <span data-i18n="how.s1.d2">and talk. Say as much as you need.</span></p>
-          </div>
-          <div class="step-arrow">→</div>
-          <div class="step">
-            <div class="step-number">2</div>
-            <h3 data-i18n="how.s2.t">Clean</h3>
-            <p data-i18n="how.s2.d">AI transcribes and polishes. Filler words vanish, punctuation appears.</p>
-          </div>
-          <div class="step-arrow">→</div>
-          <div class="step">
-            <div class="step-number">3</div>
-            <h3 data-i18n="how.s3.t">Done</h3>
-            <p data-i18n="how.s3.d">Clean text inserted at your cursor. No paste, no switching apps. Keep working.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Providers -->
-    <section id="providers" class="providers">
-      <div class="container">
-        <h2 class="section-title fade-in" data-i18n="prov.title">Your AI, your rules</h2>
-        <p class="section-sub fade-in" data-i18n="prov.sub">Pair any speech-to-text engine with any polish model. Bring your own keys.</p>
-
-        <!-- Pipeline diagram: STT → Polish → Output -->
-        <div class="combo-pipeline fade-in" aria-hidden="true">
-          <div class="cp-node cp-node-stt">
-            <div class="cp-node-icon">🎙️</div>
-            <div class="cp-node-label" data-i18n="prov.cp.stt">Speech → Text</div>
-          </div>
-          <div class="cp-arrow"><svg viewBox="0 0 56 14" xmlns="http://www.w3.org/2000/svg"><path d="M0 7 H46 M40 1 L48 7 L40 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="cp-node cp-node-llm">
-            <div class="cp-node-icon">✨</div>
-            <div class="cp-node-label" data-i18n="prov.cp.llm">Polish & Format</div>
-          </div>
-          <div class="cp-arrow"><svg viewBox="0 0 56 14" xmlns="http://www.w3.org/2000/svg"><path d="M0 7 H46 M40 1 L48 7 L40 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="cp-node cp-node-out">
-            <div class="cp-node-icon">📋</div>
-            <div class="cp-node-label" data-i18n="prov.cp.out">Cursor</div>
-          </div>
-        </div>
-
-        <!-- Hero combo: Recommended pairing -->
-        <div class="combo-hero fade-in">
-          <div class="combo-hero-badge" data-i18n="prov.combo.badge">★ Recommended combo</div>
-          <div class="combo-hero-row">
-            <div class="combo-side">
-              <div class="combo-role" data-i18n="prov.cp.stt">Speech → Text</div>
-              <div class="combo-logo combo-logo-groq" aria-hidden="true">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M13.42 2.92 6.534 12.91l5.339.484-1.229 6.965 6.886-9.99-5.339-.484z"/></svg>
-              </div>
-              <div class="combo-name">Groq</div>
-              <div class="combo-model">whisper-large-v3-turbo</div>
-              <div class="combo-spec" data-i18n="prov.combo.groq.spec">~200 ms · free tier</div>
-            </div>
-            <div class="combo-hero-arrow" aria-hidden="true">
-              <svg viewBox="0 0 64 24" xmlns="http://www.w3.org/2000/svg"><path d="M2 12 H54 M46 4 L56 12 L46 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="combo-side">
-              <div class="combo-role" data-i18n="prov.cp.llm">Polish & Format</div>
-              <div class="combo-logo combo-logo-deepseek" aria-hidden="true">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45"/></svg>
-              </div>
-              <div class="combo-name">DeepSeek</div>
-              <div class="combo-model">deepseek-v4-flash</div>
-              <div class="combo-spec" data-i18n="prov.combo.ds.spec">~$0.14 / M · streaming</div>
-            </div>
-          </div>
-          <p class="combo-hero-foot" data-i18n="prov.combo.foot">Why this combo? Groq's free Whisper tier transcribes in ~200 ms, then DeepSeek polishes it for cents — fast, accurate, the cheapest serious setup we've found.</p>
-        </div>
-
-        <!-- Provider grid -->
-        <h3 class="provider-grid-title fade-in" data-i18n="prov.grid.title">Or pick from 20+ providers</h3>
-        <div class="provider-grid fade-in">
-          <div class="provider-card" data-role="both">
-            <div class="provider-logo provider-logo-openai" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></div>
-            <div class="provider-name">OpenAI</div>
-            <div class="provider-detail">gpt-4o-mini-transcribe · gpt-5.4-mini</div>
-            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
-            <div class="provider-badge" data-i18n="prov.allone">All-in-One</div>
-          </div>
-          <div class="provider-card" data-role="stt">
-            <div class="provider-logo provider-logo-deepgram" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"/></svg></div>
-            <div class="provider-name">Deepgram</div>
-            <div class="provider-detail">Nova-3 · WebSocket</div>
-            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span></div>
-            <div class="provider-badge" data-i18n="prov.multilang">36+ Languages</div>
-          </div>
-          <div class="provider-card" data-role="llm">
-            <div class="provider-logo provider-logo-gemini" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg></div>
-            <div class="provider-name">Gemini</div>
-            <div class="provider-detail">gemini-2.5-flash</div>
-            <div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
-            <div class="provider-badge">Google</div>
-          </div>
-          <div class="provider-card" data-role="llm">
-            <div class="provider-logo provider-logo-claude" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"/></svg></div>
-            <div class="provider-name">Claude</div>
-            <div class="provider-detail">claude-sonnet-5 · SSE</div>
-            <div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
-            <div class="provider-badge">Anthropic</div>
-          </div>
-          <div class="provider-card" data-role="stt">
-            <div class="provider-logo provider-logo-iflytek" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M2 11.2h2v1.6H2zm3.6-2.8h2v7.2h-2zm3.6-2h2v11.2h-2zm3.6 1.6h2v8h-2zm3.6 2.4h2v3.2h-2zm3.6 1h2v1.2h-2z"/></svg></div>
-            <div class="provider-name" data-i18n="prov.iflytek">iFlytek</div>
-            <div class="provider-detail" data-i18n="prov.iflytekd">23 Chinese dialects</div>
-            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span></div>
-            <div class="provider-badge" data-i18n="prov.dialects">Dialect Support</div>
-          </div>
-          <div class="provider-card" data-role="stt">
-            <div class="provider-logo provider-logo-mlx" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg></div>
-            <div class="provider-name">MLX Server</div>
-            <div class="provider-detail" data-i18n="prov.mlxd">Apple Silicon · no API key</div>
-            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span></div>
-            <div class="provider-badge" data-i18n="prov.local">100% Local</div>
-          </div>
-          <div class="provider-card" data-role="llm">
-            <div class="provider-logo provider-logo-ollama" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M16.361 10.26a.894.894 0 0 0-.558.47l-.072.148.001.207c0 .193.004.217.059.353.076.193.152.312.291.448.24.238.51.3.872.205a.86.86 0 0 0 .517-.436.752.752 0 0 0 .08-.498c-.064-.453-.33-.782-.724-.897a1.06 1.06 0 0 0-.466 0zm-9.203.005c-.305.096-.533.32-.65.639a1.187 1.187 0 0 0-.06.52c.057.309.31.59.598.667.362.095.632.033.872-.205.14-.136.215-.255.291-.448.055-.136.059-.16.059-.353l.001-.207-.072-.148a.894.894 0 0 0-.565-.472 1.02 1.02 0 0 0-.474.007Zm-1.926-9.058a1.653 1.653 0 0 0-.683.298C5.617.74 5.173 1.666 4.985 2.819c-.07.436-.119 1.04-.119 1.503 0 .544.064 1.24.155 1.721l.023.208a8.12 8.12 0 0 1-.187.152 5.324 5.324 0 0 0-.949 1.02 5.49 5.49 0 0 0-.94 2.339 6.625 6.625 0 0 0-.023 1.357c.091.78.325 1.438.727 2.04l.13.195-.037.064c-.269.452-.498 1.105-.605 1.732-.084.496-.095.629-.095 1.294 0 .67.009.803.088 1.266.095.555.288 1.143.503 1.534.071.128.243.393.264.407l-.046.141a7.405 7.405 0 0 0-.548 1.873c-.062.417-.071.552-.071.991 0 .56.031.832.148 1.279L3.42 24h17.16l.02-.074c.029-.217.029-1.016 0-1.258-.11-.875-.295-1.57-.597-2.226l-.046-.141c.376-.569.607-1.284.724-2.228.031-.26.031-1.378 0-1.628-.083-.645-.182-1.082-.348-1.525a6.083 6.083 0 0 0-.329-.7l-.038-.064.131-.194c.402-.604.636-1.262.727-2.04a6.625 6.625 0 0 0-.024-1.358 5.512 5.512 0 0 0-.939-2.339 5.325 5.325 0 0 0-.95-1.02 8.097 8.097 0 0 1-.186-.152.692.692 0 0 1 .023-.208c.208-1.087.201-2.443-.017-3.503-.19-.924-.535-1.658-.98-2.082-.354-.338-.716-.482-1.15-.455-.996.059-1.8 1.205-2.116 3.01a6.805 6.805 0 0 0-.097.726l-.015.066a.96.96 0 0 1-.149-.078A4.857 4.857 0 0 0 12 3.03c-.832 0-1.687.243-2.456.698a.958.958 0 0 1-.148.078l-.015-.066a6.71 6.71 0 0 0-.097-.725C8.997 1.392 8.337.319 7.46.048a2.096 2.096 0 0 0-.585-.041Z"/></svg></div>
-            <div class="provider-name">Ollama</div>
-            <div class="provider-detail" data-i18n="prov.ollamad">Local models · offline</div>
-            <div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
-            <div class="provider-badge" data-i18n="prov.offline">Offline</div>
-          </div>
-          <div class="provider-card" data-role="llm">
-            <div class="provider-logo provider-logo-cerebras" aria-hidden="true">C</div>
-            <div class="provider-name">Cerebras</div>
-            <div class="provider-detail">gpt-oss-120b · ~3000 tok/s</div>
-            <div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
-            <div class="provider-badge" data-i18n="prov.free">Free</div>
-          </div>
-          <div class="provider-card provider-card-custom" data-role="both">
-            <div class="provider-logo provider-logo-custom" aria-hidden="true">+</div>
-            <div class="provider-name" data-i18n="prov.more">+ 15 more providers</div>
-            <div class="provider-detail" data-i18n="prov.mored">OpenRouter · Together · Volcengine · Qwen · SiliconFlow · Kimi · MiniMax · Zhipu</div>
-            <div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
-            <div class="provider-badge" data-i18n="prov.yours">Your Server</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Comparison -->
-    <section id="compare" class="compare">
-      <div class="container">
-        <h2 class="section-title fade-in" data-i18n="cmp.title">Why Vowrite</h2>
-        <p class="section-sub fade-in" data-i18n="cmp.sub">See how it compares.</p>
-        <div class="compare-table-wrap fade-in">
-          <table class="compare-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th class="col-vowrite">Vowrite</th>
-                <th class="col-other">Typeless</th>
-                <th class="col-other">Superwhisper</th>
-                <th class="col-other" data-i18n="cmp.mac">macOS Dictation</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="row-emph">
-                <td class="row-label" data-i18n="cmp.rprice">Price</td>
-                <td class="col-vowrite cell-yes" data-i18n="cmp.price.vw">Free · pay-per-use API</td>
-                <td class="col-other cell-no">$12–30/mo *</td>
-                <td class="col-other cell-no">$8.49/mo</td>
-                <td class="col-other cell-yes-dim" data-i18n="cmp.price.mac">Free (Apple only)</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r2">Multiple AI providers</td>
-                <td class="col-vowrite cell-yes">✅ 20+</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r6">Bring your own API key</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r9">Privacy (local storage only)</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-warn" data-i18n="cmp.cloud">Cloud</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-warn">iCloud</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r11">Offline / local inference</td>
-                <td class="col-vowrite cell-yes">✅ Ollama / MLX</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-yes-dim">✓ (Apple only)</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.rcross">Mac + iOS</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-warn" data-i18n="cmp.maconly">Mac only</td>
-                <td class="col-other cell-yes-dim">✓</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r4">Open source</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r1">AI text cleanup</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r3">Chinese + English mixed</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-warn" data-i18n="cmp.limited">Limited</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r10">Text replacement & auto-learning</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-no">✗</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r7">Dictation history</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-no">✗</td>
-              </tr>
-              <tr>
-                <td class="row-label" data-i18n="cmp.r8">Custom hotkey</td>
-                <td class="col-vowrite cell-yes">✅</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-yes-dim">✓</td>
-                <td class="col-other cell-warn" data-i18n="cmp.fixed">Fixed</td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="compare-footnote fade-in" data-i18n="cmp.typeless.foot">* Typeless free tier: 8,000 words/week.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section id="faq" class="faq">
-      <div class="container">
-        <h2 class="section-title fade-in" data-i18n="faq.title">Frequently asked questions</h2>
-        <div class="faq-list fade-in">
-          <details class="faq-item">
-            <summary data-i18n="faq.q1">How does Vowrite turn my voice into clean text?</summary>
-            <p data-i18n="faq.a1">Vowrite uses AI speech recognition to transcribe your voice, then an AI language model removes filler words, fixes grammar, and adds punctuation. The result is polished text inserted right at your cursor — in about 2 seconds.</p>
-          </details>
-          <details class="faq-item">
-            <summary data-i18n="faq.q2">Is Vowrite free to use?</summary>
-            <p data-i18n="faq.a2">Yes. Vowrite is open source and free. You bring your own API key from providers like OpenAI, Groq, or DeepSeek. You only pay for your actual API usage — which typically costs fractions of a cent per dictation.</p>
-          </details>
-          <details class="faq-item">
-            <summary data-i18n="faq.q3">Does it work in any app on Mac?</summary>
-            <p data-i18n="faq.a3">Yes. Vowrite inserts text at your cursor in any app — Safari, VS Code, Discord, Pages, Notion, WeChat, and more. If you can type there, Vowrite works there.</p>
-          </details>
-          <details class="faq-item">
-            <summary data-i18n="faq.q4">Can I mix Chinese and English in one sentence?</summary>
-            <p data-i18n="faq.a4">Absolutely. Vowrite handles mixed Chinese and English naturally. No language switching needed — just speak the way you normally do.</p>
-          </details>
-          <details class="faq-item">
-            <summary data-i18n="faq.q5">What AI providers are supported?</summary>
-            <p data-i18n="faq.a5">Vowrite supports 20+ providers including OpenAI, Groq, DeepSeek, Deepgram, Gemini, Claude, iFlytek, Ollama, MLX Server, and any OpenAI-compatible endpoint. Bring your own API key — no subscriptions, no lock-in.</p>
-          </details>
-          <details class="faq-item">
-            <summary data-i18n="faq.q6">Is my data private?</summary>
-            <p data-i18n="faq.a6">Your dictation history is stored locally on your Mac. Audio is sent to your chosen AI provider for transcription only — Vowrite itself never stores or transmits your data to any server.</p>
-          </details>
-          <details class="faq-item">
-            <summary data-i18n="faq.q7">How do I get the newest models?</summary>
-            <p data-i18n="faq.a7">Vowrite's provider catalog is refreshed monthly as providers ship new models — update the app to pick them up automatically. Want listings that update themselves? Point Vowrite at OpenRouter, which exposes 400+ models dynamically the moment they're released.</p>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- Coming Soon -->
-    <section class="coming-soon">
-      <div class="container">
-        <div class="coming-soon-card fade-in">
-          <h3 data-i18n="soon.title">Coming soon</h3>
-          <p><strong data-i18n="soon.s1t">Voice-triggered search</strong> — <span data-i18n="soon.s1d">Ask questions by voice and get instant answers without leaving your app.</span></p>
-          <p><strong data-i18n="soon.s3t">iOS App Store distribution</strong> — <span data-i18n="soon.s3d">The iOS keyboard is open source and buildable today — official App Store and TestFlight distribution is planned.</span></p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Download -->
-    <section id="download" class="download">
-      <div class="container">
-        <h2 class="section-title fade-in" data-i18n="dl.title">Ready to stop typing?</h2>
-        <p class="version fade-in">v0.2.3.0 · macOS 14 Sonoma · Apple Silicon</p>
-        <div class="download-actions fade-in">
-          <a href="https://github.com/Joevonlong/Vowrite/releases/latest" class="btn btn-primary btn-large">
-            <span class="btn-icon">⬇</span> <span data-i18n="dl.btn">Download for Mac</span>
-          </a>
-        </div>
-        <div class="download-reqs fade-in">
-          <span class="req" data-i18n="dl.r1">🔑 API Key (OpenAI or other)</span>
-          <span class="req" data-i18n="dl.r2">🎤 Microphone permission</span>
-          <span class="req" data-i18n="dl.r3">♿ Accessibility (optional)</span>
-        </div>
-        <p class="download-note fade-in">
-          <span data-i18n="dl.build">Or build from source:</span> <code>cd Vowrite/VowriteMac && swift build</code>
-          <br>
-          <a href="https://github.com/Joevonlong/Vowrite" data-i18n="dl.src">View source on GitHub</a>
-        </p>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container footer-inner">
-      <div class="footer-left">
-        <img src="app-icon-64.png" alt="Vowrite app icon" class="footer-icon">
-        <span>© 2026 Vowrite. Open source under <a href="https://github.com/Joevonlong/Vowrite/blob/main/LICENSE" style="color: inherit; text-decoration: underline;">MIT license</a>.</span>
-      </div>
-      <div class="footer-links">
-        <a href="https://github.com/Joevonlong/Vowrite">GitHub</a>
-        <a href="https://github.com/Joevonlong/Vowrite/releases">Releases</a>
-        <a href="https://github.com/Joevonlong/Vowrite/issues">Feedback</a>
-      </div>
-    </div>
-  </footer>
-
-  <script src="i18n.js"></script>
-
-</body>
+Thursday, 10:00
+Bring the updated design.</p></div></div></div></div><div class="container"><details class="hc-details" id="translation-details"><summary><span data-hc="translationDetails">Translation examples, gestures and settings</span></summary><!-- Live Demo -->
+<section class="tr-demo">
+<div class="container">
+<div class="tr-demo-card fade-in">
+<div class="va-chrome" style="padding:24px"><strong>Vowrite / Translate</strong><span data-va="sample">Interactive example · no recording</span></div><div class="tr-demo-row" id="trDemoRow">
+<div class="tr-demo-pane tr-demo-in">
+<div class="tr-demo-tag">
+<span class="tr-demo-flag" id="trDemoFlagIn">🇨🇳</span>
+<span data-i18n="tr.demo.youSay">You say</span>
+<span id="trDemoLangIn">Chinese</span>
+</div>
+<p class="tr-demo-text" id="trDemoIn">嗯…那个，明天下午三点开个会，把翻译模式的设计方案过一下。</p>
+</div>
+<div class="tr-demo-arrow">→</div>
+<div class="tr-demo-pane tr-demo-out">
+<div class="tr-demo-tag">
+<span class="tr-demo-flag" id="trDemoFlagOut">🇺🇸</span>
+<span data-i18n="tr.demo.youGet">Vowrite types</span>
+<span id="trDemoLangOut">English</span>
+</div>
+<p class="tr-demo-text" id="trDemoOut">Let's meet at 3 pm tomorrow to walk through the Translate mode design.</p>
+</div>
+</div>
+<div class="tr-demo-controls">
+<button aria-label="Example 1" aria-pressed="true" class="tr-demo-dot active" data-i="0" type="button"></button>
+<button aria-label="Example 2" aria-pressed="false" class="tr-demo-dot" data-i="1" type="button"></button>
+<button aria-label="Example 3" aria-pressed="false" class="tr-demo-dot" data-i="2" type="button"></button>
+<button aria-label="Example 4" aria-pressed="false" class="tr-demo-dot" data-i="3" type="button"></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Pipeline -->
+<section class="tr-pipeline" id="translation-flow">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="tr.pipe.title">From voice to translation in one breath</h2>
+<p class="section-sub fade-in" data-i18n="tr.pipe.sub">A purpose-built pipeline that detects, recognises, translates, and types — without ever leaving your text field.</p>
+<div class="tr-pipe-row fade-in">
+<div class="tr-pipe-step">
+<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></div>
+<h3 data-i18n="tr.pipe.s1.t">Speak naturally</h3>
+<p data-i18n="tr.pipe.s1.d">Press the translation shortcut on Mac, or choose Translate from the iOS microphone menu. Speak in a language supported by your chosen models.</p>
+</div>
+<div class="tr-pipe-step">
+<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></div>
+<h3 data-i18n="tr.pipe.s2.t">Auto-detect &amp; transcribe</h3>
+<p data-i18n="tr.pipe.s2.d">Compatible recognition models can detect the spoken language automatically. A configured source language provides a hint when the provider supports it.</p>
+</div>
+<div class="tr-pipe-step is-accent">
+<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h3 data-i18n="tr.pipe.s3.t">LLM translates</h3>
+<p data-i18n="tr.pipe.s3.d">A dedicated translation prompt rewrites the transcript into your target language — formal stays formal, casual stays casual.</p>
+<span class="tr-pipe-tag" data-i18n="tr.pipe.s3.tag">Translation prompt</span>
+</div>
+<div class="tr-pipe-step">
+<div class="tr-pipe-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h3 data-i18n="tr.pipe.s4.t">Type at the cursor</h3>
+<p data-i18n="tr.pipe.s4.d">The finished translation is inserted into a compatible text field, such as a message, email or document.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Triggers (Mac + iOS) -->
+<section class="tr-triggers" id="translation-triggers">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="tr.trig.title">Two ways to trigger. Zero context switch.</h2>
+<p class="section-sub fade-in" data-i18n="tr.trig.sub">Translate mode is a separate gesture, so it never overwrites the Mode you were already using.</p>
+<div class="tr-trig-grid">
+<div class="tr-trig-card fade-in">
+<div class="tr-trig-platform" data-i18n="tr.trig.mac.tag">macOS · Global hotkey</div>
+<h3 data-i18n="tr.trig.mac.t">A second hotkey, just for translation</h3>
+<p data-i18n="tr.trig.mac.d">Press ⇧⌥ Space to start a translation recording. Stop with ⌥ Space or the overlay Stop control. Your current Mode (Email, Code, Note…) stays unchanged.</p>
+<div class="tr-trig-stage">
+<div class="tr-keystack">
+<span class="tr-key">⇧</span>
+<span class="tr-key-plus">+</span>
+<span class="tr-key">⌥</span>
+<span class="tr-key-plus">+</span>
+<span class="tr-key tr-key-wide" data-i18n="tr.trig.mac.space">Space</span>
+</div>
+</div>
+<ul class="tr-trig-list">
+<li data-i18n="tr.trig.mac.b1">Configurable in Settings → Keyboard Shortcuts.</li>
+<li data-i18n="tr.trig.mac.b2">Conflict detection if it collides with the Dictate hotkey.</li>
+<li data-i18n="tr.trig.mac.b3">Recording overlay shows a target-language badge while you speak.</li>
+</ul>
+</div>
+<div class="tr-trig-card fade-in">
+<div class="tr-trig-platform" data-i18n="tr.trig.ios.tag">iOS · Keyboard arc</div>
+<h3 data-i18n="tr.trig.ios.t">Long-press the mic, slide to translate</h3>
+<p data-i18n="tr.trig.ios.d">Inside the Vowrite keyboard, long-press the mic pill. Two arcs fan out — Dictate or Translate. Slide to one, release, speak. The keyboard shows a "Translating to {target}" banner in real time.</p>
+<div class="tr-trig-stage">
+<div class="tr-arc">
+<div class="tr-arc-opt tr-arc-left">
+<span class="tr-arc-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></span>
+<span data-i18n="tr.trig.ios.arc1">Dictate</span>
+</div>
+<div class="tr-arc-opt tr-arc-right">
+<span class="tr-arc-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<span data-i18n="tr.trig.ios.arc2">Translate</span>
+</div>
+<div class="tr-arc-mic"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></div>
+</div>
+</div>
+<ul class="tr-trig-list">
+<li data-i18n="tr.trig.ios.b1">Works in iOS apps and fields that allow third-party keyboards.</li>
+<li data-i18n="tr.trig.ios.b2">Selection haptic on tier change, success haptic on commit.</li>
+<li data-i18n="tr.trig.ios.b3">Configure source and target languages separately on each device. The iOS app shares these settings with its keyboard.</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Settings (F-066) -->
+<section class="tr-settings">
+<div class="container">
+<div class="tr-settings-row">
+<div class="tr-settings-text fade-in">
+<h2 data-i18n="tr.set.t">Set it once. Translate forever.</h2>
+<p data-i18n="tr.set.p1">On Mac, open General → Language &amp; Translation. On iOS, open Settings → Language &amp; Feedback → Translation. Choose a source-language hint or automatic detection, then a target language. Each device remembers its own settings.</p>
+<p data-i18n="tr.set.p2">Need multiple language pairs? Create custom Translate modes — each with its own prompt, hotkey, and language pair. The quick settings only steer the built-in Translate mode, so custom presets stay untouched.</p>
+</div>
+<div aria-hidden="true" class="tr-mock fade-in">
+<div class="tr-mock-title">🌐 <span data-i18n="tr.set.section">Translation</span></div>
+<div class="tr-mock-row">
+<div>
+<div class="tr-mock-label" data-i18n="tr.set.src">Source Language</div>
+<div class="tr-mock-hint" data-i18n="tr.set.srch">Speech recognition hint for Translate.</div>
+</div>
+<span class="tr-mock-pick" data-i18n="tr.set.srcv">Auto-detect</span>
+</div>
+<div class="tr-mock-row">
+<div>
+<div class="tr-mock-label" data-i18n="tr.set.tgt">Target Language</div>
+<div class="tr-mock-hint" data-i18n="tr.set.tgth">Translate output goes to this language.</div>
+</div>
+<span class="tr-mock-pick" data-i18n="tr.set.tgtv">English</span>
+</div>
+<p class="tr-mock-foot" data-i18n="tr.set.foot">ⓘ Applies to the built-in Translate mode (⇧⌥ Space). Custom translation modes keep their own settings.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Language Matrix -->
+<section class="tr-langs">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="tr.lang.title">Translation in both directions.</h2>
+<p class="section-sub fade-in" data-i18n="tr.lang.sub">Choose a source and target language supported by your recognition and text models.</p>
+<div class="tr-lang-grid fade-in">
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇺🇸</span><div class="tr-lang-name">English</div><div class="tr-lang-sub">en</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇨🇳</span><div class="tr-lang-name" data-i18n="tr.lang.zh">Chinese</div><div class="tr-lang-sub">zh-Hans</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇯🇵</span><div class="tr-lang-name" data-i18n="tr.lang.ja">Japanese</div><div class="tr-lang-sub">ja</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇰🇷</span><div class="tr-lang-name" data-i18n="tr.lang.ko">Korean</div><div class="tr-lang-sub">ko</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇪🇸</span><div class="tr-lang-name" data-i18n="tr.lang.es">Spanish</div><div class="tr-lang-sub">es</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇫🇷</span><div class="tr-lang-name" data-i18n="tr.lang.fr">French</div><div class="tr-lang-sub">fr</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇩🇪</span><div class="tr-lang-name" data-i18n="tr.lang.de">German</div><div class="tr-lang-sub">de</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇮🇹</span><div class="tr-lang-name" data-i18n="tr.lang.it">Italian</div><div class="tr-lang-sub">it</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇵🇹</span><div class="tr-lang-name" data-i18n="tr.lang.pt">Portuguese</div><div class="tr-lang-sub">pt</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇷🇺</span><div class="tr-lang-name" data-i18n="tr.lang.ru">Russian</div><div class="tr-lang-sub">ru</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇸🇦</span><div class="tr-lang-name" data-i18n="tr.lang.ar">Arabic</div><div class="tr-lang-sub">ar</div></div>
+<div class="tr-lang-cell"><span class="tr-lang-flag">🇮🇳</span><div class="tr-lang-name" data-i18n="tr.lang.hi">Hindi</div><div class="tr-lang-sub">hi</div></div>
+</div>
+<p class="tr-langs-note fade-in" data-i18n="tr.lang.note">Plus any other language your STT and LLM provider support — Whisper covers 90+, GPT and Claude translate even further.</p>
+</div>
+</section>
+<!-- Use cases -->
+<section class="tr-cases">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="tr.case.title">Made for the moments your hands can't keep up</h2>
+<p class="section-sub fade-in" data-i18n="tr.case.sub">Real situations where pulling up Google Translate kills the flow.</p>
+<div class="tr-case-grid">
+<div class="tr-case fade-in">
+<div class="tr-case-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h3 data-i18n="tr.case.1.t">Cross-language email</h3>
+<p data-i18n="tr.case.1.d">Your mother tongue is Chinese, your client only reads English. Speak the email in Chinese, and a polished English version appears in Mail.</p>
+<div class="tr-case-quote" data-i18n="tr.case.1.q">"Hi James — wrapping up the v2 timeline now. Could you confirm the API contract by Friday? Happy to jump on a call this afternoon."</div>
+</div>
+<div class="tr-case fade-in">
+<div class="tr-case-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h3 data-i18n="tr.case.2.t">Multilingual team chat</h3>
+<p data-i18n="tr.case.2.d">Slack, WeChat, Telegram — speak naturally and reply in the channel's lingua franca. Your message lands clean, on time, on tone.</p>
+<div class="tr-case-quote" data-i18n="tr.case.2.q">"Pushed the hotfix — translation prompt now ships fillers separately so STT noise doesn't leak into the output."</div>
+</div>
+<div class="tr-case fade-in">
+<div class="tr-case-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h3 data-i18n="tr.case.3.t">Travel &amp; field trips</h3>
+<p data-i18n="tr.case.3.d">From a hotel in Tokyo, dictate in English — Vowrite types fluent Japanese into Notes, ready to flash to a stranger.</p>
+<div class="tr-case-quote" data-i18n="tr.case.3.q">"すみません、新宿駅まではどう行けばいいですか？"</div>
+</div>
+<div class="tr-case fade-in">
+<div class="tr-case-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h3 data-i18n="tr.case.4.t">Reading &amp; learning</h3>
+<p data-i18n="tr.case.4.d">Speak a sentence in your weaker language and check the English version. Or speak English to draft notes for a Spanish exam.</p>
+<div class="tr-case-quote" data-i18n="tr.case.4.q">"Quiero practicar español con frases reales — Vowrite, traduce esto."</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Compare -->
+<section class="tr-compare">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="tr.cmp.title">Why Vowrite Translate</h2>
+<p class="section-sub fade-in" data-i18n="tr.cmp.sub">Most translators want you to copy-paste. Vowrite types straight at your cursor.</p>
+<div aria-label="Comparison table; scroll horizontally to see all columns" class="compare-table-wrap fade-in" role="region" tabindex="0">
+<table class="compare-table">
+<thead>
+<tr>
+<th data-i18n="site.feature" scope="col">Feature</th>
+<th class="col-vowrite" scope="col">Vowrite</th>
+<th class="col-other" data-i18n="tr.cmp.apple" scope="col">Apple Translate</th>
+<th class="col-other" data-i18n="tr.cmp.google" scope="col">Google Translate</th>
+<th class="col-other" data-i18n="tr.cmp.deepl" scope="col">DeepL Voice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="row-label" data-i18n="tr.cmp.r1">Voice translation output</td>
+<td class="col-vowrite" data-i18n="comparison.translate.0.0">Translate recordings into compatible text fields</td>
+<td class="col-other" data-i18n="comparison.translate.0.1">Spoken translation; copy/replace supported text</td>
+<td class="col-other" data-i18n="comparison.translate.0.2">Spoken translation; copy/share transcript</td>
+<td class="col-other" data-i18n="comparison.translate.0.3">Live voice/subtitles for meetings and conversations</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="tr.cmp.r2">App integration</td>
+<td class="col-vowrite" data-i18n="comparison.translate.1.0">Mac text fields; iOS where third-party keyboards are allowed</td>
+<td class="col-other" data-i18n="comparison.translate.1.1">App and supported system text actions</td>
+<td class="col-other" data-i18n="comparison.translate.1.2">Web, iOS and Android</td>
+<td class="col-other" data-i18n="comparison.translate.1.3">Desktop/mobile/web; Teams, Zoom, Meet</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="tr.cmp.r3">Choose your own AI model</td>
+<td class="col-vowrite" data-i18n="comparison.translate.2.0">Choose recognition and text models</td>
+<td class="col-other" data-i18n="comparison.translate.2.1">Apple-managed</td>
+<td class="col-other" data-i18n="comparison.translate.2.2">Google-managed</td>
+<td class="col-other" data-i18n="comparison.translate.2.3">Service-managed</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="tr.cmp.r4">API keys and subscriptions</td>
+<td class="col-vowrite" data-i18n="comparison.translate.3.0">BYOK; provider costs separate</td>
+<td class="col-other" data-i18n="comparison.translate.3.1">Free Apple app</td>
+<td class="col-other" data-i18n="comparison.translate.3.2">Free consumer app</td>
+<td class="col-other" data-i18n="comparison.translate.3.3">Voice plans; eligible paid Translate plans include limited minutes</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="tr.cmp.r5">Custom translation modes &amp; prompts</td>
+<td class="col-vowrite" data-i18n="comparison.translate.4.0">Custom translation prompts</td>
+<td class="col-other" data-i18n="comparison.translate.4.1">Language/conversation controls</td>
+<td class="col-other" data-i18n="comparison.translate.4.2">Language/conversation controls</td>
+<td class="col-other" data-i18n="comparison.translate.4.3">Glossaries, terms and formality</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="tr.cmp.r6">Offline / local processing</td>
+<td class="col-vowrite" data-i18n="comparison.translate.5.0">Local text model option; recognition needs a configured service</td>
+<td class="col-other" data-i18n="comparison.translate.5.1">Downloaded supported languages</td>
+<td class="col-other" data-i18n="comparison.translate.5.2">Downloadable languages; feature limits</td>
+<td class="col-other" data-i18n="comparison.translate.5.3">Online service; offline mode not documented</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="tr.cmp.r7">Open source</td>
+<td class="col-vowrite" data-i18n="comparison.translate.6.0">Yes</td>
+<td class="col-other" data-i18n="comparison.translate.6.1">Not advertised</td>
+<td class="col-other" data-i18n="comparison.translate.6.2">Not advertised</td>
+<td class="col-other" data-i18n="comparison.translate.6.3">Not advertised</td>
+</tr>
+</tbody>
+</table>
+</div><p class="site-fact-note"><span data-i18n="site.compareNote">Checked 22 September 2026. Features vary by platform, model and plan. “Not documented” means no support claim was confirmed in the linked official documentation.</span><br/><a href="https://apps.apple.com/us/app/translate/id1514844618">Apple Translate</a> · <a href="https://support.google.com/translate/answer/6142473?co=GENIE.Platform%3DiOS&amp;hl=en">Google Translate</a> · <a href="https://www.deepl.com/en/voice-app">DeepL Voice</a></p>
+</div>
+</section>
+</details></div></section>
+<!-- How it works -->
+<!-- Providers -->
+<section class="vc-section" id="configuration"><div class="container"><div class="vc-layout"><div class="vc-copy"><h2 data-hc="providers">A little setup. All yours.</h2><p data-hc="providersDesc">Choose what listens and what helps you write. Your preferences stay in your hands.</p></div><div class="od-stack"><div class="hf-choice"><div class="hf-choice-top od-row"><div class="od-field od-fill"><h3 data-hf="choice">Your providers. Your choice.</h3></div><span class="hf-hybrid" data-hf="hybrid">Cloud + Local</span></div><p class="hf-explain" data-hf="explanation">Choose providers independently for recognition and refinement. Combine cloud services with local models.</p><div class="hf-provider-pair"><label class="hf-provider-field"><span data-hf="recognition">Voice recognition</span><select data-hf-provider="recognition"><option data-hf="choose" value="">Choose a provider</option><optgroup data-hf-group="cloud" label="Cloud"><option data-location="cloud" value="OpenAI">OpenAI</option><option data-location="cloud" value="Groq">Groq</option></optgroup></select></label><label class="hf-provider-field"><span data-hf="writing">Text refinement</span><select data-hf-provider="writing"><option data-hf="choose" value="">Choose a provider</option><optgroup data-hf-group="cloud" label="Cloud"><option data-location="cloud" value="OpenAI">OpenAI</option><option data-location="cloud" value="Google">Google</option><option data-location="cloud" value="Anthropic">Anthropic</option><option data-location="cloud" value="DeepSeek">DeepSeek</option></optgroup><optgroup data-hf-group="local" label="Local"><option data-location="local" value="Ollama">Ollama</option></optgroup></select></label></div><p aria-live="polite" class="hf-provider-summary" data-hf-summary="" role="status">Choose both providers to see your combination.</p><div class="hc-add"><button class="va-btn" data-hc-add="" type="button">Add to example setup</button><p data-hc-provider-status="" role="status">No providers added yet.</p><ul data-hc-added=""></ul><p data-hc="providerNote">Illustrative setup only. Never enter a real API key here.</p></div><p class="site-fact-note" data-i18n="site.localNote">Local text refinement is available through Ollama or MLX Server on Mac. Built-in Sherpa speech recognition is currently unavailable; a cloud recognition provider is needed for this example.</p></div><details class="hc-details"><summary><span data-hc="extra">Shortcuts, languages and writing styles</span></summary><div class="vc-window"><div class="vc-chrome"><i></i><i></i><i></i><strong>Vowrite</strong><span data-vc-text="sample">Interactive example</span></div><div class="vc-body" id="vc-settings"><p>OpenAI · Groq · Google · Anthropic · DeepSeek · Ollama</p></div></div></details></div></div></div></section><section class="vc-section" id="providers"><div class="container"><div class="vc-vendors"><h2 data-vc-text="providersTitle">Your favorites, together.</h2><p data-vc-text="providersDesc">Choose the services you already know. Keep the freedom to change.</p><ul class="vc-logos"><li><img alt="" height="24" loading="lazy" src="assets/providers/openai.svg" width="24"/><span>OpenAI</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/groq.svg" width="24"/><span>Groq</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/deepseek.svg" width="24"/><span>DeepSeek</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/gemini.svg" width="24"/><span>Gemini</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/claude.svg" width="24"/><span>Claude</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/deepgram.svg" width="24"/><span>Deepgram</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/iflytek.svg" width="24"/><span>iFlytek</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/mlx.svg" width="24"/><span>MLX Server</span></li><li><img alt="" height="24" loading="lazy" src="assets/providers/ollama.svg" width="24"/><span>Ollama</span></li></ul><ul class="vc-logos"><li><img alt="" height="512" loading="lazy" src="website-assets/provider-icons/cerebras.png" width="512"/><span>Cerebras</span></li><li><img alt="" height="512" loading="lazy" src="website-assets/provider-icons/openrouter.png" width="512"/><span>OpenRouter</span></li><li><img alt="" height="32" loading="lazy" src="website-assets/provider-icons/togetherai.png" width="32"/><span>Together AI</span></li><li><img alt="" height="192" loading="lazy" src="website-assets/provider-icons/volcengine.png" width="192"/><span>Volcengine</span></li><li><img alt="" height="80" loading="lazy" src="website-assets/provider-icons/qwen.png" width="80"/><span>Qwen</span></li><li><img alt="" height="64" loading="lazy" src="website-assets/provider-icons/siliconflow.png" width="64"/><span>SiliconFlow</span></li><li><img alt="" height="48" loading="lazy" src="website-assets/provider-icons/kimi.ico" width="48"/><span>Kimi</span></li><li><img alt="" height="32" loading="lazy" src="website-assets/provider-icons/minimax.ico" width="32"/><span>MiniMax</span></li><li><img alt="" height="96" loading="lazy" src="website-assets/provider-icons/zhipu.png" width="96"/><span>Zhipu</span></li></ul></div><details class="hc-details"><summary data-i18n="site.providerDetails">Full provider guide</summary><section class="providers" id="provider-details">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="prov.title">Your AI, your rules</h2>
+<p class="section-sub fade-in" data-i18n="prov.sub">Pair any speech-to-text engine with any polish model. Bring your own keys.</p>
+<!-- Pipeline diagram: STT → Polish → Output -->
+<div aria-hidden="true" class="combo-pipeline fade-in">
+<div class="cp-node cp-node-stt">
+<div class="cp-node-icon">🎙️</div>
+<div class="cp-node-label" data-i18n="prov.cp.stt">Speech → Text</div>
+</div>
+<div class="cp-arrow"><svg viewbox="0 0 56 14" xmlns="http://www.w3.org/2000/svg"><path d="M0 7 H46 M40 1 L48 7 L40 13" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"></path></svg></div>
+<div class="cp-node cp-node-llm">
+<div class="cp-node-icon">✨</div>
+<div class="cp-node-label" data-i18n="prov.cp.llm">Polish &amp; Format</div>
+</div>
+<div class="cp-arrow"><svg viewbox="0 0 56 14" xmlns="http://www.w3.org/2000/svg"><path d="M0 7 H46 M40 1 L48 7 L40 13" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"></path></svg></div>
+<div class="cp-node cp-node-out">
+<div class="cp-node-icon">📋</div>
+<div class="cp-node-label" data-i18n="prov.cp.out">Cursor</div>
+</div>
+</div>
+<!-- Hero combo: Recommended pairing -->
+<div class="combo-hero fade-in">
+<div class="combo-hero-badge" data-i18n="prov.combo.badge">★ Recommended combo</div>
+<div class="combo-hero-row">
+<div class="combo-side">
+<div class="combo-role" data-i18n="prov.cp.stt">Speech → Text</div>
+<div aria-hidden="true" class="combo-logo combo-logo-groq">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13.42 2.92 6.534 12.91l5.339.484-1.229 6.965 6.886-9.99-5.339-.484z" fill="currentColor"></path></svg>
+</div>
+<div class="combo-name">Groq</div>
+<div class="combo-model">whisper-large-v3-turbo</div>
+<div class="combo-spec" data-i18n="prov.combo.groq.spec">Cloud recognition · provider limits apply</div>
+</div>
+<div aria-hidden="true" class="combo-hero-arrow">
+<svg viewbox="0 0 64 24" xmlns="http://www.w3.org/2000/svg"><path d="M2 12 H54 M46 4 L56 12 L46 20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+</div>
+<div class="combo-side">
+<div class="combo-role" data-i18n="prov.cp.llm">Polish &amp; Format</div>
+<div aria-hidden="true" class="combo-logo combo-logo-deepseek">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45" fill="currentColor"></path></svg>
+</div>
+<div class="combo-name">DeepSeek</div>
+<div class="combo-model">deepseek-flash</div>
+<div class="combo-spec" data-i18n="prov.combo.ds.spec">Text refinement · usage billing</div>
+</div>
+</div>
+<p class="combo-hero-foot" data-i18n="prov.combo.foot">Example combination: Groq for speech recognition and DeepSeek for refinement. Check each provider’s current prices, account access and limits; latency depends on your recording and network.</p>
+</div>
+<!-- Provider grid -->
+<h3 class="provider-grid-title fade-in" data-i18n="prov.grid.title">Or pick from 20+ providers</h3>
+<div class="provider-grid fade-in">
+<div class="provider-card" data-role="both">
+<div aria-hidden="true" class="provider-logo provider-logo-openai"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" fill="currentColor"></path></svg></div>
+<div class="provider-name">OpenAI</div>
+<div class="provider-detail">gpt-4o-mini-transcribe · gpt-5.4-mini</div>
+<div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
+<div class="provider-badge" data-i18n="prov.allone">All-in-One</div>
+</div>
+<div class="provider-card" data-role="stt">
+<div aria-hidden="true" class="provider-logo provider-logo-deepgram"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z" fill="currentColor"></path></svg></div>
+<div class="provider-name">Deepgram</div>
+<div class="provider-detail">Nova-3 · WebSocket</div>
+<div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span></div>
+<div class="provider-badge" data-i18n="prov.multilang">36+ Languages</div>
+</div>
+<div class="provider-card" data-role="llm">
+<div aria-hidden="true" class="provider-logo provider-logo-gemini"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81" fill="currentColor"></path></svg></div>
+<div class="provider-name">Gemini</div>
+<div class="provider-detail">gemini-3.8-flash</div>
+<div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
+<div class="provider-badge">Google</div>
+</div>
+<div class="provider-card" data-role="llm">
+<div aria-hidden="true" class="provider-logo provider-logo-claude"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" fill="currentColor"></path></svg></div>
+<div class="provider-name">Claude</div>
+<div class="provider-detail">claude-sonnet-5 · SSE</div>
+<div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
+<div class="provider-badge">Anthropic</div>
+</div>
+<div class="provider-card" data-role="stt">
+<div aria-hidden="true" class="provider-logo provider-logo-iflytek"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M2 11.2h2v1.6H2zm3.6-2.8h2v7.2h-2zm3.6-2h2v11.2h-2zm3.6 1.6h2v8h-2zm3.6 2.4h2v3.2h-2zm3.6 1h2v1.2h-2z" fill="currentColor"></path></svg></div>
+<div class="provider-name" data-i18n="prov.iflytek">iFlytek</div>
+<div class="provider-detail" data-i18n="prov.iflytekd">23 Chinese dialects</div>
+<div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span></div>
+<div class="provider-badge" data-i18n="prov.dialects">Dialect Support</div>
+</div>
+<div class="provider-card" data-role="stt">
+<div aria-hidden="true" class="provider-logo provider-logo-mlx"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" fill="currentColor"></path></svg></div>
+<div class="provider-name">MLX Server</div>
+<div class="provider-detail" data-i18n="prov.mlxd">Apple Silicon · local text refinement</div>
+<div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.polish">Polish</span></div>
+<div class="provider-badge" data-i18n="prov.local">Local text model</div>
+</div>
+<div class="provider-card" data-role="llm">
+<div aria-hidden="true" class="provider-logo provider-logo-ollama"><svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16.361 10.26a.894.894 0 0 0-.558.47l-.072.148.001.207c0 .193.004.217.059.353.076.193.152.312.291.448.24.238.51.3.872.205a.86.86 0 0 0 .517-.436.752.752 0 0 0 .08-.498c-.064-.453-.33-.782-.724-.897a1.06 1.06 0 0 0-.466 0zm-9.203.005c-.305.096-.533.32-.65.639a1.187 1.187 0 0 0-.06.52c.057.309.31.59.598.667.362.095.632.033.872-.205.14-.136.215-.255.291-.448.055-.136.059-.16.059-.353l.001-.207-.072-.148a.894.894 0 0 0-.565-.472 1.02 1.02 0 0 0-.474.007Zm-1.926-9.058a1.653 1.653 0 0 0-.683.298C5.617.74 5.173 1.666 4.985 2.819c-.07.436-.119 1.04-.119 1.503 0 .544.064 1.24.155 1.721l.023.208a8.12 8.12 0 0 1-.187.152 5.324 5.324 0 0 0-.949 1.02 5.49 5.49 0 0 0-.94 2.339 6.625 6.625 0 0 0-.023 1.357c.091.78.325 1.438.727 2.04l.13.195-.037.064c-.269.452-.498 1.105-.605 1.732-.084.496-.095.629-.095 1.294 0 .67.009.803.088 1.266.095.555.288 1.143.503 1.534.071.128.243.393.264.407l-.046.141a7.405 7.405 0 0 0-.548 1.873c-.062.417-.071.552-.071.991 0 .56.031.832.148 1.279L3.42 24h17.16l.02-.074c.029-.217.029-1.016 0-1.258-.11-.875-.295-1.57-.597-2.226l-.046-.141c.376-.569.607-1.284.724-2.228.031-.26.031-1.378 0-1.628-.083-.645-.182-1.082-.348-1.525a6.083 6.083 0 0 0-.329-.7l-.038-.064.131-.194c.402-.604.636-1.262.727-2.04a6.625 6.625 0 0 0-.024-1.358 5.512 5.512 0 0 0-.939-2.339 5.325 5.325 0 0 0-.95-1.02 8.097 8.097 0 0 1-.186-.152.692.692 0 0 1 .023-.208c.208-1.087.201-2.443-.017-3.503-.19-.924-.535-1.658-.98-2.082-.354-.338-.716-.482-1.15-.455-.996.059-1.8 1.205-2.116 3.01a6.805 6.805 0 0 0-.097.726l-.015.066a.96.96 0 0 1-.149-.078A4.857 4.857 0 0 0 12 3.03c-.832 0-1.687.243-2.456.698a.958.958 0 0 1-.148.078l-.015-.066a6.71 6.71 0 0 0-.097-.725C8.997 1.392 8.337.319 7.46.048a2.096 2.096 0 0 0-.585-.041Z" fill="currentColor"></path></svg></div>
+<div class="provider-name">Ollama</div>
+<div class="provider-detail" data-i18n="prov.ollamad">Local text refinement</div>
+<div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
+<div class="provider-badge" data-i18n="prov.offline">Local refinement</div>
+</div>
+<div class="provider-card" data-role="llm">
+<div aria-hidden="true" class="provider-logo provider-logo-cerebras">C</div>
+<div class="provider-name">Cerebras</div>
+<div class="provider-detail">gpt-oss-120b</div>
+<div class="provider-roles"><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
+<div class="provider-badge" data-i18n="prov.free">Provider plan</div>
+</div>
+<div class="provider-card provider-card-custom" data-role="both">
+<div aria-hidden="true" class="provider-logo provider-logo-custom">+</div>
+<div class="provider-name" data-i18n="prov.more">More provider integrations</div>
+<div class="provider-detail" data-i18n="prov.mored">OpenRouter · Together · Volcengine · Qwen · SiliconFlow · Kimi · MiniMax · Zhipu</div>
+<div class="provider-roles"><span class="role-tag role-stt" data-i18n="prov.role.stt">STT</span><span class="role-tag role-llm" data-i18n="prov.role.polish">Polish</span></div>
+<div class="provider-badge" data-i18n="prov.yours">Your Server</div>
+</div>
+</div>
+</div>
+</section></details></div></section>
+<!-- Comparison -->
+<!-- FAQ -->
+<section class="va-section"><div class="container va-usage-strip"><div><h2 data-va="title">Free app. Pay for what you use.</h2><p class="va-muted" data-va="intro">Vowrite is free and open source. Cloud usage is billed directly by the providers you choose — not a Vowrite subscription.</p></div><a class="vw-link" href="pricing.html"><span data-va="details">How free &amp; usage works</span> →</a></div></section><section class="va-section site-comparison" id="compare">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="cmp.title">Why Vowrite</h2>
+<p class="section-sub fade-in" data-i18n="cmp.sub">See how it compares.</p>
+<div aria-label="Comparison table; scroll horizontally to see all columns" class="compare-table-wrap fade-in" role="region" tabindex="0">
+<table class="compare-table">
+<thead>
+<tr>
+<th data-i18n="site.feature" scope="col">Feature</th>
+<th class="col-vowrite" scope="col">Vowrite</th>
+<th class="col-other" scope="col">Typeless</th>
+<th class="col-other" scope="col">Superwhisper</th>
+<th class="col-other" data-i18n="cmp.mac" scope="col">macOS Dictation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-emph">
+<td class="row-label" data-i18n="cmp.rprice">Price</td>
+<td class="col-vowrite" data-i18n="comparison.app.0.0">Free app; provider usage billed separately</td>
+<td class="col-other" data-i18n="comparison.app.0.1">Free 8,000 words/week; Pro $12/mo yearly or $30 monthly</td>
+<td class="col-other" data-i18n="comparison.app.0.2">Free tier; paid Pro plans</td>
+<td class="col-other" data-i18n="comparison.app.0.3">Included with Apple devices</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r2">Multiple AI providers</td>
+<td class="col-vowrite" data-i18n="comparison.app.1.0">Choose recognition and refinement providers</td>
+<td class="col-other" data-i18n="comparison.app.1.1">Service-managed models</td>
+<td class="col-other" data-i18n="comparison.app.1.2">Multiple cloud/local models</td>
+<td class="col-other" data-i18n="comparison.app.1.3">Apple-managed</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r6">Bring your own API key</td>
+<td class="col-vowrite" data-i18n="comparison.app.2.0">Yes</td>
+<td class="col-other" data-i18n="comparison.app.2.1">Not documented</td>
+<td class="col-other" data-i18n="comparison.app.2.2">BYOK with Pro</td>
+<td class="col-other" data-i18n="comparison.app.2.3">Not applicable</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r9">Data processing and history</td>
+<td class="col-vowrite" data-i18n="comparison.app.3.0">Local history; chosen providers process audio/text</td>
+<td class="col-other" data-i18n="comparison.app.3.1">Cloud processing; local history, optional sync</td>
+<td class="col-other" data-i18n="comparison.app.3.2">Local or cloud, model-dependent</td>
+<td class="col-other" data-i18n="comparison.app.3.3">On-device or server; check settings</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r11">Local processing</td>
+<td class="col-vowrite" data-i18n="comparison.app.4.0">Local refinement; bundled offline recognition unavailable</td>
+<td class="col-other" data-i18n="comparison.app.4.1">Cloud transcription</td>
+<td class="col-other" data-i18n="comparison.app.4.2">On-device speech models</td>
+<td class="col-other" data-i18n="comparison.app.4.3">Device/language-dependent</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.rcross">Mac + iOS</td>
+<td class="col-vowrite" data-i18n="comparison.app.5.0">Mac download; iOS source build</td>
+<td class="col-other" data-i18n="comparison.app.5.1">Mac + iOS</td>
+<td class="col-other" data-i18n="comparison.app.5.2">Mac + iOS, also Windows/Android</td>
+<td class="col-other" data-i18n="comparison.app.5.3">Supported Apple devices</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r4">Open source</td>
+<td class="col-vowrite" data-i18n="comparison.app.6.0">Yes</td>
+<td class="col-other" data-i18n="comparison.app.6.1">Not advertised</td>
+<td class="col-other" data-i18n="comparison.app.6.2">Not advertised</td>
+<td class="col-other" data-i18n="comparison.app.6.3">Proprietary system feature</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r1">AI text cleanup</td>
+<td class="col-vowrite" data-i18n="comparison.app.7.0">Optional chosen text model</td>
+<td class="col-other" data-i18n="comparison.app.7.1">Yes</td>
+<td class="col-other" data-i18n="comparison.app.7.2">Model/mode-dependent</td>
+<td class="col-other" data-i18n="comparison.app.7.3">Punctuation; rewriting is separate</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r3">Chinese + English mixed</td>
+<td class="col-vowrite" data-i18n="comparison.app.8.0">Provider/model-dependent</td>
+<td class="col-other" data-i18n="comparison.app.8.1">Mixed languages supported</td>
+<td class="col-other" data-i18n="comparison.app.8.2">Model-dependent</td>
+<td class="col-other" data-i18n="comparison.app.8.3">Select/switch dictation languages</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r10">Text replacement &amp; auto-learning</td>
+<td class="col-vowrite" data-i18n="comparison.app.9.0">Replacement rules; correction learning on Mac</td>
+<td class="col-other" data-i18n="comparison.app.9.1">Dictionary + personalization</td>
+<td class="col-other" data-i18n="comparison.app.9.2">Vocabulary + replacements</td>
+<td class="col-other" data-i18n="comparison.app.9.3">System replacements in supported apps</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r7">Dictation history</td>
+<td class="col-vowrite" data-i18n="comparison.app.10.0">Local searchable history</td>
+<td class="col-other" data-i18n="comparison.app.10.1">Local, optional cloud sync</td>
+<td class="col-other" data-i18n="comparison.app.10.2">Local history</td>
+<td class="col-other" data-i18n="comparison.app.10.3">No transcript library documented</td>
+</tr>
+<tr>
+<td class="row-label" data-i18n="cmp.r8">Custom hotkey</td>
+<td class="col-vowrite" data-i18n="comparison.app.11.0">Yes (Mac)</td>
+<td class="col-other" data-i18n="comparison.app.11.1">Yes (desktop)</td>
+<td class="col-other" data-i18n="comparison.app.11.2">Yes (desktop)</td>
+<td class="col-other" data-i18n="comparison.app.11.3">Yes (Mac)</td>
+</tr>
+</tbody>
+</table>
+<p class="compare-footnote fade-in" data-i18n="cmp.typeless.foot">* Typeless free tier: 8,000 words/week.</p>
+</div><p class="site-fact-note"><span data-i18n="site.compareNote">Checked 22 September 2026. Features vary by platform, model and plan. “Not documented” means no support claim was confirmed in the linked official documentation.</span><br/><a href="https://www.typeless.com/pricing">Typeless</a> · <a href="https://superwhisper.com/">Superwhisper</a> · <a href="https://support.apple.com/en-ca/guide/mac-help/mh40584/mac">Apple Dictation</a></p>
+</div>
+</section><section class="vc-section" id="faq"><div class="container"><div class="vc-faq"><h2 data-vc-text="faqTitle">A few things to know</h2><details><summary data-vc-text="questions.0">Is Vowrite free?</summary><p data-vc-text="answers.0">The app is free and open source. Your chosen AI provider may charge for usage. See Pricing for details.</p></details><details><summary data-vc-text="questions.1">Where can I use it?</summary><p data-vc-text="answers.1">Use Vowrite in text fields across your Mac apps. Explore Apps to see examples.</p></details><details><summary data-vc-text="questions.2">Can I use more than one language?</summary><p data-vc-text="answers.2">Yes. You can dictate in mixed languages and choose a different output language. Try the translation example above.</p></details></div><details class="hc-details"><summary data-i18n="site.allQuestions">All questions and answers</summary><h3 data-i18n="faq.title">Frequently asked questions</h3><div class="faq-list fade-in">
+<details class="faq-item">
+<summary data-i18n="faq.q1">How does Vowrite turn my voice into clean text?</summary>
+<p data-i18n="faq.a1">Vowrite transcribes your recording, then optionally uses a text model to remove fillers, fix grammar and add punctuation. It pastes the result at the cursor. Processing time depends on the models, network and audio length.</p>
+</details>
+<details class="faq-item">
+<summary data-i18n="faq.q2">Is Vowrite free to use?</summary>
+<p data-i18n="faq.a2">Yes. Vowrite is free and open source. Bring your own provider credentials; cloud usage is billed directly by your chosen providers under their current rates and limits.</p>
+</details>
+<details class="faq-item">
+<summary data-i18n="faq.q3">Does it work in any app on Mac?</summary>
+<p data-i18n="faq.a3">Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.</p>
+</details>
+<details class="faq-item">
+<summary data-i18n="faq.q4">Can I mix Chinese and English in one sentence?</summary>
+<p data-i18n="faq.a4">Mixed Chinese and English is supported by compatible recognition models. Quality and language coverage depend on the selected model; no manual language switch is needed when automatic detection is supported.</p>
+</details>
+<details class="faq-item">
+<summary data-i18n="faq.q5">What AI providers are supported?</summary>
+<p data-i18n="faq.a5">The registry includes 20+ provider integrations. OpenAI, Groq, Deepgram and iFlytek offer recognition; DeepSeek, Gemini and Claude offer text refinement. Ollama and MLX Server provide local text refinement. Built-in Sherpa recognition is currently unavailable.</p>
+</details>
+<details class="faq-item">
+<summary data-i18n="faq.q6">Is my data private?</summary>
+<p data-i18n="faq.a6">History is stored locally. Cloud recognition sends audio to your chosen recognition provider; cloud refinement sends the transcript and any enabled prompt context to the text provider. Their retention policies apply. Local text models keep that refinement step on your machine.</p>
+</details>
+<details class="faq-item">
+<summary data-i18n="faq.q7">How do I get the newest models?</summary>
+<p data-i18n="faq.a7">App updates include reviewed provider presets. Where supported, refresh the model list in provider settings, or enter a compatible model ID. A provider catalog listing is not a guarantee of account access or compatibility.</p>
+</details>
+</div></details></div></section>
+<!-- Coming Soon -->
+<!-- Download -->
+<section class="coming-soon">
+<div class="container">
+<div class="coming-soon-card fade-in">
+<h3 data-i18n="soon.title">Coming soon</h3>
+<p><strong data-i18n="soon.s1t">Voice-triggered search</strong> — <span data-i18n="soon.s1d">Ask questions by voice and get instant answers without leaving your app.</span></p>
+<p><strong data-i18n="soon.s3t">iOS App Store distribution</strong> — <span data-i18n="soon.s3d">The iOS keyboard is open source and buildable today — official App Store and TestFlight distribution is planned.</span></p>
+</div>
+</div>
+</section><section class="download" id="download">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="dl.title">Ready to stop typing?</h2>
+<div class="download-reqs fade-in">
+<span class="req" data-i18n="dl.r1">🔑 API Key (OpenAI or other)</span>
+<span class="req" data-i18n="dl.r2">🎤 Microphone permission</span>
+<span class="req" data-i18n="dl.r3">♿ Accessibility for automatic paste</span>
+</div><p class="download-note fade-in">
+<span data-i18n="dl.build">Or build from source:</span> <code>cd Vowrite/VowriteMac &amp;&amp; swift build</code>
+<br/>
+<a data-i18n="dl.src" href="https://github.com/Joevonlong/Vowrite">View source on GitHub</a>
+</p><p class="version fade-in">v0.2.3.0 · macOS 14 Sonoma · Apple Silicon</p>
+<div class="download-actions fade-in">
+<a class="btn btn-primary btn-large" href="https://github.com/Joevonlong/Vowrite/releases/latest">
+<span class="btn-icon">⬇</span> <span data-i18n="dl.btn">Download for Mac</span>
+</a>
+</div>
+<p class="download-note"><a data-vc-text="sourceLink" href="https://github.com/Joevonlong/Vowrite#readme">Build from source: read the GitHub guide</a></p>
+</div>
+<div class="container hc-platforms"><h3 data-hc="platformDetails">Installation and platform details</h3><details class="hc-details" id="mac-details"><summary><span data-hc="mac">macOS — installation &amp; use</span></summary><section class="ap-platform" id="download-mac">
+<div class="container">
+<div class="ap-platform-head">
+<div class="ap-platform-icon ap-platform-icon-mac">🖥️</div>
+<div>
+<h2 class="ap-platform-title">Vowrite for macOS</h2>
+<p class="ap-platform-tag" data-i18n="ap.mac.tag">A menu-bar companion: press your shortcut, speak, then insert clean text into a compatible editable field.</p>
+</div>
+<div class="ap-platform-meta">
+<span class="ap-meta-pill">macOS 14+</span>
+<span class="ap-meta-pill">Apple Silicon</span>
+<span class="ap-meta-pill ap-meta-free" data-i18n="ap.free">Free · Open Source</span>
+</div>
+</div>
+<!-- Install steps -->
+<h3 class="ap-step-h" data-i18n="ap.mac.install.t">Install in 3 steps</h3>
+<div class="ap-step-grid">
+<div class="ap-step">
+<div class="ap-step-num">1</div>
+<h4 data-i18n="ap.mac.s1.t">Download the DMG</h4>
+<p data-i18n="ap.mac.s1.d">Download the latest macOS DMG from GitHub Releases. Sparkle verifies updates with EdDSA signatures; this does not imply Apple notarization.</p>
+<a class="ap-step-link" href="https://github.com/Joevonlong/Vowrite/releases/latest"><span data-i18n="ap.mac.s1.cta">Download Vowrite.dmg</span> →</a>
+</div>
+<div class="ap-step">
+<div class="ap-step-num">2</div>
+<h4 data-i18n="ap.mac.s2.t">Drag to Applications</h4>
+<p data-i18n="ap.mac.s2.d">Mount the DMG, drop the app into <code>/Applications</code>. First launch will prompt for Microphone + Accessibility permission — grant both (the second enables Cmd+V keystroke output).</p>
+</div>
+<div class="ap-step">
+<div class="ap-step-num">3</div>
+<h4 data-i18n="ap.mac.s3.t">Add an API key</h4>
+<p data-i18n="ap.mac.s3.d">Open Settings → API Keys to add your recognition and text-provider keys, then select them under Models. Keys stay in Keychain at rest and are used to authenticate directly with providers. No Vowrite account is required.</p>
+</div>
+</div>
+<!-- Usage -->
+<h3 class="ap-step-h" data-i18n="ap.mac.use.t">Daily usage</h3>
+<div class="ap-flow">
+<div class="ap-flow-step">
+<span class="ap-flow-icon"><kbd>⌥</kbd>+<kbd>Space</kbd></span>
+<span class="ap-flow-label" data-i18n="ap.mac.flow1">Press the shortcut</span>
+</div>
+<span class="ap-flow-arrow">→</span>
+<div class="ap-flow-step">
+<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></span>
+<span class="ap-flow-label" data-i18n="ap.mac.flow2">Speak naturally</span>
+</div>
+<span class="ap-flow-arrow">→</span>
+<div class="ap-flow-step">
+<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<span class="ap-flow-label" data-i18n="ap.mac.flow3">Press again to stop</span>
+</div>
+<span class="ap-flow-arrow">→</span>
+<div class="ap-flow-step ap-flow-final">
+<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<span class="ap-flow-label" data-i18n="ap.mac.flow4">Text at cursor</span>
+</div>
+</div>
+<p class="ap-flow-note" data-i18n="ap.mac.flow.note">Press <kbd>⇧⌥ Space</kbd> to start translation. Stop with <kbd>⌥ Space</kbd> or the overlay Stop button. Dictation supports hold-to-record when Push-to-Talk is enabled. <a href="translate.html#trig">Learn more →</a></p>
+<!-- Features -->
+<h3 class="ap-step-h" data-i18n="ap.mac.features.t">What's in the Mac app</h3>
+<div class="ap-feat-grid">
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f1.t">Global hotkey</strong>
+<span data-i18n="ap.mac.f1.d">Carbon global shortcuts, including in fullscreen apps; avoid conflicting system shortcuts.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f2.t">Cmd+V injection</strong>
+<span data-i18n="ap.mac.f2.d">Clipboard paste into compatible editable fields in browsers, editors and other apps.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f3.t">Floating overlay</strong>
+<span data-i18n="ap.mac.f3.d">Orb Pulse animation tells you it's listening</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f4.t">Translate hotkey</strong>
+<span data-i18n="ap.mac.f4.d">⇧⌥ Space starts translation; use ⌥ Space or Stop to finish.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f5.t">Custom Modes</strong>
+<span data-i18n="ap.mac.f5.d">Email · Code · Slack — each with its own polish prompt</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.mac.f6.t">Auto-update</strong>
+<span data-i18n="ap.mac.f6.d">EdDSA-signed Sparkle appcast, opt-in beta channel</span>
+</div>
+</div>
+<div class="ap-cta-row">
+<a class="btn btn-primary" href="https://github.com/Joevonlong/Vowrite/releases/latest">
+<span class="btn-icon">⬇</span> <span data-i18n="ap.mac.cta">Download for Mac</span>
+</a>
+<a class="btn btn-secondary" data-i18n="ap.source" href="https://github.com/Joevonlong/Vowrite">View source</a>
+</div>
+</div>
+</section></details><details class="hc-details" id="ios-details"><summary><span data-hc="ios">iOS — source build &amp; keyboard</span></summary><section class="ap-platform ap-platform-alt" id="download-ios">
+<div class="container">
+<div class="ap-platform-head">
+<div class="ap-platform-icon ap-platform-icon-ios">📱</div>
+<div>
+<h2 class="ap-platform-title">Vowrite for iOS</h2>
+<p class="ap-platform-tag" data-i18n="ap.ios.tag">A system-wide keyboard extension that records, polishes, and types — the same engine you use on Mac, in your pocket.</p>
+</div>
+<div class="ap-platform-meta">
+<span class="ap-meta-pill">iOS 17+</span>
+<span class="ap-meta-pill">A14+</span>
+<span class="ap-meta-pill ap-meta-free" data-i18n="ap.free">Free · Open Source</span>
+</div>
+</div>
+<!-- iOS architecture explainer -->
+<div class="ap-ios-arch">
+<div class="ap-ios-arch-card">
+<div class="ap-ios-arch-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h4 data-i18n="ap.ios.arch.app.t">VowriteIOS app</h4>
+<p data-i18n="ap.ios.arch.app.d">Hosts the engine, settings, history, Modes, and language pickers. Runs the recording service in the background so the keyboard can stay tiny.</p>
+</div>
+<div class="ap-ios-arch-arrow">⇄</div>
+<div class="ap-ios-arch-card">
+<div class="ap-ios-arch-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></div>
+<h4 data-i18n="ap.ios.arch.kb.t">VowriteKeyboard extension</h4>
+<p data-i18n="ap.ios.arch.kb.d">A real iOS keyboard. Tap the mic to dictate, long-press to pick Translate. Talks to the host app over App Group + Darwin notifications.</p>
+</div>
+</div>
+<!-- Install steps (build from source) -->
+<h3 class="ap-step-h" data-i18n="ap.ios.install.t">Install (build from source)</h3>
+<p class="ap-note" data-i18n="ap.ios.install.note">The iOS app is open source and currently requires building in Xcode. No public App Store or TestFlight distribution is available.</p>
+<div class="ap-step-grid">
+<div class="ap-step">
+<div class="ap-step-num">1</div>
+<h4 data-i18n="ap.ios.s1.t">Clone the repo</h4>
+<p data-i18n="ap.ios.s1.d">Requires Xcode 15+ and a free Apple developer account.</p>
+<pre class="ap-code">git clone https://github.com/Joevonlong/Vowrite.git
+cd Vowrite/VowriteIOS
+open VowriteIOS.xcodeproj</pre>
+</div>
+<div class="ap-step">
+<div class="ap-step-num">2</div>
+<h4 data-i18n="ap.ios.s2.t">Sign and run</h4>
+<p data-i18n="ap.ios.s2.d">In Xcode → Signing &amp; Capabilities → set your Team. Plug in your iPhone, hit ▶. Build &amp; deploy both <code>VowriteIOS</code> and <code>VowriteKeyboard</code> targets.</p>
+</div>
+<div class="ap-step">
+<div class="ap-step-num">3</div>
+<h4 data-i18n="ap.ios.s3.t">Enable the keyboard</h4>
+<p data-i18n="ap.ios.s3.d">iOS Settings → General → Keyboard → Keyboards → Add New Keyboard → Vowrite. Tap "Vowrite" again and toggle <strong>Allow Full Access</strong> (required for clipboard + network).</p>
+</div>
+</div>
+<!-- Daily usage -->
+<h3 class="ap-step-h" data-i18n="ap.ios.use.t">Daily usage</h3>
+<div class="ap-flow">
+<div class="ap-flow-step">
+<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<span class="ap-flow-label" data-i18n="ap.ios.flow1">Switch to Vowrite keyboard</span>
+</div>
+<span class="ap-flow-arrow">→</span>
+<div class="ap-flow-step">
+<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></span>
+<span class="ap-flow-label" data-i18n="ap.ios.flow2">Tap or long-press mic</span>
+</div>
+<span class="ap-flow-arrow">→</span>
+<div class="ap-flow-step">
+<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<span class="ap-flow-label" data-i18n="ap.ios.flow3">Speak, tap to stop</span>
+</div>
+<span class="ap-flow-arrow">→</span>
+<div class="ap-flow-step ap-flow-final">
+<span class="ap-flow-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<span class="ap-flow-label" data-i18n="ap.ios.flow4">Polished text inserted</span>
+</div>
+</div>
+<p class="ap-flow-note" data-i18n="ap.ios.flow.note">Long-press the mic and you'll see the Dictate / Translate arc — slide up to choose, release. <a href="index.html#translation-triggers">See the gesture →</a></p>
+<!-- Features -->
+<h3 class="ap-step-h" data-i18n="ap.ios.features.t">What's in the iOS app</h3>
+<div class="ap-feat-grid">
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f1.t">Real keyboard</strong>
+<span data-i18n="ap.ios.f1.d">Works in Messages, Mail, Notes, Slack, browsers — anywhere a keyboard appears</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M6 10v1a6 6 0 0 0 12 0v-1 M12 17v4 M8 21h8"></path></svg></span>
+<strong data-i18n="ap.ios.f2.t">Long-press arc</strong>
+<span data-i18n="ap.ios.f2.d">Hold the mic, slide up to pick Dictate or Translate. Release to fire.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f3.t">Translate banner</strong>
+<span data-i18n="ap.ios.f3.d">"Translating to English" sticker stays on screen so you never wonder what's about to come out</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f4.t">Mode editor parity</strong>
+<span data-i18n="ap.ios.f4.d">Edit Modes and source/target languages in the iOS app.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f5.t">History and text deletion</strong>
+<span data-i18n="ap.ios.f5.d">Review transcripts and swipe to delete history. The keyboard can delete a word, line, paragraph or all available text.</span>
+</div>
+<div class="ap-feat">
+<span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
+<strong data-i18n="ap.ios.f6.t">Keychain + App Group</strong>
+<span data-i18n="ap.ios.f6.d">Keys are stored in Keychain and used to authenticate directly with providers. The app and keyboard communicate through App Group and Darwin notifications.</span>
+</div>
+</div>
+<div class="ap-cta-row">
+<a class="btn btn-primary" href="https://github.com/Joevonlong/Vowrite/tree/main/VowriteIOS">
+<span class="btn-icon">⌥</span> <span data-i18n="ap.ios.cta">Build from source</span>
+</a>
+<a class="btn btn-secondary" data-i18n="ap.ios.beta" href="https://github.com/Joevonlong/Vowrite/issues">Ask about iOS availability</a>
+</div>
+</div>
+</section></details><details class="hc-details"><summary>Vowrite Engine</summary><section class="ap-sync">
+<div class="container">
+<h2 class="section-title fade-in" data-i18n="ap.sync.t">One engine, two platforms</h2>
+<p class="section-sub fade-in" data-i18n="ap.sync.sub">Both apps share <strong>VowriteKit</strong>: audio, provider integrations, Modes and translation. On iOS, the app and keyboard share settings through an App Group on the same device. Mac and iOS settings are separate; there is no automatic cross-device sync.</p>
+<div class="ap-sync-row fade-in">
+<div class="ap-sync-card">
+<div class="ap-sync-icon">🧠</div>
+<strong>VowriteKit</strong>
+<span data-i18n="ap.sync.kit">Shared Swift library — audio, Whisper, polish, Modes, translation</span>
+</div>
+<div class="ap-sync-arrow">↗</div>
+<div class="ap-sync-card">
+<div class="ap-sync-icon">🖥️</div>
+<strong>VowriteMac</strong>
+<span data-i18n="ap.sync.mac">Menu bar UI, Carbon hotkey, CGEvent injection, Sparkle</span>
+</div>
+<div class="ap-sync-arrow">↘</div>
+<div class="ap-sync-card">
+<div class="ap-sync-icon">📱</div>
+<strong>VowriteIOS + VowriteKeyboard</strong>
+<span data-i18n="ap.sync.ios">Host app + keyboard extension, App Group IPC, haptics</span>
+</div>
+</div>
+</div>
+</section></details></div></section>
+</main>
+<!-- Footer -->
+<footer class="footer">
+<div class="container footer-inner">
+<div class="footer-left">
+<img alt="Vowrite app icon" class="footer-icon" height="64" src="app-icon-64.png" width="64"/>
+<span>© 2026 Vowrite. Open source under <a href="https://github.com/Joevonlong/Vowrite/blob/main/LICENSE" style="color: inherit; text-decoration: underline;">MIT license</a>.</span>
+</div>
+<div class="footer-links"><a data-i18n="nav.apps" href="apps.html">Apps</a><a data-i18n="nav.translate" href="translate.html">Translate</a><a data-i18n="nav.pricing" href="pricing.html">Usage</a><a data-i18n="nav.features" href="index.html#features">Features</a><a data-i18n="nav.how" href="index.html#live-demo">How It Works</a>
+<a href="https://github.com/Joevonlong/Vowrite">GitHub</a>
+<a href="https://github.com/Joevonlong/Vowrite/releases">Releases</a>
+<a href="https://github.com/Joevonlong/Vowrite/issues">Feedback</a>
+</div>
+</div>
+<div class="container va-footer-note"><span data-va="footer">Free app · Open source · Cloud usage billed by your provider</span></div></footer>
+<script src="i18n.js"></script><script src="website-assets/redesign.js"></script><script src="website-assets/home-consumer.js"></script><script src="website-assets/home-header.js"></script><script src="website-assets/home-flow.js"></script><script src="website-assets/site-alignment.js"></script><script src="website-assets/translation-details.js"></script><script src="website-assets/consolidation.js"></script><script src="website-assets/production.js"></script></body>
 </html>

@@ -1,0 +1,766 @@
+{
+  "date": "2026-09-22",
+  "productBaseline": "5c9e49021f29053ea7d07fd779319c4829558f0d",
+  "copy": {
+    "hero.sub": {
+      "en": "AI voice input for Mac, with built-in translation, per-app Modes and 20+ provider integrations. Use cloud recognition and cloud or local text refinement.",
+      "zh": "Mac AI 语音输入，支持翻译、按应用切换 Mode 和 20 多个服务商集成。云端识别可搭配云端或本地文字润色。",
+      "de": "KI-Spracheingabe für den Mac mit Übersetzung, App-Modi und über 20 Anbieterintegrationen. Cloud-Erkennung mit Cloud- oder lokaler Textbearbeitung."
+    },
+    "feat.fast.d": {
+      "en": "Speculative polish pre-warms connections during recording. Response time depends on the provider, network and recording length.",
+      "zh": "推测式润色在录音时预热连接。实际响应时间取决于服务商、网络和录音长度。",
+      "de": "Die Textbearbeitung wärmt Verbindungen während der Aufnahme vor. Die Antwortzeit hängt von Anbieter, Netzwerk und Aufnahmelänge ab."
+    },
+    "how.title": {
+      "en": "Three steps. From voice to text.",
+      "zh": "三步，把声音变成文字。",
+      "de": "Drei Schritte. Von Stimme zu Text."
+    },
+    "how.sub": {
+      "en": "Record, transcribe and refine, then insert.",
+      "zh": "录音、转写与润色，然后写入。",
+      "de": "Aufnehmen, transkribieren und bearbeiten, dann einfügen."
+    },
+    "feat.works.d": {
+      "en": "Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.",
+      "zh": "通过剪贴板粘贴，将文字写入当前可编辑文本框。需要辅助功能权限；安全输入框或限制粘贴的应用可能不支持。",
+      "de": "Text per Zwischenablage in das aktive Eingabefeld einfügen. Bedienungshilfen sind erforderlich; geschützte Felder oder Apps, die Einfügen blockieren, können inkompatibel sein."
+    },
+    "feat.translate.d": {
+      "en": "Translate between languages supported by your chosen recognition and text models. Use the Mac translation shortcut or the iOS keyboard gesture without changing your Mode. <a href=\"translate.html\" data-i18n=\"feat.translate.link\">Learn more →</a>",
+      "zh": "在所选识别和文字模型支持的语言间翻译。使用 Mac 翻译快捷键或 iOS 键盘手势，无需切换当前 Mode。 <a href=\"translate.html\" data-i18n=\"feat.translate.link\">了解更多 →</a>",
+      "de": "Zwischen Sprachen deiner Erkennungs- und Textmodelle übersetzen. Mit Mac-Tastenkürzel oder iOS-Tastaturgeste, ohne den Mode zu ändern. <a href=\"translate.html\" data-i18n=\"feat.translate.link\">Mehr erfahren →</a>"
+    },
+    "faq.a1": {
+      "en": "Vowrite transcribes your recording, then optionally uses a text model to remove fillers, fix grammar and add punctuation. It pastes the result at the cursor. Processing time depends on the models, network and audio length.",
+      "zh": "Vowrite 转写录音，并可使用文字模型去掉口头禅、修正语法和添加标点，再将结果粘贴到光标处。处理时长取决于模型、网络和音频长度。",
+      "de": "Vowrite transkribiert die Aufnahme und kann Füllwörter entfernen sowie Grammatik und Zeichensetzung korrigieren. Das Ergebnis wird am Cursor eingefügt. Die Dauer hängt von Modellen, Netzwerk und Audiolänge ab."
+    },
+    "faq.a2": {
+      "en": "Yes. Vowrite is free and open source. Bring your own provider credentials; cloud usage is billed directly by your chosen providers under their current rates and limits.",
+      "zh": "是的，Vowrite 免费且开源。使用自己的服务商凭据，云端用量按所选服务商的当前价格和额度直接结算。",
+      "de": "Ja. Vowrite ist kostenlos und Open Source. Du nutzt eigene Anbieter-Zugangsdaten; Cloud-Nutzung wird direkt nach den aktuellen Preisen und Limits des Anbieters abgerechnet."
+    },
+    "faq.a3": {
+      "en": "Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.",
+      "zh": "通过剪贴板粘贴，将文字写入当前可编辑文本框。需要辅助功能权限；安全输入框或限制粘贴的应用可能不支持。",
+      "de": "Text per Zwischenablage in das aktive Eingabefeld einfügen. Bedienungshilfen sind erforderlich; geschützte Felder oder Apps, die Einfügen blockieren, können inkompatibel sein."
+    },
+    "faq.a4": {
+      "en": "Mixed Chinese and English is supported by compatible recognition models. Quality and language coverage depend on the selected model; no manual language switch is needed when automatic detection is supported.",
+      "zh": "兼容的识别模型支持中英混合输入。识别质量和语言范围取决于所选模型；支持自动检测时无需手动切换语言。",
+      "de": "Kompatible Erkennungsmodelle unterstützen gemischtes Chinesisch und Englisch. Qualität und Sprachumfang hängen vom Modell ab; bei automatischer Erkennung ist kein manueller Wechsel nötig."
+    },
+    "faq.a5": {
+      "en": "The registry includes 20+ provider integrations. OpenAI, Groq, Deepgram and iFlytek offer recognition; DeepSeek, Gemini and Claude offer text refinement. Ollama and MLX Server provide local text refinement. Built-in Sherpa recognition is currently unavailable.",
+      "zh": "注册表包含 20 多个服务商集成。OpenAI、Groq、Deepgram、讯飞提供识别，DeepSeek、Gemini、Claude 提供文字润色。Ollama 和 MLX Server 可用于本地文字润色；内置 Sherpa 识别当前不可用。",
+      "de": "Die Registry enthält über 20 Anbieterintegrationen. OpenAI, Groq, Deepgram und iFlytek bieten Erkennung, DeepSeek, Gemini und Claude Textbearbeitung. Ollama und MLX Server ermöglichen lokale Textbearbeitung. Die integrierte Sherpa-Erkennung ist derzeit nicht verfügbar."
+    },
+    "faq.a6": {
+      "en": "History is stored locally. Cloud recognition sends audio to your chosen recognition provider; cloud refinement sends the transcript and any enabled prompt context to the text provider. Their retention policies apply. Local text models keep that refinement step on your machine.",
+      "zh": "历史记录保存在本地。云端识别会将音频发送给所选识别服务商；云端润色会将转写文本及启用的提示上下文发送给文字服务商，适用其数据保留政策。本地文字模型可让润色步骤留在你的电脑上。",
+      "de": "Der Verlauf wird lokal gespeichert. Cloud-Erkennung sendet Audio an den gewählten Anbieter; Cloud-Textbearbeitung sendet Transkript und aktivierten Prompt-Kontext an den Textanbieter. Dessen Aufbewahrungsregeln gelten. Lokale Textmodelle halten diesen Bearbeitungsschritt auf deinem Rechner."
+    },
+    "faq.a7": {
+      "en": "App updates include reviewed provider presets. Where supported, refresh the model list in provider settings, or enter a compatible model ID. A provider catalog listing is not a guarantee of account access or compatibility.",
+      "zh": "应用更新包含经过核对的服务商预设。受支持的服务商可在设置中刷新模型列表，或填写兼容的模型 ID。目录中列出某个模型，并不保证当前账号有权限或协议兼容。",
+      "de": "App-Updates enthalten geprüfte Anbietervorgaben. Wenn unterstützt, aktualisiere die Modellliste in den Einstellungen oder trage eine kompatible Modell-ID ein. Ein Katalogeintrag garantiert weder Kontozugriff noch Kompatibilität."
+    },
+    "prov.combo.groq.spec": {
+      "en": "Cloud recognition · provider limits apply",
+      "zh": "云端识别 · 以服务商额度为准",
+      "de": "Cloud-Erkennung · Anbieterlimits gelten"
+    },
+    "prov.combo.ds.spec": {
+      "en": "Text refinement · usage billing",
+      "zh": "文字润色 · 按用量计费",
+      "de": "Textbearbeitung · nach Verbrauch"
+    },
+    "prov.combo.foot": {
+      "en": "Example combination: Groq for speech recognition and DeepSeek for refinement. Check each provider’s current prices, account access and limits; latency depends on your recording and network.",
+      "zh": "示例组合：Groq 负责识别，DeepSeek 负责润色。请核对各服务商的现价、账号权限和额度；延迟取决于录音和网络。",
+      "de": "Beispielkombination: Groq für Erkennung und DeepSeek für Textbearbeitung. Aktuelle Preise, Kontozugriff und Limits prüfen; die Latenz hängt von Aufnahme und Netzwerk ab."
+    },
+    "prov.more": {
+      "en": "More provider integrations",
+      "zh": "更多服务商集成",
+      "de": "Weitere Anbieterintegrationen"
+    },
+    "prov.ollamad": {
+      "en": "Local text refinement",
+      "zh": "本地文字润色",
+      "de": "Lokale Textbearbeitung"
+    },
+    "prov.offline": {
+      "en": "Local refinement",
+      "zh": "本地润色",
+      "de": "Lokale Bearbeitung"
+    },
+    "prov.mlxd": {
+      "en": "Apple Silicon · local text refinement",
+      "zh": "Apple Silicon · 本地文字润色",
+      "de": "Apple Silicon · lokale Textbearbeitung"
+    },
+    "prov.local": {
+      "en": "Local text model",
+      "zh": "本地文字模型",
+      "de": "Lokales Textmodell"
+    },
+    "prov.free": {
+      "en": "Provider plan",
+      "zh": "服务商方案",
+      "de": "Anbietertarif"
+    },
+    "dl.r3": {
+      "en": "♿ Accessibility for automatic paste",
+      "zh": "♿ 自动粘贴需要辅助功能权限",
+      "de": "♿ Bedienungshilfen für automatisches Einfügen"
+    },
+    "ap.mac.s1.d": {
+      "en": "Download the latest macOS DMG from GitHub Releases. Sparkle verifies updates with EdDSA signatures; this does not imply Apple notarization.",
+      "zh": "从 GitHub Releases 下载最新 macOS DMG。Sparkle 使用 EdDSA 签名验证更新；这不等于 Apple 公证。",
+      "de": "Lade das aktuelle macOS-DMG von GitHub Releases. Sparkle prüft Updates mit EdDSA-Signaturen; dies bedeutet keine Apple-Notarisierung."
+    },
+    "ap.mac.s3.d": {
+      "en": "Open Settings → API Keys to add your recognition and text-provider keys, then select them under Models. Keys stay in Keychain at rest and are used to authenticate directly with providers. No Vowrite account is required.",
+      "zh": "在设置 → API Keys 添加识别和文字服务商密钥，再在 Models 中选择模型。密钥静态保存在钥匙串中，并直接用于服务商认证；无需 Vowrite 账号。",
+      "de": "Unter Einstellungen → API Keys die Anbieter-Schlüssel hinzufügen, dann unter Models auswählen. Die Schlüssel werden im Schlüsselbund gespeichert und zur direkten Anbieter-Authentifizierung genutzt. Kein Vowrite-Konto erforderlich."
+    },
+    "ap.mac.flow1": {
+      "en": "Press the shortcut",
+      "zh": "按下快捷键",
+      "de": "Tastenkürzel drücken"
+    },
+    "ap.mac.flow3": {
+      "en": "Press again to stop",
+      "zh": "再次按下结束",
+      "de": "Zum Beenden erneut drücken"
+    },
+    "ap.mac.flow.note": {
+      "en": "Press <kbd>⇧⌥ Space</kbd> to start translation. Stop with <kbd>⌥ Space</kbd> or the overlay Stop button. Dictation supports hold-to-record when Push-to-Talk is enabled. <a href=\"translate.html#trig\">Learn more →</a>",
+      "zh": "按 <kbd>⇧⌥ Space</kbd> 开始翻译，用 <kbd>⌥ Space</kbd> 或悬浮条停止按钮结束。口述启用 Push-to-Talk 后支持按住录音。<a href=\"translate.html#trig\">了解更多 →</a>",
+      "de": "Mit <kbd>⇧⌥ Space</kbd> die Übersetzung starten. Mit <kbd>⌥ Space</kbd> oder Stopp im Overlay beenden. Diktieren unterstützt bei aktiviertem Push-to-Talk auch Gedrückthalten. <a href=\"translate.html#trig\">Mehr erfahren →</a>"
+    },
+    "ap.sync.sub": {
+      "en": "Both apps share <strong>VowriteKit</strong>: audio, provider integrations, Modes and translation. On iOS, the app and keyboard share settings through an App Group on the same device. Mac and iOS settings are separate; there is no automatic cross-device sync.",
+      "zh": "两个应用共享 <strong>VowriteKit</strong> 的音频、服务商集成、Mode 和翻译逻辑。iOS 主应用和键盘通过 App Group 在同一台设备上共享设置。Mac 与 iOS 的设置独立，不会自动跨设备同步。",
+      "de": "Beide Apps nutzen <strong>VowriteKit</strong> für Audio, Anbieter, Modi und Übersetzung. iOS-App und Tastatur teilen Einstellungen per App Group auf demselben Gerät. Mac- und iOS-Einstellungen bleiben getrennt; es gibt keine automatische geräteübergreifende Synchronisierung."
+    },
+    "tr.trig.ios.b3": {
+      "en": "Configure source and target languages separately on each device. The iOS app shares these settings with its keyboard.",
+      "zh": "在每台设备上分别设置源语言和目标语言；iOS 主应用会与本机键盘共享这些设置。",
+      "de": "Quell- und Zielsprache auf jedem Gerät separat einstellen. Die iOS-App teilt sie mit ihrer Tastatur."
+    },
+    "tr.trig.mac.d": {
+      "en": "Press ⇧⌥ Space to start a translation recording. Stop with ⌥ Space or the overlay Stop control. Your current Mode (Email, Code, Note…) stays unchanged.",
+      "zh": "按 ⇧⌥ Space 开始翻译录音，用 ⌥ Space 或悬浮条停止按钮结束。当前 Mode（邮件、代码、笔记等）保持不变。",
+      "de": "Mit ⇧⌥ Space eine Übersetzungsaufnahme starten. Mit ⌥ Space oder Stopp im Overlay beenden. Dein aktueller Mode (E-Mail, Code, Notiz …) bleibt unverändert."
+    },
+    "tr.pipe.s1.d": {
+      "en": "Press the translation shortcut on Mac, or choose Translate from the iOS microphone menu. Speak in a language supported by your chosen models.",
+      "zh": "在 Mac 按翻译快捷键，或在 iOS 麦克风菜单选择翻译。使用所选模型支持的语言说话。",
+      "de": "Auf dem Mac das Übersetzungs-Tastenkürzel drücken oder im iOS-Mikrofonmenü Übersetzen wählen. Eine von deinen Modellen unterstützte Sprache sprechen."
+    },
+    "tr.sub": {
+      "en": "Press the translation shortcut on Mac or choose Translate in the iOS keyboard. Vowrite recognizes speech and writes the requested output language into a compatible text field. Language support depends on your models.",
+      "zh": "在 Mac 按翻译快捷键，或在 iOS 键盘选择翻译。Vowrite 识别语音并将目标语言文字写入兼容的文本框；支持的语言取决于所选模型。",
+      "de": "Auf dem Mac das Übersetzungs-Tastenkürzel drücken oder in der iOS-Tastatur Übersetzen wählen. Vowrite schreibt die gewünschte Sprache in ein kompatibles Textfeld. Die Sprachunterstützung hängt von den Modellen ab."
+    },
+    "site.allFeatures": {
+      "en": "All features and the voice workflow",
+      "zh": "全部功能与语音流程",
+      "de": "Alle Funktionen und der Sprachablauf"
+    },
+    "site.overview": {
+      "en": "About Vowrite",
+      "zh": "关于 Vowrite",
+      "de": "Über Vowrite"
+    },
+    "site.providerDetails": {
+      "en": "Full provider guide",
+      "zh": "完整服务商说明",
+      "de": "Vollständige Anbieterübersicht"
+    },
+    "site.allQuestions": {
+      "en": "All questions and answers",
+      "zh": "全部常见问题与解答",
+      "de": "Alle Fragen und Antworten"
+    },
+    "site.feature": {
+      "en": "Feature",
+      "zh": "功能",
+      "de": "Funktion"
+    },
+    "site.requirements": {
+      "en": "macOS 14+ · Apple Silicon · Free app, provider usage billed separately",
+      "zh": "macOS 14+ · Apple Silicon · 应用免费，服务商用量另计费",
+      "de": "macOS 14+ · Apple Silicon · Kostenlose App, Anbieternutzung separat berechnet"
+    },
+    "site.localNote": {
+      "en": "Local text refinement is available through Ollama or MLX Server on Mac. Built-in Sherpa speech recognition is currently unavailable; a cloud recognition provider is needed for this example.",
+      "zh": "Mac 可通过 Ollama 或 MLX Server 使用本地文字润色。内置 Sherpa 语音识别当前不可用，此示例需要云端识别服务商。",
+      "de": "Lokale Textbearbeitung auf dem Mac ist über Ollama oder MLX Server möglich. Die integrierte Sherpa-Spracherkennung ist derzeit nicht verfügbar; dieses Beispiel benötigt Cloud-Erkennung."
+    },
+    "site.historyNote": {
+      "en": "Original provider tables are preserved below as an archival snapshot, not verified current quotes or current Vowrite capabilities. In particular, Sherpa is unavailable and Ollama / MLX provide text refinement only. Use the official billing links for current rates.",
+      "zh": "下方完整保留原服务商表格作为历史快照，不是已核验的现价或当前 Vowrite 能力说明。其中 Sherpa 不可用，Ollama / MLX 仅用于文字润色。当前价格请查看官方计费链接。",
+      "de": "Die ursprünglichen Anbietertabellen bleiben als Archiv erhalten, nicht als verifizierte aktuelle Preise oder Funktionszusagen. Sherpa ist nicht verfügbar; Ollama / MLX dienen nur der Textbearbeitung. Aktuelle Preise stehen auf den verlinkten offiziellen Seiten."
+    },
+    "site.historyLanguage": {
+      "en": "The original model and pricing notes below are preserved in English.",
+      "zh": "下方原始型号和价格注释保留英文。",
+      "de": "Die ursprünglichen Modell- und Preisangaben unten bleiben auf Englisch erhalten."
+    },
+    "site.copy": {
+      "en": "Copy command",
+      "zh": "复制命令",
+      "de": "Befehl kopieren"
+    },
+    "site.copied": {
+      "en": "Copied",
+      "zh": "已复制",
+      "de": "Kopiert"
+    },
+    "site.copyFailed": {
+      "en": "Copy unavailable. Select the command and copy it manually.",
+      "zh": "无法自动复制，请选中命令手动复制。",
+      "de": "Automatisches Kopieren nicht verfügbar. Befehl auswählen und manuell kopieren."
+    },
+    "site.onboarding": {
+      "en": "Download → Install → Add provider keys → Try your first dictation",
+      "zh": "下载 → 安装 → 配置服务商密钥 → 第一次口述",
+      "de": "Laden → Installieren → Anbieter-Schlüssel eintragen → Erstes Diktat"
+    },
+    "ap.ios.f4.d": {
+      "en": "Edit Modes and source/target languages in the iOS app.",
+      "zh": "在 iOS 主应用中编辑 Mode 及源语言、目标语言。",
+      "de": "Modi sowie Quell- und Zielsprache in der iOS-App bearbeiten."
+    },
+    "ap.ios.f5.t": {
+      "en": "History and text deletion",
+      "zh": "历史记录与文字删除",
+      "de": "Verlauf und Textlöschung"
+    },
+    "ap.ios.f5.d": {
+      "en": "Review transcripts and swipe to delete history. The keyboard can delete a word, line, paragraph or all available text.",
+      "zh": "查看转写记录并轻扫删除历史。键盘可按单词、行、段落或全部可用文字删除。",
+      "de": "Transkripte ansehen und Verlaufseinträge per Wischgeste löschen. Die Tastatur kann Wörter, Zeilen, Absätze oder den verfügbaren Text löschen."
+    },
+    "ap.ios.f6.d": {
+      "en": "Keys are stored in Keychain and used to authenticate directly with providers. The app and keyboard communicate through App Group and Darwin notifications.",
+      "zh": "密钥存储在钥匙串中，用于直接向服务商认证。主应用与键盘通过 App Group 和 Darwin 通知通信。",
+      "de": "Schlüssel werden im Schlüsselbund gespeichert und direkt zur Anbieter-Authentifizierung genutzt. App und Tastatur kommunizieren per App Group und Darwin-Mitteilungen."
+    },
+    "ap.ios.beta": {
+      "en": "Ask about iOS availability",
+      "zh": "咨询 iOS 分发进展",
+      "de": "Nach iOS-Verfügbarkeit fragen"
+    },
+    "ap.ios.install.note": {
+      "en": "The iOS app is open source and currently requires building in Xcode. No public App Store or TestFlight distribution is available.",
+      "zh": "iOS 应用已开源，目前需要使用 Xcode 自行构建，尚无公开 App Store 或 TestFlight 分发渠道。",
+      "de": "Die iOS-App ist Open Source und muss derzeit in Xcode gebaut werden. Es gibt keinen öffentlichen App-Store- oder TestFlight-Vertrieb."
+    },
+    "tr.set.p1": {
+      "en": "On Mac, open General → Language & Translation. On iOS, open Settings → Language & Feedback → Translation. Choose a source-language hint or automatic detection, then a target language. Each device remembers its own settings.",
+      "zh": "Mac：通用 → 语言与翻译。iOS：设置 → 语言与反馈 → 翻译。选择源语言提示或自动检测，再选择目标语言。各设备分别保存自己的设置。",
+      "de": "Mac: Allgemein → Sprache & Übersetzung. iOS: Einstellungen → Sprache & Feedback → Übersetzung. Quellsprache oder automatische Erkennung und dann Zielsprache wählen. Jedes Gerät speichert seine eigenen Einstellungen."
+    },
+    "site.compareNote": {
+      "en": "Checked 22 September 2026. Features vary by platform, model and plan. “Not documented” means no support claim was confirmed in the linked official documentation.",
+      "zh": "核对日期：2026 年 9 月 22 日。能力因平台、模型和方案而异。“未见说明”表示所链官方文档未确认该支持项。",
+      "de": "Geprüft am 22. September 2026. Funktionen hängen von Plattform, Modell und Tarif ab. „Nicht dokumentiert“ bedeutet, dass die verlinkten offiziellen Unterlagen keine Unterstützung bestätigen."
+    },
+    "cmp.r9": {
+      "en": "Data processing and history",
+      "zh": "数据处理与历史",
+      "de": "Datenverarbeitung und Verlauf"
+    },
+    "cmp.r11": {
+      "en": "Local processing",
+      "zh": "本地处理",
+      "de": "Lokale Verarbeitung"
+    },
+    "tr.cmp.r1": {
+      "en": "Voice translation output",
+      "zh": "语音翻译输出",
+      "de": "Ausgabe der Sprachübersetzung"
+    },
+    "tr.cmp.r2": {
+      "en": "App integration",
+      "zh": "应用集成",
+      "de": "App-Integration"
+    },
+    "tr.cmp.r4": {
+      "en": "API keys and subscriptions",
+      "zh": "API 密钥与订阅",
+      "de": "API-Schlüssel und Abonnements"
+    },
+    "tr.cmp.r6": {
+      "en": "Offline / local processing",
+      "zh": "离线/本地处理",
+      "de": "Offline-/lokale Verarbeitung"
+    },
+    "comparison.translate.0.0": {
+      "en": "Translate recordings into compatible text fields",
+      "zh": "录音后翻译到兼容文本框",
+      "de": "Aufnahmen in kompatible Textfelder übersetzen"
+    },
+    "comparison.translate.0.1": {
+      "en": "Spoken translation; copy/replace supported text",
+      "zh": "语音翻译；复制/替换受支持文字",
+      "de": "Sprachübersetzung; Text kopieren/ersetzen"
+    },
+    "comparison.translate.0.2": {
+      "en": "Spoken translation; copy/share transcript",
+      "zh": "语音翻译；复制/分享转写",
+      "de": "Sprachübersetzung; Transkript kopieren/teilen"
+    },
+    "comparison.translate.0.3": {
+      "en": "Live voice/subtitles for meetings and conversations",
+      "zh": "会议与对话的实时语音/字幕",
+      "de": "Live-Sprache/Untertitel für Meetings und Gespräche"
+    },
+    "comparison.translate.1.0": {
+      "en": "Mac text fields; iOS where third-party keyboards are allowed",
+      "zh": "Mac 文本框；允许第三方键盘的 iOS 应用",
+      "de": "Mac-Textfelder; iOS mit erlaubten Drittanbietertastaturen"
+    },
+    "comparison.translate.1.1": {
+      "en": "App and supported system text actions",
+      "zh": "应用与受支持的系统文字操作",
+      "de": "App und unterstützte Systemtextaktionen"
+    },
+    "comparison.translate.1.2": {
+      "en": "Web, iOS and Android",
+      "zh": "网页、iOS 与 Android",
+      "de": "Web, iOS und Android"
+    },
+    "comparison.translate.1.3": {
+      "en": "Desktop/mobile/web; Teams, Zoom, Meet",
+      "zh": "桌面/移动/网页；Teams、Zoom、Meet",
+      "de": "Desktop/Mobil/Web; Teams, Zoom, Meet"
+    },
+    "comparison.translate.2.0": {
+      "en": "Choose recognition and text models",
+      "zh": "自选识别和文字模型",
+      "de": "Erkennungs- und Textmodelle wählen"
+    },
+    "comparison.translate.2.1": {
+      "en": "Apple-managed",
+      "zh": "Apple 管理",
+      "de": "Von Apple verwaltet"
+    },
+    "comparison.translate.2.2": {
+      "en": "Google-managed",
+      "zh": "Google 管理",
+      "de": "Von Google verwaltet"
+    },
+    "comparison.translate.2.3": {
+      "en": "Service-managed",
+      "zh": "服务方管理",
+      "de": "Vom Dienst verwaltet"
+    },
+    "comparison.translate.3.0": {
+      "en": "BYOK; provider costs separate",
+      "zh": "自带密钥；服务商费用另计",
+      "de": "BYOK; Anbieterkosten separat"
+    },
+    "comparison.translate.3.1": {
+      "en": "Free Apple app",
+      "zh": "Apple 免费应用",
+      "de": "Kostenlose Apple-App"
+    },
+    "comparison.translate.3.2": {
+      "en": "Free consumer app",
+      "zh": "免费消费者应用",
+      "de": "Kostenlose Verbraucher-App"
+    },
+    "comparison.translate.3.3": {
+      "en": "Voice plans; eligible paid Translate plans include limited minutes",
+      "zh": "Voice 方案；部分付费 Translate 方案含有限分钟数",
+      "de": "Voice-Tarife; ausgewählte Translate-Tarife enthalten begrenzte Minuten"
+    },
+    "comparison.translate.4.0": {
+      "en": "Custom translation prompts",
+      "zh": "自定义翻译提示词",
+      "de": "Eigene Übersetzungs-Prompts"
+    },
+    "comparison.translate.4.1": {
+      "en": "Language/conversation controls",
+      "zh": "语言/对话控制",
+      "de": "Sprach-/Gesprächseinstellungen"
+    },
+    "comparison.translate.4.2": {
+      "en": "Language/conversation controls",
+      "zh": "语言/对话控制",
+      "de": "Sprach-/Gesprächseinstellungen"
+    },
+    "comparison.translate.4.3": {
+      "en": "Glossaries, terms and formality",
+      "zh": "术语表、词汇和正式程度",
+      "de": "Glossare, Begriffe und Formalität"
+    },
+    "comparison.translate.5.0": {
+      "en": "Local text model option; recognition needs a configured service",
+      "zh": "可选本地文字模型；识别仍需配置服务",
+      "de": "Lokales Textmodell möglich; Erkennung benötigt Dienst"
+    },
+    "comparison.translate.5.1": {
+      "en": "Downloaded supported languages",
+      "zh": "可下载受支持语言",
+      "de": "Heruntergeladene unterstützte Sprachen"
+    },
+    "comparison.translate.5.2": {
+      "en": "Downloadable languages; feature limits",
+      "zh": "可下载语言；功能有限制",
+      "de": "Sprachdownloads; Funktionseinschränkungen"
+    },
+    "comparison.translate.5.3": {
+      "en": "Online service; offline mode not documented",
+      "zh": "在线服务；未见离线模式说明",
+      "de": "Onlinedienst; Offline-Modus nicht dokumentiert"
+    },
+    "comparison.translate.6.0": {
+      "en": "Yes",
+      "zh": "开源",
+      "de": "Ja"
+    },
+    "comparison.translate.6.1": {
+      "en": "Not advertised",
+      "zh": "未宣称开源",
+      "de": "Nicht beworben"
+    },
+    "comparison.translate.6.2": {
+      "en": "Not advertised",
+      "zh": "未宣称开源",
+      "de": "Nicht beworben"
+    },
+    "comparison.translate.6.3": {
+      "en": "Not advertised",
+      "zh": "未宣称开源",
+      "de": "Nicht beworben"
+    },
+    "comparison.app.0.0": {
+      "en": "Free app; provider usage billed separately",
+      "zh": "应用免费；服务商用量另计",
+      "de": "Kostenlose App; Anbieternutzung separat"
+    },
+    "comparison.app.0.1": {
+      "en": "Free 8,000 words/week; Pro $12/mo yearly or $30 monthly",
+      "zh": "免费 8,000 词/周；Pro 年付折合 $12/月或月付 $30",
+      "de": "8.000 Wörter/Woche gratis; Pro $12/Monat jährlich oder $30 monatlich"
+    },
+    "comparison.app.0.2": {
+      "en": "Free tier; paid Pro plans",
+      "zh": "免费额度；Pro 付费方案",
+      "de": "Kostenloser Tarif; Pro kostenpflichtig"
+    },
+    "comparison.app.0.3": {
+      "en": "Included with Apple devices",
+      "zh": "Apple 设备内置",
+      "de": "In Apple-Geräten enthalten"
+    },
+    "comparison.app.1.0": {
+      "en": "Choose recognition and refinement providers",
+      "zh": "识别与润色服务商分别选",
+      "de": "Erkennung und Bearbeitung frei wählen"
+    },
+    "comparison.app.1.1": {
+      "en": "Service-managed models",
+      "zh": "服务方管理模型",
+      "de": "Vom Dienst verwaltete Modelle"
+    },
+    "comparison.app.1.2": {
+      "en": "Multiple cloud/local models",
+      "zh": "多个云端/本地模型",
+      "de": "Mehrere Cloud-/lokale Modelle"
+    },
+    "comparison.app.1.3": {
+      "en": "Apple-managed",
+      "zh": "Apple 管理",
+      "de": "Von Apple verwaltet"
+    },
+    "comparison.app.2.0": {
+      "en": "Yes",
+      "zh": "支持",
+      "de": "Ja"
+    },
+    "comparison.app.2.1": {
+      "en": "Not documented",
+      "zh": "未见说明",
+      "de": "Nicht dokumentiert"
+    },
+    "comparison.app.2.2": {
+      "en": "BYOK with Pro",
+      "zh": "Pro 支持自带密钥",
+      "de": "BYOK mit Pro"
+    },
+    "comparison.app.2.3": {
+      "en": "Not applicable",
+      "zh": "不适用",
+      "de": "Nicht anwendbar"
+    },
+    "comparison.app.3.0": {
+      "en": "Local history; chosen providers process audio/text",
+      "zh": "本地历史；所选服务商处理音频/文本",
+      "de": "Lokaler Verlauf; Anbieter verarbeiten Audio/Text"
+    },
+    "comparison.app.3.1": {
+      "en": "Cloud processing; local history, optional sync",
+      "zh": "云处理；本地历史，可选同步",
+      "de": "Cloud-Verarbeitung; lokaler Verlauf, optionale Synchronisierung"
+    },
+    "comparison.app.3.2": {
+      "en": "Local or cloud, model-dependent",
+      "zh": "依模型在本地或云端处理",
+      "de": "Lokal oder Cloud, je nach Modell"
+    },
+    "comparison.app.3.3": {
+      "en": "On-device or server; check settings",
+      "zh": "设备端或服务器；查看设置",
+      "de": "Gerät oder Server; Einstellungen prüfen"
+    },
+    "comparison.app.4.0": {
+      "en": "Local refinement; bundled offline recognition unavailable",
+      "zh": "本地润色；内置离线识别不可用",
+      "de": "Lokale Bearbeitung; integrierte Offline-Erkennung nicht verfügbar"
+    },
+    "comparison.app.4.1": {
+      "en": "Cloud transcription",
+      "zh": "云端转写",
+      "de": "Cloud-Transkription"
+    },
+    "comparison.app.4.2": {
+      "en": "On-device speech models",
+      "zh": "设备端语音模型",
+      "de": "Sprachmodelle auf dem Gerät"
+    },
+    "comparison.app.4.3": {
+      "en": "Device/language-dependent",
+      "zh": "取决于设备和语言",
+      "de": "Geräte-/sprachabhängig"
+    },
+    "comparison.app.5.0": {
+      "en": "Mac download; iOS source build",
+      "zh": "Mac 可下载；iOS 自行构建",
+      "de": "Mac-Download; iOS aus Quellcode"
+    },
+    "comparison.app.5.1": {
+      "en": "Mac + iOS",
+      "zh": "Mac + iOS",
+      "de": "Mac + iOS"
+    },
+    "comparison.app.5.2": {
+      "en": "Mac + iOS, also Windows/Android",
+      "zh": "Mac + iOS，另有 Windows/Android",
+      "de": "Mac + iOS, auch Windows/Android"
+    },
+    "comparison.app.5.3": {
+      "en": "Supported Apple devices",
+      "zh": "受支持的 Apple 设备",
+      "de": "Unterstützte Apple-Geräte"
+    },
+    "comparison.app.6.0": {
+      "en": "Yes",
+      "zh": "开源",
+      "de": "Ja"
+    },
+    "comparison.app.6.1": {
+      "en": "Not advertised",
+      "zh": "未宣称开源",
+      "de": "Nicht beworben"
+    },
+    "comparison.app.6.2": {
+      "en": "Not advertised",
+      "zh": "未宣称开源",
+      "de": "Nicht beworben"
+    },
+    "comparison.app.6.3": {
+      "en": "Proprietary system feature",
+      "zh": "专有系统功能",
+      "de": "Proprietäre Systemfunktion"
+    },
+    "comparison.app.7.0": {
+      "en": "Optional chosen text model",
+      "zh": "可选所选文字模型",
+      "de": "Optionales Textmodell"
+    },
+    "comparison.app.7.1": {
+      "en": "Yes",
+      "zh": "支持",
+      "de": "Ja"
+    },
+    "comparison.app.7.2": {
+      "en": "Model/mode-dependent",
+      "zh": "取决于模型/模式",
+      "de": "Modell-/modusabhängig"
+    },
+    "comparison.app.7.3": {
+      "en": "Punctuation; rewriting is separate",
+      "zh": "标点；改写为独立功能",
+      "de": "Zeichensetzung; Umschreiben separat"
+    },
+    "comparison.app.8.0": {
+      "en": "Provider/model-dependent",
+      "zh": "取决于服务商/模型",
+      "de": "Anbieter-/modellabhängig"
+    },
+    "comparison.app.8.1": {
+      "en": "Mixed languages supported",
+      "zh": "支持混合语言",
+      "de": "Gemischte Sprachen unterstützt"
+    },
+    "comparison.app.8.2": {
+      "en": "Model-dependent",
+      "zh": "取决于模型",
+      "de": "Modellabhängig"
+    },
+    "comparison.app.8.3": {
+      "en": "Select/switch dictation languages",
+      "zh": "选择/切换听写语言",
+      "de": "Diktiersprachen wählen/wechseln"
+    },
+    "comparison.app.9.0": {
+      "en": "Replacement rules; correction learning on Mac",
+      "zh": "替换规则；Mac 可学习纠错",
+      "de": "Ersetzungen; Korrekturlernen auf Mac"
+    },
+    "comparison.app.9.1": {
+      "en": "Dictionary + personalization",
+      "zh": "词典与个性化",
+      "de": "Wörterbuch und Personalisierung"
+    },
+    "comparison.app.9.2": {
+      "en": "Vocabulary + replacements",
+      "zh": "词汇与替换",
+      "de": "Wortschatz und Ersetzungen"
+    },
+    "comparison.app.9.3": {
+      "en": "System replacements in supported apps",
+      "zh": "兼容应用的系统替换",
+      "de": "Systemersetzungen in unterstützten Apps"
+    },
+    "comparison.app.10.0": {
+      "en": "Local searchable history",
+      "zh": "本地可搜索历史",
+      "de": "Lokal durchsuchbarer Verlauf"
+    },
+    "comparison.app.10.1": {
+      "en": "Local, optional cloud sync",
+      "zh": "本地，可选云同步",
+      "de": "Lokal, optionale Cloud-Synchronisierung"
+    },
+    "comparison.app.10.2": {
+      "en": "Local history",
+      "zh": "本地历史",
+      "de": "Lokaler Verlauf"
+    },
+    "comparison.app.10.3": {
+      "en": "No transcript library documented",
+      "zh": "未见转写历史库说明",
+      "de": "Keine Transkriptbibliothek dokumentiert"
+    },
+    "comparison.app.11.0": {
+      "en": "Yes (Mac)",
+      "zh": "支持（Mac）",
+      "de": "Ja (Mac)"
+    },
+    "comparison.app.11.1": {
+      "en": "Yes (desktop)",
+      "zh": "支持（桌面）",
+      "de": "Ja (Desktop)"
+    },
+    "comparison.app.11.2": {
+      "en": "Yes (desktop)",
+      "zh": "支持（桌面）",
+      "de": "Ja (Desktop)"
+    },
+    "comparison.app.11.3": {
+      "en": "Yes (Mac)",
+      "zh": "支持（Mac）",
+      "de": "Ja (Mac)"
+    },
+    "nav.pricing": {
+      "en": "Usage",
+      "zh": "用量与费用",
+      "de": "Nutzung"
+    },
+    "ap.mac.tag": {
+      "en": "A menu-bar companion: press your shortcut, speak, then insert clean text into a compatible editable field.",
+      "zh": "菜单栏里的语音助手：按下快捷键、说话，然后将清晰文字写入兼容的可编辑文本框。",
+      "de": "Dein Begleiter in der Menüleiste: Tastenkürzel drücken, sprechen und klaren Text in ein kompatibles Eingabefeld einfügen."
+    },
+    "ap.mac.f1.d": {
+      "en": "Carbon global shortcuts, including in fullscreen apps; avoid conflicting system shortcuts.",
+      "zh": "Carbon 全局快捷键支持全屏应用；请避开系统快捷键冲突。",
+      "de": "Globale Carbon-Tastenkürzel, auch in Vollbild-Apps; Konflikte mit Systemkürzeln vermeiden."
+    },
+    "ap.mac.f2.d": {
+      "en": "Clipboard paste into compatible editable fields in browsers, editors and other apps.",
+      "zh": "通过剪贴板粘贴到浏览器、编辑器等应用中兼容的可编辑文本框。",
+      "de": "Per Zwischenablage in kompatible Eingabefelder von Browsern, Editoren und anderen Apps einfügen."
+    },
+    "ap.mac.f4.d": {
+      "en": "⇧⌥ Space starts translation; use ⌥ Space or Stop to finish.",
+      "zh": "⇧⌥ Space 开始翻译；用 ⌥ Space 或停止按钮结束。",
+      "de": "⇧⌥ Space startet die Übersetzung; mit ⌥ Space oder Stopp beenden."
+    },
+    "tr.h1a": {
+      "en": "Speak one language.",
+      "zh": "说出一种语言。",
+      "de": "Sprich eine Sprache."
+    },
+    "tr.h1b": {
+      "en": "Write in another.",
+      "zh": "写下另一种语言。",
+      "de": "Schreibe in einer anderen."
+    },
+    "tr.lang.title": {
+      "en": "Translation in both directions.",
+      "zh": "双向翻译，灵活选择。",
+      "de": "Übersetzen in beide Richtungen."
+    },
+    "tr.lang.sub": {
+      "en": "Choose a source and target language supported by your recognition and text models.",
+      "zh": "选择语音识别和文字模型支持的源语言与目标语言。",
+      "de": "Wähle Quell- und Zielsprache, die deine Erkennungs- und Textmodelle unterstützen."
+    },
+    "tr.trig.ios.b1": {
+      "en": "Works in iOS apps and fields that allow third-party keyboards.",
+      "zh": "适用于允许第三方键盘的 iOS 应用和输入框。",
+      "de": "Funktioniert in iOS-Apps und Feldern, die Drittanbietertastaturen erlauben."
+    },
+    "tr.pipe.s2.d": {
+      "en": "Compatible recognition models can detect the spoken language automatically. A configured source language provides a hint when the provider supports it.",
+      "zh": "兼容的识别模型可自动检测所说语言；服务商支持时，配置的源语言会作为识别提示。",
+      "de": "Kompatible Erkennungsmodelle können die gesprochene Sprache automatisch erkennen. Eine eingestellte Quellsprache dient als Hinweis, wenn der Anbieter dies unterstützt."
+    },
+    "tr.pipe.s4.d": {
+      "en": "The finished translation is inserted into a compatible text field, such as a message, email or document.",
+      "zh": "完成的译文写入兼容的文本框，例如消息、邮件或文档。",
+      "de": "Die fertige Übersetzung wird in ein kompatibles Textfeld eingefügt, etwa in Nachrichten, E-Mails oder Dokumenten."
+    },
+    "why.s.note": {
+      "en": "Refine what you said while keeping what you meant: clearer wording in one workflow.",
+      "zh": "在保留原意的同时整理表达：一套流程，得到更清晰的文字。",
+      "de": "Das Gesagte klarer formulieren und die Bedeutung bewahren: in einem zusammenhängenden Ablauf."
+    }
+  },
+  "replacedComparisonKeys": {
+    "tr.cmp.appOnly": "comparison.translate.1.1",
+    "tr.cmp.appOnly2": "comparison.translate.1.2",
+    "tr.cmp.appOnly3": "comparison.translate.1.3",
+    "tr.cmp.applefree": "comparison.translate.3.1",
+    "tr.cmp.googleads": "comparison.translate.3.2",
+    "tr.cmp.deeplsub": "comparison.translate.3.3",
+    "tr.cmp.limited": "comparison.translate.5.2",
+    "cmp.price.vw": "comparison.app.0.0",
+    "cmp.price.mac": "comparison.app.0.3",
+    "cmp.cloud": "comparison.app.3.1",
+    "cmp.maconly": "comparison.app.5.2",
+    "cmp.limited": "comparison.app.8.3",
+    "cmp.fixed": "comparison.app.11.3"
+  }
+}
