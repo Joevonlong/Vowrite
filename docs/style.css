@@ -2252,6 +2252,7 @@ pre{max-width:100%;overflow-x:auto}code{overflow-wrap:anywhere}.ap-card,.ap-step
 .vw-site .table-wrap .badge { white-space:normal; }
 .vw-site .va-history > section { content-visibility:visible; }
 .vw-site .site-comparison .container { max-width:1200px; }
+.usage-page .usage-live { overflow:hidden; }
 @media (max-width:767px) { .hc-details .features-grid { grid-template-columns:1fr; } .vw-site .footer-left { flex-wrap:wrap; } .vw-site .nav-links { gap:8px; } }
 @media (prefers-color-scheme:dark) { :root { --text-tertiary:#a1a1a6; --green:#86efac; --amber:#fcd34d; } }
 /* Verified contrast across the real light/dark section backgrounds. */

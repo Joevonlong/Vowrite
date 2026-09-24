@@ -10,8 +10,67 @@ const results = [], errors = [], axeResults = [];
 const pages = ['index','pricing'];
 const consolidation = JSON.parse(fs.readFileSync(path.join(__dirname,'../docs/website-assets/content-consolidation.json')));
 const axe = fs.readFileSync(require.resolve('axe-core/axe.min.js'),'utf8');
+// Side-by-side evidence against the Open Design source (served at WEBSITE_DESIGN_URL).
+async function compareDesign(browser) {
+  const design = process.env.WEBSITE_DESIGN_URL;
+  assert(design, 'WEBSITE_DESIGN_URL is required for --design');
+  const dir = path.join(out, 'design-compare'); fs.mkdirSync(dir, {recursive:true});
+  let png = null, pixelmatch = null;
+  try { png = require('pngjs').PNG; pixelmatch = require('pixelmatch'); pixelmatch = pixelmatch.default || pixelmatch; } catch {}
+  const report = [];
+  for (const route of ['pricing','index']) for (const width of [1440,375]) for (const scheme of ['light','dark']) {
+    const entry = {route, width, scheme};
+    for (const [label, origin] of [['design', design], ['product', base]]) {
+      const c = await browser.newContext({locale:'en-US', reducedMotion:'reduce', colorScheme:scheme, viewport:{width, height:1000}});
+      const p = await c.newPage(); const pageErrors = [];
+      p.on('pageerror', e => pageErrors.push(e.message));
+      await p.goto(`${origin}/${route}.html`); await p.waitForLoadState('networkidle');
+      await p.evaluate(() => { try { setLang('en'); } catch {} return document.fonts.ready; });
+      const shot = path.join(dir, `${route}-${width}-${scheme}-${label}.png`);
+      await p.screenshot({path:shot, fullPage:true});
+      entry[label] = {shot, pageErrors, ...await p.evaluate(() => {
+        const box = el => { const r = el.getBoundingClientRect(); return {top:Math.round(r.top + scrollY), height:Math.round(r.height)}; };
+        const style = el => { const s = getComputedStyle(el); return {font:s.fontFamily.split(',')[0], size:s.fontSize, weight:s.fontWeight, color:s.color, background:s.backgroundColor}; };
+        return {
+          height: document.documentElement.scrollHeight,
+          overflow: document.documentElement.scrollWidth > innerWidth + 1,
+          overflowers: [...document.querySelectorAll('body *')].filter(e => (e.getBoundingClientRect().right > innerWidth + 1 || e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflowX === 'visible' && e.clientWidth > 0) && !e.parentElement.closest('.table-wrap,.compare-table-wrap')).slice(0, 8).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).join('.') : '') + ' right=' + Math.round(e.getBoundingClientRect().right)),
+          headings: [...document.querySelectorAll('main h1, main h2')].filter(h => h.offsetParent).map(h => ({tag:h.tagName, text:h.textContent.trim().replace(/\s+/g,' '), ...box(h), ...style(h)})),
+          controls: [...document.querySelectorAll('main button, main select, main a.usage-link, main a.usage-download')].filter(e => e.offsetParent).length,
+          body: style(document.body)
+        };
+      })};
+      if (label === 'design' || label === 'product') entry[label].viewport = await p.screenshot({path:path.join(dir, `${route}-${width}-${scheme}-${label}-top.png`)});
+      await c.close();
+    }
+    if (png && pixelmatch) {
+      const a = png.sync.read(entry.design.viewport), b = png.sync.read(entry.product.viewport);
+      const diff = new png({width:a.width, height:a.height});
+      entry.firstViewportDiffRatio = Number((pixelmatch(a.data, b.data, diff.data, a.width, a.height, {threshold:0.1}) / (a.width * a.height)).toFixed(4));
+      fs.writeFileSync(path.join(dir, `${route}-${width}-${scheme}-diff.png`), png.sync.write(diff));
+    }
+    delete entry.design.viewport; delete entry.product.viewport;
+    report.push(entry);
+  }
+  fs.writeFileSync(path.join(dir, 'design-compare.json'), JSON.stringify(report, null, 2));
+  console.log(JSON.stringify(report.map(r => ({route:r.route, width:r.width, scheme:r.scheme, diff:r.firstViewportDiffRatio, heights:[r.design.height, r.product.height], errors:[...r.design.pageErrors, ...r.product.pageErrors], pageOverflow:{design:r.design.overflow, product:r.product.overflow}, productOverflowers:r.product.overflow ? r.product.overflowers : []})), null, 2));
+}
 (async () => {
   const browser = await chromium.launch({headless:true});
+  if (process.argv.includes('--design')) { await compareDesign(browser); await browser.close(); return; }
+  if (process.argv.includes('--links')) {
+    const p = await browser.newPage(); const links = new Set();
+    for (const route of pages) { await p.goto(`${base}/${route}.html`); (await p.locator('a[href^="http"]').evaluateAll(es => es.map(e => e.href))).forEach(h => links.add(h)); }
+    const results = [];
+    for (const url of [...links].sort()) {
+      let status = 0;
+      try { status = (await fetch(url, {redirect:'follow', headers:{'user-agent':'Mozilla/5.0 (Macintosh) VowriteLinkCheck'}, signal:AbortSignal.timeout(20000)})).status; } catch (e) { status = String(e.cause?.code || e.name); }
+      results.push({url, status});
+    }
+    fs.writeFileSync(path.join(out, 'links.json'), JSON.stringify(results, null, 2));
+    console.log(JSON.stringify(results, null, 2));
+    await browser.close(); if (results.some(r => !(r.status >= 200 && r.status < 400))) process.exitCode = 1; return;
+  }
   const context = await browser.newContext({locale:'en-US',reducedMotion:'reduce'});
   const page = await context.newPage();
   page.on('pageerror', e => errors.push(e.message));
@@ -160,12 +219,99 @@ const axe = fs.readFileSync(require.resolve('axe-core/axe.min.js'),'utf8');
     await page.goBack();assert(new URL(page.url()).pathname.endsWith('pricing.html'));
     await page.goForward();assert.equal(new URL(page.url()).hash,'#platforms');
   });
-  await test('pricing slider and all 77 archived provider rows',async()=>{
-    await page.goto(`${base}/pricing.html`);
-    await page.locator('#va-volume').fill('200');await page.locator('#va-rate').fill('75');
-    assert.equal(await page.locator('#va-cost').textContent(),'150%');
-    await page.locator('.va-history > summary').click();assert.equal(await page.locator('.va-history tbody tr').count(),77);
-    await page.locator('#va-volume').fill('0');assert.equal(await page.locator('#va-cost').textContent(),'0%');
+  await test('usage page: examples, independent providers, live summary, languages and all 77 archived rows',async()=>{
+    await page.setViewportSize({width:1440,height:1000});
+    await page.goto(`${base}/pricing.html`);await page.evaluate(()=>setLang('en'));
+    await page.waitForFunction(()=>document.querySelector('.usage-page').dataset.usageReady==='true');
+    const text=selector=>page.locator(selector).textContent();
+    assert.equal(await page.locator('[data-usage-control]:disabled').count(),0);
+    assert.equal(await page.locator('option[value="sherpa"]').count(),0);
+    assert.equal(await text('#usage-combination-name'),'Groq → DeepSeek');
+    assert.equal(await page.locator('[data-usage-example="cloud"]').getAttribute('aria-pressed'),'true');
+    await page.locator('[data-usage-example="dictation"]').click();
+    assert.equal(await text('#usage-combination-name'),'Groq · Dictation only');
+    assert.equal(await text('#usage-writing-location'),'Off');
+    assert(await page.locator('[data-usage-writing-icon]').evaluate(e=>e.hidden&&!e.offsetParent));
+    await page.locator('[data-usage-example="local"]').click();
+    assert.equal(await text('#usage-combination-name'),'Groq → Ollama');
+    assert.equal(await text('#usage-writing-location'),'Local');
+    assert.match(await text('#usage-writing-billing'),/no cloud API fee/);
+    assert.equal(await page.locator('[data-usage-example][aria-pressed="true"]').count(),1);
+    await page.locator('#usage-flow-speech').selectOption('deepgram');
+    assert.equal(await page.locator('[data-usage-example][aria-pressed="true"]').count(),0);
+    assert.match(await page.locator('[data-usage-speech-icon]').getAttribute('src'),/assets\/providers\/deepgram\.svg$/);
+    await page.locator('#usage-writing').selectOption('anthropic');
+    assert.equal(await text('#usage-combination-name'),'Deepgram → Anthropic');
+    assert.equal(await text('#usage-combination-detail'),'Deepgram handles recognition in the cloud. Anthropic bills input and output tokens separately.');
+    await page.waitForFunction(()=>document.getElementById('usage-live').textContent.startsWith('Deepgram → Anthropic.'));
+    assert(await page.evaluate(()=>[...document.querySelectorAll('.usage-brand')].every(i=>i.hidden||i.naturalWidth>0)));
+    await page.evaluate(()=>setLang('zh'));
+    assert.equal(await text('[data-usage="heroUsage"]'),'用多少，付多少。');
+    assert.equal(await text('#usage-combination-detail'),'Deepgram 在云端完成语音识别。 Anthropic 按输入和输出 Token 另行计费。');
+    assert.equal(await page.locator('#usage-live').textContent(),'');
+    await page.evaluate(()=>setLang('de'));
+    assert.equal(await text('[data-usage="exampleLocal"]'),'Lokal bearbeiten');
+    assert.equal(await text('#usage-writing-location'),'Cloud-API');
+    await page.evaluate(()=>setLang('en'));
+    for(const summary of await page.locator('.usage-principle>summary,.usage-faq-item>summary').all()){
+      await summary.click();assert(await summary.evaluate(s=>s.parentElement.open&&s.nextElementSibling.offsetHeight>0));
+    }
+    await page.locator('a.usage-link[href="#usage-providers"]').click();await page.waitForURL(u=>u.hash==='#usage-providers');
+    assert(await page.locator('#usage-provider-title').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.top<innerHeight}));
+    await page.locator('#provider-reference > summary').click();
+    assert.equal(await page.locator('#provider-reference tbody tr').count(),77);
+    assert(await page.locator('#provider-reference table').first().isVisible());
+    assert(!await page.locator('.estimate-card').first().isVisible());
+    await page.locator('.usage-archived-estimates > summary').click();assert(await page.locator('.estimate-card').first().isVisible());
+    assert.equal(await page.locator('.usage-download').getAttribute('href'),'index.html#download');
+    await page.locator('.usage-combination a.usage-link').click();await page.waitForURL(u=>u.pathname.endsWith('/index.html')&&u.hash==='#download-mac');
+    assert(await page.locator('#download-mac').evaluate(e=>{for(let p=e;p;p=p.parentElement)if(p.tagName==='DETAILS'&&!p.open)return false;return true}));
+  });
+  await test('normal motion: demo playback, typing, pause/resume/replay, carousel, refine, menu and disclosure animations',async()=>{
+    const c=await browser.newContext({locale:'en-US',reducedMotion:'no-preference',viewport:{width:1440,height:1000}});const p=await c.newPage();
+    const motionErrors=[];p.on('pageerror',e=>motionErrors.push(e.message));
+    await p.goto(`${base}/index.html#live-demo`);await p.evaluate(()=>setLang('en'));
+    const demo=p.locator('#live-demo');
+    await p.evaluate(()=>{window.__typing={raw:[],result:[]};const root=document.querySelector('#live-demo');new MutationObserver(()=>{const raw=root.querySelector('[data-raw]').textContent.length,result=root.querySelector('[data-result]').textContent.length;const t=window.__typing;if(t.raw.at(-1)!==raw)t.raw.push(raw);if(t.result.at(-1)!==result)t.result.push(result)}).observe(root,{subtree:true,childList:true,characterData:true})});
+    await demo.locator('[data-play]').click();
+    assert.equal(await demo.getAttribute('data-running'),'true');
+    await p.waitForFunction(()=>document.querySelector('#live-demo').dataset.stage==='2');
+    await demo.locator('[data-play]').click();
+    const held={stage:await demo.getAttribute('data-stage'),status:await demo.locator('[data-status]').textContent()};
+    assert.equal(await demo.getAttribute('data-running'),'false');
+    await p.waitForTimeout(900);
+    assert.deepEqual({stage:await demo.getAttribute('data-stage'),status:await demo.locator('[data-status]').textContent()},held);
+    await demo.locator('[data-play]').click();
+    await p.waitForFunction(()=>document.querySelector('#live-demo').dataset.stage==='5',null,{timeout:10000});
+    assert.equal(await demo.getAttribute('data-running'),'false');
+    assert(!await demo.locator('[data-copy]').isDisabled());
+    const typing=await p.evaluate(()=>window.__typing);
+    assert(typing.raw.filter(n=>n>1).length>=5,'raw transcript should type progressively');
+    assert(typing.result.filter(n=>n>1).length>=5,'refined result should type progressively');
+    assert(await demo.locator('.vw-wave').evaluate(e=>getComputedStyle(e,'::after').animationName.includes('vw-refined-done')));
+    await demo.locator('[data-replay]').click();assert.equal(await demo.getAttribute('data-stage'),'0');
+    await p.goto(`${base}/index.html#translation`);
+    const first=await p.locator('#trDemoOut').textContent();
+    await p.waitForFunction(f=>document.querySelector('#trDemoOut').textContent!==f,first,{timeout:6000});
+    assert(await p.locator('#trDemoRow').evaluate(e=>e.classList.contains('tr-demo-fade')&&getComputedStyle(e).animationName!=='none'));
+    await p.locator('#translation .tr-demo-pause').click();
+    const pausedOut=await p.locator('#trDemoOut').textContent();await p.waitForTimeout(4700);
+    assert.equal(await p.locator('#trDemoOut').textContent(),pausedOut);
+    await p.locator('#translation .tr-demo-pause').click();
+    await p.waitForFunction(f=>document.querySelector('#trDemoOut').textContent!==f,pausedOut,{timeout:6000});
+    await p.goto(`${base}/index.html#cleanup`);
+    await p.locator('#vc-clean [data-vc-action="clean"]').click();
+    assert(await p.locator('#vc-clean [data-vc-action="clean"]').isDisabled());
+    await p.waitForFunction(()=>/Thursday/.test(document.querySelector('#vc-clean .vc-result')?.textContent||''),null,{timeout:3000});
+    await p.locator('.lang-toggle').click();
+    assert(await p.locator('.lang-menu').evaluate(e=>e.getAnimations().some(a=>a.animationName==='vh-menu-in')));
+    await p.keyboard.press('Escape');
+    await p.goto(`${base}/pricing.html#usage-faq`);
+    const chevron=p.locator('.usage-faq-item').first().locator('.usage-details-chevron');
+    const closed=await chevron.evaluate(e=>getComputedStyle(e).transform);
+    await p.locator('.usage-faq-item>summary').first().click();await p.waitForTimeout(260);
+    assert.notEqual(await chevron.evaluate(e=>getComputedStyle(e).transform),closed);
+    assert.deepEqual(motionErrors,[]);await c.close();
   });
   await test('command copy success and manual fallback',async()=>{
     await page.goto(`${base}/index.html#download`);
@@ -184,17 +330,24 @@ const axe = fs.readFileSync(require.resolve('axe-core/axe.min.js'),'utf8');
   await test('no JavaScript: complete content and navigation remain usable',async()=>{
     const c=await browser.newContext({javaScriptEnabled:false,viewport:{width:375,height:900}});const p=await c.newPage();
     for(const route of pages){await p.goto(`${base}/${route}.html`);assert(await p.locator('.nav-links a[href="index.html#platforms"]').isVisible());assert(await p.locator('h1').isVisible());}
+    assert(await p.locator('.usage-nojs').isVisible());assert.equal(await p.locator('[data-usage-control]:not([disabled])').count(),0);
+    assert.equal(await p.locator('#usage-combination-name').textContent(),'Groq → DeepSeek');
     await p.locator('.va-history > summary').click();assert(await p.locator('.va-history table').first().isVisible());await c.close();
   });
   await test('legacy entries provide working fallback links with JavaScript disabled',async()=>{
     const c=await browser.newContext({javaScriptEnabled:false,viewport:{width:375,height:900}});const p=await c.newPage();
     for(const [route,mapping] of Object.entries(consolidation.legacyRoutes)){
-      await p.goto(`${base}/${route}.html`);await p.locator('[data-redirect-target]').click();
+      await p.goto(`${base}/${route}.html`);
+      await Promise.all([p.waitForURL(u=>u.pathname.endsWith('/index.html')),p.locator('[data-redirect-target]').click()]);await p.waitForLoadState('load');
       assert.equal(new URL(p.url()).hash,'#'+mapping['']);
       assert(await p.locator('h1').isVisible());
     }
-    await p.goto(`${base}/index.html#platforms`);await p.locator('#ios-details>summary').click();
-    assert(await p.locator('#download-ios pre').isVisible());await c.close();
+    const q=await c.newPage();await q.goto(`${base}/index.html#platforms`,{waitUntil:'load'});
+    // Smooth hash scrolling (normal motion) restarts on each Playwright scroll retry; motion is covered separately.
+    await q.evaluate(()=>{document.documentElement.style.scrollBehavior='auto'});
+    for(let last=-1,same=0;same<3;){const y=await q.evaluate(()=>scrollY);same=y===last?same+1:0;last=y;await q.waitForTimeout(150);}
+    await q.locator('#ios-details>summary').click();
+    assert(await q.locator('#download-ios pre').isVisible());await c.close();
   });
   await test('blocked storage and failed i18n resource keep navigation and content',async()=>{
     const c=await browser.newContext({viewport:{width:375,height:900}});await c.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new Error('blocked')}})});
