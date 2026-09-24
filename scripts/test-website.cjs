@@ -58,6 +58,42 @@ async function compareDesign(browser) {
 (async () => {
   const browser = await chromium.launch({headless:true});
   if (process.argv.includes('--design')) { await compareDesign(browser); await browser.close(); return; }
+  if (process.argv.includes('--live')) {
+    // Deployed bytes must equal the committed docs/ tree, and extensionless routes must land on canonical content.
+    const docs = path.join(__dirname, '../docs'); const parity = []; const routes = [];
+    const walk = dir => fs.readdirSync(dir, {withFileTypes:true}).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]);
+    const crypto = require('node:crypto'); const sha = b => crypto.createHash('sha256').update(b).digest('hex');
+    for (const file of walk(docs).filter(f => /\.(html|css|js|json|xml|svg|png|ico|txt)$/.test(f)).sort()) {
+      const rel = path.relative(docs, file).split(path.sep).join('/');
+      let status = 0, match = false;
+      try { const r = await fetch(`${base}/${rel}`, {cache:'no-store', signal:AbortSignal.timeout(20000)}); status = r.status; match = r.ok && sha(Buffer.from(await r.arrayBuffer())) === sha(fs.readFileSync(file)); } catch (e) { status = String(e.cause?.code || e.name); }
+      parity.push({file:rel, status, match});
+    }
+    const p = await browser.newPage({viewport:{width:1440, height:1000}}); const liveErrors = [];
+    p.on('pageerror', e => liveErrors.push(e.message));
+    const expectations = [
+      ['/', '/', '', 'h1'], ['/pricing', '/pricing', '', '#usage-title'], ['/pricing.html', '/pricing.html', '', '#usage-title'],
+      ['/why', '/index.html', '#compare', '#compare'], ['/apps', '/index.html', '#platforms', '#platforms'], ['/apps#ios', '/index.html', '#download-ios', '#download-ios'],
+      ['/translate', '/index.html', '#translation', '#translation'], ['/translate#trig', '/index.html', '#translation-triggers', '#translation-triggers'],
+      ['/demo', '/index.html', '#live-demo', '#live-demo'], ['/why?ref=live-check', '/index.html', '#compare', '#compare']
+    ];
+    for (const [from, pathname, hash, target] of expectations) {
+      let passed = false, landed = '';
+      try {
+        await p.goto(`${base}${from}`); await p.waitForLoadState('load');
+        if (hash) await p.waitForURL(u => u.pathname === pathname && u.hash === hash, {timeout:10000});
+        const url = new URL(p.url()); landed = url.pathname + url.search + url.hash;
+        passed = url.pathname === pathname && (!from.includes('?') || url.search === '?ref=live-check') && await p.locator(target).first().evaluate(e => {for (let n = e; n; n = n.parentElement) if (n.tagName === 'DETAILS' && !n.open) return false; return true;});
+      } catch (e) { landed = landed || e.message.split('\n')[0]; }
+      routes.push({from, expected:pathname + hash, landed, passed});
+    }
+    await browser.close();
+    const report = {base, parity, routes, pageErrors:liveErrors};
+    fs.writeFileSync(path.join(out, 'live.json'), JSON.stringify(report, null, 2));
+    console.log(JSON.stringify({files:parity.length, mismatched:parity.filter(x => !x.match), routes, pageErrors:liveErrors}, null, 2));
+    if (parity.some(x => !x.match) || routes.some(x => !x.passed) || liveErrors.length) process.exitCode = 1;
+    return;
+  }
   if (process.argv.includes('--links')) {
     const p = await browser.newPage(); const links = new Set();
     for (const route of pages) { await p.goto(`${base}/${route}.html`); (await p.locator('a[href^="http"]').evaluateAll(es => es.map(e => e.href))).forEach(h => links.add(h)); }

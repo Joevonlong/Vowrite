@@ -7,6 +7,9 @@
 #   scripts/check-website-browser.sh --serve         keep a local preview running until interrupted
 #   scripts/check-website-browser.sh --content       save the static content check as content-check.json
 #   scripts/check-website-browser.sh --evidence DIR ...   write reports and screenshots to DIR (must come first)
+#   scripts/check-website-browser.sh [--evidence DIR] --remote https://vowrite.com [--live|...]
+#                                                    run against a deployed site; --live adds extensionless
+#                                                    routes and byte parity of deployed files with docs/
 #
 # Needs Node, Python 3, Playwright and axe-core. Set WEBSITE_NODE_PATH to override module discovery;
 # evidence goes to WEBSITE_EVIDENCE (default /tmp/vowrite-website-evidence).
@@ -21,6 +24,11 @@ if [[ "${1:-}" == "--evidence" ]]; then
 fi
 export WEBSITE_EVIDENCE="${WEBSITE_EVIDENCE:-/tmp/vowrite-website-evidence}"
 mkdir -p "$WEBSITE_EVIDENCE"
+REMOTE=""
+if [[ "${1:-}" == "--remote" ]]; then
+    [[ "${2:-}" == https://* ]] || { echo "check-website-browser: --remote needs an https:// base URL" >&2; exit 2; }
+    REMOTE="${2%/}"; shift 2
+fi
 
 module_dir() {
     local name="$1" candidate
@@ -57,8 +65,12 @@ serve() {
     exit 2
 }
 
-serve "$PORT" "$ROOT/docs" "$WEBSITE_EVIDENCE/server.log"
-export WEBSITE_URL="http://127.0.0.1:$PORT"
+if [[ -n "$REMOTE" ]]; then
+    export WEBSITE_URL="$REMOTE"
+else
+    serve "$PORT" "$ROOT/docs" "$WEBSITE_EVIDENCE/server.log"
+    export WEBSITE_URL="http://127.0.0.1:$PORT"
+fi
 
 ARGS=()
 while [[ $# -gt 0 ]]; do

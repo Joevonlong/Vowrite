@@ -49,12 +49,14 @@ scripts/check-website-browser.sh --interactions    # interactions and motion onl
 scripts/check-website-browser.sh --links           # every external link on both pages
 scripts/check-website-browser.sh --design "<Open Design project>/website"   # side-by-side screenshots
 scripts/check-website-browser.sh --serve           # local preview
+scripts/check-website-browser.sh --remote https://vowrite.com --live   # after deployment: routes + byte parity
+scripts/check-website-browser.sh --remote https://vowrite.com          # full suite against the deployed site
 ```
 
 The browser check covers both canonical pages, en/zh/de, widths 375/600/768/1024/1440, light/dark, expanded content, 200% zoom, accessibility, keyboard/click interactions, clipboard rejection, four original translation pairs, visible main features, reduced motion and normal motion (demo playback and typing, pause/resume/replay, translation carousel, refine transition, menu and disclosure animations), the Usage presets and provider selects, disabled JavaScript, blocked storage, failed script loading, and WebKit. It also follows all declared legacy routes/anchors, checks query and language persistence, and exercises fallback links without JavaScript. Reports and screenshots go to the evidence directory. The static check verifies the original content and deduplication ledger, all local links/fragments/assets, exact historical table cells, translations, commands and protected assets. Native platform parity is unchanged and can be checked with `scripts/check-parity.sh`.
 
 ## Publication and rollback
 
-The website-only change does not alter app versions, appcasts, CNAME, robots, icons or native code. GitHub Pages still needs an explicitly authorized publication and a deployed-route check, including extensionless `/why`, `/apps`, `/translate` and `/pricing`; a local static server does not prove remote routing. The first three routes now resolve to the homepage's corresponding section. Compatibility pages use `noindex,follow` and canonical homepage section URLs so they do not create duplicate content.
+The website-only change does not alter app versions, appcasts, CNAME, robots, icons or native code. Each GitHub Pages publication needs explicit authorization and a deployed-route check (`--remote … --live`), including extensionless `/why`, `/apps`, `/translate` and `/pricing` and byte parity of every served file with `docs/`; a local static server does not prove remote routing. The first three routes now resolve to the homepage's corresponding section. Compatibility pages use `noindex,follow` and canonical homepage section URLs so they do not create duplicate content.
 
 Rollback through a normal repository task that restores website files from the pinned product baseline; keep any unrelated later changes. Do not reset shared history or modify release feeds to undo a website change.
