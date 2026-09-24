@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-22",
+  "date": "2026-09-24",
   "project": "1a6dbee0-49b7-409a-bdeb-b44b26eb7e64",
   "files": {
     "why.html": {
@@ -19,8 +19,9 @@
       "bytes": 24181
     },
     "pricing.html": {
-      "sha256": "8af6506f5e43f3b14dddbb9254e6c20cd7a08d5bf8e5352254b6219c4ee902bc",
-      "bytes": 45789
+      "sha256": "f34e3022269f78f4986aad9aef42002c09306b9efb4758ce1b6b8d7043b6e7c3",
+      "bytes": 59471,
+      "note": "Usage page version 4 (2026-09-22 08:32), adopted 2026-09-24; version 1 was 8af6506f5e43f3b14dddbb9254e6c20cd7a08d5bf8e5352254b6219c4ee902bc"
     },
     "README.md": {
       "sha256": "c4dc0f1542fc86ec376bdae45911d4440cab54c0ea04dfee474b9f786cf01619",
@@ -179,8 +180,14 @@
       "bytes": 9477
     },
     "website-assets/usage.css": {
-      "sha256": "36bacee5e731490cebe246def4cdf2360944a5a5a5beaef33473da6b0b62ccb6",
-      "bytes": 20660
+      "sha256": "3587dc1c4e47ebaa4ec3a4275b73f7a57f3d5e11a943f8d9d39bf3d2427be618",
+      "bytes": 24005,
+      "note": "Shipped byte-identical as docs/website-assets/usage.css"
+    },
+    "website-assets/usage.js": {
+      "sha256": "68cbd1803c6b02b5bba930aa67afa248926dd09b0c16c0e791b3c90661a121e5",
+      "bytes": 22416,
+      "note": "Shipped with fact corrections: no Sherpa recognition option, local example uses cloud recognition plus Ollama refinement, API Keys page wording, production asset paths"
     },
     "website-assets/home-demo-visual.css": {
       "sha256": "033bb49a1b77eb9152a92805e83b361f5a52f28b0f926d799ea5452508a132df",

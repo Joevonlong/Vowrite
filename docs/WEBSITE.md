@@ -10,7 +10,9 @@ The September 2026 implementation follows the supplied Open Design website (proj
 
 `website-assets/content-consolidation.json` records the current information architecture, every old route/anchor destination and each merged duplicate's original text, reason and surviving section. Original content is either preserved/corrected at its canonical destination or explicitly accounted for as a merged duplicate. Duplicate heroes, summary feature cards, short FAQs and marketing calls to action do not remain as hidden second copies. `apps.html`, `translate.html`, `why.html` and `demo.html` are small compatibility entries with query-preserving redirects and usable no-JavaScript links.
 
-Two pricing tables retain **all 77 original data rows**, including every model, value and note, as explicitly labeled **historical reference**, not current quotes. The English source tables are identified as English in every site language. Current billing links are presented separately. They must not be promoted to current offers without a fresh per-provider review.
+`pricing.html` follows the design's Usage page (version 4): a free-app / usage-billing split, a two-step provider example (recognition, optional refinement) with three presets, a setup sequence, a cost FAQ, official rate links, the historical reference and a closing download call. Its page-scoped `website-assets/usage.css` is byte-identical to the design; `website-assets/usage.js` keeps the design's interaction and three-language copy with product corrections: recognition options are cloud providers only (bundled Sherpa is unavailable), the local preset uses cloud recognition plus Ollama refinement, and setup points to the app's API Keys page. The example never asks for credentials or calls a service. The design's per-month usage estimate was removed by the owner and is not reintroduced.
+
+Two pricing tables retain **all 77 original data rows**, including every model, value and note, as explicitly labeled **historical reference**, not current quotes. The English source tables are identified as English in every site language. The archived monthly examples sit in their own nested disclosure. Current billing links are presented separately. They must not be promoted to current offers without a fresh per-provider review.
 
 ## Shared components
 
@@ -22,6 +24,7 @@ Two pricing tables retain **all 77 original data rows**, including every model, 
 | Feature example | `#dictation`, `#cleanup`, `#expression`, `#translation` | Dictation, refinement, formats and four original translation pairs using declared preset data |
 | Platform cards | `#platforms` | Mac download / iOS source status, requirements, device controls and native installation disclosures |
 | Provider example | `#configuration` | Validated choices and an empty-selection message; no credentials or real account changes |
+| Usage combination | `pricing.html#usage-providers` | Presets and independent selects; controls stay disabled without JavaScript; summary, provider icon and polite live announcement update together |
 | Full-detail disclosure | `.hc-details`, pricing `.va-history` | Native keyboard-operable details; original deep links open ancestor panels |
 | Comparison / provider table | `.compare-table-wrap`, `.table-wrap` | Full row/column preservation; localized captions; table-local scrolling and focus |
 | Fact note | `.site-fact-note` | Shared note treatment for processing scope, dates and official sources |
@@ -38,13 +41,17 @@ python3 scripts/check-website.py
 python3 -m http.server 8767 --bind 127.0.0.1 --directory docs
 ```
 
-With Playwright and axe-core available to Node (or installed in a temporary directory):
+With Playwright and axe-core available to Node (discovered automatically, or set `WEBSITE_NODE_PATH`), the wrapper serves `docs/` and runs the suite:
 
 ```sh
-WEBSITE_URL=http://127.0.0.1:8767 WEBSITE_EVIDENCE=/tmp/vowrite-website-evidence node scripts/test-website.cjs
+scripts/check-website-browser.sh                   # matrix, axe, interactions and motion
+scripts/check-website-browser.sh --interactions    # interactions and motion only
+scripts/check-website-browser.sh --links           # every external link on both pages
+scripts/check-website-browser.sh --design "<Open Design project>/website"   # side-by-side screenshots
+scripts/check-website-browser.sh --serve           # local preview
 ```
 
-The browser check covers both canonical pages, en/zh/de, widths 375/600/768/1024/1440, light/dark, expanded content, 200% zoom, accessibility, keyboard/click interactions, clipboard rejection, four original translation pairs, visible main features, reduced motion, disabled JavaScript, blocked storage, failed script loading, and WebKit. It also follows all declared legacy routes/anchors, checks query and language persistence, and exercises fallback links without JavaScript. Reports and screenshots go to the evidence directory. The static check verifies the original content and deduplication ledger, all local links/fragments/assets, exact historical table cells, translations, commands and protected assets. Native platform parity is unchanged and can be checked with `scripts/check-parity.sh`.
+The browser check covers both canonical pages, en/zh/de, widths 375/600/768/1024/1440, light/dark, expanded content, 200% zoom, accessibility, keyboard/click interactions, clipboard rejection, four original translation pairs, visible main features, reduced motion and normal motion (demo playback and typing, pause/resume/replay, translation carousel, refine transition, menu and disclosure animations), the Usage presets and provider selects, disabled JavaScript, blocked storage, failed script loading, and WebKit. It also follows all declared legacy routes/anchors, checks query and language persistence, and exercises fallback links without JavaScript. Reports and screenshots go to the evidence directory. The static check verifies the original content and deduplication ledger, all local links/fragments/assets, exact historical table cells, translations, commands and protected assets. Native platform parity is unchanged and can be checked with `scripts/check-parity.sh`.
 
 ## Publication and rollback
 

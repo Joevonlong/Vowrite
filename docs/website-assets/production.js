@@ -22,9 +22,9 @@
   // Content remains visible when JS, IntersectionObserver or animation is unavailable.
   document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
   const titles = {
-    en: {index:'Vowrite — AI voice input for Mac',why:'Why Vowrite — Your voice, clearly expressed',apps:'Vowrite — macOS and iOS installation',translate:'Vowrite — Voice translation',pricing:'Vowrite — Usage and provider costs'},
-    zh: {index:'Vowrite — Mac AI 语音输入',why:'为什么选择 Vowrite',apps:'Vowrite — macOS 与 iOS 安装指南',translate:'Vowrite — 语音翻译',pricing:'Vowrite — 用量与服务商费用'},
-    de: {index:'Vowrite — KI-Spracheingabe für Mac',why:'Warum Vowrite',apps:'Vowrite — Installation für macOS und iOS',translate:'Vowrite — Sprachübersetzung',pricing:'Vowrite — Nutzung und Anbieterkosten'}
+    en: {index:'Vowrite — AI voice input for Mac',why:'Why Vowrite — Your voice, clearly expressed',apps:'Vowrite — macOS and iOS installation',translate:'Vowrite — Voice translation',pricing:'Usage — Vowrite'},
+    zh: {index:'Vowrite — Mac AI 语音输入',why:'为什么选择 Vowrite',apps:'Vowrite — macOS 与 iOS 安装指南',translate:'Vowrite — 语音翻译',pricing:'用量与费用 — Vowrite'},
+    de: {index:'Vowrite — KI-Spracheingabe für Mac',why:'Warum Vowrite',apps:'Vowrite — Installation für macOS und iOS',translate:'Vowrite — Sprachübersetzung',pricing:'Nutzung — Vowrite'}
   };
   function localize() {
     const name = location.pathname.split('/').pop().replace(/\.html$/, '') || 'index';
