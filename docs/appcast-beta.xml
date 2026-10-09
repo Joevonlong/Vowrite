@@ -13,5 +13,19 @@
       3. Add a new <item> block below with the edSignature and length
       4. Push to GitHub Pages (docs/)
     -->
+    <item>
+      <title>Vowrite 0.3.0.0-beta.1</title>
+      <description><![CDATA[<p>Voice Bar effects, brand menu bar icon, safer text delivery, and a new update signing key</p>]]></description>
+      <pubDate>Fri, 09 Oct 2026 21:28:08 +0200</pubDate>
+      <sparkle:version>11</sparkle:version>
+      <sparkle:shortVersionString>0.3.0.0-beta.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/Joevonlong/Vowrite/releases/download/v0.3.0.0-beta.1/Vowrite-v0.3.0.0-beta.1.dmg"
+        type="application/octet-stream"
+        sparkle:edSignature="olejPTAFeY7z5pLJ6iJnFVh9KTTC8NPXV9rXCVRq79Av9idTY64h7uFt0CNAyrehzv+AVrChlVtfynd1mxDbBw=="
+        length="3874306"
+      />
+    </item>
   </channel>
 </rss>
