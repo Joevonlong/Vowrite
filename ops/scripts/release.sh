@@ -358,7 +358,8 @@ echo "  ✓ Version.swift updated"
 echo ""
 echo "▶ Step 4: Building release..."
 cd "$APP_DIR"
-swift build -c release 2>&1
+# Packaging below uses the native SwiftPM output and resource bundle layout.
+swift build -c release --build-system native 2>&1
 echo "  ✓ Release build complete"
 
 # --- Step 5: Copy binary + embed Sparkle ---

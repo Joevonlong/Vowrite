@@ -13,13 +13,13 @@ The provider registry data lives at `VowriteKit/Sources/VowriteKit/Resources/pro
 ### Compile
 ```bash
 cd VowriteMac
-swift build
+swift build --build-system native
 ```
 
 ### Deploy to Vowrite.app
 ```bash
 # 1. Copy binary
-cp .build/arm64-apple-macosx/debug/Vowrite Vowrite.app/Contents/MacOS/Vowrite
+cp .build/arm64-apple-macosx/debug/VowriteMac Vowrite.app/Contents/MacOS/Vowrite
 
 # 2. Re-sign (required! Otherwise Accessibility permissions will be invalidated)
 codesign --force --sign - Vowrite.app

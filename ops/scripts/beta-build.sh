@@ -26,7 +26,8 @@ echo "════════════════════════�
 echo ""
 echo "▶ Step 1: Building (release config)..."
 cd "$MAC_DIR"
-swift build -c release 2>&1
+# Packaging below uses the native SwiftPM output and resource bundle layout.
+swift build -c release --build-system native 2>&1
 echo "  ✓ Release build complete"
 
 # --- Step 2: Copy binary + resources ---
