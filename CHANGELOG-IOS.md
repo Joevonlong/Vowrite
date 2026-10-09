@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Build
+
+- The Xcode project no longer presets a development team. Select your own Team under Signing & Capabilities for both the VowriteIOS and VowriteKeyboard targets; if Xcode reports that the bundle identifier is unavailable, change `com.vowrite.ios` and `com.vowrite.ios.keyboard` to identifiers you own and keep the keyboard ID as a child of the app ID.
+
 ### Reliability
 
 - Pending keyboard history remains available until import/save completes and duplicate imports are deduplicated. Expired OAuth falls back to the regular provider endpoint, and unavailable Sherpa download controls stay hidden until runtime support is ready.
