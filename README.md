@@ -46,7 +46,7 @@ No more typing. Just speak.
 | 🔑 | **Key Vault** | API keys stored per-provider in macOS Keychain — enter once, reuse everywhere |
 | 📝 | **Text Replacement** | Auto-correct vocabulary with flex pattern matching (post-STT + post-LLM) |
 | 🧠 | **Auto Dictionary** | Learns from your corrections — auto-adds words you fix to the dictionary |
-| 🎨 | **Recording Indicator** | 5 built-in presets: Classic Bar, Orb Pulse, Ripple Ring, Spectrum Arc, Minimal Dot |
+| 🎨 | **Recording Indicator** | 5 built-in presets: Classic Bar, Orb Pulse, Ripple Ring, Spectrum Arc, Minimal Dot — plus 80 Voice Bar effects on macOS *(beta)* |
 | 🔊 | **Sound Feedback** | Audio cues for start, success, and error states |
 | ⌨️ | **Custom Hotkey** | Default: `⌥ Space` — fully configurable |
 | 📊 | **History & Stats** | Browse past dictations, track time saved and words-per-minute |
@@ -66,7 +66,19 @@ See the full [Customization Guide](docs/CUSTOMIZATION.md) for details.
 
 ### Download
 
-Grab the latest `.dmg` from [**Releases**](https://github.com/Joevonlong/Vowrite/releases).
+Grab the latest `.dmg` from [**Releases**](https://github.com/Joevonlong/Vowrite/releases). The stable release is **v0.2.3.0**.
+
+Vowrite is signed with a self-signed certificate and is not notarized by Apple. On macOS 14, right-click the app and choose **Open** the first time. On macOS 15 and later, right-click → Open no longer bypasses Gatekeeper: open the app once, then go to **System Settings → Privacy & Security** and click **Open Anyway**. After that it launches normally.
+
+#### Beta (v0.3.0.0-beta.1)
+
+The beta is published on the same [Releases](https://github.com/Joevonlong/Vowrite/releases) page, marked **Pre-release** — it is not the default download, so pick it there only if you want to try it. What's new in the beta:
+
+- 80 built-in Voice Bar effects for the recording indicator, alongside the five existing styles
+- A new adaptive monochrome menu-bar logo and a more compact recording bar
+- Fix: when macOS Accessibility permission is missing, a failed paste is now reported (and the text stays in History) instead of being silently treated as success
+
+**Upgrade note:** the beta is signed with a new code-signing identity and a new Sparkle update key. Vowrite 0.2.3.0 and earlier cannot update to it automatically — download it once manually from the Releases page. macOS will then ask again for Microphone and Accessibility permission. Later updates install automatically.
 
 ### Build from Source
 
@@ -76,6 +88,10 @@ cd Vowrite/VowriteMac
 swift build        # build only
 ./build.sh         # build, sign, and launch
 ```
+
+#### iOS
+
+Open `VowriteIOS/VowriteIOS.xcodeproj` in Xcode. The project does not preset a development team: under **Signing & Capabilities**, select your own Team for both the `VowriteIOS` and `VowriteKeyboard` targets. If Xcode reports that a bundle identifier is unavailable, change `com.vowrite.ios` and `com.vowrite.ios.keyboard` to identifiers you own — the keyboard ID must stay a child of the app ID (for example `com.example.vowrite` and `com.example.vowrite.keyboard`). If you change the bundle identifiers, also replace the App Group `group.com.vowrite.shared`, which is registered to the original team, with a group you own (for example `group.com.example.vowrite`) in all three places: `VowriteIOS/Entitlements/VowriteIOS.entitlements`, `VowriteKeyboard/Entitlements/VowriteKeyboard.entitlements`, and `appGroupID` in `VowriteKit/Sources/VowriteKit/Config/VowriteStorage.swift`.
 
 ### Setup
 
@@ -155,6 +171,7 @@ Vowrite/
 │       ├── App/                # App lifecycle, state
 │       ├── Platform/           # iOS-specific: clipboard output, haptics, permissions
 │       └── Views/              # SwiftUI views (home, recording, settings, etc.)
+├── VowriteKeyboard/            # iOS keyboard extension
 └── docs/                       # Website (GitHub Pages → vowrite.com)
 ```
 
@@ -240,7 +257,7 @@ The release script performs local preparation only: macOS changelog promotion �
 - **Commits:** `<type>: <description>` — types: feat, fix, docs, refactor, chore, security, style, test
 - **Branches:** `main` for releases; `feature/F-{ID}-{slug}` for feature work
 - **Versioning:** 4-segment `MAJOR.MINOR.PATCH.BUILD`
-- **No external Swift dependencies** — only system frameworks
+- **Dependencies:** `VowriteKit` has no external dependencies; the macOS app uses Sparkle for auto-update
 
 ## 🗺️ Roadmap
 

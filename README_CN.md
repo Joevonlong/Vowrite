@@ -46,7 +46,7 @@ Vowrite 是一款轻量级 macOS 菜单栏应用（+ iOS 键盘），将你的�
 | 🔑 | **密钥库** | API Key 按服务商存入 macOS 钥匙串，填一次全局复用 |
 | 📝 | **文本替换** | 自动纠正词汇，弹性模式匹配（STT 后 + LLM 后双位置替换） |
 | 🧠 | **自动学词** | 从你的修改中学习——自动将纠正的词汇加入词库 |
-| 🎨 | **录音指示器** | Orb Pulse 呼吸光球动画 |
+| 🎨 | **录音指示器** | 5 种内置预设：Classic Bar、Orb Pulse、Ripple Ring、Spectrum Arc、Minimal Dot；macOS 另有 80 种 Voice Bar 效果 *(Beta)* |
 | 🔊 | **声音反馈** | 开始、成功、错误的音效提示 |
 | ⌨️ | **自定义快捷键** | 默认 `⌥ 空格`，可自由配置 |
 | 📊 | **历史与统计** | 浏览历史记录，追踪节省时间和每分钟字数 |
@@ -66,7 +66,19 @@ Vowrite 设计上支持自定义：
 
 ### 下载
 
-从 [**Releases**](https://github.com/Joevonlong/Vowrite/releases) 下载最新 `.dmg`。
+从 [**Releases**](https://github.com/Joevonlong/Vowrite/releases) 下载最新 `.dmg`。当前稳定版为 **v0.2.3.0**。
+
+Vowrite 使用自签名证书签名，未经 Apple 公证。在 macOS 14 上，首次打开时请右键点击应用并选择 **打开**。在 macOS 15 及更高版本上，右键 → 打开 已无法绕过 Gatekeeper：请先打开一次应用，然后进入 **系统设置 → 隐私与安全性**，点击 **仍要打开**。之后即可正常启动。
+
+#### Beta 版（v0.3.0.0-beta.1）
+
+Beta 发布在同一个 [Releases](https://github.com/Joevonlong/Vowrite/releases) 页面，标记为 **Pre-release**，不是默认下载，想尝鲜时再到该页面选择。Beta 的新内容：
+
+- 录音指示器新增 80 种内置 Voice Bar 效果，与原有的五种样式并存
+- 全新的自适应单色菜单栏图标，录音条更紧凑
+- 修复：缺少 macOS 辅助功能权限时，粘贴失败会明确提示（文字保留在历史记录中），不再被误报为成功
+
+**升级提示：** Beta 使用了新的代码签名身份和新的 Sparkle 更新密钥。Vowrite 0.2.3.0 及更早版本无法自动更新到它，请从 Releases 页面手动下载一次。安装后 macOS 会再次请求麦克风和辅助功能权限。之后的更新会自动安装。
 
 ### 从源码构建
 
@@ -76,6 +88,10 @@ cd Vowrite/VowriteMac
 swift build        # 仅编译
 ./build.sh         # 编译、签名并启动
 ```
+
+#### iOS
+
+在 Xcode 中打开 `VowriteIOS/VowriteIOS.xcodeproj`。工程不再预设开发团队：请在 **Signing & Capabilities** 中，为 `VowriteIOS` 和 `VowriteKeyboard` 两个 target 都选择你自己的 Team。如果 Xcode 提示 Bundle ID 不可用，请把 `com.vowrite.ios` 和 `com.vowrite.ios.keyboard` 改成你自己拥有的标识符——键盘的 ID 必须仍是 App ID 的子级（例如 `com.example.vowrite` 和 `com.example.vowrite.keyboard`）。如果更改了 Bundle ID，还必须把 App Group `group.com.vowrite.shared`（它注册在原开发团队名下）换成你自己拥有的组（例如 `group.com.example.vowrite`），共需修改三处：`VowriteIOS/Entitlements/VowriteIOS.entitlements`、`VowriteKeyboard/Entitlements/VowriteKeyboard.entitlements`，以及 `VowriteKit/Sources/VowriteKit/Config/VowriteStorage.swift` 中的 `appGroupID`。
 
 ### 设置
 
@@ -155,6 +171,7 @@ Vowrite/
 │       ├── App/                # 应用生命周期、状态
 │       ├── Platform/           # iOS 专有：剪贴板输出、触觉反馈、权限
 │       └── Views/              # SwiftUI 视图 (主页、录音、设置等)
+├── VowriteKeyboard/            # iOS 键盘扩展
 └── docs/                       # 网站 (GitHub Pages → vowrite.com)
 ```
 
@@ -233,14 +250,14 @@ ops/scripts/release.sh v0.2.3.0 "简短描述"
 scripts/publish-release.sh --tag v0.2.3.0
 ```
 
-发布脚本处理 macOS changelog → `Info.plist` + `Version.swift` → release 编译 → DMG 签名/打包 → appcast → git commit/tag → 可选 GitHub Release；它不会 push，也不会生成 iOS 版本。
+发布脚本只做本地准备：macOS changelog 汇总 → 版本号更新（`Info.plist` + `Version.swift`）→ release 编译 → DMG 打包/签名 → appcast → git commit/tag → 固定的发布意图。获得明确授权后，`publish-release.sh` 会原子地推送固定的 `main` 与 tag，并创建或续建对应的 GitHub Release。该流程不会生成 iOS 版本。
 
 ### 规范
 
 - **提交格式：** `<type>: <description>` — 类型：feat, fix, docs, refactor, chore, security, style, test
 - **分支：** `main` 用于发布；`feature/F-{ID}-{slug}` 用于功能开发
 - **版本号：** 4 段式 `MAJOR.MINOR.PATCH.BUILD`
-- **无外部 Swift 依赖** — 仅使用系统框架
+- **依赖：** `VowriteKit` 无外部依赖；macOS 应用使用 Sparkle 实现自动更新
 
 ## 🗺️ 路线图
 

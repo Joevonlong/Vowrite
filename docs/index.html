@@ -420,7 +420,7 @@ Thank you!</p></div></div></div></div><div class="container"><div class="home-su
 <span class="ap-meta-pill">macOS 14+</span>
 <span class="ap-meta-pill">Apple Silicon</span>
 </div>
-</div><div aria-hidden="true" class="home-device home-device-mac"><p data-i18n="home.platforms.mac.control">Press ⌥ Space. Speak. Press again.</p><p class="home-device-output" data-i18n="home.platforms.example">The design review is on Thursday at 10.</p><span class="home-device-caption" data-i18n="home.platforms.illustration">Illustration · no recording</span></div><p class="home-platform-note" data-i18n="feat.works.d">Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.</p><div class="home-platform-actions"><a class="va-btn" href="https://github.com/Joevonlong/Vowrite/releases/latest"><span data-i18n="home.platforms.mac.action">Download for Mac</span></a></div><details class="hc-details home-install" id="mac-details"><summary><span data-hc="mac">macOS — installation &amp; use</span></summary><section class="ap-platform" id="download-mac">
+</div><div aria-hidden="true" class="home-device home-device-mac"><p data-i18n="home.platforms.mac.control">Press ⌥ Space. Speak. Press again.</p><p class="home-device-output" data-i18n="home.platforms.example">The design review is on Thursday at 10.</p><span class="home-device-caption" data-i18n="home.platforms.illustration">Illustration · no recording</span></div><p class="home-platform-note" data-i18n="feat.works.d">Insert text into the active editable field using clipboard paste. Accessibility permission is required; secure fields and apps that block paste may not work.</p><div class="home-platform-actions"><a class="va-btn" href="https://github.com/Joevonlong/Vowrite/releases/latest"><span data-i18n="home.platforms.mac.action">Download for Mac</span></a></div><p class="home-platform-note"><a class="ap-step-link" data-i18n="home.platforms.mac.beta" href="https://github.com/Joevonlong/Vowrite/releases/tag/v0.3.0.0-beta.1">Want to test ahead? Try the v0.3.0.0-beta.1 pre-release →</a></p><details class="hc-details home-install" id="mac-details"><summary><span data-hc="mac">macOS — installation &amp; use</span></summary><section class="ap-platform" id="download-mac">
 <div class="container">
 <!-- Install steps -->
 <h3 class="ap-step-h" data-i18n="ap.mac.install.t">Install in 3 steps</h3>
@@ -430,6 +430,8 @@ Thank you!</p></div></div></div></div><div class="container"><div class="home-su
 <h4 data-i18n="ap.mac.s1.t">Download the DMG</h4>
 <p data-i18n="ap.mac.s1.d">Download the latest macOS DMG from GitHub Releases. Sparkle verifies updates with EdDSA signatures; this does not imply Apple notarization.</p>
 <a class="ap-step-link" href="https://github.com/Joevonlong/Vowrite/releases/latest"><span data-i18n="ap.mac.s1.cta">Download Vowrite.dmg</span> →</a>
+<p data-i18n="ap.mac.beta.d">Trying the beta? v0.3.0.0-beta.1 is signed with a new code-signing identity and update key, so Vowrite 0.2.3.0 and earlier cannot update to it automatically. Download it once from the pre-release page, then grant Microphone and Accessibility permission again.</p>
+<a class="ap-step-link" data-i18n="ap.mac.beta.cta" href="https://github.com/Joevonlong/Vowrite/releases/tag/v0.3.0.0-beta.1">Download v0.3.0.0-beta.1 →</a>
 </div>
 <div class="ap-step">
 <div class="ap-step-num">2</div>
@@ -460,7 +462,7 @@ Thank you!</p></div></div></div></div><div class="container"><div class="home-su
 <div class="ap-feat">
 <span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
 <strong data-i18n="ap.mac.f3.t">Floating overlay</strong>
-<span data-i18n="ap.mac.f3.d">Orb Pulse animation tells you it's listening</span>
+<span data-i18n="ap.mac.f3.d">Choose from five recording indicators, including Orb Pulse. The beta adds 80 built-in Voice Bar effects that react to your microphone level.</span>
 </div>
 <div class="ap-feat">
 <span class="ap-feat-icon"><svg aria-hidden="true" class="va-icon" viewbox="0 0 24 24"><path d="M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5"></path></svg></span>
@@ -518,7 +520,7 @@ open VowriteIOS.xcodeproj</pre>
 <div class="ap-step">
 <div class="ap-step-num">2</div>
 <h4 data-i18n="ap.ios.s2.t">Sign and run</h4>
-<p data-i18n="ap.ios.s2.d">In Xcode → Signing &amp; Capabilities → set your Team. Plug in your iPhone, hit ▶. Build &amp; deploy both <code>VowriteIOS</code> and <code>VowriteKeyboard</code> targets.</p>
+<p data-i18n="ap.ios.s2.d">In Xcode → Signing &amp; Capabilities, choose your own Team for both the <code>VowriteIOS</code> and <code>VowriteKeyboard</code> targets; the project does not preset one. If Xcode says a bundle identifier is unavailable, change <code>com.vowrite.ios</code> and <code>com.vowrite.ios.keyboard</code> to identifiers you own, and keep the keyboard ID a child of the app ID (for example <code>com.example.vowrite</code> and <code>com.example.vowrite.keyboard</code>). Also replace the App Group <code>group.com.vowrite.shared</code> with one you own, in <code>VowriteIOS.entitlements</code>, <code>VowriteKeyboard.entitlements</code> and <code>appGroupID</code> in <code>VowriteStorage.swift</code>. Then plug in your iPhone, hit ▶ and deploy both targets.</p>
 </div>
 <div class="ap-step">
 <div class="ap-step-num">3</div>
@@ -871,6 +873,7 @@ open VowriteIOS.xcodeproj</pre>
 <span class="btn-icon">⬇</span> <span data-i18n="dl.btn">Download for Mac</span>
 </a>
 </div>
+<p class="download-note"><a class="ap-step-link" data-i18n="home.platforms.mac.beta" href="https://github.com/Joevonlong/Vowrite/releases/tag/v0.3.0.0-beta.1">Want to test ahead? Try the v0.3.0.0-beta.1 pre-release →</a></p>
 <p class="download-note"><a data-vc-text="sourceLink" href="https://github.com/Joevonlong/Vowrite#readme">Build from source: read the GitHub guide</a></p>
 </div>
 </section>

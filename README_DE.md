@@ -46,7 +46,7 @@ Nicht mehr tippen. Einfach sprechen.
 | 🔑 | **Schlüsseltresor** | API-Keys pro Anbieter im macOS-Schlüsselbund — einmal eingeben, überall nutzen |
 | 📝 | **Textersetzung** | Auto-Korrektur mit flexiblem Musterabgleich (nach STT + nach LLM) |
 | 🧠 | **Auto-Wörterbuch** | Lernt aus deinen Korrekturen — fügt korrigierte Wörter automatisch hinzu |
-| 🎨 | **Aufnahme-Indikator** | Orb-Pulse atmende Lichtkugel-Animation |
+| 🎨 | **Aufnahme-Indikator** | 5 eingebaute Voreinstellungen: Classic Bar, Orb Pulse, Ripple Ring, Spectrum Arc, Minimal Dot — plus 80 Voice-Bar-Effekte unter macOS *(Beta)* |
 | 🔊 | **Klang-Feedback** | Akustische Signale für Start, Erfolg und Fehler |
 | ⌨️ | **Eigenes Tastenkürzel** | Standard: `⌥ Leertaste` — frei konfigurierbar |
 | 📊 | **Verlauf & Statistik** | Vergangene Diktate durchsuchen, gesparte Zeit und Wörter-pro-Minute verfolgen |
@@ -66,7 +66,19 @@ Vollständige Details im [Anpassungs-Leitfaden](docs/CUSTOMIZATION.md).
 
 ### Download
 
-Lade die neueste `.dmg` von [**Releases**](https://github.com/Joevonlong/Vowrite/releases) herunter.
+Lade die neueste `.dmg` von [**Releases**](https://github.com/Joevonlong/Vowrite/releases) herunter. Die stabile Version ist **v0.2.3.0**.
+
+Vowrite ist mit einem selbstsignierten Zertifikat signiert und wird nicht von Apple notarisiert. Unter macOS 14 beim ersten Mal per Rechtsklick **Öffnen** wählen. Ab macOS 15 umgeht Rechtsklick → Öffnen Gatekeeper nicht mehr: Öffne die App einmal, gehe dann zu **Systemeinstellungen → Datenschutz & Sicherheit** und klicke auf **Dennoch öffnen**. Danach startet sie normal.
+
+#### Beta (v0.3.0.0-beta.1)
+
+Die Beta liegt auf derselben [Releases](https://github.com/Joevonlong/Vowrite/releases)-Seite und ist als **Pre-release** markiert. Sie ist nicht der Standard-Download — wähle sie dort nur, wenn du sie ausprobieren möchtest. Neu in der Beta:
+
+- 80 eingebaute Voice-Bar-Effekte für den Aufnahme-Indikator, zusätzlich zu den fünf bisherigen Stilen
+- Neues adaptives einfarbiges Menüleisten-Logo und eine kompaktere Aufnahmeleiste
+- Fix: Fehlt die macOS-Bedienungshilfen-Berechtigung, wird ein fehlgeschlagenes Einfügen jetzt gemeldet (der Text bleibt im Verlauf), statt stillschweigend als Erfolg zu gelten
+
+**Hinweis zum Upgrade:** Die Beta ist mit einer neuen Code-Signing-Identität und einem neuen Sparkle-Update-Schlüssel signiert. Vowrite 0.2.3.0 und älter können sich nicht automatisch darauf aktualisieren — lade sie einmalig manuell von der Releases-Seite herunter. Danach fragt macOS erneut nach der Mikrofon- und Bedienungshilfen-Berechtigung. Spätere Updates werden automatisch installiert.
 
 ### Aus dem Quellcode bauen
 
@@ -76,6 +88,10 @@ cd Vowrite/VowriteMac
 swift build        # nur kompilieren
 ./build.sh         # kompilieren, signieren und starten
 ```
+
+#### iOS
+
+Öffne `VowriteIOS/VowriteIOS.xcodeproj` in Xcode. Das Projekt legt kein Entwicklungsteam mehr fest: Wähle unter **Signing & Capabilities** dein eigenes Team für beide Targets `VowriteIOS` und `VowriteKeyboard`. Meldet Xcode, dass eine Bundle-ID nicht verfügbar ist, ändere `com.vowrite.ios` und `com.vowrite.ios.keyboard` in Kennungen, die dir gehören — die Tastatur-ID muss dabei eine Unter-ID der App-ID bleiben (zum Beispiel `com.example.vowrite` und `com.example.vowrite.keyboard`). Wenn du die Bundle-IDs änderst, ersetze auch die App Group `group.com.vowrite.shared`, die auf das ursprüngliche Team registriert ist, durch eine eigene (zum Beispiel `group.com.example.vowrite`), und zwar an allen drei Stellen: `VowriteIOS/Entitlements/VowriteIOS.entitlements`, `VowriteKeyboard/Entitlements/VowriteKeyboard.entitlements` und `appGroupID` in `VowriteKit/Sources/VowriteKit/Config/VowriteStorage.swift`.
 
 ### Einrichtung
 
@@ -155,6 +171,7 @@ Vowrite/
 │       ├── App/                # App-Lebenszyklus, Zustand
 │       ├── Platform/           # iOS-spezifisch: Zwischenablage-Ausgabe, Haptik, Berechtigungen
 │       └── Views/              # SwiftUI-Views (Home, Aufnahme, Einstellungen, etc.)
+├── VowriteKeyboard/            # iOS-Tastaturerweiterung
 └── docs/                       # Website (GitHub Pages → vowrite.com)
 ```
 
@@ -233,14 +250,14 @@ ops/scripts/release.sh v0.2.3.0 "Kurze Beschreibung"
 scripts/publish-release.sh --tag v0.2.3.0
 ```
 
-Das Release-Skript erledigt: macOS-Changelog → `Info.plist` + `Version.swift` → Release-Build → DMG-Signierung/Paketierung → Appcast → Git-Commit/Tag → optionale GitHub-Release. Es pusht nicht und erstellt keine iOS-Version.
+Das Release-Skript erledigt nur die lokale Vorbereitung: macOS-Changelog-Übernahme → Versionssprung (`Info.plist` + `Version.swift`) → Release-Build → DMG-Paketierung/Signierung → Appcast → Git-Commit/Tag → festgelegte Veröffentlichungsabsicht. Nach ausdrücklicher Freigabe veröffentlicht `publish-release.sh` atomar den festgelegten `main` samt Tag und erstellt bzw. setzt das passende GitHub-Release fort. Die Pipeline erstellt keine iOS-Version.
 
 ### Konventionen
 
 - **Commits:** `<type>: <description>` — Typen: feat, fix, docs, refactor, chore, security, style, test
 - **Branches:** `main` für Releases; `feature/F-{ID}-{slug}` für Feature-Arbeit
 - **Versionierung:** 4-Segment `MAJOR.MINOR.PATCH.BUILD`
-- **Keine externen Swift-Abhängigkeiten** — nur System-Frameworks
+- **Abhängigkeiten:** `VowriteKit` hat keine externen Abhängigkeiten; die macOS-App nutzt Sparkle für Auto-Updates
 
 ## 🗺️ Roadmap
 

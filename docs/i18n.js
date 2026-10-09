@@ -1287,6 +1287,29 @@ Object.assign(i18n.en, {"ap.ios.f1.d": "Works in iOS apps and fields that allow 
 Object.assign(i18n.zh, {"ap.ios.f1.d": "适用于允许第三方键盘的 iOS 应用和输入框。", "tr.cmp.sub": "按译文输出位置、平台支持和处理方式，选择合适的工具。"});
 Object.assign(i18n.de, {"ap.ios.f1.d": "Funktioniert in iOS-Apps und Feldern, die Drittanbietertastaturen erlauben.", "tr.cmp.sub": "Vergleiche die Ausgabe übersetzter Texte, unterstützte Plattformen und Verarbeitungsoptionen für deinen Arbeitsablauf."});
 
+// Beta pre-release sync (v0.3.0.0-beta.1): recording-indicator copy, beta links and the iOS signing steps.
+Object.assign(i18n.en, {
+  "ap.mac.f3.d": "Choose from five recording indicators, including Orb Pulse. The beta adds 80 built-in Voice Bar effects that react to your microphone level.",
+  "ap.ios.s2.d": "In Xcode → Signing &amp; Capabilities, choose your own Team for both the <code>VowriteIOS</code> and <code>VowriteKeyboard</code> targets; the project does not preset one. If Xcode says a bundle identifier is unavailable, change <code>com.vowrite.ios</code> and <code>com.vowrite.ios.keyboard</code> to identifiers you own, and keep the keyboard ID a child of the app ID (for example <code>com.example.vowrite</code> and <code>com.example.vowrite.keyboard</code>). Also replace the App Group <code>group.com.vowrite.shared</code> with one you own, in <code>VowriteIOS.entitlements</code>, <code>VowriteKeyboard.entitlements</code> and <code>appGroupID</code> in <code>VowriteStorage.swift</code>. Then plug in your iPhone, hit ▶ and deploy both targets.",
+  "home.platforms.mac.beta": "Want to test ahead? Try the v0.3.0.0-beta.1 pre-release →",
+  "ap.mac.beta.d": "Trying the beta? v0.3.0.0-beta.1 is signed with a new code-signing identity and update key, so Vowrite 0.2.3.0 and earlier cannot update to it automatically. Download it once from the pre-release page, then grant Microphone and Accessibility permission again.",
+  "ap.mac.beta.cta": "Download v0.3.0.0-beta.1 →"
+});
+Object.assign(i18n.zh, {
+  "ap.mac.f3.d": "可在五种录音指示器（含 Orb Pulse）中选择。Beta 版另有 80 种内置 Voice Bar 效果，会随麦克风音量变化。",
+  "ap.ios.s2.d": "在 Xcode → Signing &amp; Capabilities 中，为 <code>VowriteIOS</code> 和 <code>VowriteKeyboard</code> 两个 target 都选择你自己的 Team（项目不再预设开发团队）。如果 Xcode 提示 bundle identifier 不可用，请把 <code>com.vowrite.ios</code> 和 <code>com.vowrite.ios.keyboard</code> 改成你自己拥有的标识符，并保持键盘的标识符是主应用标识符的子级（例如 <code>com.example.vowrite</code> 和 <code>com.example.vowrite.keyboard</code>）。同时把 App Group <code>group.com.vowrite.shared</code> 换成你自己的，需改 <code>VowriteIOS.entitlements</code>、<code>VowriteKeyboard.entitlements</code> 以及 <code>VowriteStorage.swift</code> 中的 <code>appGroupID</code>。然后插上 iPhone，按 ▶，部署两个 target。",
+  "home.platforms.mac.beta": "想抢先体验？试用 v0.3.0.0-beta.1 预发布版 →",
+  "ap.mac.beta.d": "试用 Beta？v0.3.0.0-beta.1 使用了新的代码签名身份和更新密钥，因此 Vowrite 0.2.3.0 及更早版本无法自动更新到它。请从预发布页面手动下载一次，安装后重新授予麦克风和辅助功能权限。",
+  "ap.mac.beta.cta": "下载 v0.3.0.0-beta.1 →"
+});
+Object.assign(i18n.de, {
+  "ap.mac.f3.d": "Wähle aus fünf Aufnahme-Indikatoren, darunter Orb Pulse. Die Beta bringt 80 integrierte Voice-Bar-Effekte, die auf deinen Mikrofonpegel reagieren.",
+  "ap.ios.s2.d": "In Xcode → Signing &amp; Capabilities für beide Targets <code>VowriteIOS</code> und <code>VowriteKeyboard</code> dein eigenes Team wählen; das Projekt gibt kein Team vor. Meldet Xcode, dass eine Bundle-ID nicht verfügbar ist, <code>com.vowrite.ios</code> und <code>com.vowrite.ios.keyboard</code> auf eigene Kennungen ändern; die Tastatur-ID muss dabei eine Unter-ID der App-ID bleiben (z. B. <code>com.example.vowrite</code> und <code>com.example.vowrite.keyboard</code>). Ersetze außerdem die App Group <code>group.com.vowrite.shared</code> durch eine eigene, in <code>VowriteIOS.entitlements</code>, <code>VowriteKeyboard.entitlements</code> und bei <code>appGroupID</code> in <code>VowriteStorage.swift</code>. Dann das iPhone anstecken, ▶ drücken und beide Targets deployen.",
+  "home.platforms.mac.beta": "Neugierig auf Neues? v0.3.0.0-beta.1 als Vorabversion ausprobieren →",
+  "ap.mac.beta.d": "Beta ausprobieren? v0.3.0.0-beta.1 ist mit einer neuen Code-Signing-Identität und einem neuen Update-Schlüssel signiert; Vowrite 0.2.3.0 und älter können daher nicht automatisch darauf aktualisieren. Einmal von der Seite der Vorabversion laden und anschließend Mikrofon- und Bedienungshilfen-Zugriff erneut erteilen.",
+  "ap.mac.beta.cta": "v0.3.0.0-beta.1 laden →"
+});
+
 function siteHref(href) {
  const match=href.match(/^(?:https?:\/\/vowrite\.com)?\/?(index(?:\.html)?|why(?:\.html)?|apps(?:\.html)?|translate(?:\.html)?|pricing(?:\.html)?|demo(?:\.html)?)(\?[^#]*)?(?:#(.*))?$/);
  if(!match)return href;
