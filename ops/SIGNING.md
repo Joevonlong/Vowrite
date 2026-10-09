@@ -22,6 +22,14 @@ The signing infrastructure uses a dedicated keychain at `~/Library/Keychains/vow
 
 ### Setup Steps (one-time, on build machine)
 
+The keychain password is read from `VOWRITE_KEYCHAIN_PASSWORD`. Keep the real value out of the
+repository: store it in your login keychain and export it from your shell profile, for example
+`export VOWRITE_KEYCHAIN_PASSWORD="$(security find-generic-password -s vowrite-signing-keychain -a "$USER" -w)"`.
+
+Back up both the signing keychain and the Sparkle EdDSA private key (`generate_keys -x <file>`) to a
+password manager. If either is lost, existing installs cannot verify the next update and users must
+download it manually once.
+
 If the signing keychain doesn't exist yet, run these commands:
 
 ```bash
@@ -54,7 +62,7 @@ security import /tmp/vw.p12 -k ~/Library/Keychains/vowrite-signing.keychain-db \
     -P "vw" -T /usr/bin/codesign -T /usr/bin/security
 
 # 7. Set partition list for codesign access
-security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "vowrite" \
+security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${VOWRITE_KEYCHAIN_PASSWORD:-}" \
     ~/Library/Keychains/vowrite-signing.keychain-db
 
 # 8. Clean up temp files

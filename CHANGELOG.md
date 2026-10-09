@@ -7,6 +7,10 @@ and this project uses [4-segment versioning](ops/VERSIONING.md) (`MAJOR.MINOR.PA
 
 ## [Unreleased]
 
+### Important
+
+- **New update signing key**: This version is signed with a new code-signing identity and a new Sparkle update key. Vowrite 0.2.3.0 and earlier cannot install it through automatic updates; download it once from the Releases page. After installing, macOS asks again for Microphone and Accessibility permission. Later updates install automatically.
+
 ### Added
 
 - **F-094 Built-in Voice Bar effects**: General settings now offer the original 80 Open Design effects alongside all five existing recording indicators. The selected effect responds to live microphone level and recording state inside the same compact Voice Bar, while keeping the native timer, session badge, and recording controls.
