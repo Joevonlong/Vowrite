@@ -123,8 +123,8 @@ iOS 键盘扩展（VowriteKeyboard）需要用户授予 **"完全访问"（Full 
 
 **安全问题请通过以下方式私下报告，不要公开 Issue：**
 
-- 邮箱：`security@vowrite.app`（占位；当前请发至 `[removed]`）
-- 主题格式：`[SECURITY] 简短描述`
+- GitHub 私密漏洞报告：<https://github.com/Joevonlong/Vowrite/security/advisories/new>
+- 标题格式：`[SECURITY] 简短描述`
 
 **处理流程：**
 
